@@ -1,0 +1,35 @@
+name: Docs
+
+on:
+  pull_request:
+  push:
+    branches: [main, 'release/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Links and diagrams
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      plantuml:
+        image: plantuml/plantuml-server:jetty
+        ports:
+          - 8085:8080
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: Check the documentation
+        env:
+          PLANTUML_URL: http://127.0.0.1:8085
+        run: node tools/docs-check/wait-and-check.mjs
