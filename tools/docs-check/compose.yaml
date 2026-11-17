@@ -1,0 +1,16 @@
+name: kampus-docs-check
+
+services:
+  plantuml:
+    image: plantuml/plantuml-server:jetty
+
+  check:
+    image: node:24-slim
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+    depends_on:
+      - plantuml
+    environment:
+      PLANTUML_URL: http://plantuml:8080
+    command: ["node", "tools/docs-check/wait-and-check.mjs"]
