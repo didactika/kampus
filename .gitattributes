@@ -1,0 +1,4 @@
+# Keep LF everywhere: files are read and run by tools inside Linux containers.
+* text=auto eol=lf
+*.png binary
+*.svg text eol=lf

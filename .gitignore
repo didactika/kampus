@@ -1,0 +1,15 @@
+# Rust
+/target/
+
+# Web
+node_modules/
+/web/build/
+/web/.svelte-kit/
+
+# Local output
+*.png
+!docs/assets/**/*.png
+/dist/
+.env
+.env.*
+!.env.example
