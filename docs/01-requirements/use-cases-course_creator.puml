@@ -1,0 +1,16 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+left to right direction
+
+actor "Course creator" as A_Course_creator
+
+rectangle "Kampus" {
+  package "courses" {
+    usecase "Create and configure a course" as UC_createCourse
+  }
+}
+
+A_Course_creator --> UC_createCourse
+
+@enduml

@@ -39,6 +39,7 @@ A file (`kampus.toml`) plus environment variables, which take precedence. Each r
 | `KAMPUS_ROLE` | all | no (default `all`) | `server`, `worker`, `scheduler` or `all` |
 | `KAMPUS_PUBLIC_URL` | server, worker | yes | Public address of the campus, used in links and mail |
 | `KAMPUS_DATABASE_URL` | all | yes | Connection to the database port (PostgreSQL first) |
+| `KAMPUS_DATABASE_PREFIX` | all | no (default `kmp_`) | Installation prefix of every physical database name; set once at installation (DEC-039) |
 | `KAMPUS_DATABASE_POOL_SIZE` | all | no | Connections per process |
 | `KAMPUS_STORAGE_URL` | server, worker | yes | File storage: `file:///path` or `s3://bucket/prefix` |
 | `KAMPUS_STORAGE_S3_*` | server, worker | with S3 | Endpoint, region and credentials of S3-compatible storage |

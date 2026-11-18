@@ -50,11 +50,11 @@ Priorities: **Must** (tier 1, core), **Should** (tier 2, standard activities and
 
 | ID | Requirement | Priority | Origin | Confirmed by | Use cases |
 | --- | --- | --- | --- | --- | --- |
-| RF-030 | Courses are organised in nested categories | Must | baseline | | |
-| RF-031 | Teachers create and configure courses: format, sections, visibility, dates | Must | baseline | | |
-| RF-032 | Course content is organised in sections holding activities and resources | Must | baseline | | |
-| RF-033 | Groups and group sets split learners inside a course | Must | baseline | | |
-| RF-034 | Course formats are plugins (topics, weekly, single activity and more) | Should | baseline | | |
+| RF-030 | Courses are organised in nested categories | Must | baseline | | UC-011 |
+| RF-031 | Teachers create and configure courses: format, sections, visibility, dates | Must | baseline | | UC-012 |
+| RF-032 | Course content is organised in sections holding activities and resources | Must | baseline | | UC-013 |
+| RF-033 | Groups and group sets split learners inside a course | Must | baseline | | UC-014 |
+| RF-034 | Course formats are plugins (topics, weekly, single activity and more) | Should | baseline | | UC-015 |
 
 ### Enrolment
 

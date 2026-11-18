@@ -1,0 +1,71 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus courses: categories, courses, sections, groups
+
+class Scope <<access>>
+class CourseCategory {
+  code
+  name
+  sort_key
+  visibility
+}
+class Course {
+  short_name
+  full_name
+  code
+  start
+  end
+  state : draft | published | archived | deletion_scheduled
+  visibility
+}
+class Section {
+  title
+  sort_key
+  visibility
+  available_from
+  available_until
+}
+class CourseLayout <<plugin>> {
+  code
+  settings
+}
+class CourseOwner
+class Group {
+  name
+  code
+  visibility
+}
+class GroupMembership {
+  origin : manual | module
+}
+class GroupSet {
+  name
+  code
+}
+class Account <<identity>>
+
+CourseCategory "0..1" <-- "*" CourseCategory : parent
+Course "*" --> "1" CourseCategory
+Section "*" --> "1" Course
+Section "0..1" <-- "*" Section : parent
+Course "*" --> "1" CourseLayout
+CourseOwner "*" --> "1" Course
+CourseOwner "*" --> "1" Account
+Group "*" --> "1" Course
+Group "*" --> "0..1" Section : limited to
+GroupMembership "*" --> "1" Group
+GroupMembership "*" --> "1" Account
+GroupSet "*" --> "1" Course
+GroupSet "*" -- "*" Group
+CourseCategory --> Scope
+Course --> Scope
+Section --> Scope
+note bottom of Section
+  Referenced by id, never by position;
+  order is a sort key within the parent.
+  Visibility is its own setting; the
+  effective one is computed up the tree.
+end note
+@enduml

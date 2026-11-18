@@ -7,7 +7,7 @@ sourceOfTruth: model
 
 # Data model: access
 
-PostgreSQL schema `access`, owned by `kampus-access` (DEC-014). Keys are UUID version 7 (DEC-021), times `timestamptz` (DEC-022). Every table has `created_at` and `updated_at`; mutable rows carry `version` for optimistic concurrency (DEC-026). Rules refer to the [access domain model](../../00-domain-model/access.md).
+PostgreSQL schema `access`, owned by `kampus-access` (DEC-014). Keys are UUID version 7 (DEC-021), times `timestamptz` (DEC-022). Every table has `created_at` and `updated_at`; mutable rows carry `version` for optimistic concurrency (DEC-026). Rules refer to the [access domain model](../../00-domain-model/access.md). Names are logical; physically the schema carries the installation prefix, `kmp_access` by default (DEC-039).
 
 ![Access schema](./access.svg)
 

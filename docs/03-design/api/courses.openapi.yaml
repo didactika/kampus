@@ -1,0 +1,58 @@
+openapi: 3.1.0
+info:
+  title: Kampus courses API (design fragment)
+  version: 0.1.0
+  description: >-
+    Categories, courses, sections, course layouts, groups and group sets. Conventions of DEC-025 and
+    DEC-026; permissions checked inside every operation (DEC-017); lists filtered by permission and by
+    effective visibility before paging.
+paths:
+  /api/v1/campuses/{campus_id}/categories:
+    get: { summary: The category tree of a campus (visible to the caller), responses: { '200': { description: Categories } } }
+    post: { summary: Create a category, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created } } }
+  /api/v1/categories/{category_id}:
+    patch: { summary: 'Rename, describe, show, hide or schedule a category', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
+    delete: { summary: Delete an empty category, responses: { '204': { description: Deleted }, '409': { description: Not empty } } }
+  /api/v1/categories/{category_id}/move:
+    post: { summary: 'Move under another parent and/or between two siblings (RN-046)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Moved } } }
+  /api/v1/categories/{category_id}/courses:
+    get: { summary: Courses of a category, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page of courses } } }
+    post: { summary: 'Create a course from a template (RN-051)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created } } }
+  /api/v1/courses/{course_id}:
+    get: { summary: A course with its layout, dates, state, visibility and owners, responses: { '200': { description: The course } } }
+    patch: { summary: 'Change names, dates, visibility or layout settings', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
+  /api/v1/courses/{course_id}/state:
+    put: { summary: 'Publish, archive, unarchive or schedule deletion (RN-049, RN-050)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }
+  /api/v1/courses/{course_id}/layout:
+    put: { summary: 'Choose the layout plugin and its settings (RN-052)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }
+  /api/v1/courses/{course_id}/sections:
+    get: { summary: The section tree of a course with effective visibility, responses: { '200': { description: Sections } } }
+    post: { summary: Add a section under a parent and between two siblings, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Added } } }
+  /api/v1/sections/{section_id}:
+    patch: { summary: 'Rename, summarise, show, hide or schedule a section', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
+    delete:
+      summary: 'Delete a section; its content is moved or deleted as chosen (RN-048)'
+      parameters: [{ name: content, in: query, required: true, schema: { enum: [move, delete] } }, { name: move_to, in: query, schema: { type: string, format: uuid } }]
+      responses: { '202': { description: Deletion job accepted } }
+  /api/v1/sections/{section_id}/move:
+    post: { summary: 'Move a section under another parent and/or between two siblings (RN-045, RN-047)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Moved } } }
+  /api/v1/courses/{course_id}/groups:
+    get: { summary: 'Groups the caller may see (RN-056)', responses: { '200': { description: A page of groups } } }
+    post: { summary: Create a group (optionally limited to a section), parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created } } }
+  /api/v1/groups/{group_id}:
+    patch: { summary: Update a group, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
+    delete: { summary: Delete a group, responses: { '204': { description: Deleted } } }
+  /api/v1/groups/{group_id}/members:
+    get: { summary: 'Members with their origin, as the group visibility allows', responses: { '200': { description: A page of members } } }
+    post: { summary: 'Add enrolled people by hand (RN-053)', responses: { '201': { description: Added } } }
+  /api/v1/groups/{group_id}/members/{account_id}:
+    delete: { summary: 'Remove a manual membership (RN-054)', responses: { '204': { description: Removed }, '409': { description: Owned by a module } } }
+  /api/v1/courses/{course_id}/group-sets:
+    get: { summary: Group sets of a course, responses: { '200': { description: Group sets } } }
+    post: { summary: Create a group set, responses: { '201': { description: Created } } }
+components:
+  parameters:
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+    After: { name: after, in: query, schema: { type: string } }
+    IfMatch: { name: If-Match, in: header, required: true, schema: { type: string } }
+    IdempotencyKey: { name: Idempotency-Key, in: header, schema: { type: string } }

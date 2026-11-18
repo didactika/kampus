@@ -5,6 +5,7 @@ left to right direction
 
 actor "Authenticated user" as A_Authenticated_user
 actor "Campus administrator" as A_Campus_administrator
+actor "Course creator" as A_Course_creator
 actor "Manager" as A_Manager
 actor "System" as A_System
 actor "Teacher" as A_Teacher
@@ -27,6 +28,13 @@ rectangle "Kampus" {
   package "users" {
     usecase "Edit a profile" as UC_editProfile
   }
+  package "courses" {
+    usecase "Manage course categories" as UC_manageCategories
+    usecase "Create and configure a course" as UC_createCourse
+    usecase "Organise the sections of a course" as UC_organiseSections
+    usecase "Manage groups and group sets" as UC_manageGroups
+    usecase "Choose a course layout" as UC_chooseCourseLayout
+  }
 }
 
 A_Manager --> UC_grantRole
@@ -43,5 +51,11 @@ A_Authenticated_user --> UC_setUpSecondFactor
 A_Manager --> UC_manageAccountLifecycle
 A_Authenticated_user --> UC_editProfile
 A_Manager --> UC_editProfile
+A_Manager --> UC_manageCategories
+A_Course_creator --> UC_createCourse
+A_Manager --> UC_createCourse
+A_Teacher --> UC_organiseSections
+A_Teacher --> UC_manageGroups
+A_Teacher --> UC_chooseCourseLayout
 
 @enduml

@@ -1,0 +1,17 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Teacher" as a
+participant "kampus-api" as api
+participant "Service" as svc
+database "courses schema + outbox" as db
+
+a -> api : POST /groups/{id}/members (people)
+api -> svc : group service: permission; enrolled and can reach the section?
+group one transaction
+  svc -> db : memberships (origin manual); events
+end
+svc --> a : result
+@enduml
