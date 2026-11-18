@@ -1,6 +1,6 @@
 ---
 id: DEC-029
-status: proposed
+status: accepted
 ---
 
 # DEC-029 Versioned role templates, and read-only "view as"

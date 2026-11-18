@@ -1,6 +1,6 @@
 ---
 id: DEC-028
-status: proposed
+status: accepted
 ---
 
 # DEC-028 Grants with a validity period, owned by their source

@@ -4,7 +4,7 @@ name: defineRole
 title: Define a role from a template
 actor: Campus administrator
 package: access
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-021

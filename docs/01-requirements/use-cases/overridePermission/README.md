@@ -4,7 +4,7 @@ name: overridePermission
 title: Override permissions in a scope
 actor: Manager,Teacher
 package: access
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-024

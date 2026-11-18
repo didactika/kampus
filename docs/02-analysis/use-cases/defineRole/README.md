@@ -2,7 +2,7 @@
 id: UC-004
 name: defineRole
 title: Define a role from a template
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

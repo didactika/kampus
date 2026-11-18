@@ -4,7 +4,7 @@ name: grantRole
 title: Grant a role in a scope
 actor: Manager,Teacher
 package: access
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-020

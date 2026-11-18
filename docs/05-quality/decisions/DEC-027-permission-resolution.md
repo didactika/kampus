@@ -1,6 +1,6 @@
 ---
 id: DEC-027
-status: proposed
+status: accepted
 ---
 
 # DEC-027 Permission resolution: allow, deny, forbid, and no bypass

@@ -2,7 +2,7 @@
 id: UC-002
 name: overridePermission
 title: Override permissions in a scope
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

@@ -2,7 +2,7 @@
 id: UC-001
 name: grantRole
 title: Grant a role in a scope
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

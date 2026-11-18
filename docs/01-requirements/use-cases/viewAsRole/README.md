@@ -4,7 +4,7 @@ name: viewAsRole
 title: View a scope as another role
 actor: Teacher,Manager
 package: access
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-023

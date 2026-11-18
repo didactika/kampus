@@ -2,7 +2,7 @@
 id: UC-005
 name: viewAsRole
 title: View a scope as another role
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

@@ -13,7 +13,7 @@ The business concepts of Kampus, module by module. Each module has its own docum
 
 | Module | Document | Status |
 | --- | --- | --- |
-| `kampus-access`: scopes, roles, permissions | [access.md](./access.md) | proposed |
+| `kampus-access`: scopes, roles, permissions | [access.md](./access.md) | accepted |
 
 ## Hierarchy of entities
 

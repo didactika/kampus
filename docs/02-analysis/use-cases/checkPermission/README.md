@@ -2,7 +2,7 @@
 id: UC-003
 name: checkPermission
 title: Check a permission, with its explanation
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

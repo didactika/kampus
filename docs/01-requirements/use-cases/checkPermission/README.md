@@ -4,7 +4,7 @@ name: checkPermission
 title: Check a permission, with its explanation
 actor: System
 package: access
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-022

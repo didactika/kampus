@@ -1,6 +1,6 @@
 ---
 id: DATA-ACCESS
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---
