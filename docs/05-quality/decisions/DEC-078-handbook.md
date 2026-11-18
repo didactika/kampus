@@ -14,4 +14,4 @@ status: accepted
   - Screenshots come from the end-to-end tests; tutorials are tested in CI.
   - Release notes come from the highlights register.
 - Consequences: The handbook matches the release it ships with (RNF-020) and costs little to keep current.
-- Affected artifacts: `handbook/`, the documentation checks in CI.
+- Affected artifacts: `didactika/kampus-docs` (DEC-084), the documentation checks in CI.

@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/openHelp/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Help panel and resolver | UI | `web/src/shell/help/` | no (to build) |
-| Help topics of the handbook | content | `handbook/` | no (to build) |
+| Help topics of the handbook | content | `didactika/kampus-docs` | no (to build) |
 
 ## Tests
 
