@@ -19,7 +19,8 @@ Module `kampus-access` (level 1, [architecture](../03-design/architecture.md#mod
 | Scope kind | 1 | platform, tenant, campus, category, course, section, activity, widget, user | code, allowed parent kinds |
 | Permission | 1 | One thing an actor may do, declared by a module or plugin (DEC-015) | code (`courses.course.update`), kind (read or write), risks, lowest scope kind, module |
 | Role | 1 | A named set of permission values, defined per campus from a role template | campus, name, short name, template and template version, assignable scope kinds |
-| Grant | 1 | A person holds a role in a scope, from a start to an optional end | role, scope, user, origin (manual or a module), valid from, valid until, granted by |
+| Principal | 1 | Anything that can hold grants; every account is a principal with the same id, so access never depends on identity (DEC-079) | kind, campus |
+| Grant | 1 | A principal holds a role in a scope, from a start to an optional end | role, scope, Principal, origin (manual or a module), valid from, valid until, granted by |
 | Role permission | 2 | The value a role gives a permission: allow, deny or forbid | role, permission, value |
 | Permission override | 2 | The value of a role for a permission in one scope and its descendants | scope, role, permission, value |
 | Permission value | 2 | `allow`, `deny` (can be allowed again lower down) or `forbid` (cannot be allowed by any role or lower scope); no row means inherit | value |

@@ -51,7 +51,11 @@ class ViewAsSession {
   started
   ended
 }
-class User
+class Principal {
+  kind : account
+}
+class "Account (identity)" as Account
+Account --|> Principal : same id
 
 Scope "0..1" <-- "*" Scope : parent
 Scope --> ScopeKind
@@ -59,7 +63,7 @@ Role "*" --> "1" Scope : campus
 Role "*" --> "1" RoleTemplate : created from
 Grant "*" --> "1" Role
 Grant "*" --> "1" Scope
-Grant "*" --> "1" User
+Grant "*" --> "1" Principal
 RolePermission "*" --> "1" Role
 RolePermission "*" --> "1" Permission
 PermissionOverride "*" --> "1" Scope
@@ -67,7 +71,8 @@ PermissionOverride "*" --> "1" Role
 PermissionOverride "*" --> "1" Permission
 RoleAllowance "*" --> "1" Role : role
 RoleAllowance "*" --> "1" Role : target
-ViewAsSession "*" --> "1" User
+ViewAsSession "*" --> "1" Principal
+Principal "*" --> "1" Scope : campus
 ViewAsSession "*" --> "1" Scope
 ViewAsSession "*" --> "1" Role
 note right of Scope

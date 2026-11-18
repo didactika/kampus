@@ -45,7 +45,6 @@ entity field_value {
   choice_id <<FK>>
   file_id <<FK>>
   account_id <<FK>>
-  course_id <<FK>>
 }
 entity field_value_choice {
   field_value_id <<FK>>

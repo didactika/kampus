@@ -33,16 +33,16 @@ package "3 Learning" {
 }
 
 package "2 People" {
-  component "kampus-users" as users
   component "kampus-files" as files
+  component "kampus-customise" as customise
+  component "kampus-users" as users
 }
 
 package "1 Platform" {
-  component "kampus-settings" as settings
-  component "kampus-i18n" as i18n
   component "kampus-access" as access
+  component "kampus-settings" as settings
   component "kampus-identity" as identity
-  component "kampus-customise" as customise
+  component "kampus-i18n" as i18n
 }
 
 package "0 Foundation" {
@@ -79,12 +79,15 @@ users --> customise
 files --> storage
 files --> access
 identity --> access
-customise --> access
 customise --> i18n
+customise --> files
+users --> i18n
+files --> identity
+identity --> settings
 i18n --> settings
-access --> settings
-settings --> cache
-settings --> db
+settings --> access
+access --> cache
+access --> db
 tasks --> events
 events --> db
 db --> common

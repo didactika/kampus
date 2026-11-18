@@ -56,17 +56,24 @@ entity role_allowance {
   * target_role_id : uuid <<PK, FK>>
   * kind : text <<PK>>
 }
+entity principal {
+  * id : uuid <<PK>>
+  kind : account
+  campus_id : uuid <<FK>>
+}
 entity grant {
   * id : uuid <<PK>>
   role_id : uuid <<FK>>
   scope_id : uuid <<FK>>
-  user_id : uuid <<FK>>
+  principal_id : uuid <<FK>>
   origin : manual | module
   valid_from : timestamptz
   valid_until : timestamptz
 }
 
 scope }o--|| scope_kind
+principal }o--|| scope : campus
+grant }o--|| principal
 scope }o--o| scope : parent
 scope_closure }o--|| scope : ancestor
 scope_closure }o--|| scope : descendant

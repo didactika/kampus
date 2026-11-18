@@ -28,7 +28,7 @@ Modules `kampus-identity` (level 1: accounts, credentials, external identities, 
 | Sign-in attempt | identity | 4 | A record used for throttling and for the account's security log | account or name tried, address, outcome, at |
 | Tombstone | identity | 4 | A deleted account: the same row, with every personal datum erased and a pseudonym, so academic records keep a valid reference | id, pseudonym, deleted at |
 | Profile | users | 1 | The person behind an account: names, picture, language, time zone, contact | display names, picture, locale, time zone |
-| Profile field | users | 2 | A custom field of profiles (DEC-008) with type, validation and visibility | type, required, visibility, editable by |
+| Profile field | customise | 2 | A custom field of the entity kind `account` (DEC-070), linked to the account through `users.account_field` | type, required, visibility, permissions |
 | Preference | users | 3 | A typed per-user setting declared by a module | key, value |
 | System group | users | 2 | A campus or category-wide set of people (for enrolment and reporting) | scope, name, kind (manual or rule), rule |
 | System group membership | users | 3 | A person in a system group, manual or owned by a rule or a sync | group, account, origin |
@@ -87,7 +87,7 @@ Modules `kampus-identity` (level 1: accounts, credentials, external identities, 
 | Service API | `sign_in`, `step_up`, `sign_out`, `revoke_sessions`, `create_token`, `revoke_token`, `invite`, `transition` (account lifecycle), `link_identity`, `get_profile`, `update_profile`, `group_members` |
 | Events | `identity.account_invited`, `identity.account_confirmed`, `identity.account_suspended`, `identity.account_reactivated`, `identity.account_deletion_scheduled`, `identity.account_deleted`, `identity.signed_in`, `identity.sign_in_failed`, `identity.second_factor_added`, `identity.second_factor_removed`, `identity.recovery_used`, `identity.token_created`, `identity.token_revoked`, `users.profile_updated`, `users.system_group_member_added`, `users.system_group_member_removed` |
 | API | [identity.openapi.yaml](../03-design/api/identity.openapi.yaml) |
-| Permissions | `identity.account.invite`, `identity.account.suspend`, `identity.account.delete`, `identity.account.read`, `identity.provider.manage`, `identity.token.manage_own`, `identity.token.manage_any`, `users.profile.update_own`, `users.profile.update_any`, `users.profile_field.manage`, `users.system_group.manage` |
+| Permissions | `identity.account.invite`, `identity.account.suspend`, `identity.account.delete`, `identity.account.read`, `identity.provider.manage`, `identity.token.manage_own`, `identity.token.manage_any`, `users.profile.update_own`, `users.profile.update_any`, `customise.fields.manage` (profile fields are custom fields of kind `account`), `users.system_group.manage` |
 | Data | [identity data model](../03-design/data-model/identity.md) |
 | Privacy | Both modules declare their personal data and their export and erase handlers (RN-034) |
 

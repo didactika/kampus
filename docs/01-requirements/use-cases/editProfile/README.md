@@ -28,7 +28,7 @@ extends:
 | Type | Primary, real |
 | Level | User goal |
 | Requirement | RF-014 |
-| Domain entities | Profile, Profile field, Preference |
+| Domain entities | Profile, Custom field, Preference |
 
 ## Context
 

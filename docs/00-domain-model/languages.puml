@@ -30,15 +30,10 @@ class "Customised message" as Customisedmessage {
   text
   by
 }
-class "Language choice" as Languagechoice {
-  account or course
-  forced
-}
 
 Languagepack "*" --> "1" Language
 Translation "*" --> "1" Message
 Translation "*" --> "1" Language
 Customisedmessage "*" --> "1" Message
 Customisedmessage "*" --> "1" Language
-Languagechoice "*" --> "1" Language
 @enduml

@@ -25,6 +25,7 @@ PostgreSQL schema `records`, owned by `kampus-records`, following DEC-014, DEC-0
 | `formula` | `record_id` PK FK (`CASCADE`), `expression` | Parsed and validated on save |
 | `formula_dependency` | `record_id` FK → `formula` (`CASCADE`), `depends_on_id` FK → `record` (`RESTRICT`) | PK (`record_id`, `depends_on_id`); cycles refused on save (RN-107) |
 | `recalculation` | `id`, `course_id`, `record_ids` (rows in `recalculation_record`), `account_ids` (rows in `recalculation_account`), `state`, `queued_at`, `done_at`, `error` | Queue of derived work (RN-099) |
+| `grade_condition` | `condition_id` PK FK → `activities.condition` (`CASCADE`), `record_id` FK → `record` (`RESTRICT`), `min_percent`, `max_percent` | The grade condition type is declared by records, which owns its leaf table (DEC-045, DEC-079); RN-081: deleting the record is refused while the condition exists |
 
 ## Anti-patterns avoided (DEC-014)
 

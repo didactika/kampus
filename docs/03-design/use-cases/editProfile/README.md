@@ -21,7 +21,7 @@ Analysis: [README](../../../02-analysis/use-cases/editProfile/README.md)
 | --- | --- | --- |
 | Profile service | service | `crates/kampus-users/src/profile.rs` |
 | `/api/v1/me/profile`, `/api/v1/accounts/{account_id}/profile` | API endpoints | `docs/03-design/api/identity.openapi.yaml` |
-| `users.profile`, `users.profile_field_value` | tables | `docs/03-design/data-model/identity.md` |
+| `users.profile`, `users.account_field, customise.field_value` | tables | `docs/03-design/data-model/identity.md` |
 
 ## Sequence
 
@@ -31,4 +31,4 @@ Analysis: [README](../../../02-analysis/use-cases/editProfile/README.md)
 
 | Table or entity | Operation |
 | --- | --- |
-| users.profile, users.profile_field_value | update |
+| users.profile, users.account_field, customise.field_value | update |

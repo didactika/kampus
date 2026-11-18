@@ -30,5 +30,5 @@ Analysis: [README](../../../02-analysis/use-cases/chooseLanguage/README.md)
 
 | Table or entity | Operation |
 | --- | --- |
-| i18n.language_choice | insert, update |
+| users.profile (language_code) | update |
 | i18n.translation, i18n.customised_message | select |

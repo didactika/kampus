@@ -87,3 +87,5 @@ What makes Kampus stand out. This register is the source for the release notes, 
 | HL-065 | Web client | No lost edits and no duplicates: conflicts shown, double clicks harmless | DEC-076 | planned | Work together on the same course safely. |
 | HL-066 | Help | Help for the current screen and role, onboarding checklists and guided tours | DEC-077 | planned | Learn Kampus while using it. |
 | HL-067 | Handbook | A handbook per role for every release, with references that always match the product | DEC-078 | planned | Documentation you can trust. |
+| HL-068 | Data | A relational model whose module dependencies are checked on every change: no cycles, one owner per fact | DEC-079 | planned | A database that stays clean as Kampus grows. |
+| HL-069 | Data | Upgrades and rollbacks without downtime or data loss | DEC-080 | planned | Upgrade during the term without fear. |

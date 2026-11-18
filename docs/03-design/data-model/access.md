@@ -27,15 +27,16 @@ PostgreSQL schema `access`, owned by `kampus-access` (DEC-014). Keys are UUID ve
 | `role_permission` | `role_id` FK (`CASCADE`), `permission_code` FK, `value` | PK (`role_id`, `permission_code`) |
 | `role_allowance` | `role_id` FK (`CASCADE`), `target_role_id` FK (`CASCADE`), `kind` | PK (`role_id`, `target_role_id`, `kind`); `kind` in (`grant`, `override`, `view_as`, `view`) — one table instead of one per kind |
 | `permission_override` | `scope_id` FK (`CASCADE`), `role_id` FK (`CASCADE`), `permission_code` FK, `value`, `version` | PK (`scope_id`, `role_id`, `permission_code`); a trigger enforces RN-012 |
-| `grant` | `id`, `role_id` FK (`RESTRICT`), `scope_id` FK (`CASCADE`), `user_id` FK → `identity.account`, `origin` (`manual`, `module`), `origin_module` text, `valid_from`, `valid_until`, `granted_by` FK → `identity.account` | `CHECK` `valid_until` > `valid_from`; `CHECK` `origin_module` set if and only if origin is `module`; partial `UNIQUE` (`role_id`, `scope_id`, `user_id`) where origin is `manual`; index (`user_id`, `scope_id`) |
-| `view_as_session` | `id`, `user_id` FK, `scope_id` FK (`CASCADE`), `role_id` FK (`CASCADE`), `started_at`, `ended_at` | `CHECK` `ended_at` > `started_at` |
+| `principal` | `id`, `kind` (`account`), `campus_id` FK → `scope` (`RESTRICT`), `created_at` | Supertype of everything that can hold grants (DEC-014 rule 2, DEC-079): `identity.account.id` is a foreign key to it, so access never references a higher module |
+| `grant` | `id`, `role_id` FK (`RESTRICT`), `scope_id` FK (`CASCADE`), `principal_id` FK → `principal` (`CASCADE`), `origin` (`manual`, `module`), `origin_module` text, `valid_from`, `valid_until`, `granted_by` FK → `principal` | `CHECK` `valid_until` > `valid_from`; `CHECK` `origin_module` set if and only if origin is `module`; partial `UNIQUE` (`role_id`, `scope_id`, `user_id`) where origin is `manual`; index (`user_id`, `scope_id`) |
+| `view_as_session` | `id`, `principal_id` FK → `principal` (`CASCADE`), `scope_id` FK (`CASCADE`), `role_id` FK (`CASCADE`), `started_at`, `ended_at` | `CHECK` `ended_at` > `started_at` |
 | `change` | `id`, `actor_id`, `entity` text, `entity_id`, `before` jsonb, `after` jsonb, `at` | Append-only history of grants, overrides and roles (RN-015); feeds the audit log (DEC-019) |
 
 Entities of other modules point to their scope: `courses.course.scope_id` FK → `access.scope` `UNIQUE`, and so on for categories, sections, activities, widgets and users. Modules that own grants keep their own link table (for example `enrol.enrolment_grant (enrolment_id, grant_id)`), so `grant` never references a higher module (RN-016, DEC-014 rule 7).
 
 ## Queries
 
-- **Active grants on a path** (RN-003): `grant` joined to `scope_closure` on `descendant_id = :scope`, filtered by `user_id` and `now()` between the validity bounds. Served from the cache per user and invalidated by `access.grant_*` events.
+- **Active grants on a path** (RN-003): `grant` joined to `scope_closure` on `descendant_id = :scope`, filtered by `principal_id` and `now()` between the validity bounds. Served from the cache per user and invalidated by `access.grant_*` events.
 - **Value of a role** (RN-004): overrides on the ancestors of the scope ordered by `depth`, first one wins, else `role_permission`.
 - **List filtering** (RN-020): an `EXISTS` sub-query on the objects' `scope_id` against the closure of the scopes where the actor's roles allow the permission, so paging happens after filtering.
 

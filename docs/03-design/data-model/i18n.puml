@@ -39,12 +39,6 @@ entity customised_message {
   changed_by
   changed_at
 }
-entity language_choice {
-  account_id <<FK>>
-  course_id <<FK>>
-  language_code <<FK>>
-  forced
-}
 entity missing {
   message_id <<FK>>
   language_code <<FK>>

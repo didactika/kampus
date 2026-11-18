@@ -31,13 +31,13 @@ Modules call **down** the ranking through service APIs, and learn about things *
 | 0 Foundation | `kampus-cache` | Cache port: in-process in front of Redis or Valkey, invalidation by event | common |
 | 0 Foundation | `kampus-events` | Event bus with a transactional outbox, event log, listeners (DEC-016) | common, db |
 | 0 Foundation | `kampus-tasks` | Durable job queue and scheduler on the database (DEC-016) | common, db, events |
-| 1 Platform | `kampus-settings` | Typed settings and their resolution by scope | common, db, cache, events |
-| 1 Platform | `kampus-i18n` | Messages, language packs, customised messages, language resolution and locale formatting (DEC-062) | common, db, cache, events, settings |
-| 1 Platform | `kampus-access` | Scopes (with the section scope, DEC-007), roles, permissions, overrides, checks and explanations | common, db, cache, events, settings |
-| 1 Platform | `kampus-identity` | Accounts, credentials, OIDC, MFA, sessions, API tokens | common, db, cache, events, settings, access |
-| 1 Platform | `kampus-customise` | Terminology, custom fields, layouts, rules, templates, feature flags by scope (DEC-008) | common, db, cache, events, settings, i18n, access |
-| 2 People | `kampus-users` | Profiles, preferences, system groups | identity, access, customise |
-| 2 People | `kampus-files` | File areas and permission-checked serving, on the storage port | storage, access, events |
+| 1 Platform | `kampus-access` | Scopes (with the section scope, DEC-007), principals, roles, permissions, overrides, checks and explanations; configured by its own declarations and tables, not by settings | common, db, cache, events |
+| 1 Platform | `kampus-settings` | Typed settings and their resolution by scope | common, db, cache, events, access |
+| 1 Platform | `kampus-identity` | Accounts (principals of access), credentials, OIDC, MFA, sessions, API tokens | common, db, cache, events, access, settings |
+| 1 Platform | `kampus-i18n` | Messages, language packs, customised messages, language resolution and locale formatting (DEC-062) | common, db, cache, events, access, settings |
+| 2 People | `kampus-files` | File areas and permission-checked serving, on the storage port | storage, access, identity, events |
+| 2 People | `kampus-customise` | Terminology, custom fields, layouts, rules, templates, feature flags by scope (DEC-008) | common, db, cache, events, access, settings, identity, i18n, files |
+| 2 People | `kampus-users` | Profiles (language, custom fields of accounts), preferences, system groups | identity, access, i18n, files, customise |
 | 3 Learning | `kampus-courses` | Categories, courses, sections (nested), course layouts, groups and group sets | access, users, files, customise |
 | 4 Learning | `kampus-enrol` | Enrolment methods and enrolments | courses, users, access |
 | 4 Learning | `kampus-activities` | Activity registry, course modules, availability, exceptions (RF-054) | courses, access, files |

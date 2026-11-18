@@ -21,7 +21,7 @@ Design: [README](../../../03-design/use-cases/editProfile/README.md)
 | --- | --- | --- | --- |
 | Profile service | service | `crates/kampus-users/src/profile.rs` | no (to build) |
 | `/api/v1/me/profile`, `/api/v1/accounts/{account_id}/profile` | API endpoints | `docs/03-design/api/identity.openapi.yaml` | no (to build) |
-| `users.profile`, `users.profile_field_value` | tables | `docs/03-design/data-model/identity.md` | no (to build) |
+| `users.profile`, `users.account_field, customise.field_value` | tables | `docs/03-design/data-model/identity.md` | no (to build) |
 
 ## Tests
 
