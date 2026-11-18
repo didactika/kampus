@@ -8,6 +8,7 @@ actor "Campus administrator" as A_Campus_administrator
 actor "Course creator" as A_Course_creator
 actor "Integrator" as A_Integrator
 actor "Manager" as A_Manager
+actor "Plugin developer" as A_Plugin_developer
 actor "Student" as A_Student
 actor "System" as A_System
 actor "Teacher" as A_Teacher
@@ -96,6 +97,20 @@ rectangle "Kampus" {
     usecase "Register an API client" as UC_registerApiClient
     usecase "Subscribe a webhook" as UC_subscribeWebhook
   }
+  package "plugins" {
+    usecase "Install a plugin" as UC_installPlugin
+    usecase "Upgrade, disable or remove a plugin" as UC_managePlugin
+    usecase "Build and package a plugin" as UC_buildPlugin
+  }
+  package "customise" {
+    usecase "Rename terms" as UC_renameTerms
+    usecase "Define a custom field" as UC_defineCustomField
+    usecase "Arrange a page and its menus" as UC_arrangeLayout
+    usecase "Edit the theme" as UC_editTheme
+    usecase "Create a rule" as UC_createRule
+    usecase "Switch a feature or module on or off" as UC_switchFeature
+    usecase "Export and import customisations" as UC_shareCustomisation
+  }
 }
 
 A_Manager --> UC_grantRole
@@ -158,5 +173,20 @@ A_Campus_administrator --> UC_manageLanguagePacks
 A_Integrator --> UC_registerApiClient
 A_Campus_administrator --> UC_registerApiClient
 A_Integrator --> UC_subscribeWebhook
+A_Campus_administrator --> UC_installPlugin
+A_Campus_administrator --> UC_managePlugin
+A_Plugin_developer --> UC_buildPlugin
+A_Campus_administrator --> UC_renameTerms
+A_Manager --> UC_renameTerms
+A_Campus_administrator --> UC_defineCustomField
+A_Manager --> UC_defineCustomField
+A_Campus_administrator --> UC_arrangeLayout
+A_Teacher --> UC_arrangeLayout
+A_Campus_administrator --> UC_editTheme
+A_Campus_administrator --> UC_createRule
+A_Teacher --> UC_createRule
+A_Campus_administrator --> UC_switchFeature
+A_Manager --> UC_switchFeature
+A_Campus_administrator --> UC_shareCustomisation
 
 @enduml

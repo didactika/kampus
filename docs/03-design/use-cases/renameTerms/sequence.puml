@@ -1,0 +1,18 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as a
+participant "kampus-api" as api
+participant "Term resolver" as svc
+database "customise schema + outbox" as db
+
+a -> api : Opens the terms of a scope
+api -> svc : request
+svc -> db : Shows each term with its forms and origin (RN-213)
+a -> api : Enters the forms for a language and saves
+api -> svc : request
+svc -> db : Validates the forms the language needs and stores the override (RN-212)
+svc --> a : result
+@enduml

@@ -1,0 +1,73 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema plugins (PostgreSQL)
+
+entity plugin_type {
+  code
+  world
+  sdk_version
+}
+entity plugin {
+  id <<PK>>
+  type_code <<FK>>
+  name
+  publisher
+  state
+}
+entity version {
+  id <<PK>>
+  plugin_id <<FK>>
+  version
+  sdk_range
+  digest
+  signature
+  manifest
+  file_id <<FK>>
+  uploaded_at
+}
+entity capability {
+  code
+  interface
+  risk
+}
+entity grant {
+  version_id <<FK>>
+  capability_code <<FK>>
+  granted_by <<FK>>
+  granted_at
+}
+entity installation {
+  plugin_id <<FK>>
+  version_id <<FK>>
+  enabled
+  schema_version
+  installed_at
+  version
+}
+entity migration {
+  version_id <<FK>>
+  sequence
+  checksum
+  applied_at
+}
+entity failure {
+  id <<PK>>
+  plugin_id <<FK>>
+  interface
+  kind
+  detail
+  at
+}
+
+plugin }o--|| plugin_type
+version }o--|| plugin
+grant }o--|| version
+grant }o--|| capability
+installation }o--|| plugin
+installation }o--|| version
+migration }o--|| version
+failure }o--|| plugin
+@enduml

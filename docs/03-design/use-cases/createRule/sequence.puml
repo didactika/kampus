@@ -1,0 +1,19 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as a
+participant "kampus-api" as api
+participant "Rule engine" as svc
+database "customise schema + outbox" as db
+
+a -> api : Chooses a trigger
+api -> svc : request
+svc -> db : Offers the declared event types visible in the scope (RN-218)
+a -> api : Adds conditions and actions and saves
+api -> svc : request
+svc -> db : Validates them against their schemas and the owner's permissions
+svc -> db : On each event, evaluates the conditions and enqueues the actions as jobs (RN-219)
+svc --> a : result
+@enduml

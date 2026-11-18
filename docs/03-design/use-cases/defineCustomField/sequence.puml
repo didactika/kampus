@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as a
+participant "kampus-api" as api
+participant "Custom field service" as svc
+database "customise schema + outbox" as db
+
+a -> api : Chooses an entity kind and a type
+api -> svc : request
+svc -> db : Shows the validation and visibility options of the type
+a -> api : Saves
+api -> svc : request
+svc -> db : Creates the field and its choices (RN-214)
+a -> api : People fill it
+api -> svc : request
+svc -> db : Values are validated and stored typed; private fields are visible only with permission (RN-215)
+svc --> a : result
+@enduml

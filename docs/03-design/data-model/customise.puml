@@ -1,0 +1,145 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema customise (PostgreSQL)
+
+entity term {
+  code
+  module
+  forms
+}
+entity term_override {
+  term_code <<FK>>
+  scope_id <<FK>>
+  language_code <<FK>>
+  forms
+}
+entity field {
+  id <<PK>>
+  entity_kind
+  scope_id <<FK>>
+  code
+  type
+  validation
+  visibility
+  required
+  sort_key
+  version
+}
+entity field_choice {
+  id <<PK>>
+  field_id <<FK>>
+  code
+  label
+  sort_key
+}
+entity field_value {
+  id <<PK>>
+  field_id <<FK>>
+  text_value
+  number_value
+  date_value
+  boolean_value
+  choice_id <<FK>>
+  file_id <<FK>>
+  account_id <<FK>>
+  course_id <<FK>>
+}
+entity field_value_choice {
+  field_value_id <<FK>>
+  choice_id <<FK>>
+}
+entity layout {
+  id <<PK>>
+  page_kind
+  scope_id <<FK>>
+  locked
+  version
+}
+entity placement {
+  id <<PK>>
+  layout_id <<FK>>
+  region
+  widget
+  settings
+  sort_key
+  visibility
+}
+entity menu {
+  id <<PK>>
+  menu_kind
+  scope_id <<FK>>
+  version
+}
+entity menu_item {
+  id <<PK>>
+  menu_id <<FK>>
+  parent_id <<FK>>
+  label
+  target
+  permission
+  sort_key
+}
+entity theme {
+  id <<PK>>
+  scope_id <<FK>>
+  parent_id <<FK>>
+  tokens
+  version
+}
+entity rule {
+  id <<PK>>
+  scope_id <<FK>>
+  owner_id <<FK>>
+  name
+  trigger
+  conditions
+  actions
+  enabled
+  version
+}
+entity rule_run {
+  id <<PK>>
+  rule_id <<FK>>
+  event_id <<FK>>
+  outcome
+  error
+  at
+}
+entity flag {
+  code
+  module
+  default_value
+}
+entity flag_value {
+  flag_code <<FK>>
+  scope_id <<FK>>
+  enabled
+  locked
+}
+entity change {
+  id <<PK>>
+  kind
+  object_id
+  scope_id
+  actor_id
+  before
+  after
+  at
+  package_checksum
+}
+
+term_override }o--|| term
+field_choice }o--|| field
+field_value }o--|| field
+field_value }o--|| field_choice
+field_value_choice }o--|| field_value
+field_value_choice }o--|| field_choice
+placement }o--|| layout
+menu_item }o--|| menu
+menu_item }o--o| menu_item : parent
+theme }o--o| theme : parent
+rule_run }o--|| rule
+@enduml

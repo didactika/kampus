@@ -1,0 +1,26 @@
+openapi: 3.1.0
+info:
+  title: Kampus plugins API (design fragment)
+  version: 0.1.0
+  description: >-
+    Plugin packages, capability grants and lifecycle (RN-203 to RN-210). Conventions of DEC-025 and DEC-026.
+paths:
+  /api/v1/plugins:
+    get: { summary: Installed and uploaded plugins with state and version, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
+    post: { summary: 'Upload a package; verified and validated (RN-203, RN-204)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Uploaded, awaiting grant }, '422': { description: Invalid signature, digest, SDK range or manifest } } }
+  /api/v1/plugins/{plugin_id}:
+    get: { summary: A plugin with versions, requested capabilities, grants and recent failures, responses: { '200': { description: Plugin } } }
+    delete: { summary: 'Remove after confirmation (RN-210)', parameters: [{ name: confirm, in: query, required: true, schema: { type: string } }], responses: { '202': { description: Removal job queued } } }
+  /api/v1/plugins/{plugin_id}/versions/{version}/grants:
+    put: { summary: 'Grant the requested capabilities (RN-205); migrations start', responses: { '202': { description: Migrating } } }
+  /api/v1/plugins/{plugin_id}/enabled:
+    put: { summary: Enable, responses: { '204': { description: Enabled } } }
+    delete: { summary: 'Disable (RN-209)', responses: { '204': { description: Disabled } } }
+  /api/v1/plugins/{plugin_id}/failures:
+    get: { summary: 'Traps and limits hit (RN-208)', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
+components:
+  parameters:
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+    After: { name: after, in: query, schema: { type: string } }
+    IfMatch: { name: If-Match, in: header, required: true, schema: { type: string } }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string } }

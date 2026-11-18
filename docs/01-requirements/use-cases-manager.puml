@@ -32,6 +32,11 @@ rectangle "Kampus" {
   package "settings" {
     usecase "Change a setting" as UC_changeSetting
   }
+  package "customise" {
+    usecase "Rename terms" as UC_renameTerms
+    usecase "Define a custom field" as UC_defineCustomField
+    usecase "Switch a feature or module on or off" as UC_switchFeature
+  }
 }
 
 A_Manager --> UC_grantRole
@@ -46,5 +51,8 @@ A_Manager --> UC_manageEnrolment
 A_Manager --> UC_linkEnrolmentSource
 A_Manager --> UC_reviewAuditLog
 A_Manager --> UC_changeSetting
+A_Manager --> UC_renameTerms
+A_Manager --> UC_defineCustomField
+A_Manager --> UC_switchFeature
 
 @enduml

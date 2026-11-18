@@ -1,0 +1,18 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as a
+participant "kampus-api" as api
+participant "Flag resolver" as svc
+database "customise schema + outbox" as db
+
+a -> api : Opens the features of a scope
+api -> svc : request
+svc -> db : Shows each flag with its origin
+a -> api : Switches one
+api -> svc : request
+svc -> db : Stores the value and publishes customise.changed; contributions follow at once (RN-220)
+svc --> a : result
+@enduml

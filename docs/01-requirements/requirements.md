@@ -16,11 +16,11 @@ Priorities: **Must** (tier 1, core), **Should** (tier 2, standard activities and
 | ID | Requirement | Priority | Origin | Confirmed by | Use cases |
 | --- | --- | --- | --- | --- | --- |
 | RF-001 | The platform is written from scratch in Rust | Must | owner | Owner, 2026-11-17 | |
-| RF-002 | The platform is modular: each functional area is a module with its own data and public API, and can be enabled or disabled | Must | owner | Owner, 2026-11-17 | |
+| RF-002 | The platform is modular: each functional area is a module with its own data and public API, and can be enabled or disabled | Must | owner | Owner, 2026-11-17 | UC-057 |
 | RF-003 | The platform offers the complete core of a learning platform: courses, enrolment, roles and permissions, activities, academic records, progress, communication and administration | Must | owner | Owner, 2026-11-17 | |
-| RF-004 | The platform is highly customisable: behaviour, appearance and workflows can be changed by configuration and plugins | Must | owner | Owner, 2026-11-17 | |
+| RF-004 | The platform is highly customisable: behaviour, appearance and workflows can be changed by configuration and plugins | Must | owner | Owner, 2026-11-17 | UC-058 |
 | RF-005 | The platform adds useful features beyond the standard set (tier 3) | Could | owner | Owner, 2026-11-17 | |
-| RF-006 | Everything is customisable: settings, terminology, custom fields, layouts and navigation, themes, rules and workflows, notification templates and features, layered by context (DEC-008) | Must | owner | Owner, 2026-11-17 | |
+| RF-006 | Everything is customisable: settings, terminology, custom fields, layouts and navigation, themes, rules and workflows, notification templates and features, layered by context (DEC-008) | Must | owner | Owner, 2026-11-17 | UC-052, UC-053, UC-054, UC-056 |
 | RF-007 | Every module is designed for Kampus: it keeps what works in established practice, solves known limitations, and records each improvement as a decision and in the highlights register | Must | owner | Owner, 2026-11-17 | |
 | RF-008 | The web client uses modern, modular front-end technology: each module and plugin ships its own UI module, loaded at runtime into extension points of the shell (DEC-004) | Must | owner | Owner, 2026-11-17 | |
 | RF-009 | Documentation for every role, shipped with each release: guides for learners, teachers, section leaders, course creators, managers, mentors, administrators, operators, integrators, plugin developers and core contributors, a migration guide, generated references, and help inside the product with onboarding and guided tours (DEC-011) | Must | owner | Owner, 2026-11-17 | |
@@ -113,9 +113,9 @@ Priorities: **Must** (tier 1, core), **Should** (tier 2, standard activities and
 
 | ID | Requirement | Priority | Origin | Confirmed by | Use cases |
 | --- | --- | --- | --- | --- | --- |
-| RF-100 | Plugins of these types (activity, widget, authentication, enrolment, report, question type, course format, theme, local) can be installed, upgraded, enabled and removed | Must | owner | Owner, 2026-11-17 | |
+| RF-100 | Plugins of these types (activity, widget, authentication, enrolment, report, question type, course format, theme, local) can be installed, upgraded, enabled and removed | Must | owner | Owner, 2026-11-17 | UC-049, UC-050 |
 | RF-101 | A tool converts a Moodle plugin into a Kampus plugin quickly, reporting what needs review | Must | owner | Owner, 2026-11-17 | |
-| RF-102 | Plugins run sandboxed with only the permissions they declare | Must | extra | | |
+| RF-102 | Plugins run sandboxed with only the permissions they declare | Must | extra | | UC-051 |
 | RF-103 | External systems integrate through a documented API with tokens and scopes | Must | baseline | | UC-047 |
 | RF-104 | Webhooks notify external systems of events | Could | extra | | UC-048 |
 | RF-105 | LTI 1.3 lets Kampus launch external tools and be launched as a tool | Should | baseline | | |
@@ -130,10 +130,10 @@ Priorities: **Must** (tier 1, core), **Should** (tier 2, standard activities and
 | RF-112 | An AI tutor answers learners about course content, and AI pre-grading proposes grades that a teacher approves | Could | extra | | |
 | RF-113 | Learning paths chain courses and activities with prerequisites across courses | Could | extra | | |
 | RF-114 | Real-time presence and collaborative editing in course content and activities | Could | extra | | |
-| RF-115 | Themes are built from design tokens and can be changed without code | Could | extra | | |
+| RF-115 | Themes are built from design tokens and can be changed without code | Could | extra | | UC-055 |
 | RF-116 | Learning analytics are recorded as xAPI statements in a learning record store | Could | extra | | |
 | RF-117 | The mobile experience works offline and synchronises when connected | Could | extra | | |
-| RF-118 | Features can be switched on per campus, tenant or course with feature flags | Could | extra | | |
+| RF-118 | Features can be switched on per campus, tenant or course with feature flags | Could | extra | | UC-057 |
 | RF-119 | After the initial release: book, lesson, glossary, wiki, database and workshop activities; tags, comments, notes and favourites; blogs, IMS content package import, BigBlueButton as a plugin, an accessibility checker (Q-003) | Could | owner | Owner, 2026-11-17 | |
 
 ## Non-functional

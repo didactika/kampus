@@ -19,3 +19,4 @@ status: accepted
   - **Feature flags**: modules and features switched per level.
 - Consequences: One resolution engine with caching, audit of who changed what, and import and export of customisations between campuses. Plugins use the same framework for their settings, terms and widgets.
 - Affected artifacts: RF-004, RF-006, the settings module, the web client, every module's design.
+- Refined by: DEC-059 (settings), DEC-062 (messages), DEC-070 (terms and custom fields), DEC-071 (layouts, menus and themes), DEC-072 (rules) and DEC-073 (feature flags and packages).

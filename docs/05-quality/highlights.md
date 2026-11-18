@@ -75,3 +75,10 @@ What makes Kampus stand out. This register is the source for the release notes, 
 | HL-053 | Integrations | Signed, reliable webhooks filtered by permissions | DEC-064 | planned | Push events to other systems without polling. |
 | HL-054 | Infrastructure | One schema for every supported database, with migrations tested on each | DEC-065 | planned | Run on the database your organisation already uses. |
 | HL-055 | Infrastructure | Every storage, cache and database backend proven by the same conformance suite | DEC-066 | planned | Swap backends without surprises. |
+| HL-056 | Plugins | Signed plugins that ask for exactly what they need, installed and upgraded without breaking the campus | DEC-067, DEC-068 | planned | Install extensions safely, and undo it. |
+| HL-057 | Plugins | A faulty plugin fails alone: limits per call, isolation and automatic disabling | DEC-068 | planned | One bad plugin never takes the campus down. |
+| HL-058 | Plugins | Plugin data in its own relational schema, portable across databases | DEC-069 | planned | Extensions that upgrade cleanly. |
+| HL-059 | Customisation | Rename any term with correct grammar in every language, and add typed custom fields to anything | DEC-070 | planned | Your words, your data, everywhere. |
+| HL-060 | Customisation | Arrange pages, menus and branding without code, always accessible | DEC-071 | planned | Make the campus yours without developers. |
+| HL-061 | Customisation | Workflows built from building blocks, auditable and safe | DEC-072 | planned | Automate the routine without plugins. |
+| HL-062 | Customisation | Feature flags per campus, tenant or course, and customisations shared between campuses | DEC-073 | planned | Roll out features gradually and reuse configurations. |

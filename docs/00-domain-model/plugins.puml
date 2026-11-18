@@ -1,0 +1,59 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus plugins
+
+class "Plugin" as Plugin {
+  id
+  type
+  name
+  publisher
+  state
+}
+class "Plugin version" as Pluginversion {
+  version
+  SDK range
+  digest
+  signature
+  manifest
+}
+class "Plugin type" as Plugintype {
+  code
+  world
+  SDK version
+}
+class "Capability" as Capability {
+  code
+  interface
+  risk
+}
+class "Capability grant" as Capabilitygrant {
+  granted by
+  at
+}
+class "Installation" as Installation {
+  enabled
+  schema version
+  installed at
+}
+class "Plugin migration" as Pluginmigration {
+  sequence
+  checksum
+  applied at
+}
+class "Plugin failure" as Pluginfailure {
+  interface
+  kind
+  at
+  detail
+}
+
+Pluginversion "*" --> "1" Plugin
+Capabilitygrant "*" --> "1" Pluginversion
+Capabilitygrant "*" --> "1" Capability
+Installation "*" --> "1" Plugin
+Installation "*" --> "1" Pluginversion
+Pluginmigration "*" --> "1" Pluginversion
+Pluginfailure "*" --> "1" Installation
+@enduml

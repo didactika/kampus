@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as a
+participant "kampus-api" as api
+participant "Layout service" as svc
+database "customise schema + outbox" as db
+
+a -> api : Opens a page in edit mode
+api -> svc : request
+svc -> db : Shows regions and the widgets available
+a -> api : Adds, moves or removes widgets and saves
+api -> svc : request
+svc -> db : Validates regions, widgets and their settings (RN-216); stores with If-Match
+a -> api : Edits a menu
+api -> svc : request
+svc -> db : Stores the tree; items are filtered by permission when shown
+svc --> a : result
+@enduml

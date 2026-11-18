@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Plugin developer" as a
+participant "kampus-api" as api
+participant "Host test harness" as svc
+database "plugins schema + outbox" as db
+
+a -> api : Scaffolds a plugin of a type
+api -> svc : request
+svc -> db : kampus plugin new creates the world, manifest and tests
+a -> api : Implements and tests it
+api -> svc : request
+svc -> db : kampus plugin test runs it in the harness with limits (RN-208)
+a -> api : Packs it
+api -> svc : request
+svc -> db : kampus plugin pack builds the component, computes the digest and signs it (RN-203)
+svc --> a : result
+@enduml
