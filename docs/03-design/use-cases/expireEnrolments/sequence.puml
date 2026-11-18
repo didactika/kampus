@@ -1,0 +1,17 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Scheduler" as a
+participant "kampus-api or worker" as api
+participant "Enrolment service" as svc
+database "enrol schema + outbox" as db
+
+a -> api : run the expiry job
+api -> svc : select due enrolments (FOR UPDATE SKIP LOCKED)
+group one transaction
+  svc -> db : apply the expiry rule; expiry_outcome; event (RN-068)
+end
+svc --> a : result
+@enduml

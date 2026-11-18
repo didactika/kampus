@@ -51,3 +51,7 @@ What makes Kampus stand out. This register is the source for the release notes, 
 | HL-029 | Courses | Sections nest to any depth and keep their identity when moved; links, permissions and groups follow them | DEC-035 | planned | Reorganise a course freely: links and settings follow each section. |
 | HL-030 | Courses | Archiving a course freezes it read-only; deletion is a job with a grace period that removes everything it owns | DEC-036 | planned | Close a term in one click and keep it as a record. |
 | HL-031 | Courses | Groups for one section, and group mode per course, section or activity | DEC-038 | planned | Teams where you need them, and only there. |
+| HL-032 | Enrolment | Leaving a course and coming back never loses grades or progress | DEC-043 | planned | Come back to a course exactly where you left it. |
+| HL-033 | Enrolment | Capacities hold under any load; self-enrolment keys are hashed, never hinted, and throttled | DEC-041 | planned | Fair places in every course, and keys nobody can guess. |
+| HL-034 | Enrolment | Courses linked to programmes (system groups) or to other courses stay in sync, without loops | DEC-042 | planned | Enrol a whole programme once; every course follows. |
+| HL-035 | Enrolment | Each way of joining owns the roles it gives, so removing one never removes another | DEC-040 | planned | No more surprises when someone leaves one of several courses or groups. |

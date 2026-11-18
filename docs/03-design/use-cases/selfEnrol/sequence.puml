@@ -1,0 +1,32 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Authenticated user" as u
+participant "kampus-api" as api
+participant "Self-enrolment service" as svc
+participant "Access service" as acc
+participant "Payment port" as pay
+database "enrol schema + outbox" as db
+
+u -> api : POST /enrolment-instances/{id}/self (key; Idempotency-Key)
+api -> svc : self_enrol(context, instance, key)
+svc -> db : attempts below the limit? (RN-064)
+svc -> svc : key matches a stored hash (constant time)?
+alt approval required
+  svc -> db : request (pending); enrol.request_created
+  svc --> u : 202 request created
+else payment required
+  svc -> pay : start payment
+  svc --> u : 202 payment pending
+else open
+  group one transaction
+    svc -> db : lock the instance; open now? below capacity? (RN-063)
+    svc -> db : enrolment (active)
+    svc -> acc : grant the instance role; link it (enrolment_grant)
+    svc -> db : group membership for a group key; enrol.enrolment_created
+  end
+  svc --> u : 201
+end
+@enduml

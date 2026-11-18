@@ -21,6 +21,11 @@ rectangle "Kampus" {
     usecase "Manage course categories" as UC_manageCategories
     usecase "Create and configure a course" as UC_createCourse
   }
+  package "enrolment" {
+    usecase "Enrol people in a course" as UC_enrolPeople
+    usecase "Manage an enrolment" as UC_manageEnrolment
+    usecase "Link a system group or a course" as UC_linkEnrolmentSource
+  }
 }
 
 A_Manager --> UC_grantRole
@@ -30,5 +35,8 @@ A_Manager --> UC_manageAccountLifecycle
 A_Manager --> UC_editProfile
 A_Manager --> UC_manageCategories
 A_Manager --> UC_createCourse
+A_Manager --> UC_enrolPeople
+A_Manager --> UC_manageEnrolment
+A_Manager --> UC_linkEnrolmentSource
 
 @enduml

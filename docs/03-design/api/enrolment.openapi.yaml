@@ -1,0 +1,39 @@
+openapi: 3.1.0
+info:
+  title: Kampus enrolment API (design fragment)
+  version: 0.1.0
+  description: >-
+    Method instances, enrolments, requests, self-enrolment and linked sources. Conventions of DEC-025 and
+    DEC-026; permissions checked inside every operation (DEC-017).
+paths:
+  /api/v1/courses/{course_id}/enrolment-instances:
+    get: { summary: Method instances of a course, responses: { '200': { description: Instances } } }
+    post: { summary: Add a method instance (manual, self, system group, course link, plugin), parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Added } } }
+  /api/v1/enrolment-instances/{instance_id}:
+    patch: { summary: 'Change role, period, capacity, approval, keys, expiry rule; enable or disable (RN-071)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
+    delete: { summary: 'Delete the instance and the enrolments it owns (RN-071)', responses: { '202': { description: Deletion job accepted } } }
+  /api/v1/enrolment-instances/{instance_id}/source:
+    put: { summary: 'Link a system group or a course; refused if it would create a cycle (RN-067)', responses: { '200': { description: Linked; a sync job is queued } } }
+  /api/v1/courses/{course_id}/participants:
+    get:
+      summary: 'Participants with their enrolments and roles, filtered by permission before paging'
+      parameters: [{ name: active, in: query, schema: { type: boolean } }, { $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }]
+      responses: { '200': { description: A page of participants } }
+  /api/v1/enrolment-instances/{instance_id}/enrolments:
+    post: { summary: 'Enrol one or more people manually (RN-063, RN-073)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Enrolled, with a per-person report } } }
+  /api/v1/enrolments/{enrolment_id}:
+    get: { summary: An enrolment, responses: { '200': { description: The enrolment } } }
+    patch: { summary: 'Change status, period or reason (RN-070)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
+    delete: { summary: 'Remove an enrolment; records and progress are kept (RN-069)', responses: { '204': { description: Removed }, '409': { description: Owned by a linked source } } }
+  /api/v1/enrolment-instances/{instance_id}/self:
+    post: { summary: 'Self-enrol with an optional key; creates a request when approval is required (RN-063 to RN-066)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Enrolled }, '202': { description: Request created or payment pending }, '409': { description: Full or closed }, '429': { description: Too many key attempts } } }
+  /api/v1/courses/{course_id}/enrolment-requests:
+    get: { summary: Pending requests of a course, responses: { '200': { description: A page of requests } } }
+  /api/v1/enrolment-requests/{request_id}/decision:
+    put: { summary: 'Approve or reject a request (RN-065)', responses: { '200': { description: Decided } } }
+components:
+  parameters:
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+    After: { name: after, in: query, schema: { type: string } }
+    IfMatch: { name: If-Match, in: header, required: true, schema: { type: string } }
+    IdempotencyKey: { name: Idempotency-Key, in: header, schema: { type: string } }

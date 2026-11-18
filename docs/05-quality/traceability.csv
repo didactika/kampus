@@ -14,3 +14,8 @@ RF-031,UC-012,createCourse,docs/02-analysis/use-cases/createCourse,docs/03-desig
 RF-032,UC-013,organiseSections,docs/02-analysis/use-cases/organiseSections,docs/03-design/use-cases/organiseSections,crates/kampus-courses/src/section.rs,crates/kampus-courses/tests
 RF-033,UC-014,manageGroups,docs/02-analysis/use-cases/manageGroups,docs/03-design/use-cases/manageGroups,crates/kampus-courses/src/group.rs,crates/kampus-courses/tests
 RF-034,UC-015,chooseCourseLayout,docs/02-analysis/use-cases/chooseCourseLayout,docs/03-design/use-cases/chooseCourseLayout,crates/kampus-courses/src/layout.rs,crates/kampus-courses/tests
+RF-040,UC-016,enrolPeople,docs/02-analysis/use-cases/enrolPeople,docs/03-design/use-cases/enrolPeople,crates/kampus-enrol/src/enrolment.rs,crates/kampus-enrol/tests
+RF-042,UC-017,selfEnrol,docs/02-analysis/use-cases/selfEnrol,docs/03-design/use-cases/selfEnrol,crates/kampus-enrol/src/self_enrol.rs,crates/kampus-enrol/tests
+RF-041,UC-018,manageEnrolment,docs/02-analysis/use-cases/manageEnrolment,docs/03-design/use-cases/manageEnrolment,crates/kampus-enrol/src/enrolment.rs,crates/kampus-enrol/tests
+RF-040,UC-019,linkEnrolmentSource,docs/02-analysis/use-cases/linkEnrolmentSource,docs/03-design/use-cases/linkEnrolmentSource,crates/kampus-enrol/src/sync.rs,crates/kampus-enrol/tests
+RF-041,UC-020,expireEnrolments,docs/02-analysis/use-cases/expireEnrolments,docs/03-design/use-cases/expireEnrolments,crates/kampus-enrol/src/jobs/expire.rs,crates/kampus-enrol/tests

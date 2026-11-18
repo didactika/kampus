@@ -1,0 +1,17 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Teacher" as a
+participant "kampus-api or worker" as api
+participant "Enrolment service" as svc
+database "enrol schema + outbox" as db
+
+a -> api : PATCH /enrolments/{id} (status or period, If-Match)
+api -> svc : not derived from a source? version matches?
+group one transaction
+  svc -> db : enrolment updated, or removed with its grants; records kept (RN-069); event
+end
+svc --> a : result
+@enduml
