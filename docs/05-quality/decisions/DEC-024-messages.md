@@ -1,6 +1,6 @@
 ---
 id: DEC-024
-status: proposed
+status: accepted
 ---
 
 # DEC-024 Project Fluent messages, BCP 47 locales, one rich-text format

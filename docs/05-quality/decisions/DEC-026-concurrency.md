@@ -1,6 +1,6 @@
 ---
 id: DEC-026
-status: proposed
+status: accepted
 ---
 
 # DEC-026 Optimistic versions, idempotency keys and rules enforced by the database

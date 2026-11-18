@@ -1,6 +1,6 @@
 ---
 id: DEC-022
-status: proposed
+status: accepted
 ---
 
 # DEC-022 Instants in UTC, dates and durations apart, NULL for never

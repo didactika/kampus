@@ -1,6 +1,6 @@
 ---
 id: DEC-025
-status: proposed
+status: accepted
 ---
 
 # DEC-025 REST conventions, cursor pagination and additive versioning

@@ -1,6 +1,6 @@
 ---
 id: DEC-023
-status: proposed
+status: accepted
 ---
 
 # DEC-023 Exact numerics for grades, weights and money

@@ -1,6 +1,6 @@
 ---
 id: DEC-021
-status: proposed
+status: accepted
 ---
 
 # DEC-021 UUID version 7 keys, natural keys in their scope, typed ids
