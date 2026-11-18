@@ -1,6 +1,6 @@
 ---
 id: DEC-040
-status: proposed
+status: accepted
 ---
 
 # DEC-040 Enrolment is participation; roles come from grants the enrolment owns

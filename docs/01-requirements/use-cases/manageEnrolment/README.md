@@ -4,7 +4,7 @@ name: manageEnrolment
 title: Manage an enrolment
 actor: Teacher,Manager
 package: enrolment
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-041

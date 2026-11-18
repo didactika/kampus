@@ -4,7 +4,7 @@ name: expireEnrolments
 title: Expire enrolments
 actor: System
 package: enrolment
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-041

@@ -4,7 +4,7 @@ name: linkEnrolmentSource
 title: Link a system group or a course
 actor: Manager
 package: enrolment
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-040

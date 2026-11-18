@@ -2,7 +2,7 @@
 id: UC-016
 name: enrolPeople
 title: Enrol people in a course
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

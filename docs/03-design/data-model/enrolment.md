@@ -1,6 +1,6 @@
 ---
 id: DATA-ENROL
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

@@ -2,7 +2,7 @@
 id: UC-017
 name: selfEnrol
 title: Enrol oneself in a course
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

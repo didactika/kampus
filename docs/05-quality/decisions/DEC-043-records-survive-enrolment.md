@@ -1,6 +1,6 @@
 ---
 id: DEC-043
-status: proposed
+status: accepted
 ---
 
 # DEC-043 Ending a participation never deletes academic records or progress

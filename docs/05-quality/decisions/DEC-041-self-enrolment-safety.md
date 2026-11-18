@@ -1,6 +1,6 @@
 ---
 id: DEC-041
-status: proposed
+status: accepted
 ---
 
 # DEC-041 Self-enrolment with limits in the transaction, hashed keys, approvals and payments

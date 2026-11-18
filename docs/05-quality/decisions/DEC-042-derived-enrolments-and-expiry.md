@@ -1,6 +1,6 @@
 ---
 id: DEC-042
-status: proposed
+status: accepted
 ---
 
 # DEC-042 Derived enrolments from system groups and courses, and expiry as a recorded job

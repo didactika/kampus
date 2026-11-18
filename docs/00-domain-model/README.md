@@ -16,7 +16,7 @@ The business concepts of Kampus, module by module. Each module has its own docum
 | `kampus-access`: scopes, roles, permissions | [access.md](./access.md) | accepted |
 | `kampus-identity` and `kampus-users`: accounts, sign-in, profiles, system groups | [identity.md](./identity.md) | accepted |
 | `kampus-courses`: categories, courses, sections, groups | [courses.md](./courses.md) | accepted |
-| `kampus-enrol`: methods, enrolments, requests | [enrolment.md](./enrolment.md) | proposed |
+| `kampus-enrol`: methods, enrolments, requests | [enrolment.md](./enrolment.md) | accepted |
 
 ## Hierarchy of entities
 

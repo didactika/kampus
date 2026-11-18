@@ -2,7 +2,7 @@
 id: UC-019
 name: linkEnrolmentSource
 title: Link a system group or a course
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

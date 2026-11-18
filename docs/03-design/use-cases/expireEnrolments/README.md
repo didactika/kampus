@@ -2,7 +2,7 @@
 id: UC-020
 name: expireEnrolments
 title: Expire enrolments
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

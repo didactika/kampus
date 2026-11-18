@@ -4,7 +4,7 @@ name: enrolPeople
 title: Enrol people in a course
 actor: Teacher,Manager
 package: enrolment
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-040

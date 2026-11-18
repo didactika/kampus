@@ -2,7 +2,7 @@
 id: UC-018
 name: manageEnrolment
 title: Manage an enrolment
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

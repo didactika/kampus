@@ -4,7 +4,7 @@ name: selfEnrol
 title: Enrol oneself in a course
 actor: Authenticated user
 package: enrolment
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-042
