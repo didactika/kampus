@@ -20,10 +20,9 @@ PostgreSQL schema `activities`, owned by `kampus-activities`, following DEC-014,
 | `module_setting` | `course_module_id` PK FK (`CASCADE`), `values` jsonb validated by the type's settings schema | Settings the type declares; common settings are columns of `course_module` |
 | `condition` | `id`, `course_module_id` FK (`CASCADE`, nullable), `section_id` FK → `courses.section` (`CASCADE`, nullable), `parent_id` FK → `condition` (`CASCADE`), `operator` (`all`, `any`, `not`, `leaf`), `kind`, `show_when_unmet` | `CHECK` exactly one of `course_module_id`, `section_id`, `parent_id` set; leaves have one row in their kind's table |
 | `condition_date` | `condition_id` PK FK (`CASCADE`), `from`, `until` | `CHECK` at least one set |
-| `condition_grade` | `condition_id` PK FK (`CASCADE`), `record_id` FK → `records.record` (`RESTRICT`), `min_percent`, `max_percent` | RN-081: deleting the record is refused while the condition exists |
 | `condition_progress` | `condition_id` PK FK (`CASCADE`), `course_module_id` FK → `course_module` (`RESTRICT`), `required_state` | |
 | `condition_group` | `condition_id` PK FK (`CASCADE`), `group_id` FK → `courses.group` (`RESTRICT`, nullable for "any group"), `group_set_id` FK (`RESTRICT`, nullable) | |
-| `condition_profile` | `condition_id` PK FK (`CASCADE`), `field_id` FK → `users.profile_field` (`RESTRICT`), `operator`, `value` | |
+| `condition_profile` | `condition_id` PK FK (`CASCADE`), `field_id` FK → `customise.field` (`RESTRICT`), `operator`, `value` | |
 | `exception` | `id`, `course_module_id` FK (`CASCADE`), `account_id` FK → `identity.account` (`CASCADE`, nullable), `group_id` FK → `courses.group` (`CASCADE`, nullable), `opens_at`, `closes_at`, `due_at`, `cutoff_at`, `time_limit` interval, `attempts` integer, `reason`, `created_by`, `version` | `CHECK` exactly one of `account_id`, `group_id`; `UNIQUE` (`course_module_id`, `account_id`); `UNIQUE` (`course_module_id`, `group_id`); `CHECK` at least one value set |
 | `bin_item` | `id`, `course_id`, `course_module_id` FK (`CASCADE`), `original_section_id`, `original_sort_key`, `deleted_by`, `deleted_at`, `expires_at`, `error` | One per binned course module |
 

@@ -44,12 +44,6 @@ entity condition_date {
   from
   until
 }
-entity condition_grade {
-  condition_id <<FK>>
-  record_id <<FK>>
-  min_percent
-  max_percent
-}
 entity condition_progress {
   condition_id <<FK>>
   course_module_id <<FK>>
@@ -98,7 +92,6 @@ module_setting }o--|| course_module
 condition }o--|| course_module
 condition }o--o| condition : parent
 condition_date }o--|| condition
-condition_grade }o--|| condition
 condition_progress }o--|| condition
 condition_progress }o--|| course_module
 condition_group }o--|| condition

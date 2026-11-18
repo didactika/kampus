@@ -28,7 +28,7 @@ extends:
 | Type | Primary, real |
 | Level | User goal |
 | Requirement | RF-091 |
-| Domain entities | Language, Language choice |
+| Domain entities | Language, Profile |
 
 ## Context
 
@@ -47,7 +47,7 @@ The language is resolved per request; a course may force its own; right-to-left 
 
 | Step | Actor | System |
 | --- | --- | --- |
-| 1 | Chooses a language | Stores the choice (RN-189) |
+| 1 | Chooses a language | Stores the choice in the profile (RN-189) |
 | 2 | — | The client loads the bundles of the language with the scope's customisations (RN-191) and switches direction if needed (RN-192) |
 
 ## Alternative flows

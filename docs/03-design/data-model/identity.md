@@ -15,7 +15,7 @@ PostgreSQL schemas `identity` (owned by `kampus-identity`) and `users` (owned by
 
 | Table | Columns | Constraints and indexes |
 | --- | --- | --- |
-| `account` | `id`, `campus_id` FK → `access.scope`, `scope_id` FK → `access.scope` `UNIQUE` (the user scope), `kind` (`person`, `service`), `username`, `email`, `email_verified_at`, `status`, `status_reason`, `status_changed_at`, `status_changed_by`, `last_sign_in_at`, `pseudonym`, `deleted_at`, `version` | `UNIQUE` (`campus_id`, lower(`username`)); partial `UNIQUE` (`campus_id`, lower(`email`)) where status ≠ `deleted`; `CHECK` status in the five states; `CHECK` service accounts have no email requirement |
+| `account` | `id` PK FK → `access.principal` (`CASCADE`), `campus_id` FK → `access.scope`, `scope_id` FK → `access.scope` `UNIQUE` (the user scope), `kind` (`person`, `service`), `username`, `email`, `email_verified_at`, `status`, `status_reason`, `status_changed_at`, `status_changed_by`, `last_sign_in_at`, `pseudonym`, `deleted_at`, `version` | `UNIQUE` (`campus_id`, lower(`username`)); partial `UNIQUE` (`campus_id`, lower(`email`)) where status ≠ `deleted`; `CHECK` status in the five states; `CHECK` service accounts have no email requirement |
 | `account_transition` | `id`, `account_id` FK (`CASCADE`), `from_status`, `to_status`, `reason`, `actor_id`, `at` | Append-only history of RN-023 |
 | `password` | `account_id` PK FK (`CASCADE`), `hash`, `algorithm_params`, `set_at`, `must_change` | One row per account |
 | `passkey` | `id`, `account_id` FK (`CASCADE`), `credential_id` `UNIQUE`, `public_key`, `sign_count`, `label`, `last_used_at` | WebAuthn credential, usable as first or second factor |
@@ -35,9 +35,8 @@ PostgreSQL schemas `identity` (owned by `kampus-identity`) and `users` (owned by
 
 | Table | Columns | Constraints and indexes |
 | --- | --- | --- |
-| `profile` | `account_id` PK FK → `identity.account` (`CASCADE`), `given_name`, `family_name`, `display_name`, `locale`, `time_zone`, `picture_file_id` FK → `files.file`, `version` | `CHECK` locale is a BCP 47 tag, time zone an IANA name |
-| `profile_field` | `id`, `scope_id` FK → `access.scope` (campus or category), `code`, `type` (`text`, `number`, `date`, `choice`, `boolean`), `options` jsonb (validated), `required`, `visibility` (`self`, `roles`, `nobody`), `editable_by` (`self`, `roles`), `sort` | `UNIQUE` (`scope_id`, `code`) |
-| `profile_field_value` | `account_id` FK (`CASCADE`), `field_id` FK (`CASCADE`), `value` typed by field (one column per type, `CHECK` exactly one set) | PK (`account_id`, `field_id`) |
+| `profile` | `account_id` PK FK → `identity.account` (`CASCADE`), `given_name`, `family_name`, `display_name`, `language_code` FK → `i18n.language` (nullable: campus default), `time_zone`, `picture_file_id` FK → `files.file`, `version` | `CHECK` time zone is an IANA name |
+| `account_field` | `account_id` FK → `identity.account` (`CASCADE`), `field_value_id` FK → `customise.field_value` (`CASCADE`) | PK (`account_id`, `field_value_id`); profile fields are custom fields of the entity kind `account` (DEC-070), owned through this link |
 | `preference` | `account_id` FK (`CASCADE`), `key` (declared by a module), `value` jsonb (validated by its declaration) | PK (`account_id`, `key`) |
 | `system_group` | `id`, `scope_id` FK → `access.scope`, `code`, `name`, `kind` (`manual`, `rule`), `rule` jsonb (validated), `owner_module` | `UNIQUE` (`scope_id`, `code`) |
 | `system_group_member` | `group_id` FK (`CASCADE`), `account_id` FK (`CASCADE`), `origin` (`manual`, `rule`, `sync`), `added_at` | PK (`group_id`, `account_id`, `origin`) (RN-037) |

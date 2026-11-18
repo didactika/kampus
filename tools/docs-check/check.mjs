@@ -4,11 +4,13 @@
  * - Every relative link in a Markdown file points to an existing file or folder.
  * - Every PlantUML source has its rendered SVG next to it.
  * - Every PlantUML source renders without errors on the PlantUML server, when one is given.
+ * - No foreign key of a data model points to a module later in the architecture's ranking.
  *
  * Usage: node tools/docs-check/check.mjs [--plantuml-url http://plantuml:8080]
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { checkSchemaDependencies } from './schema-dependencies.mjs';
 
 const args = process.argv.slice(2);
 const urlIndex = args.indexOf('--plantuml-url');
@@ -57,6 +59,8 @@ if (plantumlUrl) {
 } else {
   console.log('No PlantUML server given: rendering not checked.');
 }
+
+errors.push(...checkSchemaDependencies(root));
 
 const markdownCount = files.filter((f) => f.endsWith('.md')).length;
 if (errors.length) {

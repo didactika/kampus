@@ -95,6 +95,12 @@ entity recalculation {
   done_at
   error
 }
+entity grade_condition {
+  condition_id <<FK>>
+  record_id <<FK>>
+  min_percent
+  max_percent
+}
 
 category }o--o| category : parent
 record }o--|| category
@@ -105,4 +111,5 @@ letter_band }o--|| letter_set
 formula }o--|| record
 formula_dependency }o--|| formula
 formula_dependency }o--|| record
+grade_condition }o--|| record
 @enduml

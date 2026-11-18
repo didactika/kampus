@@ -1,13 +1,311 @@
 @startuml
 !theme plain
 hide circle
-skinparam linetype polyline
-top to bottom direction
+hide empty members
+skinparam linetype ortho
+skinparam packageStyle rectangle
+title Kampus data model: schemas and cross-schema foreign keys
 
-entity example {
-  * id : uuid <<PK>>
-  --
-  name : varchar(120)
+package "access" as access_pkg {
+  class "access" as access {
+    scope_kind
+    scope_kind_parent
+    scope
+    scope_closure
+    permission
+    role_template
+    role_template_value
+    role
+    role_scope_kind
+    role_permission
+    role_allowance
+    permission_override
+    principal
+    grant
+    view_as_session
+    change
+  }
+}
+package "activities" as activities_pkg {
+  class "activities" as activities {
+    activity_type
+    course_module
+    module_setting
+    condition
+    condition_date
+    condition_progress
+    condition_group
+    condition_profile
+    exception
+    bin_item
+  }
+}
+package "api" as api_pkg {
+  class "api" as api {
+    client
+    scope
+    authorisation
+    refresh_token
+    rate_limit
+    webhook
+    webhook_delivery
+  }
+}
+package "calendar" as calendar_pkg {
+  class "calendar" as calendar {
+    entry
+    entry_exception
+    activity_date
+    subscription
+    imported_entry
+    feed_token
+  }
+}
+package "courses" as courses_pkg {
+  class "courses" as courses {
+    category
+    course
+    course_layout_setting
+    course_owner
+    section
+    group
+    group_member
+    group_set
+    group_set_group
+    course_template
+  }
+}
+package "customise" as customise_pkg {
+  class "customise" as customise {
+    term
+    term_override
+    field
+    field_choice
+    field_value
+    field_value_choice
+    layout
+    placement
+    menu
+    menu_item
+    theme
+    rule
+    rule_run
+    flag
+    flag_value
+    change
+  }
+}
+package "enrol" as enrol_pkg {
+  class "enrol" as enrol {
+    instance
+    instance_setting
+    self_key
+    linked_group
+    linked_course
+    enrolment
+    enrolment_grant
+    enrolment_group_member
+    request
+    expiry_outcome
+    self_attempt
+  }
+}
+package "events" as events_pkg {
+  class "events" as events {
+    event_type
+    event
+    outbox
+    listener
+    delivery
+    audit_entry
+    retention_policy
+  }
+}
+package "files" as files_pkg {
+  class "files" as files {
+    blob
+    area
+    file
+    upload_session
+    quota
+    conversion
+    trash
+  }
+}
+package "i18n" as i18n_pkg {
+  class "i18n" as i18n {
+    language
+    message
+    pack
+    translation
+    customised_message
+    missing
+  }
+}
+package "identity" as identity_pkg {
+  class "identity" as identity {
+    account
+    account_transition
+    password
+    passkey
+    identity_provider
+    external_identity
+    second_factor
+    recovery_code
+    one_time_token
+    session
+    api_token
+    api_token_scope
+    sign_in_attempt
+  }
+}
+package "notify" as notify_pkg {
+  class "notify" as notify {
+    notification_type
+    channel
+    preference
+    campus_default
+    template
+    notification
+    delivery
+    conversation
+    member
+    message
+    message_deletion
+    block
+  }
+}
+package "plugins" as plugins_pkg {
+  class "plugins" as plugins {
+    plugin_type
+    plugin
+    version
+    capability
+    grant
+    installation
+    migration
+    failure
+  }
+}
+package "privacy" as privacy_pkg {
+  class "privacy" as privacy {
+    data_category
+    request
+    request_item
+    retention_rule
+    legal_hold
+    policy
+    acceptance
+    export_package
+  }
+}
+package "progress" as progress_pkg {
+  class "progress" as progress {
+    rule
+    activity_state
+    activity_exception
+    activity_history
+    criterion
+    criterion_activity
+    criterion_grade
+    criterion_date
+    criterion_duration
+    criterion_role_approval
+    criterion_course
+    prerequisite
+    course_state
+    course_history
+  }
+}
+package "records" as records_pkg {
+  class "records" as records {
+    category
+    record
+    entry
+    grade
+    scale
+    letter_set
+    letter_band
+    formula
+    formula_dependency
+    recalculation
+    grade_condition
+  }
+}
+package "settings" as settings_pkg {
+  class "settings" as settings {
+    definition
+    value
+    change
+  }
+}
+package "tasks" as tasks_pkg {
+  class "tasks" as tasks {
+    job_type
+    job
+    schedule
+    schedule_tick
+    attempt
+  }
+}
+package "users" as users_pkg {
+  class "users" as users {
+    profile
+    account_field
+    preference
+    system_group
+    system_group_member
+  }
 }
 
+activities --> access : 1
+activities --> courses : 4
+activities --> customise : 1
+activities --> identity : 1
+api --> events : 1
+api --> identity : 2
+calendar --> access : 2
+calendar --> activities : 1
+calendar --> courses : 1
+calendar --> identity : 2
+courses --> access : 3
+courses --> i18n : 1
+courses --> identity : 2
+customise --> access : 7
+customise --> events : 1
+customise --> files : 1
+customise --> i18n : 1
+customise --> identity : 2
+enrol --> access : 2
+enrol --> courses : 4
+enrol --> identity : 1
+enrol --> users : 1
+files --> access : 1
+files --> identity : 2
+i18n --> access : 1
+identity --> access : 6
+notify --> access : 1
+notify --> courses : 1
+notify --> identity : 2
+plugins --> files : 1
+plugins --> identity : 1
+privacy --> access : 1
+privacy --> files : 1
+privacy --> identity : 3
+privacy --> tasks : 1
+progress --> access : 1
+progress --> activities : 1
+progress --> courses : 2
+progress --> identity : 1
+progress --> records : 1
+records --> access : 1
+records --> activities : 2
+records --> courses : 1
+records --> identity : 1
+settings --> access : 2
+users --> access : 1
+users --> customise : 1
+users --> files : 1
+users --> i18n : 1
+users --> identity : 2
 @enduml

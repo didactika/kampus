@@ -25,7 +25,7 @@ The modules and their dependency levels: a module calls only lower levels, and l
 
 ![Data model](./data-model/data-model.svg)
 
-Names in the data models are **logical** (`module.table`); the installation prefix, `kmp_` by default, goes on the module schema (DEC-039): `courses.group` is `kmp_courses.group` on PostgreSQL and `kmp_courses_group` on dialects without schemas.
+Names in the data models are **logical** (`module.table`); the installation prefix, `kmp_` by default, goes on the module schema (DEC-039): `courses.group` is `kmp_courses.group` on PostgreSQL and `kmp_courses_group` on dialects without schemas. The rules every data model follows, the linter and the common anti-patterns ruled out are in the [data model conventions](./data-model/conventions.md) (DEC-014, DEC-079, DEC-080); the overview above shows each schema and how many foreign keys link it to the modules before it.
 
 Per module: [access](./data-model/access.md), [identity and users](./data-model/identity.md), [courses](./data-model/courses.md), [enrolment](./data-model/enrolment.md), [activities](./data-model/activities.md), [records](./data-model/records.md), [progress](./data-model/progress.md), [files](./data-model/files.md), [events](./data-model/events.md), [notifications](./data-model/notify.md), [calendar](./data-model/calendar.md), [settings](./data-model/settings.md), [tasks](./data-model/tasks.md), [privacy](./data-model/privacy.md), [languages](./data-model/i18n.md), [integrations](./data-model/integrations.md), [customisation](./data-model/customise.md), [plugins](./data-model/plugins.md).
 

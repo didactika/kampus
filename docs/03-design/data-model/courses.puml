@@ -19,6 +19,7 @@ entity course {
   category_id : uuid <<FK>>
   short_name : text
   layout_code : text
+  language_code : text <<FK i18n.language>>
   starts_at : timestamptz
   ends_at : timestamptz
   state : text

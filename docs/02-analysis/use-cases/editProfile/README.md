@@ -21,7 +21,7 @@ Requirements: [README](../../../01-requirements/use-cases/editProfile/README.md)
 | --- | --- | --- |
 | Profile page, `/me/profile`, `/accounts/{id}/profile` | boundary | Show and edit |
 | Profile service | control | Apply RN-036 |
-| Profile, Profile field value | entity | Persisted state |
+| Profile, Custom field value | entity | Persisted state |
 
 ## Collaboration
 

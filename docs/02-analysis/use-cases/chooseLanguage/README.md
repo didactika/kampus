@@ -21,7 +21,7 @@ Requirements: [README](../../../01-requirements/use-cases/chooseLanguage/README.
 | --- | --- | --- |
 | Language menu, `PUT /me/language` | boundary | Collect the request |
 | Language resolver | control | Apply RN-189 to RN-192 |
-| Language, Language choice | entity | Persisted state |
+| Language, Profile | entity | Persisted state |
 
 ## Collaboration
 

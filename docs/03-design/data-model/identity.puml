@@ -7,7 +7,7 @@ title Schemas identity and users (PostgreSQL)
 
 package identity {
   entity account {
-    * id : uuid <<PK>>
+    * id : uuid <<PK, FK access.principal>>
     campus_id : uuid <<FK>>
     scope_id : uuid <<FK, UNIQUE>>
     username : text
@@ -62,18 +62,12 @@ package identity {
 package users {
   entity profile {
     * account_id : uuid <<PK, FK>>
-    locale : text
+    language_code : text <<FK i18n.language>>
     time_zone : text
   }
-  entity profile_field {
-    * id : uuid <<PK>>
-    scope_id : uuid <<FK>>
-    code : text
-    type : text
-  }
-  entity profile_field_value {
+  entity account_field {
     * account_id : uuid <<PK, FK>>
-    * field_id : uuid <<PK, FK>>
+    * field_value_id : uuid <<PK, FK customise.field_value>>
   }
   entity system_group {
     * id : uuid <<PK>>
@@ -96,8 +90,7 @@ session }o--|| account
 api_token }o--|| account
 one_time_token }o--|| account
 profile ||--|| account
-profile_field_value }o--|| profile
-profile_field_value }o--|| profile_field
+account_field }o--|| account
 system_group_member }o--|| system_group
 system_group_member }o--|| account
 @enduml

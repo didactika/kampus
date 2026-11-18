@@ -34,7 +34,7 @@ Module `kampus-customise` (level 1, [architecture](../03-design/architecture.md#
 | --- | --- |
 | RN-212 | Terms are declared by modules with grammatical forms (singular, plural, gender, article where the language needs it); messages refer to terms by code, so a renamed term is right in every sentence. |
 | RN-213 | Every customisation is resolved from the most specific scope up and returns its origin; a level may lock a kind for the levels below (as RN-165). |
-| RN-214 | Custom fields are typed (text, number, date, choice, multiple choice, boolean, file, reference to an account or course), validated on write, and stored as typed values with a foreign key to the field and owned through each module's link table, like files (RN-127), so there is no polymorphic owner. |
+| RN-214 | Custom fields are typed (text, number, date, choice, multiple choice, boolean, file, reference to an account), validated on write, and stored as typed values with a foreign key to the field and owned through each module's link table, like files (RN-127), so there is no polymorphic owner. |
 | RN-215 | Custom field visibility and editing follow permissions (`customise.field.view`, `.edit`) per field; private fields never reach the API or exports of people without them. |
 | RN-216 | Layouts and menus are data validated against the page kind's regions and the widgets installed; an unknown or disabled widget is skipped, never breaks the page; teachers change course layouts within what the campus allows. |
 | RN-217 | Themes are design tokens validated against the token schema and the contrast rules of WCAG 2.2 AA (RNF-003); a theme that fails contrast is refused; the client applies them as CSS custom properties without code. |
