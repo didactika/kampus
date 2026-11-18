@@ -38,6 +38,10 @@ all-features = true
 [advisories]
 version = 2
 yanked = "deny"
+ignore = [
+    { id = "RUSTSEC-2023-0071", reason = "rsa, through openidconnect, only verifies ID token signatures with public keys; the timing attack needs private-key operations" },
+    { id = "RUSTSEC-2026-0543", reason = "chrono, through openidconnect, has no maintained release; it only parses token timestamps. Review when openidconnect moves off it" },
+]
 
 [licenses]
 version = 2

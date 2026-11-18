@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! One test per business rule of identity built so far (RN-022 to RN-027, RN-029 to RN-035, RN-039),
+//! One test per business rule of identity built so far (RN-022 to RN-035, RN-039),
 //! against PostgreSQL, on a campus with its default roles, an administrator and a manager.
 
 #![allow(
@@ -51,14 +51,17 @@ use kampus_db::{Database, Prefix, Upgrader};
 use kampus_identity::account::SignUp;
 use kampus_identity::api_token::{TokenRequest, TokenScope};
 use kampus_identity::declarations::{ACCOUNT_READ, TOKEN_MANAGE_OWN};
+use kampus_identity::oidc::{OidcOutcome, ProviderConfig};
 use kampus_identity::second_factor::Proof;
 use kampus_identity::session::Client;
 use kampus_identity::sign_in::{Credential, SignIn, SignInOutcome};
 use kampus_identity::totp;
 use kampus_identity::{
-    AccountId, AccountKind, AccountStatus, CampusPolicy, FactorKind, FixedPolicies, Identity, MemoryCourier,
-    MfaLevel, Notice, PasswordCost, SecretKey, Session,
+    AccountId, AccountKind, AccountStatus, CampusPolicy, FactorKind, FixedPolicies, Identity, LinkingPolicy,
+    MemoryCourier, MfaLevel, Notice, PasswordCost, ProviderId, SecretKey, Session,
 };
+use openidconnect::reqwest;
+use openidconnect::url::Url;
 use sqlx::Row;
 
 /// A password that passes the default policy.
@@ -1176,4 +1179,230 @@ async fn rn_030_recovery_checks_the_second_factor_first_and_never_signs_in() {
         .filter(|m| matches!(m.notice, Notice::Recovery { .. }))
         .count();
     assert_eq!(links, 3, "at most three links an hour");
+}
+
+/// Where the browser comes back from the provider.
+const REDIRECT: &str = "http://localhost/callback";
+
+/// Configures a test provider for the campus: its issuer gives the claims the test needs.
+async fn provider(w: &World, issuer: &str, linking_policy: LinkingPolicy) -> ProviderId {
+    let base = std::env::var("KAMPUS_TEST_OIDC_URL").expect("KAMPUS_TEST_OIDC_URL is set");
+    let issuer = format!("{base}/{issuer}");
+    w.identity
+        .add_provider(
+            &w.admin,
+            w.campus,
+            ProviderConfig {
+                issuer,
+                client: "kampus".to_owned(),
+                client_secret: "provider secret".to_owned(),
+                linking_policy,
+            },
+        )
+        .await
+        .unwrap()
+}
+
+/// Signs in at the provider as its browser would, and returns the flow, the code and the state.
+async fn at_provider(w: &World, provider: ProviderId) -> (String, String, String) {
+    let start = w.identity.oidc_start(provider, REDIRECT).await.unwrap();
+    let url = Url::parse(&start.authorize_url).unwrap();
+    let query: BTreeMap<String, String> = url.query_pairs().into_owned().collect();
+    assert_eq!(query["code_challenge_method"], "S256");
+    assert!(query.contains_key("nonce"));
+    let browser = reqwest::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .unwrap();
+    let response = browser.get(url).send().await.unwrap();
+    let location = Url::parse(response.headers()["location"].to_str().unwrap()).unwrap();
+    assert!(location.as_str().starts_with(REDIRECT));
+    let back: BTreeMap<String, String> = location.query_pairs().into_owned().collect();
+    (start.flow, back["code"].clone(), back["state"].clone())
+}
+
+/// Signs in through the provider.
+async fn through_provider(w: &World, provider: ProviderId) -> Result<OidcOutcome> {
+    let (flow, code, state) = at_provider(w, provider).await;
+    w.identity
+        .oidc_callback(&flow, &code, &state, &Client::default())
+        .await
+}
+
+#[tokio::test]
+async fn rn_028_a_verified_email_links_by_policy_and_then_by_subject() {
+    let w = world().await;
+    let ana = w.person("ana@example.org").await;
+    let google = provider(&w, "verified", LinkingPolicy::VerifiedEmail).await;
+    assert_eq!(w.identity.providers(w.campus).await.unwrap().len(), 1);
+    assert_eq!(
+        error(provider_again(&w).await).0,
+        ErrorKind::Conflict,
+        "one provider per issuer in a campus"
+    );
+
+    let (flow, code, state) = at_provider(&w, google).await;
+    assert_eq!(
+        error(
+            w.identity
+                .oidc_callback(&flow, &code, "another state", &Client::default())
+                .await
+        )
+        .1,
+        "identity.oidc_flow_invalid"
+    );
+    let mut tampered = flow.clone();
+    tampered.replace_range(10..11, if &flow[10..11] == "A" { "B" } else { "A" });
+    assert_eq!(
+        error(
+            w.identity
+                .oidc_callback(&tampered, &code, &state, &Client::default())
+                .await
+        )
+        .1,
+        "identity.oidc_flow_invalid"
+    );
+    let outcome = w
+        .identity
+        .oidc_callback(&flow, &code, &state, &Client::default())
+        .await
+        .unwrap();
+    let OidcOutcome::SignedIn(SignInOutcome::SignedIn(new)) = outcome else {
+        panic!("signed in through the provider: {outcome:?}");
+    };
+    assert_eq!(new.session.account, ana);
+    assert_eq!(w.count("external_identity", ana).await, 1);
+
+    let OidcOutcome::SignedIn(SignInOutcome::SignedIn(again)) = through_provider(&w, google).await.unwrap()
+    else {
+        panic!("the link by subject signs in again");
+    };
+    assert_eq!(again.session.account, ana);
+
+    let setup = w.identity.new_totp_secret(&new.session).await.unwrap();
+    w.identity
+        .confirm_totp(
+            &new.session,
+            "phone",
+            &setup.secret,
+            &current_code(&w, &setup.secret),
+        )
+        .await
+        .unwrap();
+    assert!(
+        matches!(
+            through_provider(&w, google).await.unwrap(),
+            OidcOutcome::SignedIn(SignInOutcome::SecondFactorRequired { .. })
+        ),
+        "the provider goes through the same pipeline, second factor included"
+    );
+
+    w.identity
+        .suspend(&Actor::Principal(w.manager), ana, "paused", None)
+        .await
+        .unwrap();
+    assert_eq!(
+        error(through_provider(&w, google).await),
+        (
+            ErrorKind::Unauthenticated,
+            "identity.external_identity_not_linked".to_owned()
+        )
+    );
+}
+
+/// Adds the same issuer a second time.
+async fn provider_again(w: &World) -> Result<ProviderId> {
+    w.identity
+        .add_provider(
+            &w.admin,
+            w.campus,
+            ProviderConfig {
+                issuer: format!("{}/verified", std::env::var("KAMPUS_TEST_OIDC_URL").unwrap()),
+                client: "kampus".to_owned(),
+                client_secret: "provider secret".to_owned(),
+                linking_policy: LinkingPolicy::SubjectOnly,
+            },
+        )
+        .await
+}
+
+#[tokio::test]
+async fn rn_028_an_unverified_or_unknown_email_never_links() {
+    let not_linked = (
+        ErrorKind::Unauthenticated,
+        "identity.external_identity_not_linked".to_owned(),
+    );
+    for (issuer, policy) in [
+        ("unverified", LinkingPolicy::VerifiedEmail),
+        ("stranger", LinkingPolicy::VerifiedEmail),
+        ("verified", LinkingPolicy::SubjectOnly),
+    ] {
+        let w = world().await;
+        let ana = w.person("ana@example.org").await;
+        let provider = provider(&w, issuer, policy).await;
+        assert_eq!(
+            error(through_provider(&w, provider).await),
+            not_linked,
+            "{issuer}"
+        );
+        assert_eq!(w.count("external_identity", ana).await, 0);
+    }
+    let w = world().await;
+    let manager = Actor::Principal(w.manager);
+    assert_eq!(
+        error(
+            w.identity
+                .add_provider(
+                    &manager,
+                    w.campus,
+                    ProviderConfig {
+                        issuer: "https://accounts.example.org".to_owned(),
+                        client: "kampus".to_owned(),
+                        client_secret: "secret".to_owned(),
+                        linking_policy: LinkingPolicy::Confirm,
+                    },
+                )
+                .await
+        )
+        .0,
+        ErrorKind::PermissionDenied
+    );
+}
+
+#[tokio::test]
+async fn rn_028_the_owner_can_confirm_a_link() {
+    let w = world().await;
+    let ana = w.person("ana@example.org").await;
+    let provider = provider(&w, "verified", LinkingPolicy::Confirm).await;
+    let OidcOutcome::ConfirmLink { link } = through_provider(&w, provider).await.unwrap() else {
+        panic!("the campus asks the owner to confirm");
+    };
+    assert_eq!(
+        w.count("external_identity", ana).await,
+        0,
+        "nothing is linked before the owner confirms"
+    );
+    let (session, _) = w.session("ana@example.org").await;
+    w.identity.confirm_link(&session, &link).await.unwrap();
+    assert_eq!(
+        w.courier.last_to("ana@example.org").map(|m| m.notice),
+        Some(Notice::IdentityLinked)
+    );
+    let OidcOutcome::SignedIn(SignInOutcome::SignedIn(new)) = through_provider(&w, provider).await.unwrap()
+    else {
+        panic!("the confirmed link signs in");
+    };
+    assert_eq!(new.session.account, ana);
+
+    let bea = w.person("bea@example.org").await;
+    let (bea_session, _) = w.session("bea@example.org").await;
+    assert_eq!(bea_session.account, bea);
+    assert_eq!(
+        error(w.identity.confirm_link(&bea_session, &link).await),
+        (
+            ErrorKind::Conflict,
+            "identity.external_identity_linked".to_owned()
+        ),
+        "an identity links to one account"
+    );
 }

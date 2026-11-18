@@ -59,6 +59,51 @@ kampus_common::define_id! {
     pub struct FactorId;
 }
 
+kampus_common::define_id! {
+    /// Identifies an identity provider.
+    pub struct ProviderId;
+}
+
+/// How a provider identity that is not linked yet finds its account (RN-028).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LinkingPolicy {
+    /// Only identities linked before sign in; nothing is linked at sign-in.
+    SubjectOnly,
+    /// An identity whose email the provider verified links to the active account with that email.
+    VerifiedEmail,
+    /// The owner of the account confirms the link by signing in with their own credentials.
+    Confirm,
+}
+
+impl LinkingPolicy {
+    /// The policy as stored.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::SubjectOnly => "subject_only",
+            Self::VerifiedEmail => "verified_email",
+            Self::Confirm => "confirm",
+        }
+    }
+}
+
+impl FromStr for LinkingPolicy {
+    type Err = Error;
+
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
+        match text {
+            "subject_only" => Ok(Self::SubjectOnly),
+            "verified_email" => Ok(Self::VerifiedEmail),
+            "confirm" => Ok(Self::Confirm),
+            _ => Err(Error::validation(
+                "identity.linking_policy_invalid",
+                vec![FieldError::new("linking_policy", "one_of")],
+            )),
+        }
+    }
+}
+
 /// The kind of a second factor (RN-029).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
