@@ -1,6 +1,6 @@
 ---
 id: DEC-037
-status: proposed
+status: accepted
 ---
 
 # DEC-037 Course layouts as plugins that only present

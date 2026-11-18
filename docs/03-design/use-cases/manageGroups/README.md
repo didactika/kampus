@@ -2,7 +2,7 @@
 id: UC-014
 name: manageGroups
 title: Manage groups and group sets
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

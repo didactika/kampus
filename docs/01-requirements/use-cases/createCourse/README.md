@@ -4,7 +4,7 @@ name: createCourse
 title: Create and configure a course
 actor: Course creator,Manager
 package: courses
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-031

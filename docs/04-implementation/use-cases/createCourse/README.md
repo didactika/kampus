@@ -2,7 +2,7 @@
 id: UC-012
 name: createCourse
 title: Create and configure a course
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

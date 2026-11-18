@@ -1,13 +1,13 @@
 ---
 id: DATA-COURSES
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---
 
 # Data model: courses
 
-PostgreSQL schema `courses`, owned by `kampus-courses`, following DEC-014, DEC-021, DEC-022 and DEC-026. Rules refer to the [courses domain model](../../00-domain-model/courses.md). Table names are logical; physically every name carries the installation prefix, `kmp_` by default (DEC-039).
+PostgreSQL schema `courses`, owned by `kampus-courses`, following DEC-014, DEC-021, DEC-022 and DEC-026. Rules refer to the [courses domain model](../../00-domain-model/courses.md). Names are logical; physically the schema carries the installation prefix, `kmp_courses` by default (DEC-039).
 
 ![Courses schema](./courses.svg)
 

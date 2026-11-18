@@ -4,7 +4,7 @@ name: manageGroups
 title: Manage groups and group sets
 actor: Teacher
 package: courses
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-033

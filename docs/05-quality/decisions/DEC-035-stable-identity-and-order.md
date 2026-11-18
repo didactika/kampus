@@ -1,6 +1,6 @@
 ---
 id: DEC-035
-status: proposed
+status: accepted
 ---
 
 # DEC-035 Stable identifiers and fractional sort keys for everything that is ordered

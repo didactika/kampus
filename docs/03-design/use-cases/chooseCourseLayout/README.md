@@ -2,7 +2,7 @@
 id: UC-015
 name: chooseCourseLayout
 title: Choose a course layout
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

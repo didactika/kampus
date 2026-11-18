@@ -2,7 +2,7 @@
 id: UC-013
 name: organiseSections
 title: Organise the sections of a course
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

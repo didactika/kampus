@@ -1,6 +1,6 @@
 ---
 id: DEC-036
-status: proposed
+status: accepted
 ---
 
 # DEC-036 Course lifecycle with archiving as a freeze, and deletion as a cascading job

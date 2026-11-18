@@ -4,7 +4,7 @@ name: chooseCourseLayout
 title: Choose a course layout
 actor: Teacher
 package: courses
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-034

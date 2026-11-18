@@ -1,6 +1,6 @@
 ---
 id: DOM-COURSES
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

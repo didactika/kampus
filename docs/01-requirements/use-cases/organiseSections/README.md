@@ -4,7 +4,7 @@ name: organiseSections
 title: Organise the sections of a course
 actor: Teacher
 package: courses
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-032

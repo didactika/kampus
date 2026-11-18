@@ -1,6 +1,6 @@
 ---
 id: DEC-038
-status: proposed
+status: accepted
 ---
 
 # DEC-038 Groups per course or section, group mode as a scoped setting, owned memberships

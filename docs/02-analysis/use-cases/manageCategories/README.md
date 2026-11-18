@@ -2,7 +2,7 @@
 id: UC-011
 name: manageCategories
 title: Manage course categories
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

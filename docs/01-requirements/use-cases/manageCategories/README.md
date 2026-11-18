@@ -4,7 +4,7 @@ name: manageCategories
 title: Manage course categories
 actor: Manager
 package: courses
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-030

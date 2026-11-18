@@ -1,6 +1,6 @@
 ---
 id: DEC-034
-status: proposed
+status: accepted
 ---
 
 # DEC-034 Visibility stored per node, computed through the scope tree
