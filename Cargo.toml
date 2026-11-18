@@ -1,12 +1,36 @@
-# This file is part of Kampus - Knowledge Academic Modular Platform for Universal Study.
+# ------------------------------------------------------------------------------
 #
-# Copyright (c) 2026 Didactika. All rights reserved.
-# Proprietary and confidential: see the LICENSE file at the root of the repository.
-# SPDX-License-Identifier: LicenseRef-Didactika-Proprietary
+#     _  __    _    __  __ ____  _   _ ____
+#    | |/ /   / \  |  \/  |  _ \| | | / ___|
+#    | ' /   / _ \ | |\/| | |_) | | | \___ \
+#    | . \  / ___ \| |  | |  __/| |_| |___) |
+#    |_|\_\/_/   \_\_|  |_|_|    \___/|____/
+#
+#    Knowledge Academic Modular Platform for Universal Study
+#
+# ------------------------------------------------------------------------------
+#
+# This file is part of Kampus - https://github.com/didactika/kampus
+#
+# Kampus is free software: you can redistribute it and/or modify it under the terms of the
+# GNU Affero General Public License as published by the Free Software Foundation, either
+# version 3 of the License, or (at your option) any later version.
+#
+# Kampus is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License along with Kampus.
+# If not, see <https://www.gnu.org/licenses/>.
 #
 # @package   kampus
-# @author    hector-ae21
+# @copyright 2026 Didactika
+# @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
+# @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
 # @since     0.1.0
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# ------------------------------------------------------------------------------
 
 [workspace]
 resolver = "3"
@@ -16,13 +40,29 @@ members = ["crates/*"]
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.100"
-license-file = "LICENSE"
+license = "AGPL-3.0-or-later"
 repository = "https://github.com/didactika/kampus"
 publish = false
 
 [workspace.dependencies]
-sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres"] }
-tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+kampus-common = { path = "crates/kampus-common" }
+kampus-db = { path = "crates/kampus-db" }
+axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "tokio", "query"] }
+base64 = "0.23.1"
+clap = { version = "4.6.8", features = ["derive", "env"] }
+http-body-util = "0.1.5"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sha2 = "0.11.1"
+sqlx = { version = "0.9.1", default-features = false, features = ["runtime-tokio", "tls-rustls-ring-webpki", "postgres", "uuid", "time"] }
+time = { version = "0.3.55", features = ["serde", "formatting", "parsing", "macros"] }
+tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread", "signal", "net", "time", "sync"] }
+toml = { version = "1.2.1", default-features = false, features = ["parse", "serde"] }
+tower = { version = "0.5.3", features = ["util"] }
+tower-http = { version = "0.7.1", features = ["trace", "request-id", "timeout"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json", "fmt"] }
+uuid = { version = "1.29.3", features = ["v7", "serde"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

@@ -154,7 +154,7 @@ Priorities: **Must** (tier 1, core), **Should** (tier 2, standard activities and
 | RNF-012 | Plugin isolation | A faulty plugin cannot crash the platform or read data it was not granted | Sandbox and fuzz tests | Must |
 | RNF-013 | Portability | Runs as containers on Linux; one-command local setup | Compose file and Helm chart | Must |
 | RNF-014 | Supply chain | Locked dependencies, audits in CI, signed releases | `cargo audit`, `cargo deny`, npm audit in CI | Must |
-| RNF-015 | Code provenance | All code is original or comes from a declared dependency with an allowed licence (DEC-010) | Licence check in CI; review checklist per pull request | Must |
+| RNF-015 | Code provenance | All code is original or comes from a declared dependency with an allowed licence (DEC-085) | Licence check in CI; review checklist per pull request | Must |
 | RNF-016 | Database portability | Runs on several relational databases behind the database port: PostgreSQL first, then MySQL and MariaDB, SQLite, SQL Server and Oracle (DEC-009) | Every module test passes against every supported database in CI | Must (PostgreSQL), Should (others) |
 | RNF-017 | File storage portability | File storage behind the storage port: local disk and S3-compatible first, then Azure Blob, Google Cloud Storage, WebDAV and SFTP; files can move between backends without downtime | Storage conformance suite per adapter; migration test | Must (local, S3), Should (others) |
 | RNF-018 | Cache portability | Two-level cache behind the cache port: in-process and Redis or Valkey first, then Memcached; invalidation across nodes through the event bus | Cache conformance suite; multi-node invalidation test | Must (in-process, Redis), Should (others) |

@@ -1,6 +1,6 @@
 ---
 id: DEC-010
-status: accepted
+status: superseded
 ---
 
 # DEC-010 Proprietary commercial licence of Didactika, for now
@@ -15,3 +15,4 @@ status: accepted
   - Plugins converted by `moodle2kampus` keep their own licence (DEC-006). Most are GPL, so a converted plugin is distributed as a separate work under its own licence and is never merged into the Kampus core.
   - Changing the licence later only needs Didactika's decision, because every contribution is made for Didactika.
 - Affected artifacts: `LICENSE`, `README.md`, `deny.toml`, Q-001.
+- Superseded by: DEC-085 (AGPL-3.0-or-later).
