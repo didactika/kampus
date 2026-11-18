@@ -1,0 +1,60 @@
+@startuml
+!theme plain
+skinparam linetype ortho
+title Kampus infrastructure ports
+
+package "Modules" {
+  [kampus-files] as files
+  [kampus-events] as events
+  [kampus-tasks] as tasks
+  [kampus-identity] as identity
+  [kampus-notify] as notify
+  [every module] as mods
+}
+
+package "Ports (traits)" {
+  interface "Database" as DB
+  interface "File storage" as ST
+  interface "Cache" as CA
+  interface "Sessions" as SE
+  interface "Task queue" as TQ
+  interface "Search" as SR
+  interface "Mail" as MA
+}
+
+package "Adapters (first release)" {
+  [kampus-db-postgres] as pg
+  [kampus-storage-local] as loc
+  [kampus-storage-s3] as s3
+  [kampus-cache-moka] as moka
+  [kampus-cache-redis] as redis
+  [SMTP adapter] as smtp
+}
+
+package "Conformance suites" {
+  [one suite per port] as suite
+}
+
+mods --> DB
+mods --> CA
+mods --> SR
+files --> ST
+events --> DB
+tasks --> TQ
+identity --> SE
+notify --> MA
+
+pg ..|> DB
+pg ..|> SE
+pg ..|> TQ
+pg ..|> SR
+loc ..|> ST
+s3 ..|> ST
+moka ..|> CA
+redis ..|> CA
+smtp ..|> MA
+
+suite ..> pg : tests
+suite ..> s3 : tests
+suite ..> redis : tests
+@enduml

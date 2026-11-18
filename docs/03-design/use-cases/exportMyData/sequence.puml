@@ -1,0 +1,19 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Authenticated user" as a
+participant "kampus-api" as api
+participant "Request coordinator" as svc
+database "privacy schema + outbox" as db
+
+a -> api : Requests an export
+api -> svc : request
+svc -> db : Creates the request and one job per module (RN-179)
+svc -> db : Each handler writes its JSON and files; the package is assembled
+a -> api : Opens the package
+api -> svc : request
+svc -> db : Serves signed links until the package expires (RN-183)
+svc --> a : result
+@enduml

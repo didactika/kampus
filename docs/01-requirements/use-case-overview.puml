@@ -6,6 +6,7 @@ left to right direction
 actor "Authenticated user" as A_Authenticated_user
 actor "Campus administrator" as A_Campus_administrator
 actor "Course creator" as A_Course_creator
+actor "Integrator" as A_Integrator
 actor "Manager" as A_Manager
 actor "Student" as A_Student
 actor "System" as A_System
@@ -77,6 +78,24 @@ rectangle "Kampus" {
     usecase "See the calendar" as UC_viewCalendar
     usecase "Subscribe to or export a calendar" as UC_subscribeCalendar
   }
+  package "settings" {
+    usecase "Change a setting" as UC_changeSetting
+  }
+  package "tasks" {
+    usecase "Monitor background tasks" as UC_monitorTasks
+  }
+  package "privacy" {
+    usecase "Export my personal data" as UC_exportMyData
+    usecase "Process a deletion request" as UC_processDeletionRequest
+  }
+  package "i18n" {
+    usecase "Choose a language" as UC_chooseLanguage
+    usecase "Install language packs and customise messages" as UC_manageLanguagePacks
+  }
+  package "api" {
+    usecase "Register an API client" as UC_registerApiClient
+    usecase "Subscribe a webhook" as UC_subscribeWebhook
+  }
 }
 
 A_Manager --> UC_grantRole
@@ -128,5 +147,16 @@ A_Authenticated_user --> UC_setNotificationPreferences
 A_Authenticated_user --> UC_sendMessage
 A_Authenticated_user --> UC_viewCalendar
 A_Authenticated_user --> UC_subscribeCalendar
+A_Campus_administrator --> UC_changeSetting
+A_Manager --> UC_changeSetting
+A_Teacher --> UC_changeSetting
+A_Campus_administrator --> UC_monitorTasks
+A_Authenticated_user --> UC_exportMyData
+A_Campus_administrator --> UC_processDeletionRequest
+A_Authenticated_user --> UC_chooseLanguage
+A_Campus_administrator --> UC_manageLanguagePacks
+A_Integrator --> UC_registerApiClient
+A_Campus_administrator --> UC_registerApiClient
+A_Integrator --> UC_subscribeWebhook
 
 @enduml

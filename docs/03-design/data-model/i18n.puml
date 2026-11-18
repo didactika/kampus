@@ -1,0 +1,60 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema i18n (PostgreSQL)
+
+entity language {
+  code
+  name
+  direction
+  parent_code <<FK>>
+  enabled
+}
+entity message {
+  id <<PK>>
+  module
+  key
+  source_text
+  description
+  placeholders
+}
+entity pack {
+  module
+  language_code <<FK>>
+  version
+  installed_at
+}
+entity translation {
+  message_id <<FK>>
+  language_code <<FK>>
+  text
+}
+entity customised_message {
+  message_id <<FK>>
+  language_code <<FK>>
+  scope_id <<FK>>
+  text
+  changed_by
+  changed_at
+}
+entity language_choice {
+  account_id <<FK>>
+  course_id <<FK>>
+  language_code <<FK>>
+  forced
+}
+entity missing {
+  message_id <<FK>>
+  language_code <<FK>>
+  count
+  last_seen_at
+}
+
+language }o--o| language : parent
+pack }o--|| language
+translation }o--|| message
+customised_message }o--|| message
+missing }o--|| message
+@enduml

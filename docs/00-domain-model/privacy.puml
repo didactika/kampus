@@ -1,0 +1,65 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus privacy
+
+class "Data request" as Datarequest {
+  Account
+  kind
+  state
+  requested by
+  reason
+  approved by
+  due by
+}
+class "Request item" as Requestitem {
+  module
+  state
+  Job
+  error
+}
+class "Privacy handler" as Privacyhandler {
+  module
+  data categories
+  export
+  erase
+}
+class "Data category" as Datacategory {
+  code
+  module
+  purpose
+  legal basis
+}
+class "Retention rule" as Retentionrule {
+  campus
+  keep for
+  action
+}
+class "Legal hold" as Legalhold {
+  account or scope
+  reason
+  until
+  by
+}
+class "Policy" as Policy {
+  code
+  version
+  text
+  required
+}
+class "Acceptance" as Acceptance {
+  Account
+  at
+  on behalf
+}
+class "Export package" as Exportpackage {
+  File
+  expires
+}
+
+Requestitem "*" --> "1" Datarequest
+Retentionrule "*" --> "1" Datacategory
+Acceptance "*" --> "1" Policy
+Exportpackage "*" --> "1" Datarequest
+@enduml

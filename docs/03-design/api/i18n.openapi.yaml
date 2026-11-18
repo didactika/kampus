@@ -1,0 +1,28 @@
+openapi: 3.1.0
+info:
+  title: Kampus languages API (design fragment)
+  version: 0.1.0
+  description: >-
+    Languages, message bundles for the client, language choice (RN-189), packs (RN-193), customised
+    messages (RN-191) and missing translations (RN-190). Conventions of DEC-025 and DEC-026.
+paths:
+  /api/v1/languages:
+    get: { summary: Enabled languages with direction, responses: { '200': { description: Languages } } }
+  /api/v1/languages/{code}/bundles/{module}:
+    get: { summary: 'Resolved messages of a module for a language and scope, cacheable by ETag', parameters: [{ name: scope, in: query, schema: { type: string } }], responses: { '200': { description: Bundle }, '304': { description: Not modified } } }
+  /api/v1/me/language:
+    put: { summary: Choose the caller's language, responses: { '204': { description: Chosen } } }
+  /api/v1/language-packs:
+    get: { summary: Installed packs with versions and missing counts, responses: { '200': { description: Packs } } }
+    post: { summary: 'Install or update a pack (RN-193)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '202': { description: Job queued } } }
+  /api/v1/scopes/{scope_id}/messages/{module}/{key}:
+    put: { summary: Customise a message in a scope; placeholders checked, responses: { '200': { description: Customised }, '422': { description: Placeholders differ } } }
+    delete: { summary: Remove the customisation, responses: { '204': { description: Removed } } }
+  /api/v1/languages/{code}/missing:
+    get: { summary: Missing translations ordered by how often they were needed, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
+components:
+  parameters:
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+    After: { name: after, in: query, schema: { type: string } }
+    IfMatch: { name: If-Match, in: header, required: true, schema: { type: string } }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string } }

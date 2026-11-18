@@ -29,6 +29,9 @@ rectangle "Kampus" {
   package "events" {
     usecase "Review the audit log" as UC_reviewAuditLog
   }
+  package "settings" {
+    usecase "Change a setting" as UC_changeSetting
+  }
 }
 
 A_Manager --> UC_grantRole
@@ -42,5 +45,6 @@ A_Manager --> UC_enrolPeople
 A_Manager --> UC_manageEnrolment
 A_Manager --> UC_linkEnrolmentSource
 A_Manager --> UC_reviewAuditLog
+A_Manager --> UC_changeSetting
 
 @enduml

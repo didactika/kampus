@@ -1,0 +1,71 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema api (PostgreSQL)
+
+entity client {
+  id <<PK>>
+  name
+  kind
+  account_id <<FK>>
+  owner_id <<FK>>
+  redirect_uris
+  allowed_scopes
+  secret_hash
+  enabled
+  created_at
+}
+entity scope {
+  code
+  module
+  permissions
+  description
+}
+entity authorisation {
+  id <<PK>>
+  client_id <<FK>>
+  account_id <<FK>>
+  scopes
+  granted_at
+  revoked_at
+}
+entity refresh_token {
+  id <<PK>>
+  authorisation_id <<FK>>
+  hash
+  family_id
+  expires_at
+  used_at
+}
+entity rate_limit {
+  subject_kind
+  subject
+  window
+  limit
+}
+entity webhook {
+  id <<PK>>
+  client_id <<FK>>
+  url
+  event_types
+  secret_encrypted
+  state
+  consecutive_failures
+  version
+}
+entity webhook_delivery {
+  webhook_id <<FK>>
+  event_id <<FK>>
+  state
+  attempts
+  status_code
+  next_attempt_at
+}
+
+authorisation }o--|| client
+refresh_token }o--|| authorisation
+webhook }o--|| client
+webhook_delivery }o--|| webhook
+@enduml

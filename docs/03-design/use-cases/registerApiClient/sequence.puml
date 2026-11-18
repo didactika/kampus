@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Integrator" as a
+participant "kampus-api" as api
+participant "Client registry and token service" as svc
+database "api schema + outbox" as db
+
+a -> api : Registers a client with its kind and allowed scopes
+api -> svc : request
+svc -> db : Stores it, hashes the secret and shows it once
+a -> api : The system obtains a token
+api -> svc : request
+svc -> db : Issues it with its scopes; each call checks scope and permission (RN-196)
+a -> api : A person authorises an application
+api -> svc : request
+svc -> db : Runs authorisation code with PKCE and records the consent (RN-197)
+svc --> a : result
+@enduml

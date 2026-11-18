@@ -104,10 +104,10 @@ Priorities: **Must** (tier 1, core), **Should** (tier 2, standard activities and
 
 | ID | Requirement | Priority | Origin | Confirmed by | Use cases |
 | --- | --- | --- | --- | --- | --- |
-| RF-090 | Administrators configure the platform through settings, with defaults and per-module settings | Must | baseline | | |
-| RF-091 | The platform is internationalised: language packs, per-user language, right-to-left support | Must | baseline | | |
-| RF-092 | Scheduled and ad hoc tasks run in the background and can be monitored | Must | baseline | | |
-| RF-093 | Users can export and delete their personal data; administrators manage data requests and retention | Must | baseline | | |
+| RF-090 | Administrators configure the platform through settings, with defaults and per-module settings | Must | baseline | | UC-041 |
+| RF-091 | The platform is internationalised: language packs, per-user language, right-to-left support | Must | baseline | | UC-045, UC-046 |
+| RF-092 | Scheduled and ad hoc tasks run in the background and can be monitored | Must | baseline | | UC-042 |
+| RF-093 | Users can export and delete their personal data; administrators manage data requests and retention | Must | baseline | | UC-043, UC-044 |
 
 ### Plugins and integration
 
@@ -116,8 +116,8 @@ Priorities: **Must** (tier 1, core), **Should** (tier 2, standard activities and
 | RF-100 | Plugins of these types (activity, widget, authentication, enrolment, report, question type, course format, theme, local) can be installed, upgraded, enabled and removed | Must | owner | Owner, 2026-11-17 | |
 | RF-101 | A tool converts a Moodle plugin into a Kampus plugin quickly, reporting what needs review | Must | owner | Owner, 2026-11-17 | |
 | RF-102 | Plugins run sandboxed with only the permissions they declare | Must | extra | | |
-| RF-103 | External systems integrate through a documented API with tokens and scopes | Must | baseline | | |
-| RF-104 | Webhooks notify external systems of events | Could | extra | | |
+| RF-103 | External systems integrate through a documented API with tokens and scopes | Must | baseline | | UC-047 |
+| RF-104 | Webhooks notify external systems of events | Could | extra | | UC-048 |
 | RF-105 | LTI 1.3 lets Kampus launch external tools and be launched as a tool | Should | baseline | | |
 | RF-106 | SCORM, H5P and xAPI content can be played and tracked | Should | baseline | | |
 

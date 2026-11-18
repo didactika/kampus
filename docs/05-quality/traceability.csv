@@ -39,3 +39,11 @@ RF-070,UC-037,setNotificationPreferences,docs/02-analysis/use-cases/setNotificat
 RF-071,UC-038,sendMessage,docs/02-analysis/use-cases/sendMessage,docs/03-design/use-cases/sendMessage,crates/kampus-notify/src/messaging.rs,crates/kampus-notify/tests
 RF-072,UC-039,viewCalendar,docs/02-analysis/use-cases/viewCalendar,docs/03-design/use-cases/viewCalendar,crates/kampus-calendar/src/view.rs,crates/kampus-calendar/tests
 RF-072,UC-040,subscribeCalendar,docs/02-analysis/use-cases/subscribeCalendar,docs/03-design/use-cases/subscribeCalendar,crates/kampus-calendar/src/subscriptions.rs,crates/kampus-calendar/tests
+RF-090,UC-041,changeSetting,docs/02-analysis/use-cases/changeSetting,docs/03-design/use-cases/changeSetting,crates/kampus-settings/src/resolve.rs,crates/kampus-settings/tests
+RF-092,UC-042,monitorTasks,docs/02-analysis/use-cases/monitorTasks,docs/03-design/use-cases/monitorTasks,crates/kampus-tasks/src/runner.rs,crates/kampus-tasks/tests
+RF-093,UC-043,exportMyData,docs/02-analysis/use-cases/exportMyData,docs/03-design/use-cases/exportMyData,crates/kampus-privacy/src/requests.rs,crates/kampus-privacy/tests
+RF-093,UC-044,processDeletionRequest,docs/02-analysis/use-cases/processDeletionRequest,docs/03-design/use-cases/processDeletionRequest,crates/kampus-privacy/src/requests.rs,crates/kampus-privacy/tests
+RF-091,UC-045,chooseLanguage,docs/02-analysis/use-cases/chooseLanguage,docs/03-design/use-cases/chooseLanguage,crates/kampus-i18n/src/resolve.rs,crates/kampus-i18n/tests
+RF-091,UC-046,manageLanguagePacks,docs/02-analysis/use-cases/manageLanguagePacks,docs/03-design/use-cases/manageLanguagePacks,crates/kampus-i18n/src/packs.rs,crates/kampus-i18n/tests
+RF-103,UC-047,registerApiClient,docs/02-analysis/use-cases/registerApiClient,docs/03-design/use-cases/registerApiClient,crates/kampus-api/src/clients.rs,crates/kampus-api/tests
+RF-104,UC-048,subscribeWebhook,docs/02-analysis/use-cases/subscribeWebhook,docs/03-design/use-cases/subscribeWebhook,crates/kampus-api/src/webhooks.rs,crates/kampus-api/tests

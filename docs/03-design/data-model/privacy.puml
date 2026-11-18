@@ -1,0 +1,71 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema privacy (PostgreSQL)
+
+entity data_category {
+  code
+  module
+  purpose
+  legal_basis
+}
+entity request {
+  id <<PK>>
+  account_id <<FK>>
+  kind
+  state
+  requested_by <<FK>>
+  reason
+  approved_by
+  due_by
+  created_at
+  completed_at
+}
+entity request_item {
+  request_id <<FK>>
+  module
+  state
+  job_id <<FK>>
+  error
+}
+entity retention_rule {
+  category_code <<FK>>
+  campus_id
+  keep_for
+  action
+}
+entity legal_hold {
+  id <<PK>>
+  account_id <<FK>>
+  scope_id <<FK>>
+  reason
+  until
+  created_by
+}
+entity policy {
+  id <<PK>>
+  code
+  version
+  text
+  required
+  published_at
+}
+entity acceptance {
+  policy_id <<FK>>
+  account_id <<FK>>
+  accepted_at
+  on_behalf_of <<FK>>
+}
+entity export_package {
+  request_id <<FK>>
+  file_id <<FK>>
+  expires_at
+}
+
+request_item }o--|| request
+retention_rule }o--|| data_category
+acceptance }o--|| policy
+export_package }o--|| request
+@enduml

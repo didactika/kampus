@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as a
+participant "kampus-api" as api
+participant "Settings resolver" as svc
+database "settings schema + outbox" as db
+
+a -> api : Opens the settings of a scope
+api -> svc : request
+svc -> db : Shows each value with its origin, locks and fixed values (RN-164, RN-166)
+a -> api : Changes a value and saves
+api -> svc : request
+svc -> db : Validates it against the schema (RN-163) and stores it with If-Match
+a -> api : Optionally locks it
+api -> svc : request
+svc -> db : Stops overrides below (RN-165)
+svc --> a : result
+@enduml

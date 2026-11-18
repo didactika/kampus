@@ -1,0 +1,44 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus languages
+
+class "Language" as Language {
+  code (BCP 47)
+  name
+  direction
+  parent
+  enabled
+}
+class "Message" as Message {
+  module
+  key
+  source text
+  description
+  placeholders
+}
+class "Language pack" as Languagepack {
+  module
+  version
+}
+class "Translation" as Translation {
+  text
+}
+class "Customised message" as Customisedmessage {
+  scope
+  text
+  by
+}
+class "Language choice" as Languagechoice {
+  account or course
+  forced
+}
+
+Languagepack "*" --> "1" Language
+Translation "*" --> "1" Message
+Translation "*" --> "1" Language
+Customisedmessage "*" --> "1" Message
+Customisedmessage "*" --> "1" Language
+Languagechoice "*" --> "1" Language
+@enduml

@@ -1,0 +1,50 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus integrations
+
+class "API client" as APIclient {
+  name
+  kind
+  Account
+  redirect URIs
+  allowed scopes
+  owner
+  enabled
+}
+class "API scope" as APIscope {
+  code
+  module
+  permissions
+  description
+}
+class "Authorisation" as Authorisation {
+  Account
+  scopes
+  granted at
+  revoked at
+}
+class "Rate limit" as Ratelimit {
+  subject
+  window
+  limit
+}
+class "Webhook" as Webhook {
+  url
+  event types
+  secret hash
+  state
+  failures
+}
+class "Webhook delivery" as Webhookdelivery {
+  event
+  status
+  attempts
+  response code
+}
+
+Authorisation "*" --> "1" APIclient
+Webhook "*" --> "1" APIclient
+Webhookdelivery "*" --> "1" Webhook
+@enduml
