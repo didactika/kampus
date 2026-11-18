@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as a
+participant "kampus-api" as api
+participant "Pack installer" as svc
+database "i18n schema + outbox" as db
+
+a -> api : Installs or updates a pack
+api -> svc : request
+svc -> db : Queues a job that loads the translations and reports removed messages (RN-193)
+a -> api : Customises a message for a scope
+api -> svc : request
+svc -> db : Checks placeholders (RN-188) and stores the customisation
+a -> api : Reviews missing translations
+api -> svc : request
+svc -> db : Lists them by how often they were needed (RN-190)
+svc --> a : result
+@enduml

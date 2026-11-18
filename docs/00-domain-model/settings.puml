@@ -1,0 +1,38 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus settings
+
+class "Setting definition" as Settingdefinition {
+  key
+  module
+  schema
+  default
+  levels
+  permission
+  sensitive
+  restart required
+}
+class "Setting value" as Settingvalue {
+  scope
+  value
+  locked
+  version
+}
+class "Setting change" as Settingchange {
+  actor
+  before
+  after
+  at
+  request
+}
+class "Fixed value" as Fixedvalue {
+  value
+  source
+}
+
+Settingvalue "*" --> "1" Settingdefinition
+Settingchange "*" --> "1" Settingvalue
+Fixedvalue "*" --> "1" Settingdefinition
+@enduml

@@ -1,0 +1,40 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema settings (PostgreSQL)
+
+entity definition {
+  key
+  module
+  schema
+  default_value
+  levels
+  permission
+  sensitive
+  restart_required
+}
+entity value {
+  id <<PK>>
+  definition_key <<FK>>
+  scope_id <<FK>>
+  value
+  encrypted_value
+  locked
+  version
+}
+entity change {
+  id <<PK>>
+  definition_key <<FK>>
+  scope_id
+  actor_id <<FK>>
+  before
+  after
+  at
+  request_id
+}
+
+value }o--|| definition
+change }o--|| definition
+@enduml

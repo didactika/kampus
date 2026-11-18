@@ -39,6 +39,9 @@ rectangle "Kampus" {
   package "events" {
     usecase "Review the audit log" as UC_reviewAuditLog
   }
+  package "settings" {
+    usecase "Change a setting" as UC_changeSetting
+  }
 }
 
 A_Teacher --> UC_grantRole
@@ -60,5 +63,6 @@ A_Teacher --> UC_viewGrades
 A_Teacher --> UC_configureCourseProgress
 A_Teacher --> UC_setProgressException
 A_Teacher --> UC_reviewAuditLog
+A_Teacher --> UC_changeSetting
 
 @enduml

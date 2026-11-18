@@ -1,0 +1,16 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Authenticated user" as a
+participant "kampus-api" as api
+participant "Language resolver" as svc
+database "i18n schema + outbox" as db
+
+a -> api : Chooses a language
+api -> svc : request
+svc -> db : Stores the choice (RN-189)
+svc -> db : The client loads the bundles of the language with the scope's customisations (RN-191) and switches direction if needed (RN-192)
+svc --> a : result
+@enduml

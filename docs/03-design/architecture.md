@@ -32,9 +32,10 @@ Modules call **down** the ranking through service APIs, and learn about things *
 | 0 Foundation | `kampus-events` | Event bus with a transactional outbox, event log, listeners (DEC-016) | common, db |
 | 0 Foundation | `kampus-tasks` | Durable job queue and scheduler on the database (DEC-016) | common, db, events |
 | 1 Platform | `kampus-settings` | Typed settings and their resolution by scope | common, db, cache, events |
+| 1 Platform | `kampus-i18n` | Messages, language packs, customised messages, language resolution and locale formatting (DEC-062) | common, db, cache, events, settings |
 | 1 Platform | `kampus-access` | Scopes (with the section scope, DEC-007), roles, permissions, overrides, checks and explanations | common, db, cache, events, settings |
 | 1 Platform | `kampus-identity` | Accounts, credentials, OIDC, MFA, sessions, API tokens | common, db, cache, events, settings, access |
-| 1 Platform | `kampus-customise` | Terminology, custom fields, layouts, rules, templates, feature flags by scope (DEC-008) | common, db, cache, events, settings, access |
+| 1 Platform | `kampus-customise` | Terminology, custom fields, layouts, rules, templates, feature flags by scope (DEC-008) | common, db, cache, events, settings, i18n, access |
 | 2 People | `kampus-users` | Profiles, preferences, system groups | identity, access, customise |
 | 2 People | `kampus-files` | File areas and permission-checked serving, on the storage port | storage, access, events |
 | 3 Learning | `kampus-courses` | Categories, courses, sections (nested), course layouts, groups and group sets | access, users, files, customise |
@@ -93,7 +94,7 @@ OpenTelemetry for traces and metrics, structured JSON logs with the request id a
 
 ### Internationalisation and time
 
-Every user-facing string is a message of its module, resolved through the terminology layer (DEC-008, DEC-012). Times are stored as UTC timestamps with time zone and shown in the user's zone; identifiers, money, pagination and API conventions are fixed by the platform foundations (T-B.02).
+Every user-facing string is an ICU message of its module, resolved by `kampus-i18n` and then through the terminology layer (DEC-008, DEC-012, DEC-062). Times are stored as UTC timestamps with time zone and shown in the user's zone; identifiers, money, pagination and API conventions are fixed by the platform foundations (T-B.02).
 
 ## Deployment
 

@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as a
+participant "kampus-api" as api
+participant "Job runner and scheduler" as svc
+database "tasks schema + outbox" as db
+
+a -> api : Opens the task monitor
+api -> svc : request
+svc -> db : Lists jobs by state with attempts, progress and errors (RN-172)
+a -> api : Retries or cancels a job
+api -> svc : request
+svc -> db : Queues it again, or stops it at its next step (RN-176)
+a -> api : Changes or runs a schedule
+api -> svc : request
+svc -> db : Saves the rule and time zone, or enqueues a run now (RN-175)
+svc --> a : result
+@enduml

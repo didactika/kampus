@@ -56,6 +56,14 @@ sourceOfTruth: model
 | UC-038 | [Send a message](./use-cases/sendMessage/README.md) | Authenticated user | notify | RF-071 | [card](../02-analysis/use-cases/sendMessage/README.md) | [card](../03-design/use-cases/sendMessage/README.md) | [card](../04-implementation/use-cases/sendMessage/README.md) | accepted |
 | UC-039 | [See the calendar](./use-cases/viewCalendar/README.md) | Authenticated user | calendar | RF-072 | [card](../02-analysis/use-cases/viewCalendar/README.md) | [card](../03-design/use-cases/viewCalendar/README.md) | [card](../04-implementation/use-cases/viewCalendar/README.md) | accepted |
 | UC-040 | [Subscribe to or export a calendar](./use-cases/subscribeCalendar/README.md) | Authenticated user | calendar | RF-072 | [card](../02-analysis/use-cases/subscribeCalendar/README.md) | [card](../03-design/use-cases/subscribeCalendar/README.md) | [card](../04-implementation/use-cases/subscribeCalendar/README.md) | accepted |
+| UC-041 | [Change a setting](./use-cases/changeSetting/README.md) | Campus administrator, Manager, Teacher | settings | RF-090 | [card](../02-analysis/use-cases/changeSetting/README.md) | [card](../03-design/use-cases/changeSetting/README.md) | [card](../04-implementation/use-cases/changeSetting/README.md) | accepted |
+| UC-042 | [Monitor background tasks](./use-cases/monitorTasks/README.md) | Campus administrator | tasks | RF-092 | [card](../02-analysis/use-cases/monitorTasks/README.md) | [card](../03-design/use-cases/monitorTasks/README.md) | [card](../04-implementation/use-cases/monitorTasks/README.md) | accepted |
+| UC-043 | [Export my personal data](./use-cases/exportMyData/README.md) | Authenticated user | privacy | RF-093 | [card](../02-analysis/use-cases/exportMyData/README.md) | [card](../03-design/use-cases/exportMyData/README.md) | [card](../04-implementation/use-cases/exportMyData/README.md) | accepted |
+| UC-044 | [Process a deletion request](./use-cases/processDeletionRequest/README.md) | Campus administrator | privacy | RF-093 | [card](../02-analysis/use-cases/processDeletionRequest/README.md) | [card](../03-design/use-cases/processDeletionRequest/README.md) | [card](../04-implementation/use-cases/processDeletionRequest/README.md) | accepted |
+| UC-045 | [Choose a language](./use-cases/chooseLanguage/README.md) | Authenticated user | i18n | RF-091 | [card](../02-analysis/use-cases/chooseLanguage/README.md) | [card](../03-design/use-cases/chooseLanguage/README.md) | [card](../04-implementation/use-cases/chooseLanguage/README.md) | accepted |
+| UC-046 | [Install language packs and customise messages](./use-cases/manageLanguagePacks/README.md) | Campus administrator | i18n | RF-091 | [card](../02-analysis/use-cases/manageLanguagePacks/README.md) | [card](../03-design/use-cases/manageLanguagePacks/README.md) | [card](../04-implementation/use-cases/manageLanguagePacks/README.md) | accepted |
+| UC-047 | [Register an API client](./use-cases/registerApiClient/README.md) | Integrator, Campus administrator | api | RF-103 | [card](../02-analysis/use-cases/registerApiClient/README.md) | [card](../03-design/use-cases/registerApiClient/README.md) | [card](../04-implementation/use-cases/registerApiClient/README.md) | accepted |
+| UC-048 | [Subscribe a webhook](./use-cases/subscribeWebhook/README.md) | Integrator | api | RF-104 | [card](../02-analysis/use-cases/subscribeWebhook/README.md) | [card](../03-design/use-cases/subscribeWebhook/README.md) | [card](../04-implementation/use-cases/subscribeWebhook/README.md) | accepted |
 
 ### Use-case diagram
 
@@ -74,6 +82,10 @@ sourceOfTruth: model
 #### Course creator
 
 ![Course creator](./use-cases-course_creator.svg)
+
+#### Integrator
+
+![Integrator](./use-cases-integrator.svg)
 
 #### Manager
 

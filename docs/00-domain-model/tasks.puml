@@ -1,0 +1,47 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus tasks
+
+class "Job type" as Jobtype {
+  code
+  module
+  schema
+  max attempts
+  back-off
+  timeout
+  concurrency
+}
+class "Job" as Job {
+  payload
+  state
+  attempts
+  available at
+  lease until
+  progress
+  last error
+}
+class "Schedule" as Schedule {
+  cron
+  time zone
+  enabled
+  next run
+}
+class "Schedule tick" as Scheduletick {
+  at
+}
+class "Job attempt" as Jobattempt {
+  worker
+  started
+  ended
+  outcome
+  error
+}
+
+Job "*" --> "1" Jobtype
+Schedule "*" --> "1" Jobtype
+Scheduletick "*" --> "1" Schedule
+Scheduletick "*" --> "1" Job
+Jobattempt "*" --> "1" Job
+@enduml

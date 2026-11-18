@@ -1,0 +1,26 @@
+openapi: 3.1.0
+info:
+  title: Kampus settings API (design fragment)
+  version: 0.1.0
+  description: >-
+    Declared settings, values per scope resolved with their origin (RN-164), locks (RN-165), fixed values
+    (RN-166) and history (RN-168). Sensitive values are never returned (RN-167). Conventions of DEC-025 and DEC-026.
+paths:
+  /api/v1/setting-definitions:
+    get: { summary: Declared settings with schema, default and levels, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
+  /api/v1/scopes/{scope_id}/settings:
+    get: { summary: Resolved values in a scope with the origin of each, responses: { '200': { description: Values } } }
+  /api/v1/scopes/{scope_id}/settings/{key}:
+    put: { summary: 'Set a value, validated against its schema (RN-163)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Set }, '409': { description: Locked above or fixed by the deployment }, '422': { description: Invalid } } }
+    delete: { summary: Remove the value; the level above applies again, responses: { '204': { description: Removed } } }
+  /api/v1/scopes/{scope_id}/settings/{key}/lock:
+    put: { summary: Lock the value for the levels below, responses: { '204': { description: Locked } } }
+    delete: { summary: Unlock, responses: { '204': { description: Unlocked } } }
+  /api/v1/settings/{key}/history:
+    get: { summary: Changes of a setting with actor and values (masked when sensitive), parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
+components:
+  parameters:
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+    After: { name: after, in: query, schema: { type: string } }
+    IfMatch: { name: If-Match, in: header, required: true, schema: { type: string } }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string } }

@@ -1,0 +1,18 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+left to right direction
+
+actor "Integrator" as A_Integrator
+
+rectangle "Kampus" {
+  package "api" {
+    usecase "Register an API client" as UC_registerApiClient
+    usecase "Subscribe a webhook" as UC_subscribeWebhook
+  }
+}
+
+A_Integrator --> UC_registerApiClient
+A_Integrator --> UC_subscribeWebhook
+
+@enduml

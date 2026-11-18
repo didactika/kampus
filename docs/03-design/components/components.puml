@@ -39,6 +39,7 @@ package "2 People" {
 
 package "1 Platform" {
   component "kampus-settings" as settings
+  component "kampus-i18n" as i18n
   component "kampus-access" as access
   component "kampus-identity" as identity
   component "kampus-customise" as customise
@@ -79,6 +80,8 @@ files --> storage
 files --> access
 identity --> access
 customise --> access
+customise --> i18n
+i18n --> settings
 access --> settings
 settings --> cache
 settings --> db

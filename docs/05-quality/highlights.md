@@ -67,3 +67,11 @@ What makes Kampus stand out. This register is the source for the release notes, 
 | HL-045 | Notifications | Preferences per notification and channel, required notices that cannot be lost, and texts in the campus language | DEC-056 | planned | The right notices, on the right channel. |
 | HL-046 | Messaging | One conversation per pair, campus rules on who may write, and deleted messages that really go away | DEC-057 | planned | Private messaging you can trust. |
 | HL-047 | Calendar | Activity dates and extensions always current in the calendar, repeating events and subscriptions without duplicates | DEC-058 | planned | One calendar that is always right. |
+| HL-048 | Settings | Every setting typed and validated, showing where its value comes from, with locks and a full history | DEC-059 | planned | Know why a setting has its value, and who changed it. |
+| HL-049 | Tasks | Background work that never gets stuck, never runs twice and never fails without an alert | DEC-060 | planned | Scheduled tasks you can trust and monitor. |
+| HL-050 | Privacy | Export and deletion covering every module and plugin by construction, with legal holds and retention per data category | DEC-061 | planned | GDPR requests answered completely, on time. |
+| HL-051 | Languages | Translations with correct plurals, customisations that survive updates and missing strings made visible | DEC-062 | planned | Every language done properly, including right-to-left. |
+| HL-052 | Integrations | A generated API document, least-privilege tokens, OAuth for third-party apps and rate limits | DEC-063 | planned | Safe integrations that match the documentation. |
+| HL-053 | Integrations | Signed, reliable webhooks filtered by permissions | DEC-064 | planned | Push events to other systems without polling. |
+| HL-054 | Infrastructure | One schema for every supported database, with migrations tested on each | DEC-065 | planned | Run on the database your organisation already uses. |
+| HL-055 | Infrastructure | Every storage, cache and database backend proven by the same conformance suite | DEC-066 | planned | Swap backends without surprises. |

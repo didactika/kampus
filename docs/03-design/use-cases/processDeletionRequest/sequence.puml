@@ -1,0 +1,19 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as a
+participant "kampus-api" as api
+participant "Request coordinator" as svc
+database "privacy schema + outbox" as db
+
+a -> api : Reviews the request
+api -> svc : request
+svc -> db : Shows the data categories per module and any legal hold (RN-182)
+a -> api : Approves
+api -> svc : request
+svc -> db : Records the approval (RN-180) and starts one job per module
+svc -> db : Each handler erases its data; identity turns the account into a tombstone (RN-181)
+svc --> a : result
+@enduml

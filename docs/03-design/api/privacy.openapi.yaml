@@ -1,0 +1,35 @@
+openapi: 3.1.0
+info:
+  title: Kampus privacy API (design fragment)
+  version: 0.1.0
+  description: >-
+    Data requests (RN-179 to RN-183), legal holds (RN-182), retention rules (RN-184) and policies with
+    acceptances (RN-185). Conventions of DEC-025 and DEC-026.
+paths:
+  /api/v1/privacy/requests:
+    get: { summary: 'Requests the caller may handle, with due dates (RN-186)', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
+    post: { summary: Request an export or a deletion, for oneself or on behalf, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created }, '409': { description: An open request of that kind exists } } }
+  /api/v1/privacy/requests/{request_id}:
+    get: { summary: A request with its items per module, responses: { '200': { description: Request } } }
+  /api/v1/privacy/requests/{request_id}/approve:
+    post: { summary: 'Approve a deletion (RN-180)', responses: { '202': { description: Running }, '409': { description: Held } } }
+  /api/v1/privacy/requests/{request_id}/reject:
+    post: { summary: Reject with a reason, responses: { '200': { description: Rejected } } }
+  /api/v1/privacy/requests/{request_id}/package:
+    get: { summary: 'Signed links to the export files (RN-183)', responses: { '200': { description: Links }, '410': { description: Expired } } }
+  /api/v1/privacy/holds:
+    get: { summary: Legal holds, responses: { '200': { description: Holds } } }
+    post: { summary: Place a hold, responses: { '201': { description: Placed } } }
+  /api/v1/privacy/retention-rules:
+    get: { summary: Data categories and their retention per campus, responses: { '200': { description: Rules } } }
+    put: { summary: Replace the rules, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
+  /api/v1/policies/pending:
+    get: { summary: Required policy versions the caller has not accepted, responses: { '200': { description: Policies } } }
+  /api/v1/policies/{policy_id}/acceptance:
+    put: { summary: Accept a policy version, responses: { '204': { description: Accepted } } }
+components:
+  parameters:
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+    After: { name: after, in: query, schema: { type: string } }
+    IfMatch: { name: If-Match, in: header, required: true, schema: { type: string } }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string } }

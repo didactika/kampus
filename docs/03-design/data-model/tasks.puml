@@ -1,0 +1,61 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema tasks (PostgreSQL)
+
+entity job_type {
+  code
+  module
+  schema
+  max_attempts
+  backoff
+  timeout
+  concurrency
+}
+entity job {
+  id <<PK>>
+  type_code <<FK>>
+  payload
+  state
+  attempts
+  available_at
+  lease_until
+  worker
+  concurrency_key
+  progress
+  last_error
+  created_at
+  finished_at
+}
+entity schedule {
+  id <<PK>>
+  type_code <<FK>>
+  cron
+  time_zone
+  enabled
+  next_run_at
+  version
+}
+entity schedule_tick {
+  schedule_id <<FK>>
+  at
+  job_id <<FK>>
+}
+entity attempt {
+  id <<PK>>
+  job_id <<FK>>
+  worker
+  started_at
+  ended_at
+  outcome
+  error
+}
+
+job }o--|| job_type
+schedule }o--|| job_type
+schedule_tick }o--|| schedule
+schedule_tick }o--|| job
+attempt }o--|| job
+@enduml

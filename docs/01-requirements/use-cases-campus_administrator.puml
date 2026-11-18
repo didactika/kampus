@@ -12,9 +12,29 @@ rectangle "Kampus" {
   package "events" {
     usecase "Review and retry failed event deliveries" as UC_retryDeliveries
   }
+  package "settings" {
+    usecase "Change a setting" as UC_changeSetting
+  }
+  package "tasks" {
+    usecase "Monitor background tasks" as UC_monitorTasks
+  }
+  package "privacy" {
+    usecase "Process a deletion request" as UC_processDeletionRequest
+  }
+  package "i18n" {
+    usecase "Install language packs and customise messages" as UC_manageLanguagePacks
+  }
+  package "api" {
+    usecase "Register an API client" as UC_registerApiClient
+  }
 }
 
 A_Campus_administrator --> UC_defineRole
 A_Campus_administrator --> UC_retryDeliveries
+A_Campus_administrator --> UC_changeSetting
+A_Campus_administrator --> UC_monitorTasks
+A_Campus_administrator --> UC_processDeletionRequest
+A_Campus_administrator --> UC_manageLanguagePacks
+A_Campus_administrator --> UC_registerApiClient
 
 @enduml

@@ -1,0 +1,16 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Integrator" as a
+participant "kampus-api" as api
+participant "Webhook dispatcher" as svc
+database "api schema + outbox" as db
+
+a -> api : Gives a URL and event types
+api -> svc : request
+svc -> db : Checks HTTPS and that the address is not private (RN-201), and the types against the client's permissions (RN-199)
+svc -> db : Delivers each event after commit with an HMAC signature, retrying with back-off (RN-200)
+svc --> a : result
+@enduml
