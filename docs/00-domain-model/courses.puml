@@ -24,8 +24,8 @@ class Section {
   title
   sort_key
   visibility
-  available_from
-  available_until
+  visible_from
+  visible_until
 }
 class CourseLayout <<plugin>> {
   code
