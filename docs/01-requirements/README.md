@@ -16,17 +16,26 @@ sourceOfTruth: model
 
 | ID | Use case | Actor | Package | Requirement | Analysis | Design | Implementation | Status |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| UC-001 | [Grant a role in a scope](./use-cases/grantRole/README.md) | Manager, Teacher | access | RF-020 | [card](../02-analysis/use-cases/grantRole/README.md) | [card](../03-design/use-cases/grantRole/README.md) | [card](../04-implementation/use-cases/grantRole/README.md) | proposed |
-| UC-002 | [Override permissions in a scope](./use-cases/overridePermission/README.md) | Manager, Teacher | access | RF-024 | [card](../02-analysis/use-cases/overridePermission/README.md) | [card](../03-design/use-cases/overridePermission/README.md) | [card](../04-implementation/use-cases/overridePermission/README.md) | proposed |
-| UC-003 | [Check a permission, with its explanation](./use-cases/checkPermission/README.md) | System | access | RF-022 | [card](../02-analysis/use-cases/checkPermission/README.md) | [card](../03-design/use-cases/checkPermission/README.md) | [card](../04-implementation/use-cases/checkPermission/README.md) | proposed |
-| UC-004 | [Define a role from a template](./use-cases/defineRole/README.md) | Campus administrator | access | RF-021 | [card](../02-analysis/use-cases/defineRole/README.md) | [card](../03-design/use-cases/defineRole/README.md) | [card](../04-implementation/use-cases/defineRole/README.md) | proposed |
-| UC-005 | [View a scope as another role](./use-cases/viewAsRole/README.md) | Teacher, Manager | access | RF-023 | [card](../02-analysis/use-cases/viewAsRole/README.md) | [card](../03-design/use-cases/viewAsRole/README.md) | [card](../04-implementation/use-cases/viewAsRole/README.md) | proposed |
+| UC-001 | [Grant a role in a scope](./use-cases/grantRole/README.md) | Manager, Teacher | access | RF-020 | [card](../02-analysis/use-cases/grantRole/README.md) | [card](../03-design/use-cases/grantRole/README.md) | [card](../04-implementation/use-cases/grantRole/README.md) | accepted |
+| UC-002 | [Override permissions in a scope](./use-cases/overridePermission/README.md) | Manager, Teacher | access | RF-024 | [card](../02-analysis/use-cases/overridePermission/README.md) | [card](../03-design/use-cases/overridePermission/README.md) | [card](../04-implementation/use-cases/overridePermission/README.md) | accepted |
+| UC-003 | [Check a permission, with its explanation](./use-cases/checkPermission/README.md) | System | access | RF-022 | [card](../02-analysis/use-cases/checkPermission/README.md) | [card](../03-design/use-cases/checkPermission/README.md) | [card](../04-implementation/use-cases/checkPermission/README.md) | accepted |
+| UC-004 | [Define a role from a template](./use-cases/defineRole/README.md) | Campus administrator | access | RF-021 | [card](../02-analysis/use-cases/defineRole/README.md) | [card](../03-design/use-cases/defineRole/README.md) | [card](../04-implementation/use-cases/defineRole/README.md) | accepted |
+| UC-005 | [View a scope as another role](./use-cases/viewAsRole/README.md) | Teacher, Manager | access | RF-023 | [card](../02-analysis/use-cases/viewAsRole/README.md) | [card](../03-design/use-cases/viewAsRole/README.md) | [card](../04-implementation/use-cases/viewAsRole/README.md) | accepted |
+| UC-006 | [Sign up and confirm an account](./use-cases/signUp/README.md) | Visitor | identity | RF-010 | [card](../02-analysis/use-cases/signUp/README.md) | [card](../03-design/use-cases/signUp/README.md) | [card](../04-implementation/use-cases/signUp/README.md) | proposed |
+| UC-007 | [Sign in, or recover access](./use-cases/signIn/README.md) | Visitor | identity | RF-011 | [card](../02-analysis/use-cases/signIn/README.md) | [card](../03-design/use-cases/signIn/README.md) | [card](../04-implementation/use-cases/signIn/README.md) | proposed |
+| UC-008 | [Set up a second factor](./use-cases/setUpSecondFactor/README.md) | Authenticated user | identity | RF-012 | [card](../02-analysis/use-cases/setUpSecondFactor/README.md) | [card](../03-design/use-cases/setUpSecondFactor/README.md) | [card](../04-implementation/use-cases/setUpSecondFactor/README.md) | proposed |
+| UC-009 | [Manage the lifecycle of accounts](./use-cases/manageAccountLifecycle/README.md) | Manager | identity | RF-013 | [card](../02-analysis/use-cases/manageAccountLifecycle/README.md) | [card](../03-design/use-cases/manageAccountLifecycle/README.md) | [card](../04-implementation/use-cases/manageAccountLifecycle/README.md) | proposed |
+| UC-010 | [Edit a profile](./use-cases/editProfile/README.md) | Authenticated user, Manager | users | RF-014 | [card](../02-analysis/use-cases/editProfile/README.md) | [card](../03-design/use-cases/editProfile/README.md) | [card](../04-implementation/use-cases/editProfile/README.md) | proposed |
 
 ### Use-case diagram
 
 ![Use cases](./use-case-overview.svg)
 
 ### By actor
+
+#### Authenticated user
+
+![Authenticated user](./use-cases-authenticated_user.svg)
 
 #### Campus administrator
 
@@ -43,6 +52,10 @@ sourceOfTruth: model
 #### Teacher
 
 ![Teacher](./use-cases-teacher.svg)
+
+#### Visitor
+
+![Visitor](./use-cases-visitor.svg)
 
 The index and its diagrams are generated from the use-case cards (front matter: `actor`, `package`, `includes`, `extends`). Edit the cards, not this table.
 

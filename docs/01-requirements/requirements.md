@@ -29,11 +29,11 @@ Priorities: **Must** (tier 1, core), **Should** (tier 2, standard activities and
 
 | ID | Requirement | Priority | Origin | Confirmed by | Use cases |
 | --- | --- | --- | --- | --- | --- |
-| RF-010 | Users sign up, confirm their email, sign in and reset their password | Must | baseline | | |
-| RF-011 | Users can sign in with external identity providers (OIDC first, then SAML and LDAP) | Must | baseline | | |
-| RF-012 | Users can enable multi-factor authentication; administrators can require it per role | Must | baseline | | |
-| RF-013 | Administrators manage users: create, edit, suspend, delete, bulk upload | Must | baseline | | |
-| RF-014 | Users have a profile with standard and custom fields, preferences and a picture | Must | baseline | | |
+| RF-010 | Users sign up, confirm their email, sign in and reset their password | Must | baseline | | UC-006 |
+| RF-011 | Users can sign in with external identity providers (OIDC first, then SAML and LDAP) | Must | baseline | | UC-007 |
+| RF-012 | Users can enable multi-factor authentication; administrators can require it per role | Must | baseline | | UC-008 |
+| RF-013 | Administrators manage users: create, edit, suspend, delete, bulk upload | Must | baseline | | UC-009 |
+| RF-014 | Users have a profile with standard and custom fields, preferences and a picture | Must | baseline | | UC-010 |
 | RF-015 | System groups gather users at campus or category level for enrolment and reporting | Should | baseline | | |
 
 ### Permissions

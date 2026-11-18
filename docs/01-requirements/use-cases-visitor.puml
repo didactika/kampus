@@ -1,0 +1,18 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+left to right direction
+
+actor "Visitor" as A_Visitor
+
+rectangle "Kampus" {
+  package "identity" {
+    usecase "Sign up and confirm an account" as UC_signUp
+    usecase "Sign in, or recover access" as UC_signIn
+  }
+}
+
+A_Visitor --> UC_signUp
+A_Visitor --> UC_signIn
+
+@enduml

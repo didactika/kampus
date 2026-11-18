@@ -1,0 +1,20 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+left to right direction
+
+actor "Authenticated user" as A_Authenticated_user
+
+rectangle "Kampus" {
+  package "identity" {
+    usecase "Set up a second factor" as UC_setUpSecondFactor
+  }
+  package "users" {
+    usecase "Edit a profile" as UC_editProfile
+  }
+}
+
+A_Authenticated_user --> UC_setUpSecondFactor
+A_Authenticated_user --> UC_editProfile
+
+@enduml

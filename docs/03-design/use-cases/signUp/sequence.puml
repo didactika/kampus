@@ -1,0 +1,27 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Visitor" as v
+participant "kampus-api" as api
+participant "Account service" as svc
+participant "Mail job" as mail
+database "identity schema + outbox" as db
+
+v -> api : POST /auth/sign-up (Idempotency-Key)
+api -> svc : sign_up(name, email)
+svc -> svc : campus allows it? domain allowed?
+alt email free
+  svc -> db : account pending_confirmation, hashed one-time token
+  svc -> mail : confirmation link (job)
+else email taken
+  svc -> mail : "you already have an account" to that email (job)
+end
+svc --> v : 202, same answer in both cases (RN-027)
+v -> api : POST /auth/confirm (token, password)
+api -> svc : confirm
+svc -> db : token valid, unused, not expired? (RN-026)
+svc -> db : password (Argon2id), status active, profile, events
+svc --> v : 200
+@enduml

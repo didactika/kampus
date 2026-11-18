@@ -3,10 +3,12 @@
 skinparam linetype polyline
 left to right direction
 
+actor "Authenticated user" as A_Authenticated_user
 actor "Campus administrator" as A_Campus_administrator
 actor "Manager" as A_Manager
 actor "System" as A_System
 actor "Teacher" as A_Teacher
+actor "Visitor" as A_Visitor
 
 rectangle "Kampus" {
   package "access" {
@@ -15,6 +17,15 @@ rectangle "Kampus" {
     usecase "Check a permission, with its explanation" as UC_checkPermission
     usecase "Define a role from a template" as UC_defineRole
     usecase "View a scope as another role" as UC_viewAsRole
+  }
+  package "identity" {
+    usecase "Sign up and confirm an account" as UC_signUp
+    usecase "Sign in, or recover access" as UC_signIn
+    usecase "Set up a second factor" as UC_setUpSecondFactor
+    usecase "Manage the lifecycle of accounts" as UC_manageAccountLifecycle
+  }
+  package "users" {
+    usecase "Edit a profile" as UC_editProfile
   }
 }
 
@@ -26,5 +37,11 @@ A_System --> UC_checkPermission
 A_Campus_administrator --> UC_defineRole
 A_Teacher --> UC_viewAsRole
 A_Manager --> UC_viewAsRole
+A_Visitor --> UC_signUp
+A_Visitor --> UC_signIn
+A_Authenticated_user --> UC_setUpSecondFactor
+A_Manager --> UC_manageAccountLifecycle
+A_Authenticated_user --> UC_editProfile
+A_Manager --> UC_editProfile
 
 @enduml

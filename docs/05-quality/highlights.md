@@ -42,3 +42,8 @@ What makes Kampus stand out. This register is the source for the release notes, 
 | HL-020 | Permissions | Roles granted for a period end on time; roles given by enrolment or system groups are owned by them and never remove a role given by hand | DEC-028 | planned | Temporary assistants and reviewers, without anyone remembering to remove them. |
 | HL-021 | Permissions | Role templates are versioned; resetting a role shows the differences first, and upgrades never change a campus silently | DEC-029 | planned | Your role customisations survive every upgrade. |
 | HL-022 | Permissions | A scope can be frozen: everything in it becomes read-only for everyone until it is unfrozen | RN-011 | planned | Close a course or a term in one click, without losing anything. |
+| HL-023 | Identity | Passwords, passkeys and identity providers share one sign-in pipeline with throttling and second factors; external accounts link by issuer and subject | DEC-030 | planned | Every way in is equally safe. |
+| HL-024 | Identity | Recovery asks for the second factor before changing any credential | DEC-032 | planned | Controlling someone's email is not enough to take over their account. |
+| HL-025 | Identity | Suspending an account or changing its password ends every session and token at once | DEC-031 | planned | Access ends the moment you decide. |
+| HL-026 | Privacy | Deleting a person erases their personal data after a grace period, while records keep a consistent anonymous reference | DEC-033 | planned | The right to be forgotten, without breaking anyone's grades. |
+| HL-027 | Integration | API tokens are scoped, expire, are shown once and stored hashed | DEC-031 | planned | Integrations with exactly the access they need, for as long as they need it. |
