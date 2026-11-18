@@ -19,7 +19,7 @@ Design: [README](../../../03-design/use-cases/defineRole/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Role service | service | `crates/access/src/role.rs` | no (to build) |
+| Role service | service | `crates/access/src/service/role.rs` | no (to build) |
 | `/api/v1/campuses/{campus_id}/roles`, `/api/v1/roles/{role_id}`, reset preview and reset | API endpoints | `docs/03-design/api/access.openapi.yaml` | no (to build) |
 | `access.role`, `access.role_permission`, `access.role_allowance` | tables | `docs/03-design/data-model/access.md` | no (to build) |
 

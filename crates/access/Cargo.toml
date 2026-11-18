@@ -42,9 +42,13 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[package.metadata.kampus]
+kind = "module"
+
 [dependencies]
 kampus-common.workspace = true
 kampus-db.workspace = true
+kampus-module.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sqlx.workspace = true

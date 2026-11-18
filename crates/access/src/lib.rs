@@ -37,28 +37,24 @@
 //!
 //! There is no bypass (RN-007): administrators are principals with roles, checked like everyone else.
 
-pub mod check;
-pub mod declarations;
-pub mod grant;
-mod history;
+pub mod db;
 pub mod model;
-pub mod overrides;
-pub mod role;
-pub mod schema;
-pub mod scope;
-pub mod sync;
-pub mod view_as;
+pub mod module;
+pub mod permissions;
+pub mod service;
 
 use std::sync::Arc;
 
 use kampus_common::{Clock, Timestamp};
 use kampus_db::Database;
 
-pub use check::{Decision, GrantEvaluation};
 pub use model::{
     Actor, AllowanceKind, GrantId, PermissionDeclaration, PermissionKind, PrincipalId, Risk, RoleId,
     RoleTemplateDeclaration, ScopeId, ScopeKind, Value, ViewAsId,
 };
+pub use module::MODULE;
+pub use service::check::{Decision, GrantEvaluation};
+pub use service::scope::PathScope;
 
 /// The access service.
 #[derive(Clone)]
@@ -86,7 +82,7 @@ impl Access {
 
     /// The quoted name of a table of this module.
     fn table(&self, name: &str) -> String {
-        format!("{}.\"{name}\"", self.db.prefix().schema(schema::MODULE))
+        format!("{}.\"{name}\"", self.db.prefix().schema(module::NAME))
     }
 
     /// The current instant.

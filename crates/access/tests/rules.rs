@@ -45,7 +45,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use kampus_access::declarations::{self, GRANT_CREATE};
+use kampus_access::permissions::{self, GRANT_CREATE};
 use kampus_access::{
     Access, Actor, PermissionDeclaration, PermissionKind, PrincipalId, Risk, RoleId, RoleTemplateDeclaration,
     ScopeId, ScopeKind, Value,
@@ -97,7 +97,7 @@ const TEMPLATES: &[RoleTemplateDeclaration] = &[
         version: 1,
         values: &[
             (GRANT_CREATE, Value::Allow),
-            (declarations::VIEW_AS, Value::Allow),
+            (permissions::VIEW_AS, Value::Allow),
             (VIEW, Value::Allow),
             (UPDATE, Value::Allow),
             (EDIT, Value::Allow),
@@ -170,7 +170,7 @@ async fn world() -> World {
     let simple = uuid::Uuid::now_v7().simple().to_string();
     let prefix: Prefix = format!("a{}_", &simple[simple.len() - 6..]).parse().unwrap();
     let db = Database::connect(&url, prefix, 4).await.unwrap();
-    Upgrader::new(&db, &[kampus_access::schema::STEPS], "0.1.0")
+    Upgrader::new(&db, &[kampus_access::MODULE.schema()], "0.1.0")
         .apply(true)
         .await
         .unwrap();
@@ -178,7 +178,7 @@ async fn world() -> World {
         Timestamp::parse_rfc3339("2026-11-18T10:00:00Z").unwrap(),
     ));
     let access = Access::new(db.clone(), clock.clone());
-    let mut templates: Vec<RoleTemplateDeclaration> = declarations::TEMPLATES
+    let mut templates: Vec<RoleTemplateDeclaration> = permissions::TEMPLATES
         .iter()
         .filter(|t| !TEMPLATES.iter().any(|x| x.code == t.code))
         .copied()
@@ -187,7 +187,7 @@ async fn world() -> World {
     access
         .sync(
             &[
-                ("access", declarations::PERMISSIONS),
+                ("access", permissions::PERMISSIONS),
                 ("courses", COURSE_PERMISSIONS),
             ],
             &templates,
@@ -854,7 +854,7 @@ async fn rn_021_undeclared_and_retired_permissions_fail() {
     w.access
         .sync(
             &[
-                ("access", declarations::PERMISSIONS),
+                ("access", permissions::PERMISSIONS),
                 ("courses", &COURSE_PERMISSIONS[..3]),
             ],
             &[],

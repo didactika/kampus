@@ -19,7 +19,7 @@ Design: [README](../../../03-design/use-cases/viewAsRole/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| View-as service | service | `crates/access/src/view_as.rs` | no (to build) |
+| View-as service | service | `crates/access/src/service/view_as.rs` | no (to build) |
 | `/api/v1/scopes/{scope_id}/view-as` | API endpoint | `docs/03-design/api/access.openapi.yaml` | no (to build) |
 | `access.view_as_session` | table | `docs/03-design/data-model/access.md` | no (to build) |
 

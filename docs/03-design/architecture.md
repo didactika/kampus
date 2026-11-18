@@ -15,7 +15,7 @@ A **modular monolith** (DEC-002): one Cargo workspace, one crate per module, com
 
 - owns its tables, in its own PostgreSQL schema (DEC-014), and no other module writes them;
 - exposes a **service API** (Rust traits and types in its crate) and publishes **domain events**;
-- declares what it contributes to the platform through one `Module` implementation: permissions, settings, events, jobs, privacy data, API routes, UI modules and help topics (DEC-015).
+- declares what it contributes to the platform through one `Module` descriptor: permissions, settings, events, jobs, privacy data, API routes, UI modules and help topics (DEC-015), in the folders of the [module layout](./module-layout.md) (DEC-087).
 
 Modules call **down** the ranking through service APIs, and learn about things **above** them only through events. Cargo forbids cycles, so the graph stays acyclic by construction.
 
@@ -25,8 +25,9 @@ Modules call **down** the ranking through service APIs, and learn about things *
 
 | Level | Crate | Responsibility | Depends on |
 | --- | --- | --- | --- |
-| 0 Foundation | `kampus-common` | Errors, identifiers, time, money, pagination, request context, the `Module` contract | — |
+| 0 Foundation | `kampus-common` | Errors, identifiers, time, money, pagination, request context | — |
 | 0 Foundation | `kampus-db` | Database port: neutral schema, dialect adapters (PostgreSQL first), migrations, transactions | common |
+| 0 Foundation | `kampus-module` | The module contract (DEC-015, DEC-087): the descriptor every module exposes and the vocabulary of its declarations | common, db |
 | 0 Foundation | `kampus-storage` | File storage port: local and S3-compatible first (DEC-009) | common |
 | 0 Foundation | `kampus-cache` | Cache port: in-process in front of Redis or Valkey, invalidation by event | common |
 | 0 Foundation | `kampus-events` | Event bus with a transactional outbox, event log, listeners (DEC-016) | common, db |

@@ -42,10 +42,14 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[package.metadata.kampus]
+kind = "module"
+
 [dependencies]
 kampus-common.workspace = true
 kampus-db.workspace = true
 kampus-access.workspace = true
+kampus-module.workspace = true
 argon2.workspace = true
 async-trait.workspace = true
 base64.workspace = true
