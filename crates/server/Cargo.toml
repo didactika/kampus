@@ -51,6 +51,7 @@ kampus-storage-opendal = { path = "../storage/adapters/opendal" }
 kampus-common.workspace = true
 kampus-db.workspace = true
 kampus-access.workspace = true
+kampus-identity.workspace = true
 kampus-cache.workspace = true
 kampus-storage.workspace = true
 axum.workspace = true

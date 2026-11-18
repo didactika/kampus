@@ -72,7 +72,7 @@ Sessions use secure, HTTP-only cookies; API tokens are scoped, expire, and are s
 
 ### Errors
 
-One error model in `kampus-common` (DEC-018): `not_found`, `permission_denied`, `validation` (with the field and rule), `conflict`, `precondition_failed`, `rate_limited`, `unavailable` and `internal`. Services return these, never strings. The API maps them to HTTP statuses with RFC 9457 problem details, and messages are translatable. Internal errors carry the request id, never a stack trace or data to the client.
+One error model in `kampus-common` (DEC-018): `not_found`, `unauthenticated`, `permission_denied`, `validation` (with the field and rule), `conflict`, `precondition_failed`, `rate_limited`, `unavailable` and `internal`. Services return these, never strings. The API maps them to HTTP statuses with RFC 9457 problem details, and messages are translatable. Internal errors carry the request id, never a stack trace or data to the client.
 
 ### Transactions, events and jobs
 

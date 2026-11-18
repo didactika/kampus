@@ -87,12 +87,29 @@ impl Access {
     /// A `not_found` error for an unknown parent, a `validation` error for a kind that may not hang there.
     pub async fn create_scope(&self, parent: ScopeId, kind: ScopeKind) -> Result<ScopeId> {
         let mut tx = self.db.begin().await?;
+        let id = self.create_scope_in(&mut tx, parent, kind).await?;
+        tx.commit().await.map_err(kampus_db::classify)?;
+        Ok(id)
+    }
+
+    /// Creates a scope under a parent inside the caller's transaction, so another module can create it
+    /// together with the entity it belongs to.
+    ///
+    /// # Errors
+    ///
+    /// As [`Access::create_scope`].
+    pub async fn create_scope_in(
+        &self,
+        conn: &mut PgConnection,
+        parent: ScopeId,
+        kind: ScopeKind,
+    ) -> Result<ScopeId> {
         let row = sqlx::query(sql(format!(
             "select kind, campus_id from {} where id = $1",
             self.table("scope")
         )))
         .bind(parent.as_uuid())
-        .fetch_optional(&mut *tx)
+        .fetch_optional(&mut *conn)
         .await
         .map_err(kampus_db::classify)?
         .ok_or_else(|| Error::not_found("access.scope_not_found"))?;
@@ -112,8 +129,7 @@ impl Access {
             row.get::<Option<uuid::Uuid>, _>("campus_id")
                 .map(ScopeId::from_uuid)
         };
-        self.insert_scope(&mut tx, id, kind, Some(parent), campus).await?;
-        tx.commit().await.map_err(kampus_db::classify)?;
+        self.insert_scope(conn, id, kind, Some(parent), campus).await?;
         Ok(id)
     }
 
@@ -227,13 +243,28 @@ impl Access {
     ///
     /// A `conflict` error when the campus does not exist or the id is taken.
     pub async fn create_principal(&self, id: PrincipalId, campus: ScopeId) -> Result<()> {
+        let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
+        self.create_principal_in(&mut conn, id, campus).await
+    }
+
+    /// Creates a principal inside the caller's transaction, so identity creates it with its account.
+    ///
+    /// # Errors
+    ///
+    /// As [`Access::create_principal`].
+    pub async fn create_principal_in(
+        &self,
+        conn: &mut PgConnection,
+        id: PrincipalId,
+        campus: ScopeId,
+    ) -> Result<()> {
         sqlx::query(sql(format!(
             "insert into {} (id, campus_id) values ($1, $2)",
             self.table("principal")
         )))
         .bind(id.as_uuid())
         .bind(campus.as_uuid())
-        .execute(self.db.pool())
+        .execute(conn)
         .await
         .map(drop)
         .map_err(kampus_db::classify)
@@ -246,13 +277,28 @@ impl Access {
     ///
     /// A `not_found` error for an unknown principal.
     pub async fn set_principal_active(&self, id: PrincipalId, active: bool) -> Result<()> {
+        let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
+        self.set_principal_active_in(&mut conn, id, active).await
+    }
+
+    /// Marks a principal active or not inside the caller's transaction, together with the account change.
+    ///
+    /// # Errors
+    ///
+    /// As [`Access::set_principal_active`].
+    pub async fn set_principal_active_in(
+        &self,
+        conn: &mut PgConnection,
+        id: PrincipalId,
+        active: bool,
+    ) -> Result<()> {
         let updated = sqlx::query(sql(format!(
             "update {} set active = $2 where id = $1",
             self.table("principal")
         )))
         .bind(id.as_uuid())
         .bind(active)
-        .execute(self.db.pool())
+        .execute(conn)
         .await
         .map_err(kampus_db::classify)?
         .rows_affected();

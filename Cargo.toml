@@ -50,6 +50,8 @@ kampus-db = { path = "crates/db" }
 kampus-storage = { path = "crates/storage" }
 kampus-cache = { path = "crates/cache" }
 kampus-access = { path = "crates/access" }
+kampus-identity = { path = "crates/identity" }
+argon2 = { version = "0.6.0", default-features = false, features = ["alloc"] }
 async-trait = "0.1.92"
 bytes = "1.12.2"
 moka = { version = "0.12.16", features = ["future"] }
@@ -58,6 +60,7 @@ redis = { version = "1.8.2", default-features = false, features = ["tokio-comp",
 tempfile = "3.27.0"
 axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "tokio", "query"] }
 base64 = "0.23.1"
+getrandom = "0.4.3"
 clap = { version = "4.6.8", features = ["derive", "env"] }
 http-body-util = "0.1.5"
 serde = { version = "1.0.229", features = ["derive"] }

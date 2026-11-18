@@ -14,6 +14,7 @@ package identity {
     email : text
     status : text
     pseudonym : text
+    deletion_due_at : timestamptz
   }
   entity password {
     * account_id : uuid <<PK, FK>>
@@ -22,7 +23,7 @@ package identity {
   entity passkey {
     * id : uuid <<PK>>
     account_id : uuid <<FK>>
-    credential_id : bytea <<UNIQUE>>
+    credential : bytea <<UNIQUE>>
   }
   entity identity_provider {
     * id : uuid <<PK>>

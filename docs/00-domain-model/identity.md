@@ -66,7 +66,7 @@ Modules `kampus-identity` (level 1: accounts, credentials, external identities, 
 
 ## Lifecycles
 
-- **Account:** invited → pending confirmation → active ⇄ suspended → (grace period) → deleted, leaving a tombstone.
+- **Account:** signed up → pending confirmation → active ⇄ suspended → (grace period) → deleted, leaving a tombstone. An invitation link proves the email as a confirmation link does, so an invited account becomes active directly.
 - **Session:** created by the pipeline → refreshed while used → ends at expiry, sign-out, or revocation (RN-031).
 - **API token:** created (shown once) → used → expires or is revoked.
 
