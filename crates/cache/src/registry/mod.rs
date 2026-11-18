@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! How adapters register in a build and how the configured one is opened (DEC-086).
+//! How adapters register in a build and how the configured one is opened.
 
 use std::sync::Arc;
 
@@ -42,7 +42,7 @@ use kampus_common::Result;
 /// What an adapter returns while it opens.
 pub type Opening = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Arc<dyn Cache>>> + Send>>;
 
-/// A cache adapter as it registers itself in a build (DEC-086): the URL schemes it serves and how it opens.
+/// A cache adapter as it registers itself in a build: the URL schemes it serves and how it opens.
 #[derive(Debug, Clone, Copy)]
 pub struct Adapter {
     /// The name of the adapter, for logs and errors.

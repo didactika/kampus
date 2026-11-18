@@ -32,10 +32,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Access control of Kampus (DEC-017, DEC-027, DEC-028): the scope tree with sections, principals,
+//! Access control of Kampus: the scope tree with sections, principals,
 //! roles made from templates, grants, overrides, permission checks with their explanation, and "view as".
 //!
-//! There is no bypass (RN-007): administrators are principals with roles, checked like everyone else.
+//! There is no bypass: administrators are principals with roles, checked like everyone else.
 
 pub mod db;
 pub mod model;
@@ -61,7 +61,7 @@ pub use service::scope::PathScope;
 pub struct Access {
     /// The database of the installation.
     db: Database,
-    /// Where "now" comes from (DEC-022).
+    /// Where "now" comes from.
     clock: Arc<dyn Clock>,
 }
 

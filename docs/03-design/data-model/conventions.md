@@ -97,6 +97,7 @@ The linter (`kampus_db::lint`) replays the declared steps of every module in dep
 | L-06 | a foreign key points to a later module (DM-05) |
 | L-07 | a name breaks the conventions above or uses an unquoted reserved word |
 | L-08 | a step drops a column a supported release still reads, or adds a required column without a default |
+| L-09 | SQL outside the neutral schema (`Change::Postgres`) gives no reason |
 
 ## Anti-patterns and the Kampus fix
 

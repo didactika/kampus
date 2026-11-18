@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Server-side sessions (RN-031) and step-up (RN-032). A session token is random and stored as a hash;
+//! Server-side sessions and step-up. A session token is random and stored as a hash;
 //! every request checks the session against the account's status, so revocation is immediate.
 
 use kampus_access::ScopeId;
@@ -108,7 +108,7 @@ impl Identity {
     }
 
     /// The session a token carries, checked against its lifetime, its idle time and the status of its
-    /// account (RN-031).
+    /// account.
     ///
     /// # Errors
     ///
@@ -238,7 +238,7 @@ impl Identity {
         }
     }
 
-    /// Ends every session and revokes every API token of an account (RN-031).
+    /// Ends every session and revokes every API token of an account.
     pub(crate) async fn revoke_everything_in(
         &self,
         conn: &mut PgConnection,
@@ -264,7 +264,7 @@ impl Identity {
         .map_err(kampus_db::classify)
     }
 
-    /// Proves the password again for a sensitive operation (RN-032); the session's strong authentication
+    /// Proves the password again for a sensitive operation; the session's strong authentication
     /// becomes now.
     ///
     /// # Errors
@@ -292,7 +292,7 @@ impl Identity {
         })
     }
 
-    /// Refuses a sensitive operation when the session's last strong authentication is too old (RN-032).
+    /// Refuses a sensitive operation when the session's last strong authentication is too old.
     ///
     /// # Errors
     ///

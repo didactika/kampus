@@ -121,5 +121,5 @@ pub const TEMPLATES: &[RoleTemplateDeclaration] = &[
     },
 ];
 
-/// The template of the role visitors read with (RN-009).
+/// The template of the role visitors read with.
 pub const GUEST_TEMPLATE: &str = "guest";

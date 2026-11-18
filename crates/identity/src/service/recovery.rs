@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Recovering access (UC-007 A2, RN-030): a link by email, then the second factor or a recovery code when
+//! Recovering access: a link by email, then the second factor or a recovery code when
 //! the account has one, then a new password. Recovery is rate-limited, ends every session and token,
 //! tells the owner, and never signs the person in by itself.
 
@@ -57,7 +57,7 @@ pub struct RecoveryNeeds {
 
 impl Identity {
     /// Starts a recovery: when the email has an active account, it receives a link. The answer is the
-    /// same whatever happens (RN-027), and an account receives a few links per hour at most.
+    /// same whatever happens, and an account receives a few links per hour at most.
     ///
     /// # Errors
     ///

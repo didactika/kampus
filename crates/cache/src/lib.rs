@@ -32,11 +32,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The cache port of Kampus (DEC-009, infrastructure ports): entries with a time to live, counters with a
-//! window (rate limits, RN-198) and short locks with a lease. A value is always recomputable from the
+//! The cache port of Kampus: entries with a time to live, counters with a
+//! window (rate limits) and short locks with a lease. A value is always recomputable from the
 //! database, so losing the cache never loses data.
 //!
-//! Adapters implement [`Cache`] and pass the suite of [`conformance`] (DEC-066). [`Layered`] puts an
+//! Adapters implement [`Cache`] and pass the suite of [`conformance`]. [`Layered`] puts an
 //! in-process cache in front of a shared one.
 
 #[cfg(feature = "conformance")]

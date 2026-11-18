@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Upgrades (DEC-080, DEC-082): the ordered, immutable steps of each module and the runner that applies
+//! Upgrades: the ordered, immutable steps of each module and the runner that applies
 //! them from any supported release.
 
 mod runner;

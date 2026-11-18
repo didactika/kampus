@@ -32,8 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Synchronises what modules declare (DEC-015): permissions and role templates. A permission no module
-//! declares any more is retired, never deleted, so references keep working (RN-021).
+//! Synchronises what modules declare: permissions and role templates. A permission no module
+//! declares any more is retired, never deleted, so references keep working.
 
 use kampus_common::Result;
 

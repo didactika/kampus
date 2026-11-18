@@ -32,4 +32,4 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # ------------------------------------------------------------------------------
 
-# Adapters published outside this repository, registered in kampus-server by tools/repo-check --fix (DEC-086).
+# Adapters published outside this repository, registered in kampus-server by tools/repo-check --fix.

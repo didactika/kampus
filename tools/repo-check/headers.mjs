@@ -33,7 +33,7 @@
 // ------------------------------------------------------------------------------
 
 /**
- * The standard file header of DEC-083: which files need it, how it is written in each comment syntax,
+ * The standard file header: which files need it, how it is written in each comment syntax,
  * and how a missing or outdated one is replaced.
  */
 import fs from 'node:fs';
@@ -66,7 +66,7 @@ const EXEMPT = [/^docs\//, /\.md$/, /\.mdx$/, /\.json$/, /\.lock$/, /^LICENSE$/,
 /** The project line every header starts its notice with. */
 export const MARKER = 'This file is part of Kampus';
 
-/** The licence of Kampus (DEC-085). */
+/** The licence of Kampus. */
 export const SPDX = 'AGPL-3.0-or-later';
 
 /** The KAMPUS banner, in the standard FIGlet font. */

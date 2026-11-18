@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! One-time tokens (RN-026): random, stored only as hashes, expiring and used once. Issuing a token
+//! One-time tokens: random, stored only as hashes, expiring and used once. Issuing a token
 //! replaces the unused tokens of the same purpose, so only the latest link works.
 
 use kampus_common::{Error, FieldError, Result};
@@ -50,7 +50,7 @@ pub enum Purpose {
     Invitation,
     /// Sets a password asked by a manager.
     SetPassword,
-    /// Recovers access (RN-030).
+    /// Recovers access.
     Recovery,
     /// A code sent by email as a second factor.
     EmailCode,
@@ -113,7 +113,7 @@ impl Identity {
         Ok(token)
     }
 
-    /// Issues an eight-digit code for an account, such as an email code (RN-029), and returns it.
+    /// Issues an eight-digit code for an account, such as an email code, and returns it.
     pub(crate) async fn issue_code_in(
         &self,
         conn: &mut PgConnection,

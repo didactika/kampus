@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! What every infrastructure port shares about its adapters (DEC-086): the settings an adapter is opened
+//! What every infrastructure port shares about its adapters: the settings an adapter is opened
 //! with, and how the scheme of its URL chooses it.
 
 use std::collections::BTreeMap;
@@ -44,7 +44,7 @@ use crate::{Error, FieldError, Result};
 pub struct AdapterSettings {
     /// The URL that chose the adapter (`redis://cache:6379`, `s3://bucket/prefix`, `file:///var/lib/kampus`).
     pub url: String,
-    /// The installation prefix, for adapters that share a backend between installations (DEC-039).
+    /// The installation prefix, for adapters that share a backend between installations.
     pub prefix: String,
     /// The adapter's own options, from `KAMPUS_<PORT>_<OPTION>` variables (`s3_endpoint` …).
     pub options: BTreeMap<String, String>,

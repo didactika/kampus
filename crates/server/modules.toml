@@ -33,7 +33,7 @@
 # ------------------------------------------------------------------------------
 
 # Modules published outside this repository, registered in kampus-server by tools/repo-check --fix
-# (DEC-087). They follow the standard module layout and come after the modules of the repository.
+#. They follow the standard module layout and come after the modules of the repository.
 #
 # [[module]]
 # crate = "kampus-attendance"

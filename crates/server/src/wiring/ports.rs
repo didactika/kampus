@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Opens the infrastructure ports of a process with the adapters of this build (DEC-086): the scheme of
+//! Opens the infrastructure ports of a process with the adapters of this build: the scheme of
 //! each URL in the configuration chooses the adapter.
 
 use std::sync::Arc;

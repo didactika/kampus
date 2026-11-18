@@ -33,7 +33,7 @@
 // ------------------------------------------------------------------------------
 
 /**
- * The adapter registry of the server (DEC-086). Every adapter in `crates/<port>/adapters/<name>`, and every
+ * The adapter registry of the server. Every adapter in `crates/<port>/adapters/<name>`, and every
  * external adapter declared in `crates/server/adapters.toml`, becomes a dependency of `kampus-server` and an
  * entry of `crates/server/src/wiring/adapters.rs`. With `--fix` both are written; otherwise a stale registry is a
  * problem, so an adapter dropped into its folder is never forgotten.
@@ -103,7 +103,7 @@ function cargoBlock(adapters) {
 function rustBody(adapters) {
   const ports = [...new Set(adapters.map((a) => a.port))];
   const lines = [
-    '//! The adapters of every port in this build (DEC-086), written by `tools/repo-check --fix` from',
+    '//! The adapters of every port in this build, written by `tools/repo-check --fix` from',
     '//! `crates/*/adapters/*` and `crates/server/adapters.toml`. Do not edit by hand.',
   ];
   for (const port of ports) {

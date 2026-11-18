@@ -32,12 +32,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The database port of Kampus, PostgreSQL first (DEC-009, DEC-065).
+//! The database port of Kampus, PostgreSQL first.
 //!
-//! - [`Prefix`]: the installation prefix of every physical name (DEC-039).
-//! - [`Step`] and [`ModuleSteps`]: the ordered, immutable upgrade steps of each module (DEC-080).
-//! - [`Upgrader`]: applies every pending step of every module in one run, from any supported release
-//!   (DEC-082), and refuses a database that is newer than the code or whose steps changed.
+//! - [`Prefix`]: the installation prefix of every physical name.
+//! - [`Step`] and [`ModuleSteps`]: the ordered, immutable upgrade steps of each module.
+//! - [`Upgrader`]: applies every pending step of every module in one run, from any supported release,
+//!   and refuses a database that is newer than the code or whose steps changed.
 //! - [`Database`]: the connection pool with the prefix, and transactions.
 
 mod connection;

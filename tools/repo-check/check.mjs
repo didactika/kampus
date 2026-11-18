@@ -33,7 +33,7 @@
 // ------------------------------------------------------------------------------
 
 /**
- * Repository checks of Kampus: file headers (DEC-083), version and changelog (DEC-081) and the
+ * Repository checks of Kampus: file headers, version and changelog and the
  * dependency rules of the crates (architecture).
  *
  * Usage: node tools/repo-check/check.mjs [--fix] [--author <name>] [--branch <name>] [--files <list>] [--changed <list>]
@@ -74,7 +74,23 @@ const changedFile = option('--changed');
 const changed = changedFile ? fs.readFileSync(changedFile, 'utf8').split('\n').filter(Boolean) : null;
 const branch = option('--branch') ?? process.env.GITHUB_HEAD_REF ?? process.env.GITHUB_REF_NAME ?? null;
 
+/**
+ * Code never cites the specification: identifiers of rules, requirements, use cases, decisions or tasks
+ * belong in the documentation, which traces them to the code.
+ */
+function checkCodeCitations() {
+  const citation = /\b(?:RN|RNF|RF|UC|DEC|HL)-\d+|\bT-[A-Z0-9]+\.\d+/;
+  const code = /^(?:crates|tools)\/.*\.(?:rs|mjs|toml)$|^(?:Cargo|deny|clippy)\.toml$|^compose\.yaml$|^Dockerfile$|^\.github\/.*\.ya?ml$/;
+  const problems = files
+    .filter((file) => code.test(file) && fs.existsSync(path.join(root, file)))
+    .flatMap((file) => fs.readFileSync(path.join(root, file), 'utf8').split('\n')
+      .map((line, i) => (citation.test(line) ? `${file}:${i + 1}: cites the specification; keep identifiers in the documentation` : null))
+      .filter(Boolean));
+  return { problems, summary: 'code free of specification identifiers' };
+}
+
 const results = [
+  checkCodeCitations(),
   checkHeaders(root, files, { fix: args.includes('--fix'), author: option('--author') ?? process.env.KAMPUS_AUTHOR ?? 'unknown', since: workspaceVersion(root) ?? '0.1.0' }),
   checkVersions(root, { branch, changed }),
   checkArchitecture(root),

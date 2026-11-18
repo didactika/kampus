@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Upgrade steps (DEC-080, DEC-082): each module declares its ordered steps as neutral schema changes; a
+//! Upgrade steps: each module declares its ordered steps as neutral schema changes; a
 //! released step is never edited, which its checksum proves.
 
 use sha2::{Digest, Sha256};

@@ -36,7 +36,7 @@
  * Architecture rules of the Rust workspace, checked against `docs/03-design/architecture.md`.
  *
  * - Every crate in `crates/<folder>` is a module of the module table; every crate in
- *   `crates/<port>/adapters/<name>` is an adapter of that port, named `<port>-<name>` (DEC-086).
+ *   `crates/<port>/adapters/<name>` is an adapter of that port, named `<port>-<name>`.
  * - A module depends only on modules listed before it in the table (dependency rule 1).
  * - Only `kampus-server` depends on adapters, which it registers (dependency rule 5).
  */

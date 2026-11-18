@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The module contract of Kampus (DEC-015, DEC-087): every module crate exposes one [`Module`] in
+//! The module contract of Kampus: every module crate exposes one [`Module`] in
 //! `src/module.rs`, and the server reads it to install the module's schema and to synchronise what it
 //! declares. Nothing is discovered from file names; the standard layout only tells developers where each
 //! declaration lives.

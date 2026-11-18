@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The conformance suite of the cache port (DEC-066): an adapter is supported only when it passes every
+//! The conformance suite of the cache port: an adapter is supported only when it passes every
 //! check here, run against a real backend.
 
 #![allow(

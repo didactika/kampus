@@ -33,7 +33,7 @@
 // ------------------------------------------------------------------------------
 
 //! Request identifiers: every request and job carries one, in every log line and in every error a caller
-//! sees (DEC-018, DEC-019).
+//! sees.
 
 use std::fmt;
 

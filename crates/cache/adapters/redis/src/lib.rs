@@ -33,7 +33,7 @@
 // ------------------------------------------------------------------------------
 
 //! The shared cache adapter on Redis or Valkey: what every instance of an installation sees. Keys carry
-//! the installation prefix (DEC-039), so several installations can share one server.
+//! the installation prefix, so several installations can share one server.
 
 mod store;
 
@@ -41,7 +41,7 @@ use kampus_cache::Cache;
 
 pub use store::RedisCache;
 
-/// The registration of this adapter (DEC-086): `redis://`, `rediss://` and `valkey://` URLs.
+/// The registration of this adapter: `redis://`, `rediss://` and `valkey://` URLs.
 pub const ADAPTER: kampus_cache::Adapter = kampus_cache::Adapter {
     name: "redis",
     schemes: &["redis", "rediss", "valkey"],

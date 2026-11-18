@@ -32,8 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The HTTP layer of every role: liveness and readiness (DEC-019), request identifiers on every request
-//! and response, and problem details (RFC 9457) for errors (DEC-018).
+//! The HTTP layer of every role: liveness and readiness, request identifiers on every request
+//! and response, and problem details (RFC 9457) for errors.
 
 use axum::Router;
 use axum::extract::State;
@@ -135,7 +135,7 @@ async fn not_found(headers: HeaderMap) -> Response {
 }
 
 /// Turns an error into problem details: kind, code, parameters, fields and the request id; internal
-/// errors expose only the request id (DEC-018).
+/// errors expose only the request id.
 pub fn problem(error: &Error, headers: &HeaderMap) -> Response {
     let request_id = headers
         .get(REQUEST_ID)

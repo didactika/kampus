@@ -33,7 +33,7 @@
 // ------------------------------------------------------------------------------
 
 /**
- * The modules of the build and their standard layout (DEC-087).
+ * The modules of the build and their standard layout.
  *
  * Every crate says what it is in `[package.metadata.kampus] kind`: `foundation`, `port`, `adapter`,
  * `module` or `server`. Module crates follow one layout, so every declaration has one place, and the
@@ -154,7 +154,7 @@ function checkLayout(root) {
       continue;
     }
     const base = path.join(root, c.dir);
-    const where = `the ${c.kind} layout (DEC-087)`;
+    const where = `the ${c.kind} layout`;
     for (const entry of fs.readdirSync(base)) {
       if (!['Cargo.toml', 'README.md', 'src', 'tests', ...layout.root].includes(entry)) {
         problems.push(`${c.dir}/${entry}: not part of ${where}`);
@@ -176,7 +176,7 @@ function checkLayout(root) {
     }
     for (const [file, pattern, what] of layout.declarations) {
       const full = path.join(base, file);
-      if (!fs.existsSync(full)) problems.push(`${c.dir}/${file}: missing (DEC-087)`);
+      if (!fs.existsSync(full)) problems.push(`${c.dir}/${file}: missing`);
       else if (!pattern.test(fs.readFileSync(full, 'utf8'))) problems.push(`${c.dir}/${file}: ${what}`);
     }
   }
@@ -194,7 +194,7 @@ function walkFolders(dir) {
 function rustBody(modules) {
   const entries = modules.map((m) => `&${m.crate.replace(/-/g, '_')}::MODULE`);
   return [
-    '//! The modules of this build (DEC-087), in dependency order, written by `tools/repo-check --fix` from',
+    '//! The modules of this build, in dependency order, written by `tools/repo-check --fix` from',
     '//! the module crates and `crates/server/modules.toml`. Do not edit by hand.',
     '',
     '/// Every module of this build.',

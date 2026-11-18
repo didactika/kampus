@@ -32,9 +32,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The scope tree (RN-001, RN-002): every scope has a kind, a parent of an allowed kind and its campus;
+//! The scope tree: every scope has a kind, a parent of an allowed kind and its campus;
 //! the closure table is kept in the transaction that creates a scope. Also principals, which belong to a
-//! campus (DEC-079).
+//! campus.
 
 use kampus_common::{Error, Result};
 use sqlx::{PgConnection, Row};
@@ -80,7 +80,7 @@ impl Access {
         Ok(id)
     }
 
-    /// Creates a scope under a parent, when its kind may hang from the parent's (RN-001).
+    /// Creates a scope under a parent, when its kind may hang from the parent's.
     ///
     /// # Errors
     ///
@@ -213,7 +213,7 @@ impl Access {
             .ok_or_else(|| Error::not_found("access.scope_not_found"))
     }
 
-    /// Freezes or unfreezes a scope; both need `access.scope.freeze` in it (RN-011). Changing a frozen
+    /// Freezes or unfreezes a scope; both need `access.scope.freeze` in it. Changing a frozen
     /// scope is refused, so unfreezing checks the permission as if the scope were open.
     ///
     /// # Errors
@@ -271,7 +271,7 @@ impl Access {
     }
 
     /// Marks a principal active or not; identity calls it when an account is suspended, restored or
-    /// deleted, so inactive accounts fail every check (RN-010).
+    /// deleted, so inactive accounts fail every check.
     ///
     /// # Errors
     ///

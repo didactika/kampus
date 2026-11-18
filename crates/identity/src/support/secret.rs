@@ -32,8 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Secrets: random tokens from the operating system (RN-026), their hashes, and Argon2id password hashes
-//! (RN-025). Tokens are stored only as SHA-256 hashes; they carry enough entropy for a fast hash.
+//! Secrets: random tokens from the operating system, their hashes, and Argon2id password hashes.
+//! Tokens are stored only as SHA-256 hashes; they carry enough entropy for a fast hash.
 
 use std::sync::{Arc, OnceLock};
 

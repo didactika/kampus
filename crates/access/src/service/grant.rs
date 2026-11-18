@@ -32,8 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Grants (UC-001): who holds which role where. Every change is recorded (RN-015) and never leaves a
-//! campus unmanaged (RN-008).
+//! Grants: who holds which role where. Every change is recorded and never leaves a
+//! campus unmanaged.
 
 use kampus_common::{Error, FieldError, Result, Timestamp};
 use serde_json::json;
@@ -45,14 +45,14 @@ use crate::{Access, Actor, AllowanceKind, GrantId, PrincipalId, RoleId, ScopeId,
 
 /// Who a new grant comes from.
 enum Origin<'a> {
-    /// A person, with the permission and the allowance (RN-013).
+    /// A person, with the permission and the allowance.
     Manual(&'a Actor),
-    /// A module that owns the grant, such as an enrolment (RN-016).
+    /// A module that owns the grant, such as an enrolment.
     Module(&'a str),
 }
 
 impl Access {
-    /// Grants a role to a principal in a scope, from now until `until` (RN-013).
+    /// Grants a role to a principal in a scope, from now until `until`.
     ///
     /// # Errors
     ///
@@ -70,7 +70,7 @@ impl Access {
             .await
     }
 
-    /// Grants a role on behalf of a module, which owns the grant and is the only one to remove it (RN-016).
+    /// Grants a role on behalf of a module, which owns the grant and is the only one to remove it.
     ///
     /// # Errors
     ///
@@ -219,11 +219,11 @@ impl Access {
     }
 
     /// Removes a manual grant: needs `access.grant.delete`; grants owned by a module are removed only by
-    /// it (RN-016); refused when it leaves the campus unmanaged (RN-008).
+    /// it; refused when it leaves the campus unmanaged.
     ///
     /// # Errors
     ///
-    /// `permission_denied`, `conflict` for a module's grant or for RN-008, `not_found` for an unknown grant.
+    /// `permission_denied`, `conflict` for a module's grant or when it would leave the campus without anyone to manage it, `not_found` for an unknown grant.
     pub async fn revoke(&self, actor: &Actor, grant: GrantId) -> Result<()> {
         self.remove_grant(Some(actor), None, grant).await
     }
@@ -232,7 +232,7 @@ impl Access {
     ///
     /// # Errors
     ///
-    /// `conflict` when another module or a person owns it, or for RN-008.
+    /// `conflict` when another module or a person owns it, when it would leave the campus without anyone to manage it.
     pub async fn revoke_for_module(&self, module: &str, grant: GrantId) -> Result<()> {
         self.remove_grant(None, Some(module), grant).await
     }
@@ -330,7 +330,7 @@ impl Access {
     }
 
     /// Refuses a change that leaves a campus, managed before it, without an active principal able to grant
-    /// roles in it (RN-008).
+    /// roles in it.
     pub(crate) async fn ensure_still_managed(
         &self,
         conn: &mut PgConnection,

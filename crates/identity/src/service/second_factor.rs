@@ -32,9 +32,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Second factors (UC-008, RN-029): codes from an authenticator app, codes by email, and recovery codes
-//! shown once and stored as hashes. Adding or removing a factor needs a recent strong authentication
-//! (RN-032). A sign-in that needs a second factor ends here, with a session of the higher level.
+//! Second factors: codes from an authenticator app, codes by email, and recovery codes
+//! shown once and stored as hashes. Adding or removing a factor needs a recent strong authentication.
+//! A sign-in that needs a second factor ends here, with a session of the higher level.
 
 use kampus_common::{Error, FieldError, Result, Timestamp};
 use sqlx::{PgConnection, Row};
@@ -350,7 +350,7 @@ impl Identity {
         Ok(())
     }
 
-    /// Completes a sign-in with its second factor (UC-007 step 3). The challenge works once: a wrong
+    /// Completes a sign-in with its second factor. The challenge works once: a wrong
     /// factor ends it, counts as a failed sign-in, and the person signs in again.
     ///
     /// # Errors
@@ -402,7 +402,7 @@ impl Identity {
         })
     }
 
-    /// Whether the account must give a second factor (RN-029): it set one up, one of its roles requires it,
+    /// Whether the account must give a second factor: it set one up, one of its roles requires it,
     /// or the campus does.
     pub(crate) async fn second_factor_needed(
         &self,

@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Typed identifiers (DEC-021): every entity has its own identifier type wrapping a UUID version 7, so an
+//! Typed identifiers: every entity has its own identifier type wrapping a UUID version 7, so an
 //! identifier of one kind cannot be passed where another is expected.
 
 /// Declares a typed identifier wrapping a UUID version 7.

@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The permissions identity declares (DEC-015); the values its role templates give them are in
+//! The permissions identity declares; the values its role templates give them are in
 //! [`templates`].
 
 use kampus_access::{PermissionDeclaration, PermissionKind, Risk, ScopeKind};
@@ -41,17 +41,17 @@ pub mod templates;
 
 pub use templates::{MEMBER_TEMPLATE, TEMPLATES};
 
-/// Invite people to a campus and create service accounts (UC-009).
+/// Invite people to a campus and create service accounts.
 pub const ACCOUNT_INVITE: &str = "identity.account.invite";
-/// Suspend and reactivate accounts (RN-023).
+/// Suspend and reactivate accounts.
 pub const ACCOUNT_SUSPEND: &str = "identity.account.suspend";
-/// Schedule and cancel the deletion of accounts (RN-034, RN-035).
+/// Schedule and cancel the deletion of accounts.
 pub const ACCOUNT_DELETE: &str = "identity.account.delete";
 /// Read the accounts of a campus.
 pub const ACCOUNT_READ: &str = "identity.account.read";
 /// Configure the identity providers of a campus.
 pub const PROVIDER_MANAGE: &str = "identity.provider.manage";
-/// Create and revoke one's own API tokens (RN-033).
+/// Create and revoke one's own API tokens.
 pub const TOKEN_MANAGE_OWN: &str = "identity.token.manage_own";
 /// Create and revoke the API tokens of any account, such as service accounts.
 pub const TOKEN_MANAGE_ANY: &str = "identity.token.manage_any";

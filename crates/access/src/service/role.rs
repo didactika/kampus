@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Roles (RN-017): made from a template version, with the scope kinds where they can be granted and the
+//! Roles: made from a template version, with the scope kinds where they can be granted and the
 //! roles they may grant, override or view as. A role can be compared with its template and reset to it.
 
 use std::collections::BTreeMap;
@@ -164,7 +164,7 @@ impl Access {
         Ok(roles)
     }
 
-    /// Creates a role of a campus from the latest version of a template (RN-017).
+    /// Creates a role of a campus from the latest version of a template.
     ///
     /// # Errors
     ///
@@ -272,11 +272,11 @@ impl Access {
     }
 
     /// Gives a role a value for a permission, or removes its value with `None`; refused when it would
-    /// leave the campus without anyone able to manage access (RN-008). Recorded (RN-015).
+    /// leave the campus without anyone able to manage access. Recorded.
     ///
     /// # Errors
     ///
-    /// `permission_denied` without `access.role.manage`, `conflict` for RN-008.
+    /// `permission_denied` without `access.role.manage`, `conflict` when it would leave the campus without anyone to manage it.
     pub async fn set_role_value(
         &self,
         actor: &Actor,
@@ -386,7 +386,7 @@ impl Access {
         self.differences(&mut conn, role).await
     }
 
-    /// Makes a role require a second factor from the people who hold it, or not (RN-029); needs
+    /// Makes a role require a second factor from the people who hold it, or not; needs
     /// `access.role.manage` in the role's campus. The change is recorded.
     ///
     /// # Errors
@@ -425,7 +425,7 @@ impl Access {
         tx.commit().await.map_err(kampus_db::classify)
     }
 
-    /// Whether a principal holds, now, a role that requires a second factor (RN-029).
+    /// Whether a principal holds, now, a role that requires a second factor.
     ///
     /// # Errors
     ///
@@ -446,11 +446,11 @@ impl Access {
     }
 
     /// Resets a role to the latest version of its template: without `confirm` it only shows the
-    /// differences; with it, it applies them (RN-017).
+    /// differences; with it, it applies them.
     ///
     /// # Errors
     ///
-    /// `permission_denied` without `access.role.manage`, `conflict` for RN-008.
+    /// `permission_denied` without `access.role.manage`, `conflict` when it would leave the campus without anyone to manage it.
     pub async fn reset_to_template(
         &self,
         actor: &Actor,

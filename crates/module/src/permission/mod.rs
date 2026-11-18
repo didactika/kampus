@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The vocabulary of what modules declare to access control (DEC-017, DEC-027): kinds of scope, values,
+//! The vocabulary of what modules declare to access control: kinds of scope, values,
 //! risks, permissions and role templates.
 
 use std::fmt;
@@ -41,7 +41,7 @@ use std::str::FromStr;
 use kampus_common::{Error, FieldError};
 use serde::Serialize;
 
-/// The kinds of scope, in the order of the tree (RN-001).
+/// The kinds of scope, in the order of the tree.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ScopeKind {
@@ -55,7 +55,7 @@ pub enum ScopeKind {
     Category,
     /// A course.
     Course,
-    /// A section of a course, possibly nested (DEC-007).
+    /// A section of a course, possibly nested.
     Section,
     /// An activity or material.
     Activity,
@@ -95,7 +95,7 @@ impl ScopeKind {
         }
     }
 
-    /// How deep the kind sits in the tree; a permission is meaningful only down to its lowest kind (RN-012).
+    /// How deep the kind sits in the tree; a permission is meaningful only down to its lowest kind.
     #[must_use]
     pub const fn rank(self) -> u8 {
         match self {
@@ -110,7 +110,7 @@ impl ScopeKind {
         }
     }
 
-    /// Whether a scope of this kind may hang from a parent of `parent` kind (RN-001).
+    /// Whether a scope of this kind may hang from a parent of `parent` kind.
     #[must_use]
     pub const fn may_hang_from(self, parent: Self) -> bool {
         match self {
@@ -156,7 +156,7 @@ pub enum Value {
     Allow,
     /// The role does not allow it here; a lower scope may allow it again.
     Deny,
-    /// No role and no lower scope may allow it (RN-005).
+    /// No role and no lower scope may allow it.
     Forbid,
 }
 
@@ -231,7 +231,7 @@ impl Risk {
     }
 }
 
-/// A permission as a module declares it (RN-021, DEC-015).
+/// A permission as a module declares it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PermissionDeclaration {
     /// The code, `<module>.<entity>.<action>`.
@@ -240,11 +240,11 @@ pub struct PermissionDeclaration {
     pub kind: PermissionKind,
     /// What it can expose.
     pub risks: &'static [Risk],
-    /// The lowest kind of scope where it means something (RN-012).
+    /// The lowest kind of scope where it means something.
     pub lowest_kind: ScopeKind,
 }
 
-/// A role template as a module declares it: default values that roles are created from (RN-017).
+/// A role template as a module declares it: default values that roles are created from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RoleTemplateDeclaration {
     /// The code (`manager`, `teacher`…).

@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! File storage adapters on Apache OpenDAL (DEC-009): local disk and S3-compatible stores now, and every
+//! File storage adapters on Apache OpenDAL: local disk and S3-compatible stores now, and every
 //! backend OpenDAL supports later, behind the [`Storage`] port.
 
 mod store;
@@ -42,7 +42,7 @@ use kampus_storage::Storage;
 
 pub use store::{OpendalStorage, S3Config};
 
-/// The registration of this adapter (DEC-086): `file:///path` stores on the local disk; `s3://bucket/prefix`
+/// The registration of this adapter: `file:///path` stores on the local disk; `s3://bucket/prefix`
 /// in an S3-compatible bucket, with the options `s3_endpoint`, `s3_region`, `s3_access_key_id` and
 /// `s3_secret_access_key`.
 pub const ADAPTER: kampus_storage::Adapter = kampus_storage::Adapter {

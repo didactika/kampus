@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The adapters of every port in this build (DEC-086), written by `tools/repo-check --fix` from
+//! The adapters of every port in this build, written by `tools/repo-check --fix` from
 //! `crates/*/adapters/*` and `crates/server/adapters.toml`. Do not edit by hand.
 
 /// The cache adapters of this build.

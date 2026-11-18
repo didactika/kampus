@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The schema linter (DEC-014, data model conventions L-01 to L-08): it replays the declared steps of
+//! The schema linter (rules L-01 to L-09 of the data model conventions): it replays the declared steps of
 //! every module, in dependency order, and reports what breaks the conventions, before any database sees it.
 
 use std::collections::HashMap;
@@ -150,7 +150,7 @@ pub fn lint(modules: &[ModuleSteps], oldest_supported: &str) -> Vec<Finding> {
                     }
                     Change::Postgres { reason, .. } if reason.trim().is_empty() => {
                         report(
-                            "DEC-065",
+                            "L-09",
                             step.name,
                             "SQL outside the neutral schema without a reason".to_owned(),
                         );
@@ -407,7 +407,7 @@ mod tests {
     fn every_broken_convention_is_reported() {
         let findings = lint(&[GOOD, BAD], "0.1.0");
         let rules: Vec<&str> = findings.iter().map(|f| f.rule).collect();
-        for rule in ["L-01", "L-03", "L-04", "L-05", "L-06", "L-07", "L-08", "DEC-065"] {
+        for rule in ["L-01", "L-03", "L-04", "L-05", "L-06", "L-07", "L-08", "L-09"] {
             assert!(rules.contains(&rule), "{rule} missing in {findings:?}");
         }
         assert!(

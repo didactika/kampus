@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The deployment configuration (DEC-020): a file plus `KAMPUS_*` environment variables, which take
+//! The deployment configuration: a file plus `KAMPUS_*` environment variables, which take
 //! precedence. Each role validates only what it reads, and every problem is reported at once.
 
 use std::collections::HashMap;
@@ -98,7 +98,7 @@ impl fmt::Display for Role {
 /// How log lines are written.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LogFormat {
-    /// One JSON object per line, for collectors (DEC-019).
+    /// One JSON object per line, for collectors.
     Json,
     /// Human-readable lines, for development.
     Text,
