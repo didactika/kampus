@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | identity | Search | Help | Account }
   ==
-  Title of the screen
+  Home > identity > Security page
+  --
+  <b>Set up a second factor
+  Protect the account with a passkey, an authenticator app or email codes…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Chooses passkey, authenticator app or email… | ^passkey, authenticator app or…^
+    2. Registers the passkey or enters the first c… | [ Register ]
+    3. Saves the recovery codes | [ Save ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The person removes a factor: Step-up; refused if a role or the campu…
+  --
+  [ Save ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

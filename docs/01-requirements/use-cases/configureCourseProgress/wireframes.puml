@@ -1,13 +1,18 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | progress | Search | Help | Account }
   ==
-  Title of the screen
+  Home > progress > Course progress settings
+  --
+  <b>Configure course progress
+  Decide what completing the course means, and which courses come first
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Chooses criteria (activities, grade, date, … | ^criteria (activities, grade, …^
+    2. Sets prerequisites | "                    "
+    3. Saves | [ Save ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  [ Save ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

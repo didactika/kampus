@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | privacy | Search | Help | Account }
   ==
-  Title of the screen
+  Home > privacy > Privacy page
+  --
+  <b>Export my personal data
+  Receive a copy of all personal data the campus keeps about them
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Requests an export | [ Request ]
+    3. Opens the package | [ Open ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> A module fails: The item is failed and retried; the req…
+  <&warning> The package expired: 410; a new request is needed
+  --
+  [ Request ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

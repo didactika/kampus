@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | identity | Search | Help | Account }
   ==
-  Title of the screen
+  Home > identity > Sign-up and confirm pages
+  --
+  <b>Sign up and confirm an account
+  Create an account and prove the email belongs to the person
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Gives name, email and accepts the campus te… | "                    "
+    3. Opens the link and chooses a password | [ Open ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The email is already used: Sends a you already have an account mes…
+  <&warning> The link expired or was used: Offers a new link
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

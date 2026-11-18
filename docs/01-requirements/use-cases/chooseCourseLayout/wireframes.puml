@@ -1,13 +1,19 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | courses | Search | Help | Account }
   ==
-  Title of the screen
+  Home > courses > Course settings
+  --
+  <b>Choose a course layout
+  Present the course with a layout plugin (topics, weekly, single activit…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens the course settings and chooses a lay… | [ Open ]
+    2. Adjusts its settings and saves | [ Adjust ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The layout is disabled later in t…: The course falls back to the campus def…
+  --
+  [ Save ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

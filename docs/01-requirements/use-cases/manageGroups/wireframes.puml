@@ -1,13 +1,21 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | courses | Search | Help | Account }
   ==
-  Title of the screen
+  Home > courses > Groups screens
+  --
+  <b>Manage groups and group sets
+  Create groups (for the course or for one section), group sets and membe…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Creates a group, optionally limited to a se… | [ Create ]
+    2. Adds enrolled people | "                    "
+    3. Groups them in sets and chooses the group m… | [ Group ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The actor removes a membership cr…: conflict: the enrolment owns it (RN-054)
+  <&warning> A hidden group is chosen for grou…: Refused when chosen (RN-055)
+  --
+  [ Create ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

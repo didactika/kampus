@@ -1,13 +1,19 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | customise | Search | Help | Account }
   ==
-  Title of the screen
+  Home > customise > Terminology page
+  --
+  <b>Rename terms
+  Use the organisation's own words (for example programme for course) in …
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens the terms of a scope | [ Open ]
+    2. Enters the forms for a language and saves | "                    "
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> Terms are locked above: 409 with the level that locked them
+  --
+  [ Save ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | plugins | Search | Help | Account }
   ==
-  Title of the screen
+  Home > plugins > kampus plugin commands
+  --
+  <b>Build and package a plugin
+  Write a plugin of a type, test it against the host and publish a signed…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Scaffolds a plugin of a type | [ Scaffold ]
+    2. Implements and tests it | [ Implement ]
+    3. Packs it | [ Pack ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The plugin calls an interface it …: The call fails in the harness, as in pr…
+  --
+  [ Pack ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

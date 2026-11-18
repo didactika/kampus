@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | customise | Search | Help | Account }
   ==
-  Title of the screen
+  Home > customise > Page editor
+  --
+  <b>Arrange a page and its menus
+  Place widgets in the regions of a page and edit its menus
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens a page in edit mode | [ Open ]
+    2. Adds, moves or removes widgets and saves | "                    "
+    3. Edits a menu | "                    "
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> A widget's plugin is disabled: The widget is skipped; the page still r…
+  --
+  [ Save ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

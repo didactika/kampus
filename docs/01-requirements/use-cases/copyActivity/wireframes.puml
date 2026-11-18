@@ -1,13 +1,17 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | activities | Search | Help | Account }
   ==
-  Title of the screen
+  Home > activities > Course editor
+  --
+  <b>Copy or move an activity
+  Reuse an activity in another place or course, or move it
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Chooses copy or move and the target | ^copy or move and the target^
+    2. Confirms | [ Confirm ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  [ Confirm ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

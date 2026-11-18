@@ -1,13 +1,21 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | users | Search | Help | Account }
   ==
-  Title of the screen
+  Home > users > Profile page
+  --
+  <b>Edit a profile
+  Keep names, picture, language, time zone and custom fields up to date
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens a profile | [ Open ]
+    2. Changes values | "                    "
+    3. Saves | [ Save ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> Changed meanwhile by someone else: precondition_failed; reload
+  <&warning> The person changes the email: Step-up, then a confirmation link to th…
+  --
+  [ Save ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

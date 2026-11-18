@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | activities | Search | Help | Account }
   ==
-  Title of the screen
+  Home > activities > Exceptions screen
+  --
+  <b>Grant an exception
+  Give a person or a group other dates, attempts or time on any activity
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Chooses a person or a group and the values | ^a person or a group and the v…^
+    2. Saves | [ Save ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> An exception already exists for t…: Offers to edit it (RN-085)
+  <&warning> The group is deleted: Its exceptions go with it, with an even…
+  --
+  [ Save ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

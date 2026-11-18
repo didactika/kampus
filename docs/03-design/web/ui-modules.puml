@@ -1,0 +1,44 @@
+@startuml
+!theme plain
+skinparam linetype ortho
+title Web client: shell, UI modules and extension points
+
+node "Browser" {
+  package "Shell (SvelteKit)" {
+    [Router] as router
+    [Layout engine] as layout
+    [Navigation] as nav
+    [Theme and strings] as theme
+    [Help and tours] as help
+    [Error boundaries] as eb
+  }
+  package "UI modules (ES modules, loaded on demand)" {
+    [courses UI] as cui
+    [records UI] as rui
+    [activity plugin UI] as pui
+  }
+  [Design system @kampus/ui] as ds
+  [Generated API client] as client
+}
+
+node "kampus-server" {
+  [kampus-api] as api
+  [UI manifests and import map] as manifest
+}
+
+router --> manifest : import map
+layout --> cui : region:course:main
+layout --> pui : activity:<type>
+nav --> rui : menu:course
+eb ..> cui
+eb ..> pui
+cui --> ds
+rui --> ds
+pui --> ds
+cui --> client
+rui --> client
+pui --> client
+client --> api : HTTPS, ETag, Idempotency-Key
+theme --> api : tokens, bundles
+help --> api : help topics
+@enduml

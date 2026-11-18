@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | notify | Search | Help | Account }
   ==
-  Title of the screen
+  Home > notify > Preferences page
+  --
+  <b>Choose how to be notified
+  Choose the channels and digests for each kind of notification
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens the preferences | [ Open ]
+    2. Changes channels or digests and saves | "                    "
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> A required type has every channel…: 422: required types can only be routed …
+  <&warning> The campus locked a type: The locked row is kept (RN-148)
+  --
+  [ Save ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

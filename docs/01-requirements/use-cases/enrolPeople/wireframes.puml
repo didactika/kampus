@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | enrolment | Search | Help | Account }
   ==
-  Title of the screen
+  Home > enrolment > Participants page
+  --
+  <b>Enrol people in a course
+  Bring one or many people into a course with a role and a period
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Searches people and chooses a role and a pe… | [ Search ]
+    2. Confirms | [ Confirm ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The person is already enrolled th…: Reported as already enrolled (RN-062)
+  <&warning> A file or a system group is used: A job validates every row and reports p…
+  --
+  [ Confirm ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

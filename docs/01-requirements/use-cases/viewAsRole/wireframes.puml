@@ -1,13 +1,21 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | access | Search | Help | Account }
   ==
-  Title of the screen
+  Home > access > View as control
+  --
+  <b>View a scope as another role
+  See a course, section or activity exactly as a learner, assistant or re…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Chooses view as and a role in a scope | ^view as and a role in a scope^
+    2. Browses | [ Browse ]
+    3. Ends the session | [ End ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The person tries to change someth…: Refused: the session is read-only
+  <&warning> The person leaves the scope: The session ends automatically
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

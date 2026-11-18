@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | i18n | Search | Help | Account }
   ==
-  Title of the screen
+  Home > i18n > Languages admin
+  --
+  <b>Install language packs and customise messages
+  Offer a language and adjust its wording for the campus or a scope
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Installs or updates a pack | [ Install ]
+    2. Customises a message for a scope | [ Customise ]
+    3. Reviews missing translations | [ Open ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The placeholders differ from the …: 422 with the expected placeholders
+  --
+  [ Install ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | events | Search | Help | Account }
   ==
-  Title of the screen
+  Home > events > Audit screen
+  --
+  <b>Review the audit log
+  Find who did what, when and where, within what they may see
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Filters by scope, person, object and dates | "                    "
+    2. Exports the range | [ Export ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> An entry is about an object the a…: It is left out (RN-144)
+  <&warning> The person was erased: Shown by pseudonym (RN-145)
+  --
+  [ Export ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

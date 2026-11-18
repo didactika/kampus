@@ -23,7 +23,7 @@ Priorities: **Must** (tier 1, core), **Should** (tier 2, standard activities and
 | RF-006 | Everything is customisable: settings, terminology, custom fields, layouts and navigation, themes, rules and workflows, notification templates and features, layered by context (DEC-008) | Must | owner | Owner, 2026-11-17 | UC-052, UC-053, UC-054, UC-056 |
 | RF-007 | Every module is designed for Kampus: it keeps what works in established practice, solves known limitations, and records each improvement as a decision and in the highlights register | Must | owner | Owner, 2026-11-17 | |
 | RF-008 | The web client uses modern, modular front-end technology: each module and plugin ships its own UI module, loaded at runtime into extension points of the shell (DEC-004) | Must | owner | Owner, 2026-11-17 | |
-| RF-009 | Documentation for every role, shipped with each release: guides for learners, teachers, section leaders, course creators, managers, mentors, administrators, operators, integrators, plugin developers and core contributors, a migration guide, generated references, and help inside the product with onboarding and guided tours (DEC-011) | Must | owner | Owner, 2026-11-17 | |
+| RF-009 | Documentation for every role, shipped with each release: guides for learners, teachers, section leaders, course creators, managers, mentors, administrators, operators, integrators, plugin developers and core contributors, a migration guide, generated references, and help inside the product with onboarding and guided tours (DEC-011) | Must | owner | Owner, 2026-11-17 | UC-059, UC-060 |
 
 ### Identity and access
 

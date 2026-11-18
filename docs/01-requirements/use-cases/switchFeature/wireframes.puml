@@ -1,13 +1,19 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | customise | Search | Help | Account }
   ==
-  Title of the screen
+  Home > customise > Features page
+  --
+  <b>Switch a feature or module on or off
+  Roll a feature or a module out to a campus, tenant or course, or turn i…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens the features of a scope | [ Open ]
+    2. Switches one | ^one^
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> Locked above: 409
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

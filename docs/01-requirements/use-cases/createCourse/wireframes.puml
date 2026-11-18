@@ -1,13 +1,22 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | courses | Search | Help | Account }
   ==
-  Title of the screen
+  Home > courses > Course creation and settings
+  --
+  <b>Create and configure a course
+  Create a course from a template, and set its names, dates, visibility, …
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Chooses a category and a template | ^a category and a template^
+    2. Gives short name, full name, dates and visi… | "                    "
+    3. Confirms | [ Confirm ]
+    4. Publishes the course when ready | [ Publish ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The short name is taken: conflict naming the field
+  <&warning> The owner archives the course at …: The course scope is frozen (RN-011, RN-…
+  --
+  [ Publish ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

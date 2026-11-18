@@ -1,13 +1,22 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | enrolment | Search | Help | Account }
   ==
-  Title of the screen
+  Home > enrolment > Course page
+  --
+  <b>Enrol oneself in a course
+  Join a course, with a key, an approval or a payment when the course ask…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens the course page and chooses to join | [ Open ]
+    2. Gives the key if asked | "                    "
+    3. Confirms | [ Confirm ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The instance requires approval: Creates a request; the person is told a…
+  <&warning> The instance requires a payment: Starts the payment; the enrolment is cr…
+  <&warning> The instance is full or closed: conflict with the reason
+  --
+  [ Confirm ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

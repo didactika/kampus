@@ -1,13 +1,18 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | records | Search | Help | Account }
   ==
-  Title of the screen
+  Home > records > Records service API (called by activity types)
+  --
+  <b>Receive a grade from an activity
+  Store a grade and update the totals that depend on it
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. An activity sends a grade for a person | [ Continue ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The same grade is sent again: Nothing changes; no second event
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

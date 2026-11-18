@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | enrolment | Search | Help | Account }
   ==
-  Title of the screen
+  Home > enrolment > Participants page
+  --
+  <b>Manage an enrolment
+  Suspend, reactivate, extend or remove a person's participation
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens a participant | [ Open ]
+    2. Suspends, reactivates or changes the period | [ Continue ]
+    3. Removes the enrolment | [ Remove ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The enrolment comes from a system…: conflict: change the source instead (RN…
+  --
+  [ Remove ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

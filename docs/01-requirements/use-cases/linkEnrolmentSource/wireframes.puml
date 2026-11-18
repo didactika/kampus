@@ -1,13 +1,19 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | enrolment | Search | Help | Account }
   ==
-  Title of the screen
+  Home > enrolment > Enrolment methods page
+  --
+  <b>Link a system group or a course
+  Keep a course's participants in sync with a system group or another cou…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Adds a system group or course-link instance… | "                    "
+    3. The source changes later | [ Continue ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The source is itself a linked cou…: Only its non-linked enrolments are used…
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

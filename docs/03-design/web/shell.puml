@@ -1,0 +1,33 @@
+@startsalt
+{+
+  {* Kampus | Courses | Calendar | Messages | Search | ? Help | Account }
+  ==
+  Home > Category > Course
+  --
+  {
+    {+
+      <b>menu:course
+      Overview
+      Sections
+      Grades
+      Progress
+      Participants
+    } |
+    {+
+      <b>region:course:main
+      [ Widget of a module ]
+      [ Activity of a plugin ]
+      .
+      <b>slot:course:tabs
+      { Overview | Grades | Progress | Settings }
+    } |
+    {+
+      <b>region:course:side
+      [ Calendar widget ]
+      [ Progress widget ]
+    }
+  }
+  --
+  <&info> Error boundary: a failing module shows a card, the page keeps working
+}
+@endsalt

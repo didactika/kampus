@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | customise | Search | Help | Account }
   ==
-  Title of the screen
+  Home > customise > Rules page
+  --
+  <b>Create a rule
+  Automate a routine (for example enrol in the next course on completion)…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Chooses a trigger | ^a trigger^
+    2. Adds conditions and actions and saves | "                    "
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> An action fails: The run is recorded as failed with its …
+  <&warning> The rule would trigger itself or …: The chain stops and is reported (RN-219)
+  --
+  [ Save ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

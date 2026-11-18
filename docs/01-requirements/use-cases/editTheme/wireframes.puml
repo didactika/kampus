@@ -1,13 +1,19 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | customise | Search | Help | Account }
   ==
-  Title of the screen
+  Home > customise > Theme editor
+  --
+  <b>Edit the theme
+  Brand the campus, a tenant or a course without code
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Changes colours, typography, spacing, radiu… | "                    "
+    2. Saves | [ Save ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> A pair of colours fails contrast: 422 naming the pair and the required ra…
+  --
+  [ Save ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

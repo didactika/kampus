@@ -1,0 +1,19 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Authenticated user" as a
+participant "kampus-api" as api
+participant "Help resolver" as svc
+database "help schema + outbox" as db
+
+a -> api : Opens help on a screen
+api -> svc : request
+svc -> db : Resolves the topic of the route or contribution (HB-01)
+svc -> db : Shows the text for the viewer's role and version, with terms applied and the campus's local pages (HB-02, HB-04)
+a -> api : Follows a link
+api -> svc : request
+svc -> db : Opens the full guide in the handbook
+svc --> a : result
+@enduml

@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | access | Search | Help | Account }
   ==
-  Title of the screen
+  Home > access > Every service operation
+  --
+  <b>Check a permission, with its explanation
+  Decide whether an actor may do something in a scope, and explain why
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. An operation needs a permission in a scope | [ Continue ]
+    4. A reviewer asks for the explanation | [ Continue ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The permission is not declared: Denied with rule unknown_permission, re…
+  <&warning> The actor is viewing as another r…: Uses that role only, read permissions o…
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

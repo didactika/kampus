@@ -1,13 +1,21 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | access | Search | Help | Account }
   ==
-  Title of the screen
+  Home > access > Permissions screen
+  --
+  <b>Override permissions in a scope
+  Change what a role may do in one scope and its descendants, for example…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens the permissions of a role in a scope | [ Open ]
+    2. Sets values to allow, deny, forbid or inher… | "                    "
+    3. Saves | [ Save ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> Another person changed them meanw…: precondition_failed; the screen reloads…
+  <&warning> The change would leave the campus…: Refused (RN-008)
+  --
+  [ Save ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

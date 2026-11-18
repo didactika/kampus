@@ -1,0 +1,37 @@
+@startuml
+!theme plain
+skinparam linetype ortho
+title Handbook: sources and outputs
+
+package "Sources" {
+  [Use-case cards] as uc
+  [Module declarations\n(permissions, settings, events, routes, messages)] as decl
+  [OpenAPI document] as oas
+  [UI manifests\n(help topics, data-help-id)] as ui
+  [Highlights register] as hl
+  [Written pages\n(tasks, concepts, tutorials)] as pages
+}
+
+package "Handbook (Starlight)" {
+  [Guides per audience] as guides
+  [Generated references] as refs
+  [Help topics] as topics
+  [Guided tours] as tours
+  [Release notes] as notes
+}
+
+package "Web client" {
+  [Help panel] as panel
+  [Tour runner] as runner
+}
+
+uc --> guides : task outlines
+pages --> guides
+decl --> refs
+oas --> refs
+ui --> topics
+ui --> tours
+hl --> notes
+topics --> panel
+tours --> runner
+@enduml

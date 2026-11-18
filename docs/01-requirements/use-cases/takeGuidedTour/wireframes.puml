@@ -1,0 +1,21 @@
+@startsalt
+{+
+  {* Kampus | help | Search | Help | Account }
+  ==
+  Home > help > Tour runner and checklist of the shell
+  --
+  <b>Take a guided tour or follow the onboarding checklist
+  Learn the main tasks of their role step by step
+  --
+  {
+    1. Starts a tour from the help panel or the ch… | [ Start ]
+    2. Follows the steps | [ Follow ]
+    3. Does a task of the checklist for real | [ Doe ]
+  }
+  --
+  <&warning> A step's element is missing: Skips it and reports it (HB-06)
+  <&warning> The person dismisses the tour: Stops it; it can be restarted from the …
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
+}
+@endsalt

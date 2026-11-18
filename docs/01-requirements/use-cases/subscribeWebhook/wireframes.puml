@@ -1,13 +1,19 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | api | Search | Help | Account }
   ==
-  Title of the screen
+  Home > api > Webhooks screen
+  --
+  <b>Subscribe a webhook
+  Have Kampus push the events an external system needs
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Gives a URL and event types | "                    "
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The endpoint keeps failing: The webhook is disabled and its owner n…
+  <&warning> The URL resolves to a private add…: 422
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

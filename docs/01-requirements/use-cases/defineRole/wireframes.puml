@@ -1,13 +1,22 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | access | Search | Help | Account }
   ==
-  Title of the screen
+  Home > access > Roles screens
+  --
+  <b>Define a role from a template
+  Create or adapt the roles of a campus, and bring them back to their tem…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Creates a role from a template version | [ Create ]
+    2. Adjusts names, values, allowances and assig… | [ Adjust ]
+    3. Asks to reset to a template version | [ Ask ]
+    4. Confirms the reset | [ Confirm ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The role changed after the preview: precondition_failed; preview again
+  <&warning> The actor deletes a role with gra…: conflict: grants must be removed first
+  --
+  [ Confirm ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

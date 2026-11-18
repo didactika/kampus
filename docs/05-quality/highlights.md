@@ -82,3 +82,8 @@ What makes Kampus stand out. This register is the source for the release notes, 
 | HL-060 | Customisation | Arrange pages, menus and branding without code, always accessible | DEC-071 | planned | Make the campus yours without developers. |
 | HL-061 | Customisation | Workflows built from building blocks, auditable and safe | DEC-072 | planned | Automate the routine without plugins. |
 | HL-062 | Customisation | Feature flags per campus, tenant or course, and customisations shared between campuses | DEC-073 | planned | Roll out features gradually and reuse configurations. |
+| HL-063 | Web client | Plugins add their own screens and widgets anywhere, and a failing one never breaks the page | DEC-074 | planned | Extend the interface without forking it. |
+| HL-064 | Web client | One accessible design system for every screen and plugin, themed without code | DEC-075 | planned | Consistent, accessible screens in every theme. |
+| HL-065 | Web client | No lost edits and no duplicates: conflicts shown, double clicks harmless | DEC-076 | planned | Work together on the same course safely. |
+| HL-066 | Help | Help for the current screen and role, onboarding checklists and guided tours | DEC-077 | planned | Learn Kampus while using it. |
+| HL-067 | Handbook | A handbook per role for every release, with references that always match the product | DEC-078 | planned | Documentation you can trust. |

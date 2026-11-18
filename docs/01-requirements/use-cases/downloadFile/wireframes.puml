@@ -1,13 +1,21 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | files | Search | Help | Account }
   ==
-  Title of the screen
+  Home > files > File link
+  --
+  <b>Open or download a file
+  Open a file attached to something they may read
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens a link to a file | [ Open ]
+    3. Downloads | [ Download ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The owner is not readable: 404
+  <&warning> The signed URL has expired: 403; the client asks for a new one
+  <&warning> A conversion is requested: Returns it or queues it (RN-135)
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

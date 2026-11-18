@@ -1,13 +1,21 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | identity | Search | Help | Account }
   ==
-  Title of the screen
+  Home > identity > Sign-in page
+  --
+  <b>Sign in, or recover access
+  Start a session through one secure pipeline, whatever the method
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Chooses password, passkey or an identity pr… | ^password, passkey or an ident…^
+    3. Gives the second factor when asked | "                    "
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The provider identity is not link…: Links only by policy (verified email) o…
+  <&warning> The person forgot the password: Recovery: token by email, then second f…
+  <&warning> Too many attempts: Slows down, then locks temporarily; the…
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt
