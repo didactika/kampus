@@ -21,7 +21,7 @@ Design: [README](../../../03-design/use-cases/manageGroups/README.md)
 | --- | --- | --- | --- |
 | Group service | service | `crates/kampus-courses/src/group.rs` | no (to build) |
 | `/api/v1/courses/{course_id}/groups`, `/api/v1/groups/{group_id}/members`, group sets | API endpoints | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
-| `courses.course_group`, `courses.course_group_member`, `courses.course_group_set` | tables | `docs/03-design/data-model/courses.md` | no (to build) |
+| `courses.group`, `courses.group_member`, `courses.group_set` | tables | `docs/03-design/data-model/courses.md` | no (to build) |
 
 ## Tests
 

@@ -21,7 +21,7 @@ Analysis: [README](../../../02-analysis/use-cases/manageGroups/README.md)
 | --- | --- | --- |
 | Group service | service | `crates/kampus-courses/src/group.rs` |
 | `/api/v1/courses/{course_id}/groups`, `/api/v1/groups/{group_id}/members`, group sets | API endpoints | `docs/03-design/api/courses.openapi.yaml` |
-| `courses.course_group`, `courses.course_group_member`, `courses.course_group_set` | tables | `docs/03-design/data-model/courses.md` |
+| `courses.group`, `courses.group_member`, `courses.group_set` | tables | `docs/03-design/data-model/courses.md` |
 
 ## Sequence
 
@@ -31,5 +31,5 @@ Analysis: [README](../../../02-analysis/use-cases/manageGroups/README.md)
 
 | Table or entity | Operation |
 | --- | --- |
-| courses.course_group, courses.course_group_member, courses.course_group_set, courses.course_group_set_member | insert, update, delete |
+| courses.group, courses.group_member, courses.group_set, courses.group_set_group | insert, update, delete |
 | settings | group mode per scope |

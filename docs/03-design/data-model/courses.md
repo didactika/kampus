@@ -7,7 +7,7 @@ sourceOfTruth: model
 
 # Data model: courses
 
-PostgreSQL schema `courses`, owned by `kampus-courses`, following DEC-014, DEC-021, DEC-022 and DEC-026. Rules refer to the [courses domain model](../../00-domain-model/courses.md).
+PostgreSQL schema `courses`, owned by `kampus-courses`, following DEC-014, DEC-021, DEC-022 and DEC-026. Rules refer to the [courses domain model](../../00-domain-model/courses.md). Table names are logical; physically every name carries the installation prefix, `kmp_` by default (DEC-039).
 
 ![Courses schema](./courses.svg)
 
@@ -20,10 +20,10 @@ PostgreSQL schema `courses`, owned by `kampus-courses`, following DEC-014, DEC-0
 | `course_layout_setting` | `course_id` FK (`CASCADE`), `layout_code`, `values` jsonb validated by the layout's declared schema | PK (`course_id`, `layout_code`); keeps the settings of each layout used, so switching back restores them (RN-052) |
 | `course_owner` | `course_id` FK (`CASCADE`), `account_id` FK → `identity.account`, `since` | PK (`course_id`, `account_id`) |
 | `section` | `id`, `scope_id` FK `UNIQUE`, `course_id` FK (`CASCADE`), `parent_id` FK → `section` (`CASCADE`), `title`, `summary`, `sort_key`, `visibility`, `visible_from`, `visible_until`, `deleted_at`, `version` | `UNIQUE` (`course_id`, `parent_id`, `sort_key`) (`NULLS NOT DISTINCT`); trigger: parent in the same course and no cycle; index (`course_id`, `parent_id`) |
-| `course_group` | `id`, `course_id` FK (`CASCADE`), `section_id` FK → `section` (`CASCADE`, nullable), `name`, `code`, `description`, `visibility`, `joining_key_hash`, `version` | `UNIQUE` (`course_id`, lower(`name`)); partial `UNIQUE` (`course_id`, lower(`code`)); `CHECK` visibility in four values |
-| `course_group_member` | `group_id` FK → `course_group` (`CASCADE`), `account_id` FK → `identity.account`, `origin` (`manual`, `module`), `origin_module`, `added_at` | PK (`group_id`, `account_id`, `origin`); manual or module, never both in one row (RN-054) |
-| `course_group_set` | `id`, `course_id` FK (`CASCADE`), `name`, `code` | `UNIQUE` (`course_id`, lower(`name`)) |
-| `course_group_set_member` | `set_id` FK (`CASCADE`), `group_id` FK (`CASCADE`) | PK (`set_id`, `group_id`) (RN-058) |
+| `group` | `id`, `course_id` FK (`CASCADE`), `section_id` FK → `section` (`CASCADE`, nullable), `name`, `code`, `description`, `visibility`, `joining_key_hash`, `version` | `UNIQUE` (`course_id`, lower(`name`)); partial `UNIQUE` (`course_id`, lower(`code`)); `CHECK` visibility in four values |
+| `group_member` | `group_id` FK → `group` (`CASCADE`), `account_id` FK → `identity.account`, `origin` (`manual`, `module`), `origin_module`, `added_at` | PK (`group_id`, `account_id`, `origin`); manual or module, never both in one row (RN-054) |
+| `group_set` | `id`, `course_id` FK (`CASCADE`), `name`, `code` | `UNIQUE` (`course_id`, lower(`name`)) |
+| `group_set_group` | `set_id` FK (`CASCADE`), `group_id` FK (`CASCADE`) | PK (`set_id`, `group_id`) (RN-058) |
 | `course_template` | `id`, `scope_id` FK → `access.scope` (campus or category), `code`, `layout_code`, `sections` jsonb (validated outline), `settings` jsonb (validated) | `UNIQUE` (`scope_id`, `code`) |
 
 Course modules are placed in sections by `kampus-activities`, which owns `activities.course_module (section_id FK → courses.section, sort_key)`; this schema never lists module identifiers (no list in a text column). Group mode is a setting of `kampus-settings`, resolved by scope (RN-057), not a column here.

@@ -25,6 +25,8 @@ The modules and their dependency levels: a module calls only lower levels, and l
 
 ![Data model](./data-model/data-model.svg)
 
+Names in the data models are **logical** (`module.table`); every physical name carries the installation prefix, `kmp_` by default (DEC-039): `courses.group` is `kmp_courses.kmp_group` on PostgreSQL.
+
 Per module: [access](./data-model/access.md), [identity and users](./data-model/identity.md), [courses](./data-model/courses.md).
 
 ## API

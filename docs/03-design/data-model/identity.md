@@ -7,7 +7,7 @@ sourceOfTruth: model
 
 # Data model: identity and users
 
-PostgreSQL schemas `identity` (owned by `kampus-identity`) and `users` (owned by `kampus-users`), following DEC-014, DEC-021, DEC-022 and DEC-026. Rules refer to the [identity domain model](../../00-domain-model/identity.md).
+PostgreSQL schemas `identity` (owned by `kampus-identity`) and `users` (owned by `kampus-users`), following DEC-014, DEC-021, DEC-022 and DEC-026. Rules refer to the [identity domain model](../../00-domain-model/identity.md). Table names are logical; physically every name carries the installation prefix, `kmp_` by default (DEC-039).
 
 ![Identity schema](./identity.svg)
 
