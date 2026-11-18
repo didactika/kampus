@@ -12,7 +12,7 @@ paths:
   /api/v1/courses/{course_id}/records/categories:
     post: { summary: Add a category with its aggregation method, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Added } } }
   /api/v1/record-categories/{category_id}:
-    patch: { summary: Change method, drop lowest, keep highest, exclude empty, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated; a recalculation job is queued } } }
+    patch: { summary: 'Change method, drop lowest, keep highest, exclude empty', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated; a recalculation job is queued } } }
   /api/v1/courses/{course_id}/records/items:
     post: { summary: Add a manual grade record or a formula, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Added } } }
   /api/v1/records/{record_id}:

@@ -33,3 +33,6 @@ jobs:
         env:
           PLANTUML_URL: http://127.0.0.1:8085
         run: node tools/docs-check/wait-and-check.mjs
+
+      - name: Validate the API fragments against OpenAPI 3.1
+        run: npx --yes @redocly/cli@1.25.0 lint --extends=minimal --format=summary docs/03-design/api/*.openapi.yaml

@@ -8,7 +8,7 @@ info:
 paths:
   /api/v1/courses/{course_id}/enrolment-instances:
     get: { summary: Method instances of a course, responses: { '200': { description: Instances } } }
-    post: { summary: Add a method instance (manual, self, system group, course link, plugin), parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Added } } }
+    post: { summary: 'Add a method instance (manual, self, system group, course link, plugin)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Added } } }
   /api/v1/enrolment-instances/{instance_id}:
     patch: { summary: 'Change role, period, capacity, approval, keys, expiry rule; enable or disable (RN-071)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
     delete: { summary: 'Delete the instance and the enrolments it owns (RN-071)', responses: { '202': { description: Deletion job accepted } } }
@@ -20,7 +20,7 @@ paths:
       parameters: [{ name: active, in: query, schema: { type: boolean } }, { $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }]
       responses: { '200': { description: A page of participants } }
   /api/v1/enrolment-instances/{instance_id}/enrolments:
-    post: { summary: 'Enrol one or more people manually (RN-063, RN-073)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Enrolled, with a per-person report } } }
+    post: { summary: 'Enrol one or more people manually (RN-063, RN-073)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: 'Enrolled, with a per-person report' } } }
   /api/v1/enrolments/{enrolment_id}:
     get: { summary: An enrolment, responses: { '200': { description: The enrolment } } }
     patch: { summary: 'Change status, period or reason (RN-070)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }

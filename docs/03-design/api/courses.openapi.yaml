@@ -19,7 +19,7 @@ paths:
     get: { summary: Courses of a category, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page of courses } } }
     post: { summary: 'Create a course from a template (RN-051)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created } } }
   /api/v1/courses/{course_id}:
-    get: { summary: A course with its layout, dates, state, visibility and owners, responses: { '200': { description: The course } } }
+    get: { summary: 'A course with its layout, dates, state, visibility and owners', responses: { '200': { description: The course } } }
     patch: { summary: 'Change names, dates, visibility or layout settings', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
   /api/v1/courses/{course_id}/state:
     put: { summary: 'Publish, archive, unarchive or schedule deletion (RN-049, RN-050)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }

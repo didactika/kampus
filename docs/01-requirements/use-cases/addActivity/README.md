@@ -60,6 +60,8 @@ Every activity type fulfils the same contract; the course module carries the com
 
 | ID | Rule |
 | --- | --- |
+| RN-079 | Effective visibility |
+| RN-091 | Scoped cache invalidation |
 | RN-075 | Activity contract |
 | RN-076 | Placement and order |
 | RN-077 | One transaction |

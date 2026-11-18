@@ -61,6 +61,7 @@ Conditions are typed rows that point to what they depend on, combined in a tree 
 
 | ID | Rule |
 | --- | --- |
+| RN-092 | Shown when visible and available |
 | RN-080 | Typed conditions |
 | RN-081 | Dependencies protected |
 | RN-082 | Unknown conditions close |

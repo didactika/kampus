@@ -60,6 +60,7 @@ Listeners receive each event at least once; after the last retry a delivery goes
 
 | ID | Rule |
 | --- | --- |
+| RN-141 | Bounded event chains |
 | RN-137 | Declared events |
 | RN-138 | Outbox after commit |
 | RN-139 | At least once, dead letter |

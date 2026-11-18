@@ -63,6 +63,8 @@ Service clients act as their service account; OAuth applications act for the peo
 
 | ID | Rule |
 | --- | --- |
+| RN-033 | Scoped, expiring, hashed tokens |
+| RN-039 | Service accounts use tokens only |
 | RN-195 | Declared routes |
 | RN-196 | Scopes within permissions |
 | RN-197 | OAuth 2 with PKCE |

@@ -7,7 +7,7 @@ info:
     (RN-166) and history (RN-168). Sensitive values are never returned (RN-167). Conventions of DEC-025 and DEC-026.
 paths:
   /api/v1/setting-definitions:
-    get: { summary: Declared settings with schema, default and levels, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
+    get: { summary: 'Declared settings with schema, default and levels', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
   /api/v1/scopes/{scope_id}/settings:
     get: { summary: Resolved values in a scope with the origin of each, responses: { '200': { description: Values } } }
   /api/v1/scopes/{scope_id}/settings/{key}:

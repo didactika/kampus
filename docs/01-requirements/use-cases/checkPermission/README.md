@@ -63,6 +63,9 @@ Every service operation calls the check against the scope of the object it touch
 
 | ID | Rule |
 | --- | --- |
+| RN-001 | One scope tree |
+| RN-002 | Sections are scopes |
+| RN-020 | Lists filtered before paging |
 | RN-003 | Active grants on the path |
 | RN-004 | First value bottom-up |
 | RN-005 | Forbid wins |

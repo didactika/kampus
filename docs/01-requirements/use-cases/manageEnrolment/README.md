@@ -61,6 +61,8 @@ An enrolment has a status and a period. Suspension keeps everything; removal tak
 
 | ID | Rule |
 | --- | --- |
+| RN-071 | Disabling suspends, deleting removes |
+| RN-074 | Every change publishes an event |
 | RN-060 | Active participation |
 | RN-061 | Owned grants |
 | RN-069 | Records kept |

@@ -7,9 +7,9 @@ info:
 paths:
   /api/v1/plugins:
     get: { summary: Installed and uploaded plugins with state and version, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
-    post: { summary: 'Upload a package; verified and validated (RN-203, RN-204)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Uploaded, awaiting grant }, '422': { description: Invalid signature, digest, SDK range or manifest } } }
+    post: { summary: 'Upload a package; verified and validated (RN-203, RN-204)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: 'Uploaded, awaiting grant' }, '422': { description: 'Invalid signature, digest, SDK range or manifest' } } }
   /api/v1/plugins/{plugin_id}:
-    get: { summary: A plugin with versions, requested capabilities, grants and recent failures, responses: { '200': { description: Plugin } } }
+    get: { summary: 'A plugin with versions, requested capabilities, grants and recent failures', responses: { '200': { description: Plugin } } }
     delete: { summary: 'Remove after confirmation (RN-210)', parameters: [{ name: confirm, in: query, required: true, schema: { type: string } }], responses: { '202': { description: Removal job queued } } }
   /api/v1/plugins/{plugin_id}/versions/{version}/grants:
     put: { summary: 'Grant the requested capabilities (RN-205); migrations start', responses: { '202': { description: Migrating } } }

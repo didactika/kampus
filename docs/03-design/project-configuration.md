@@ -28,7 +28,7 @@ sourceOfTruth: model
 | Architecture | the dependency rules of the architecture (levels, ports) |
 | Schema | the schema linter of DEC-014 |
 | Supply chain | `cargo deny` (licences of DEC-010, advisories), `cargo audit`, npm audit |
-| Documentation | link and diagram checks (`tools/docs-check`) |
+| Documentation | link and diagram checks, schema dependencies and OpenAPI validation (`tools/docs-check`) |
 
 ## Deployment configuration
 

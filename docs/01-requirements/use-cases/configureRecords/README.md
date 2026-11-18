@@ -61,6 +61,9 @@ Each aggregation method has a typed definition and worked examples; changing set
 
 | ID | Rule |
 | --- | --- |
+| RN-095 | One record per grade item |
+| RN-102 | Exact numerics |
+| RN-110 | Versioned calculation behaviour |
 | RN-100 | Typed aggregation |
 | RN-101 | Drop lowest and keep highest |
 | RN-106 | Versioned scales |
