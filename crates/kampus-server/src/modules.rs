@@ -39,3 +39,27 @@ use kampus_db::ModuleSteps;
 
 /// The upgrade steps of every module of this build, in dependency order.
 pub const MODULES: &[ModuleSteps] = &[];
+
+/// The oldest release still supported: columns may be dropped only when it no longer reads them (DEC-081).
+pub const OLDEST_SUPPORTED: &str = "0.1.0";
+
+#[cfg(test)]
+mod tests {
+    use super::{MODULES, OLDEST_SUPPORTED};
+
+    #[test]
+    fn the_schema_of_every_module_passes_the_linter() {
+        let mut modules = vec![kampus_db::OWN_STEPS];
+        modules.extend_from_slice(MODULES);
+        let findings = kampus_db::lint::lint(&modules, OLDEST_SUPPORTED);
+        assert!(
+            findings.is_empty(),
+            "{}",
+            findings
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join("\n")
+        );
+    }
+}

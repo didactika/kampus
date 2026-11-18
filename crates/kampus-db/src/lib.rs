@@ -41,14 +41,16 @@
 //! - [`Database`]: the connection pool with the prefix, and transactions.
 
 mod database;
+pub mod lint;
 mod prefix;
+pub mod schema;
 mod step;
 mod upgrade;
 
-pub use database::{Database, Transaction};
+pub use database::{Capabilities, Database, Transaction, classify};
 pub use prefix::Prefix;
 pub use step::{ModuleSteps, Step};
-pub use upgrade::{Problem, UpgradePlan, UpgradeReport, Upgrader};
+pub use upgrade::{OWN_STEPS, Problem, UpgradePlan, UpgradeReport, Upgrader};
 
 /// The logical name of the schema this crate owns: the ledger of applied steps and the installation.
 pub const MODULE: &str = "db";
