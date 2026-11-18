@@ -1,13 +1,17 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | records | Search | Help | Account }
   ==
-  Title of the screen
+  Home > records > My grades
+  --
+  <b>See grades
+  See grades and feedback exactly as permitted
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens my grades or the grader report | [ Open ]
+    2. Exports | [ Export ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  [ Export ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

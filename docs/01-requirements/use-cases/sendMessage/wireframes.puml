@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | notify | Search | Help | Account }
   ==
-  Title of the screen
+  Home > notify > Messaging drawer
+  --
+  <b>Send a message
+  Talk with another person or a group
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens a conversation with a person or group | [ Open ]
+    2. Writes and sends | "                    "
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> Blocked or not allowed: 403 without telling who blocked
+  <&warning> Every member deleted the message: A job purges it (RN-154)
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

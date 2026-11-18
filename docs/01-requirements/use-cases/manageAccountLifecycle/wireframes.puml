@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | identity | Search | Help | Account }
   ==
-  Title of the screen
+  Home > identity > People administration
+  --
+  <b>Manage the lifecycle of accounts
+  Invite, suspend, reactivate and delete accounts, one by one or in bulk
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Invites people, or selects accounts and a t… | [ Invite ]
+    3. Schedules a deletion | [ Schedule ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> A file of many rows: A job validates every row, then applies…
+  <&warning> The grace period ends: Privacy handlers erase personal data; t…
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

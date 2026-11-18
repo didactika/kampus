@@ -1,13 +1,21 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | courses | Search | Help | Account }
   ==
-  Title of the screen
+  Home > courses > Course editor
+  --
+  <b>Organise the sections of a course
+  Add, nest, move, reorder, hide, schedule and delete sections without br…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Adds a section between two others, or insid… | "                    "
+    2. Drags a section to another place | [ Drag ]
+    3. Hides or schedules a section | [ Hide ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The actor deletes a section with …: Asks to move the content or delete it; …
+  <&warning> Two people reorder at the same ti…: The second gets precondition_failed and…
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

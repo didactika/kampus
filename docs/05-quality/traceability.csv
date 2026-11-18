@@ -57,3 +57,5 @@ RF-115,UC-055,editTheme,docs/02-analysis/use-cases/editTheme,docs/03-design/use-
 RF-006,UC-056,createRule,docs/02-analysis/use-cases/createRule,docs/03-design/use-cases/createRule,crates/kampus-customise/src/rules.rs,crates/kampus-customise/tests
 RF-118,UC-057,switchFeature,docs/02-analysis/use-cases/switchFeature,docs/03-design/use-cases/switchFeature,crates/kampus-customise/src/flags.rs,crates/kampus-customise/tests
 RF-004,UC-058,shareCustomisation,docs/02-analysis/use-cases/shareCustomisation,docs/03-design/use-cases/shareCustomisation,crates/kampus-customise/src/packages.rs,crates/kampus-customise/tests
+RF-009,UC-059,openHelp,docs/02-analysis/use-cases/openHelp,docs/03-design/use-cases/openHelp,web/src/shell/help,web/tests/help
+RF-009,UC-060,takeGuidedTour,docs/02-analysis/use-cases/takeGuidedTour,docs/03-design/use-cases/takeGuidedTour,crates/kampus-users/src/onboarding.rs,web/tests/help

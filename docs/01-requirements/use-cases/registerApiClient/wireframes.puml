@@ -1,13 +1,22 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | api | Search | Help | Account }
   ==
-  Title of the screen
+  Home > api > API clients screen
+  --
+  <b>Register an API client
+  Let an external system or application use the API with the least privil…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Registers a client with its kind and allowe… | [ Register ]
+    2. The system obtains a token | [ Continue ]
+    3. A person authorises an application | [ Continue ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> Too many requests: 429 with Retry-After (RN-198)
+  <&warning> A used refresh token is presented…: The whole token family is revoked (RN-1…
+  <&warning> A route is deprecated: Answers with Deprecation and Sunset (RN…
+  --
+  [ Register ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

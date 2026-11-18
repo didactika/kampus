@@ -111,6 +111,10 @@ rectangle "Kampus" {
     usecase "Switch a feature or module on or off" as UC_switchFeature
     usecase "Export and import customisations" as UC_shareCustomisation
   }
+  package "help" {
+    usecase "Open help for the current screen" as UC_openHelp
+    usecase "Take a guided tour or follow the onboarding checklist" as UC_takeGuidedTour
+  }
 }
 
 A_Manager --> UC_grantRole
@@ -188,5 +192,7 @@ A_Teacher --> UC_createRule
 A_Campus_administrator --> UC_switchFeature
 A_Manager --> UC_switchFeature
 A_Campus_administrator --> UC_shareCustomisation
+A_Authenticated_user --> UC_openHelp
+A_Authenticated_user --> UC_takeGuidedTour
 
 @enduml

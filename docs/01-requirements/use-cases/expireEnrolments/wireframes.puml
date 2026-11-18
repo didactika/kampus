@@ -1,13 +1,17 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | enrolment | Search | Help | Account }
   ==
-  Title of the screen
+  Home > enrolment > Scheduler
+  --
+  <b>Expire enrolments
+  Apply each instance's expiry rule when enrolments reach their end, and …
   --
   {
-    Field one | "value        "
-    Field two | ^option^
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The rule is keep without role: The participation stays, its grants are…
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

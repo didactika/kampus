@@ -1,13 +1,19 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | calendar | Search | Help | Account }
   ==
-  Title of the screen
+  Home > calendar > Calendar page
+  --
+  <b>See the calendar
+  See campus, course, group, personal entries and activity dates in a per…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens a period | [ Open ]
+    3. Adds a personal or course entry | "                    "
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> An activity is hidden from the pe…: Its dates are not shown (RN-156)
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

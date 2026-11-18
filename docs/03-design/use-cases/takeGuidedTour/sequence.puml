@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Authenticated user" as a
+participant "kampus-api" as api
+participant "Onboarding service" as svc
+database "help schema + outbox" as db
+
+a -> api : Starts a tour from the help panel or the checklist
+api -> svc : request
+svc -> db : Loads the tour steps of the screen (HB-06)
+a -> api : Follows the steps
+api -> svc : request
+svc -> db : Highlights each element, accessible by keyboard and screen reader (HB-07)
+a -> api : Does a task of the checklist for real
+api -> svc : request
+svc -> db : Ticks the item from the action's event (HB-05)
+svc --> a : result
+@enduml

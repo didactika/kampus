@@ -1,13 +1,19 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | events | Search | Help | Account }
   ==
-  Title of the screen
+  Home > events > Deliveries screen
+  --
+  <b>Review and retry failed event deliveries
+  See which listeners failed and retry them once the cause is fixed
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens the dead-letter list | [ Open ]
+    2. Retries one or many | [ Retry ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The listener belongs to a disable…: The delivery stays paused until the plu…
+  --
+  [ Retry ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

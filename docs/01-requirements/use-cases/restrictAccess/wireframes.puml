@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | activities | Search | Help | Account }
   ==
-  Title of the screen
+  Home > activities > Conditions editor
+  --
+  <b>Restrict access to an activity or section
+  Open an activity or a section only when dates, grades, progress, groups…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Builds a tree of conditions | "                    "
+    2. Saves | [ Save ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> Someone later deletes what a cond…: The deletion is refused or rewrites the…
+  <&warning> A condition type is disabled later: The module becomes unavailable and the …
+  --
+  [ Save ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

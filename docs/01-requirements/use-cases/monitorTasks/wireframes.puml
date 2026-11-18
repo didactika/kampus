@@ -1,13 +1,21 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | tasks | Search | Help | Account }
   ==
-  Title of the screen
+  Home > tasks > Task monitor
+  --
+  <b>Monitor background tasks
+  See what runs in the background, fix failures and adjust schedules
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens the task monitor | [ Open ]
+    2. Retries or cancels a job | [ Retry ]
+    3. Changes or runs a schedule | "                    "
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> A job of the same concurrency key…: The retried job waits (RN-173)
+  <&warning> A worker dies while running: The lease expires and the job runs agai…
+  --
+  [ Retry ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

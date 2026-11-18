@@ -1,13 +1,22 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | files | Search | Help | Account }
   ==
-  Title of the screen
+  Home > files > File picker
+  --
+  <b>Upload a file
+  Attach a file to something they may change, within the limits of its ar…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Chooses a file for an area | ^a file for an area^
+    2. Sends the content | [ Send ]
+    3. Completes | [ Complete ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> Over the quota or too large: 413 with the limit and the usage
+  <&warning> The type is not allowed: 415; the content is discarded
+  <&warning> The scan finds malware: The file is quarantined and the owner t…
+  --
+  [ Complete ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

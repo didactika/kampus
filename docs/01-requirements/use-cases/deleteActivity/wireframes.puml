@@ -1,13 +1,19 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | activities | Search | Help | Account }
   ==
-  Title of the screen
+  Home > activities > Course editor and bin
+  --
+  <b>Delete and restore an activity
+  Remove an activity safely, with the option to restore it
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Deletes the activity | [ Delete ]
+    2. Restores it from the bin | [ Restore ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The purge fails: The bin item shows the failure and its …
+  --
+  [ Restore ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

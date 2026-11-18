@@ -1,0 +1,19 @@
+@startsalt
+{+
+  {* Kampus | help | Search | Help | Account }
+  ==
+  Home > help > Help panel of the shell
+  --
+  <b>Open help for the current screen
+  Understand the screen and the task at hand without leaving it
+  --
+  {
+    1. Opens help on a screen | [ Open ]
+    3. Follows a link | [ Follow ]
+  }
+  --
+  <&warning> The topic is missing: Shows the guide home and reports it (HB…
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
+}
+@endsalt

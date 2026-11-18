@@ -1,13 +1,19 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | activities | Search | Help | Account }
   ==
-  Title of the screen
+  Home > activities > Course editor
+  --
+  <b>Add an activity or material
+  Place a new activity or material of a type in a section, with its setti…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Chooses a type and a position | ^a type and a position^
+    2. Fills settings and saves | "                    "
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The type rejects the settings: validation with the fields; nothing cre…
+  --
+  [ Save ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

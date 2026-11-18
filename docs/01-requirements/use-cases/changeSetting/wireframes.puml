@@ -1,13 +1,22 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | settings | Search | Help | Account }
   ==
-  Title of the screen
+  Home > settings > Settings page
+  --
+  <b>Change a setting
+  Set, remove or lock a value of a setting in a scope
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens the settings of a scope | [ Open ]
+    2. Changes a value and saves | "                    "
+    3. Locks it | [ Lock ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> Locked above or fixed by the depl…: 409 with where it is locked or fixed
+  <&warning> Invalid value: 422 with the field errors
+  <&warning> The setting requires a restart: Stored; the screen says it applies at t…
+  --
+  [ Lock ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

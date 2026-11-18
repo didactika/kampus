@@ -1,13 +1,19 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | i18n | Search | Help | Account }
   ==
-  Title of the screen
+  Home > i18n > Language menu
+  --
+  <b>Choose a language
+  Use the campus in their language, with dates and numbers formatted for …
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Chooses a language | ^a language^
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> A message has no translation: Falls back along the parent chain and c…
+  <&warning> A course forces another language: The course is shown in its language
+  --
+  [ Continue ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

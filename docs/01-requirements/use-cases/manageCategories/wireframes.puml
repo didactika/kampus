@@ -1,13 +1,21 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | courses | Search | Help | Account }
   ==
-  Title of the screen
+  Home > courses > Catalogue administration
+  --
+  <b>Manage course categories
+  Organise the catalogue: create, rename, move, reorder, hide and delete …
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Creates a category under a parent | [ Create ]
+    2. Drags it between two siblings or under anot… | [ Drag ]
+    3. Hides it, or schedules its visibility | [ Hide ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The actor deletes a category with…: conflict: move or delete its courses an…
+  <&warning> The move would create a cycle: Refused
+  --
+  [ Create ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

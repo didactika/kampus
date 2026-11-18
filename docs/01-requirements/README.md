@@ -74,6 +74,8 @@ sourceOfTruth: model
 | UC-056 | [Create a rule](./use-cases/createRule/README.md) | Campus administrator, Teacher | customise | RF-006 | [card](../02-analysis/use-cases/createRule/README.md) | [card](../03-design/use-cases/createRule/README.md) | [card](../04-implementation/use-cases/createRule/README.md) | accepted |
 | UC-057 | [Switch a feature or module on or off](./use-cases/switchFeature/README.md) | Campus administrator, Manager | customise | RF-118 | [card](../02-analysis/use-cases/switchFeature/README.md) | [card](../03-design/use-cases/switchFeature/README.md) | [card](../04-implementation/use-cases/switchFeature/README.md) | accepted |
 | UC-058 | [Export and import customisations](./use-cases/shareCustomisation/README.md) | Campus administrator | customise | RF-004 | [card](../02-analysis/use-cases/shareCustomisation/README.md) | [card](../03-design/use-cases/shareCustomisation/README.md) | [card](../04-implementation/use-cases/shareCustomisation/README.md) | accepted |
+| UC-059 | [Open help for the current screen](./use-cases/openHelp/README.md) | Authenticated user | help | RF-009 | [card](../02-analysis/use-cases/openHelp/README.md) | [card](../03-design/use-cases/openHelp/README.md) | [card](../04-implementation/use-cases/openHelp/README.md) | accepted |
+| UC-060 | [Take a guided tour or follow the onboarding checklist](./use-cases/takeGuidedTour/README.md) | Authenticated user | help | RF-009 | [card](../02-analysis/use-cases/takeGuidedTour/README.md) | [card](../03-design/use-cases/takeGuidedTour/README.md) | [card](../04-implementation/use-cases/takeGuidedTour/README.md) | accepted |
 
 ### Use-case diagram
 

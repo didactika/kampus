@@ -1,13 +1,22 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | access | Search | Help | Account }
   ==
-  Title of the screen
+  Home > access > People screen of a scope
+  --
+  <b>Grant a role in a scope
+  Give a person a role in a scope, for a period or without end, so that i…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Opens the people of a scope (campus, catego… | [ Open ]
+    2. Chooses a role, one or more people and opti… | ^a role, one or more people an…^
+    3. Confirms | [ Confirm ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The same manual grant already exi…: Returns the existing grant (unique cons…
+  <&warning> The role is not assignable here o…: permission_denied with the reason
+  <&warning> The actor removes a grant instead: Manual grants only; a module grant answ…
+  --
+  [ Confirm ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

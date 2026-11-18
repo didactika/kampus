@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | customise | Search | Help | Account }
   ==
-  Title of the screen
+  Home > customise > Packages page
+  --
+  <b>Export and import customisations
+  Reuse a configuration in another campus or scope
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Exports chosen kinds from a scope | [ Export ]
+    2. Uploads it to the target and previews | [ Upload ]
+    3. Applies | [ Apply ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The package refers to a widget, f…: Those parts are listed as not applicable
+  --
+  [ Apply ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

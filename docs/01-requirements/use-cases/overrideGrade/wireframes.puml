@@ -1,13 +1,17 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | records | Search | Help | Account }
   ==
-  Title of the screen
+  Home > records > Grader report
+  --
+  <b>Override or lock a grade
+  Set a grade by hand, or freeze grades, with history
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Sets a value and feedback in the grader rep… | "                    "
+    2. Locks the record or the grade | [ Lock ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  [ Lock ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

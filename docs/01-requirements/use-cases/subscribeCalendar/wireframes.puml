@@ -1,13 +1,20 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | calendar | Search | Help | Account }
   ==
-  Title of the screen
+  Home > calendar > Calendar settings
+  --
+  <b>Subscribe to or export a calendar
+  Bring an external calendar in, or take one's own calendar to another ap…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Adds an external calendar URL | "                    "
+    3. Creates a personal feed | [ Create ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The external calendar is unreacha…: The last error is kept and shown; entri…
+  <&warning> The token is revoked: The feed stops answering
+  --
+  [ Create ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

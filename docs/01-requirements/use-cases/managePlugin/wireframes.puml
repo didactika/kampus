@@ -1,13 +1,21 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | plugins | Search | Help | Account }
   ==
-  Title of the screen
+  Home > plugins > Plugins admin
+  --
+  <b>Upgrade, disable or remove a plugin
+  Keep extensions up to date, pause them or take them out without breakin…
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Uploads a new version | [ Upload ]
+    2. Disables the plugin | [ Disable ]
+    3. Removes it and confirms | [ Remove ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> The plugin keeps failing: It is disabled automatically and admini…
+  <&warning> The upgrade migration fails: The previous version stays installed an…
+  --
+  [ Remove ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt

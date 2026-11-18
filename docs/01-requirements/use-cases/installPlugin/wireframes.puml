@@ -1,13 +1,21 @@
 @startsalt
-{
-  {* File | Help }
+{+
+  {* Kampus | plugins | Search | Help | Account }
   ==
-  Title of the screen
+  Home > plugins > Plugins admin
+  --
+  <b>Install a plugin
+  Add an extension to the campus, knowing exactly what it may do
   --
   {
-    Field one | "value        "
-    Field two | ^option^
+    1. Uploads a package | [ Upload ]
+    2. Reviews the requested capabilities and gran… | [ Open ]
+    4. Enables it | [ Enable ]
   }
-  [ Accept ] | [ Cancel ]
+  --
+  <&warning> Invalid signature or incompatible…: 422 with the reason
+  <&warning> A migration fails: The step is rolled back; the plugin sta…
+  --
+  [ Enable ] | [ Cancel ] | [ ? Help ]
 }
 @endsalt
