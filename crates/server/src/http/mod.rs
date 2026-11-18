@@ -57,7 +57,7 @@ pub struct AppState {
     /// The upgrade steps of this build, to tell whether the database is current.
     pub modules: &'static [ModuleSteps],
     /// The other ports of the process.
-    pub ports: crate::ports::Ports,
+    pub ports: crate::wiring::ports::Ports,
 }
 
 /// Builds the router of a process.

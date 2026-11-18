@@ -5,7 +5,7 @@ origin: requirements
 sourceOfTruth: model
 ---
 
-# Module layout
+# Module and crate layout
 
 Every module crate, in this repository or outside it, has the same structure (DEC-087). The server reads only the module's descriptor; the layout tells developers, reviewers and `tools/repo-check` where each declaration lives.
 
@@ -58,9 +58,33 @@ pub const MODULE: Module = Module {
 
 Nothing else may sit at the top of the crate or of `src/`; `tools/repo-check` reports any other file or folder, a missing descriptor, and a registry out of date.
 
+## Every other crate
+
+Foundation, port, adapter and server crates follow the same principle: `src/` holds only its entry files, and everything else lives in a folder named after its concern, each with a `mod.rs`. Folder names are snake case. Public paths do not depend on folders: `lib.rs` re-exports what callers use.
+
+| Kind | At the top of `src/` | Required folders | Also at the crate root |
+| --- | --- | --- | --- |
+| `foundation` | `lib.rs` | — | — |
+| `port` | `lib.rs` | `port/` (the trait and its types), `registry/` (`Adapter` and `open`), `conformance/` (the suite every adapter passes) | `adapters/` |
+| `adapter` | `lib.rs` with `ADAPTER` | `store/` (the implementation) | — |
+| `server` | `lib.rs`, `main.rs` | `commands/`, `config/`, `http/`, `wiring/` (the generated registries and the composition) | `adapters.toml`, `modules.toml` |
+| `module` | `lib.rs`, `module.rs` | `db/`, `permissions/`, and the folders above | `web/`, `lang/`, `assets/` |
+
+The crates of the repository today:
+
+| Crate | Folders of `src/` |
+| --- | --- |
+| `kampus-common` | `adapter/` (settings of adapters), `clock/` (instants and clocks), `error/` (the error model), `id/` (typed identifiers), `page/` (pagination), `request/` (request context) |
+| `kampus-db` | `connection/` (pool, prefix, error classes), `schema/` (the neutral schema), `upgrade/` (steps and the runner), `lint/` (the schema linter) |
+| `kampus-module` | `descriptor/` (`Module`), `permission/` (the vocabulary of declarations) |
+| `kampus-storage`, `kampus-cache` | `port/`, `registry/`, `conformance/`; the cache adds `layered/` |
+| `kampus-server` | `commands/` (serve, upgrade, check), `config/`, `http/`, `wiring/` |
+
+`tools/repo-check` rejects a file at the top of `src/` that is not an entry file, a folder without `mod.rs`, a missing required folder, and a crate without its kind.
+
 ## Registering a module
 
-The server's registry, `crates/server/src/registry.rs`, lists every module of the build in dependency order, and the `# modules:start` block of `crates/server/Cargo.toml` depends on each. `tools/repo-check --fix` writes both:
+The server's registry, `crates/server/src/wiring/registry.rs`, lists every module of the build in dependency order, and the `# modules:start` block of `crates/server/Cargo.toml` depends on each. `tools/repo-check --fix` writes both:
 
 - from every crate of kind `module` under `crates/`, ordered by the module table of the [architecture](./architecture.md#modules);
 - then from `crates/server/modules.toml`, for modules published outside the repository:

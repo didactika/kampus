@@ -37,7 +37,7 @@
 use std::process::ExitCode;
 
 use clap::{Parser, Subcommand};
-use kampus_server::{Config, run};
+use kampus_server::{Config, commands};
 
 /// Kampus: the modular learning platform.
 #[derive(Debug, Parser)]
@@ -88,12 +88,12 @@ async fn main() -> ExitCode {
             return ExitCode::from(2);
         }
     };
-    run::init_logging(&config);
+    commands::init_logging(&config);
 
     let result = match cli.command.unwrap_or(Command::Serve) {
-        Command::Serve => run::serve(&config).await,
+        Command::Serve => commands::serve(&config).await,
         Command::Upgrade { new_installation } => {
-            run::upgrade(&config, new_installation).await.map(|applied| {
+            commands::upgrade(&config, new_installation).await.map(|applied| {
                 report(&format!(
                     "kampus-server: {} upgrade step(s) applied",
                     applied.len()
@@ -103,7 +103,7 @@ async fn main() -> ExitCode {
                 }
             })
         }
-        Command::Check => run::check(&config).await.and_then(|plan| {
+        Command::Check => commands::check(&config).await.and_then(|plan| {
             report(&format!(
                 "kampus-server: installed {}, {} pending step(s)",
                 plan.installed,

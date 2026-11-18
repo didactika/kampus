@@ -35,12 +35,9 @@
 //! The Kampus binary (DEC-020): one image whose process takes a role, validates the configuration that
 //! role reads, brings the database to the code's upgrade steps, and serves HTTP until it is told to stop.
 
-pub mod adapters;
+pub mod commands;
 pub mod config;
 pub mod http;
-pub mod modules;
-pub mod ports;
-pub mod registry;
-pub mod run;
+pub mod wiring;
 
 pub use config::{Config, Role};

@@ -47,8 +47,8 @@ use http_body_util::BodyExt;
 use kampus_common::PLATFORM_VERSION;
 use kampus_db::{Database, Prefix, Upgrader};
 use kampus_server::http::{AppState, router};
-use kampus_server::modules::SCHEMAS;
-use kampus_server::ports::Ports;
+use kampus_server::wiring::modules::SCHEMAS;
+use kampus_server::wiring::ports::Ports;
 use tower::ServiceExt;
 
 /// Connects to a fresh installation with a prefix of its own.

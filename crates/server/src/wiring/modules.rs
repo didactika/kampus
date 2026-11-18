@@ -40,7 +40,7 @@ use std::sync::LazyLock;
 
 use kampus_db::ModuleSteps;
 
-use crate::registry::MODULES;
+use crate::wiring::registry::MODULES;
 
 /// The upgrade steps of every module of this build, in dependency order.
 pub static SCHEMAS: LazyLock<Vec<ModuleSteps>> =

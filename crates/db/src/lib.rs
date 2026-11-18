@@ -40,17 +40,14 @@
 //!   (DEC-082), and refuses a database that is newer than the code or whose steps changed.
 //! - [`Database`]: the connection pool with the prefix, and transactions.
 
-mod database;
+mod connection;
 pub mod lint;
-mod prefix;
 pub mod schema;
-mod step;
 mod upgrade;
 
-pub use database::{Capabilities, Database, Transaction, classify};
-pub use prefix::Prefix;
-pub use step::{ModuleSteps, Step};
-pub use upgrade::{OWN_STEPS, Problem, UpgradePlan, UpgradeReport, Upgrader};
+pub use connection::Prefix;
+pub use connection::{Capabilities, Database, Transaction, classify};
+pub use upgrade::{ModuleSteps, OWN_STEPS, Problem, Step, UpgradePlan, UpgradeReport, Upgrader};
 
 /// The logical name of the schema this crate owns: the ledger of applied steps and the installation.
 pub const MODULE: &str = "db";
