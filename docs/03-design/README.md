@@ -9,7 +9,7 @@ sourceOfTruth: model
 
 ## Architecture
 
-Style, packages or layers, and the reason for each choice. Decisions are recorded in the quality folder.
+A modular monolith of one crate per module, in dependency levels, with service APIs, domain events and declared contributions; one image with three roles. See [architecture.md](./architecture.md) (DEC-015 to DEC-020).
 
 ## Design classes
 
@@ -19,7 +19,7 @@ Style, packages or layers, and the reason for each choice. Decisions are recorde
 
 ![Components](./components/components.svg)
 
-The components, the interfaces they offer and require, and which one implements which. Deployment shows where they run; this diagram shows how they are assembled.
+The modules and their dependency levels: a module calls only lower levels, and learns about higher ones through events. The full table and the rules are in [architecture.md](./architecture.md#modules).
 
 ## Data model
 

@@ -1,13 +1,46 @@
 @startuml
 !theme plain
-skinparam linetype polyline
-top to bottom direction
+skinparam linetype ortho
+title Kampus deployment
 
-node "Application" {
-  component "api"
+actor "Browser / mobile" as user
+actor "External system" as ext
+
+node "Reverse proxy (TLS)" as proxy
+
+node "web (SvelteKit SSR)\nstateless, n instances" as web
+
+node "kampus image" {
+  component "role: server\nHTTP API, n instances" as server
+  component "role: worker\njobs and listeners, n instances" as worker
+  component "role: scheduler\none active (database lease)" as scheduler
 }
-database "Database"
 
-"api" --> "Database"
+database "PostgreSQL\none schema per module,\noutbox, job queue" as pg
+storage "File storage\nlocal disk or S3-compatible" as files
+node "Redis or Valkey\nshared cache, sessions" as cache
+node "OpenTelemetry collector\ntraces, metrics, logs" as otel
+node "SMTP or mail provider" as mail
 
+user --> proxy : HTTPS
+ext --> proxy : HTTPS (API, LTI, webhooks)
+proxy --> web
+proxy --> server : /api
+web --> server : API calls
+server --> pg
+server --> files
+server --> cache
+worker --> pg
+worker --> files
+worker --> cache
+worker --> mail : notifications
+scheduler --> pg : enqueue scheduled jobs
+server ..> otel
+worker ..> otel
+scheduler ..> otel
+
+note right of server
+  Small installations run the three
+  roles in one process.
+end note
 @enduml

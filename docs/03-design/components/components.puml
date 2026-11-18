@@ -1,28 +1,96 @@
 @startuml
 !theme plain
-skinparam linetype polyline
+skinparam linetype ortho
+skinparam componentStyle rectangle
 top to bottom direction
+title Kampus modules (one crate each) and their dependency levels
 
-package "Presentation" {
-  component "Web client" as web
+component "web/ (SvelteKit shell + UI modules)" as web
+
+package "7 Edge" {
+  component "kampus-api" as api
+  component "kampus-plugin-host" as plugins
 }
 
-package "Application" {
-  component "Orders API" as api
-  component "Order service" as service
+package "6 Services" {
+  component "kampus-notify" as notify
+  component "kampus-calendar" as calendar
+  component "kampus-privacy" as privacy
 }
 
-package "Infrastructure" {
-  component "Persistence adapter" as adapter
-  database "Database" as db
+package "5 Learning" {
+  component "kampus-records" as records
+  component "kampus-progress" as progress
 }
 
-interface "OrderPort" as port
+package "4 Learning" {
+  component "kampus-enrol" as enrol
+  component "kampus-activities" as activities
+}
 
-web -down-> api : HTTPS
-api -down-> service
-service -down-> port : requires
-adapter -up- port : provides
-adapter -down-> db : SQL
+package "3 Learning" {
+  component "kampus-courses" as courses
+}
 
+package "2 People" {
+  component "kampus-users" as users
+  component "kampus-files" as files
+}
+
+package "1 Platform" {
+  component "kampus-settings" as settings
+  component "kampus-access" as access
+  component "kampus-identity" as identity
+  component "kampus-customise" as customise
+}
+
+package "0 Foundation" {
+  component "kampus-common" as common
+  component "kampus-db" as db
+  component "kampus-storage" as storage
+  component "kampus-cache" as cache
+  component "kampus-events\n(outbox, event log)" as events
+  component "kampus-tasks\n(job queue, scheduler)" as tasks
+}
+
+web --> api : HTTPS (OpenAPI)
+api --> notify
+api --> calendar
+api --> privacy
+api --> progress
+api --> records
+plugins --> activities : SDK host interfaces
+notify --> users
+notify --> tasks
+calendar --> activities
+privacy --> identity
+privacy --> tasks
+progress --> records
+records --> activities
+records --> enrol
+enrol --> courses
+activities --> courses
+activities --> files
+courses --> users
+courses --> files
+users --> identity
+users --> customise
+files --> storage
+files --> access
+identity --> access
+customise --> access
+access --> settings
+settings --> cache
+settings --> db
+tasks --> events
+events --> db
+db --> common
+storage --> common
+cache --> common
+
+note bottom of events
+  Upward notifications travel only as events:
+  written to the outbox in the same transaction,
+  dispatched after commit.
+end note
 @enduml
