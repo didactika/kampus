@@ -1,6 +1,6 @@
 ---
 id: DEC-044
-status: proposed
+status: accepted
 ---
 
 # DEC-044 A typed, versioned activity contract

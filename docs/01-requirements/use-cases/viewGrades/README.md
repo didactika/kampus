@@ -4,7 +4,7 @@ name: viewGrades
 title: See grades
 actor: Student,Teacher
 package: records
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-062

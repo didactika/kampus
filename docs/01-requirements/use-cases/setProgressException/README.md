@@ -4,7 +4,7 @@ name: setProgressException
 title: Set a progress exception
 actor: Teacher
 package: progress
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-063

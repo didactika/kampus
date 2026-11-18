@@ -1,6 +1,6 @@
 ---
 id: DEC-047
-status: proposed
+status: accepted
 ---
 
 # DEC-047 Deletion through a recycle bin with a visible failed state

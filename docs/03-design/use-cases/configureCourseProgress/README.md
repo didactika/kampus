@@ -2,7 +2,7 @@
 id: UC-031
 name: configureCourseProgress
 title: Configure course progress
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

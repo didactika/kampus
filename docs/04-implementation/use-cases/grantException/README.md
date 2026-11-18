@@ -2,7 +2,7 @@
 id: UC-023
 name: grantException
 title: Grant an exception
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

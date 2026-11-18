@@ -2,7 +2,7 @@
 id: UC-021
 name: addActivity
 title: Add an activity or material
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

@@ -4,7 +4,7 @@ name: restrictAccess
 title: Restrict access to an activity or section
 actor: Teacher
 package: activities
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-051

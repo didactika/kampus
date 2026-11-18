@@ -4,7 +4,7 @@ name: grantException
 title: Grant an exception
 actor: Teacher
 package: activities
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-054

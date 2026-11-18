@@ -4,7 +4,7 @@ name: addActivity
 title: Add an activity or material
 actor: Teacher
 package: activities
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-050

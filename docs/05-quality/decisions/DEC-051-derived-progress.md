@@ -1,6 +1,6 @@
 ---
 id: DEC-051
-status: proposed
+status: accepted
 ---
 
 # DEC-051 Progress as derived records re-evaluated by events

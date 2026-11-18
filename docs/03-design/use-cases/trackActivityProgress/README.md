@@ -2,7 +2,7 @@
 id: UC-030
 name: trackActivityProgress
 title: Track activity progress
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

@@ -1,6 +1,6 @@
 ---
 id: DEC-046
-status: proposed
+status: accepted
 ---
 
 # DEC-046 One exception model for every activity, with one precedence rule

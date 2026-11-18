@@ -4,7 +4,7 @@ name: trackActivityProgress
 title: Track activity progress
 actor: System
 package: progress
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-063

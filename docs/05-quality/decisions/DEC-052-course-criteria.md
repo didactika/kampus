@@ -1,6 +1,6 @@
 ---
 id: DEC-052
-status: proposed
+status: accepted
 ---
 
 # DEC-052 Typed course criteria, an acyclic prerequisite graph and one tracked population

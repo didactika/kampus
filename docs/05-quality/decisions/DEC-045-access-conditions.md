@@ -1,6 +1,6 @@
 ---
 id: DEC-045
-status: proposed
+status: accepted
 ---
 
 # DEC-045 Access conditions as typed rows with foreign keys

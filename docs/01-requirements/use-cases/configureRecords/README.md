@@ -4,7 +4,7 @@ name: configureRecords
 title: Configure the academic records of a course
 actor: Teacher
 package: records
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-060

@@ -1,6 +1,6 @@
 ---
 id: DATA-ACTIVITIES
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

@@ -4,7 +4,7 @@ name: receiveGrade
 title: Receive a grade from an activity
 actor: System
 package: records
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-061

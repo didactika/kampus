@@ -4,7 +4,7 @@ name: copyActivity
 title: Copy or move an activity
 actor: Teacher
 package: activities
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-053

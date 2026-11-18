@@ -2,7 +2,7 @@
 id: UC-024
 name: copyActivity
 title: Copy or move an activity
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

@@ -1,6 +1,6 @@
 ---
 id: DEC-048
-status: proposed
+status: accepted
 ---
 
 # DEC-048 Grades as an immutable ledger, totals derived by a job

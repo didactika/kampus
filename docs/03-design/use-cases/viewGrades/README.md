@@ -2,7 +2,7 @@
 id: UC-029
 name: viewGrades
 title: See grades
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

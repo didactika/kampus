@@ -2,7 +2,7 @@
 id: UC-028
 name: overrideGrade
 title: Override or lock a grade
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

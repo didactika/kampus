@@ -2,7 +2,7 @@
 id: UC-025
 name: deleteActivity
 title: Delete and restore an activity
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

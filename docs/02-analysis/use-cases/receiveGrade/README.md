@@ -2,7 +2,7 @@
 id: UC-026
 name: receiveGrade
 title: Receive a grade from an activity
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

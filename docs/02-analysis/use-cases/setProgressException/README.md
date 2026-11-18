@@ -2,7 +2,7 @@
 id: UC-032
 name: setProgressException
 title: Set a progress exception
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

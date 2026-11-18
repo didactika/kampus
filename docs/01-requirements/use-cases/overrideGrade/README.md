@@ -4,7 +4,7 @@ name: overrideGrade
 title: Override or lock a grade
 actor: Teacher
 package: records
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-061

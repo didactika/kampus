@@ -2,7 +2,7 @@
 id: UC-027
 name: configureRecords
 title: Configure the academic records of a course
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

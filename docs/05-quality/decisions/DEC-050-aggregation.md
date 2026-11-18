@@ -1,6 +1,6 @@
 ---
 id: DEC-050
-status: proposed
+status: accepted
 ---
 
 # DEC-050 Typed aggregation methods with worked examples as tests

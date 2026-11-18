@@ -1,6 +1,6 @@
 ---
 id: DATA-PROGRESS
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

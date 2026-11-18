@@ -1,6 +1,6 @@
 ---
 id: DATA-RECORDS
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

@@ -1,6 +1,6 @@
 ---
 id: DEC-049
-status: proposed
+status: accepted
 ---
 
 # DEC-049 One visibility service for every read of grades

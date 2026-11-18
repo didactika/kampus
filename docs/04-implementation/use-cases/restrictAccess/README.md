@@ -2,7 +2,7 @@
 id: UC-022
 name: restrictAccess
 title: Restrict access to an activity or section
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

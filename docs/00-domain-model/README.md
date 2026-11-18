@@ -17,9 +17,9 @@ The business concepts of Kampus, module by module. Each module has its own docum
 | `kampus-identity` and `kampus-users`: accounts, sign-in, profiles, system groups | [identity.md](./identity.md) | accepted |
 | `kampus-courses`: categories, courses, sections, groups | [courses.md](./courses.md) | accepted |
 | `kampus-enrol`: methods, enrolments, requests | [enrolment.md](./enrolment.md) | accepted |
-| `kampus-activities`: course modules, access conditions, exceptions | [activities.md](./activities.md) | proposed |
-| `kampus-records`: academic records | [records.md](./records.md) | proposed |
-| `kampus-progress`: activity and course progress | [progress.md](./progress.md) | proposed |
+| `kampus-activities`: course modules, access conditions, exceptions | [activities.md](./activities.md) | accepted |
+| `kampus-records`: academic records | [records.md](./records.md) | accepted |
+| `kampus-progress`: activity and course progress | [progress.md](./progress.md) | accepted |
 
 ## Hierarchy of entities
 
