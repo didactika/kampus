@@ -21,7 +21,7 @@ paths:
   /api/v1/course-modules/{course_module_id}/copy:
     post: { summary: 'Copy within the course or to another course (RN-090)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Copied } } }
   /api/v1/course-modules/{course_module_id}/conditions:
-    get: { summary: The condition tree, with any unknown or broken condition reported, responses: { '200': { description: Conditions } } }
+    get: { summary: 'The condition tree, with any unknown or broken condition reported', responses: { '200': { description: Conditions } } }
     put: { summary: 'Replace the condition tree (RN-080)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
   /api/v1/sections/{section_id}/conditions:
     get: { summary: The condition tree of a section, responses: { '200': { description: Conditions } } }

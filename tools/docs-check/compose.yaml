@@ -14,3 +14,10 @@ services:
     environment:
       PLANTUML_URL: http://plantuml:8080
     command: ["node", "tools/docs-check/wait-and-check.mjs"]
+
+  openapi:
+    image: redocly/cli:1.25.0
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+    entrypoint: ["sh", "-c", "redocly lint --extends=minimal --format=summary docs/03-design/api/*.openapi.yaml"]

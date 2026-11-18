@@ -28,7 +28,7 @@ paths:
     get: { summary: Webhooks of a client, responses: { '200': { description: Webhooks } } }
     post: { summary: 'Subscribe a URL to event types (RN-199, RN-201)', responses: { '201': { description: Subscribed }, '422': { description: URL or event type not allowed } } }
   /api/v1/webhooks/{webhook_id}:
-    patch: { summary: Change, enable or disable, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }
+    patch: { summary: 'Change, enable or disable', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }
     delete: { summary: Remove, responses: { '204': { description: Removed } } }
   /api/v1/webhooks/{webhook_id}/deliveries:
     get: { summary: Recent deliveries with status codes, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }

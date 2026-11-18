@@ -61,6 +61,8 @@ Criteria are typed; prerequisites form a graph that must stay acyclic.
 
 | ID | Rule |
 | --- | --- |
+| RN-117 | Inherited rule defaults |
+| RN-125 | Progress notifications per course |
 | RN-120 | Typed criteria |
 | RN-121 | Evaluation and revocation |
 | RN-122 | Acyclic prerequisites |

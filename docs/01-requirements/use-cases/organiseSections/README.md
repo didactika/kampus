@@ -62,6 +62,7 @@ Sections are scopes with stable identities. Links, highlights, permissions and g
 
 | ID | Rule |
 | --- | --- |
+| RN-044 | Hidden content for those allowed |
 | RN-043 | Visibility never copied down |
 | RN-045 | Stable ids and sort keys |
 | RN-047 | Moving a subtree |

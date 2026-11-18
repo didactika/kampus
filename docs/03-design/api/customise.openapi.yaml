@@ -30,7 +30,7 @@ paths:
     get: { summary: Rules of a scope, responses: { '200': { description: Rules } } }
     post: { summary: 'Create a rule from declared triggers, conditions and actions (RN-218)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created } } }
   /api/v1/rules/{rule_id}:
-    patch: { summary: Change, enable or disable, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }
+    patch: { summary: 'Change, enable or disable', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }
     delete: { summary: Delete, responses: { '204': { description: Deleted } } }
   /api/v1/rules/{rule_id}/runs:
     get: { summary: 'Runs with outcome and error (RN-219)', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }

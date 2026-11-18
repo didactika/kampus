@@ -62,6 +62,7 @@ Groups split participants. A section can have its own groups and its own group m
 
 | ID | Rule |
 | --- | --- |
+| RN-059 | Joining keys hashed |
 | RN-041 | Unique group names |
 | RN-053 | Members must be enrolled |
 | RN-054 | Owned memberships |

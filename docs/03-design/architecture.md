@@ -94,7 +94,7 @@ OpenTelemetry for traces and metrics, structured JSON logs with the request id a
 
 ### Internationalisation and time
 
-Every user-facing string is an ICU message of its module, resolved by `kampus-i18n` and then through the terminology layer (DEC-008, DEC-012, DEC-062). Times are stored as UTC timestamps with time zone and shown in the user's zone; identifiers, money, pagination and API conventions are fixed by the platform foundations (T-B.02).
+Every user-facing string is an ICU message of its module, resolved by `kampus-i18n` and then through the terminology layer (DEC-008, DEC-012, DEC-062). Times are stored as UTC timestamps with time zone and shown in the user's zone; identifiers, money, pagination and API conventions are fixed by the [platform foundations](./foundations.md).
 
 ## Deployment
 
@@ -110,11 +110,29 @@ Every user-facing string is an ICU message of its module, resolved by `kampus-i1
 
 | Requirement | Where it is met |
 | --- | --- |
-| RF-002 modular | Modules and dependency rules |
+| RF-001 written from scratch in Rust | [Style](#style), DEC-001; code provenance checks (RNF-015) |
+| RF-002 modular | [Modules](#modules) and [dependency rules](#dependency-rules); feature flags switch modules per scope (DEC-073, UC-057) |
+| RF-003 complete core | Tier 1 modules of the [module table](#modules), each with its domain model, data model, API and use cases |
+| RF-007 designed for Kampus | One domain model per module listing its rules, and one decision per improvement (DEC-001 onwards), with highlights HL-001 onwards |
+| RF-008 modular web client | [Web client](./web/README.md): shell, UI modules and extension points (DEC-004, DEC-074 to DEC-076) |
+| RNF-001 security | Permission checks inside services (DEC-017), server-side sessions (DEC-031), signed URLs (DEC-053), sandboxed plugins (DEC-068), webhook address checks (DEC-064) |
+| RNF-002 privacy | Privacy handlers declared by every module (DEC-061), tombstones (RN-034), retention per data category |
+| RNF-003 accessibility | Design system and accessible tokens (DEC-075, RN-217), accessibility scans per page |
+| RNF-004 performance | Permission filtering in the query (RN-020), two-level cache with invalidation by event, indexes from queries (DEC-014 rule 8), load test in T-C.14 |
 | RNF-005 scalability | Stateless roles, state in the ports |
-| RNF-006 availability | Expand-and-contract migrations, rolling upgrades |
-| RNF-007 maintainability | Dependency rules enforced by the build |
-| RNF-009 observability | Observability |
-| RNF-012 plugin isolation | `kampus-plugin-host` (DEC-003) |
+| RNF-006 availability | Expand-and-contract migrations (DEC-080), rolling upgrades |
+| RNF-007 maintainability | Dependency rules enforced by the build and by the schema check (DEC-079) |
+| RNF-008 testability | One test folder per use case in the traceability table; one test per rule |
+| RNF-009 observability | [Observability](#observability) |
+| RNF-010 internationalisation | ICU messages and CLDR formatting (DEC-062), right-to-left in the client (RN-192) |
+| RNF-011 extensibility | Additive host interfaces within a major SDK version (RN-211), API deprecation with sunset dates (RN-202) |
+| RNF-012 plugin isolation | `kampus-plugin-host` (DEC-003, DEC-068) |
 | RNF-013 portability | Deployment |
-| RNF-019 infrastructure ports | Dependency rule 5 |
+| RNF-014 supply chain | Quality gates of the [project configuration](./project-configuration.md); signed plugin packages (DEC-067) |
+| RNF-015 code provenance | Licence checks in the quality gates (DEC-010) |
+| RNF-016 database portability | Database port and neutral schema (DEC-065), conformance suite (DEC-066) |
+| RNF-017 file storage portability | Storage port ([infrastructure ports](./ports/README.md)) |
+| RNF-018 cache portability | Cache port ([infrastructure ports](./ports/README.md)) |
+| RNF-019 infrastructure ports | Dependency rule 5, [infrastructure ports](./ports/README.md) |
+| RNF-020 documentation quality | [Handbook](./handbook/README.md) with help topics and generated references (DEC-077, DEC-078) |
+| RNF-021 data integrity | [Data model conventions](./data-model/conventions.md) (DEC-014, DEC-079, DEC-080) |

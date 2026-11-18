@@ -63,6 +63,8 @@ Every client (web, API, plugins) uses the same pipeline; the owning module attac
 
 | ID | Rule |
 | --- | --- |
+| RN-133 | Unreferenced blobs to the trash |
+| RN-136 | Moving between backends |
 | RN-126 | One blob per hash |
 | RN-127 | One owner |
 | RN-129 | One pipeline |

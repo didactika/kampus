@@ -63,6 +63,7 @@ Self-enrolment can be open, protected by a key (which may also place the person 
 
 | ID | Rule |
 | --- | --- |
+| RN-072 | Guest access is not an enrolment |
 | RN-063 | Limits in the transaction |
 | RN-064 | Keys |
 | RN-065 | Approval |

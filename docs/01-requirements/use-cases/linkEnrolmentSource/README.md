@@ -61,6 +61,7 @@ Programmes and departments are system groups; companion courses share participan
 
 | ID | Rule |
 | --- | --- |
+| RN-037 | System groups and their memberships |
 | RN-067 | Derived enrolments, no chains, no cycles |
 | RN-073 | Bulk changes as jobs |
 

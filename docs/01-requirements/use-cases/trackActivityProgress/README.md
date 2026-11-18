@@ -60,6 +60,7 @@ States are derived from events (views, submissions, grades, exceptions) and reco
 
 | ID | Rule |
 | --- | --- |
+| RN-124 | Progress survives the participation |
 | RN-115 | Enumerated states, displayed at read time |
 | RN-116 | Re-evaluation by listeners |
 | RN-123 | Tracked population |

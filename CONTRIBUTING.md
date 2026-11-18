@@ -27,6 +27,7 @@
 
   ```bash
   docker compose -f tools/docs-check/compose.yaml run --rm check
+  docker compose -f tools/docs-check/compose.yaml run --rm openapi
   docker compose -f tools/docs-check/compose.yaml down
   ```
 

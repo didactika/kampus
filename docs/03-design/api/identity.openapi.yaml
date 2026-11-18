@@ -15,7 +15,7 @@ paths:
   /api/v1/auth/oidc/{provider_id}/start:
     get: { summary: Start sign-in with an identity provider, responses: { '302': { description: Redirect to the provider } } }
   /api/v1/auth/oidc/{provider_id}/callback:
-    get: { summary: 'Finish sign-in; links by issuer and subject (RN-028)', responses: { '302': { description: Signed in, or confirmation of linking required } } }
+    get: { summary: 'Finish sign-in; links by issuer and subject (RN-028)', responses: { '302': { description: 'Signed in, or confirmation of linking required' } } }
   /api/v1/auth/step-up:
     post: { summary: 'Re-authenticate for a sensitive operation (RN-032)', responses: { '200': { description: Strong authentication renewed } } }
   /api/v1/auth/sign-out:
@@ -23,9 +23,9 @@ paths:
   /api/v1/auth/sign-up:
     post: { summary: 'Self sign-up when the campus allows it (UC-006)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '202': { description: Confirmation link sent } } }
   /api/v1/auth/confirm:
-    post: { summary: Confirm an email or accept an invitation with a one-time token, then set a password, responses: { '200': { description: Confirmed } } }
+    post: { summary: 'Confirm an email or accept an invitation with a one-time token, then set a password', responses: { '200': { description: Confirmed } } }
   /api/v1/auth/recovery:
-    post: { summary: 'Request account recovery (rate-limited, RN-030)', responses: { '202': { description: Accepted, whether or not the account exists } } }
+    post: { summary: 'Request account recovery (rate-limited, RN-030)', responses: { '202': { description: 'Accepted, whether or not the account exists' } } }
   /api/v1/auth/recovery/complete:
     post: { summary: 'Complete recovery: token, then second factor or recovery code, then the new credential', responses: { '200': { description: Credential changed; sessions revoked; not signed in } } }
   /api/v1/me/sessions:
@@ -33,11 +33,11 @@ paths:
     delete: { summary: Revoke all my other sessions, responses: { '204': { description: Revoked } } }
   /api/v1/me/second-factors:
     get: { summary: My second factors, responses: { '200': { description: Second factors } } }
-    post: { summary: 'Add a second factor (step-up required)', responses: { '201': { description: Added, with recovery codes shown once } } }
+    post: { summary: 'Add a second factor (step-up required)', responses: { '201': { description: 'Added, with recovery codes shown once' } } }
   /api/v1/me/second-factors/{factor_id}:
     delete: { summary: 'Remove a second factor (step-up required)', responses: { '204': { description: Removed } } }
   /api/v1/me/tokens:
-    get: { summary: My API tokens (prefix, scopes, expiry, last use), responses: { '200': { description: A page of tokens } } }
+    get: { summary: 'My API tokens (prefix, scopes, expiry, last use)', responses: { '200': { description: A page of tokens } } }
     post: { summary: 'Create an API token; the secret is shown once (RN-033)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created } } }
   /api/v1/me/tokens/{token_id}:
     delete: { summary: Revoke a token, responses: { '204': { description: Revoked } } }

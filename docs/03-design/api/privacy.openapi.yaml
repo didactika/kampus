@@ -8,7 +8,7 @@ info:
 paths:
   /api/v1/privacy/requests:
     get: { summary: 'Requests the caller may handle, with due dates (RN-186)', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
-    post: { summary: Request an export or a deletion, for oneself or on behalf, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created }, '409': { description: An open request of that kind exists } } }
+    post: { summary: 'Request an export or a deletion, for oneself or on behalf', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created }, '409': { description: An open request of that kind exists } } }
   /api/v1/privacy/requests/{request_id}:
     get: { summary: A request with its items per module, responses: { '200': { description: Request } } }
   /api/v1/privacy/requests/{request_id}/approve:
