@@ -52,6 +52,38 @@ services:
       timeout: 3s
       retries: 30
 
+  s3:
+    image: chrislusf/seaweedfs:3.97
+    command: ["server", "-s3", "-dir=/data", "-master.volumeSizeLimitMB=64"]
+    ports:
+      - "58333:8333"
+    volumes:
+      - s3-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  s3-buckets:
+    image: curlimages/curl:8.11.1
+    entrypoint: ["sh", "-c"]
+    command:
+      - for bucket in kampus kampus-test; do code=$$(curl -s -o /dev/null -w "%{http_code}" -X PUT http://s3:8333/$$bucket); [ "$$code" = 200 ] || [ "$$code" = 409 ] || exit 1; done
+    depends_on:
+      s3:
+        condition: service_healthy
+
+  valkey:
+    image: valkey/valkey:8.1.1
+    ports:
+      - "56379:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
   server:
     build: .
     image: kampus:0.1.0-dev
@@ -78,6 +110,8 @@ services:
     working_dir: /work
     environment:
       KAMPUS_TEST_DATABASE_URL: postgres://kampus:kampus@postgres:5432/kampus_test
+      KAMPUS_TEST_S3_ENDPOINT: http://s3:8333
+      KAMPUS_TEST_CACHE_URL: redis://valkey:6379
       CARGO_TARGET_DIR: /target
     volumes:
       - .:/work
@@ -87,9 +121,14 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      s3-buckets:
+        condition: service_completed_successfully
+      valkey:
+        condition: service_healthy
 
 volumes:
   postgres-data:
+  s3-data:
   cargo-registry:
   cargo-git:
   target:

@@ -39,8 +39,8 @@ Everything runs in containers: nothing but Git and Docker is needed on the host.
 ```bash
 docker compose up -d postgres                     # PostgreSQL 17 on localhost:55432 (kampus / kampus)
 docker compose run --rm rust cargo fmt --all
-docker compose run --rm rust cargo clippy --workspace --all-targets --locked -- -D warnings
-docker compose run --rm rust cargo test --workspace --locked
+docker compose run --rm rust cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+docker compose run --rm rust cargo test --workspace --all-features --locked
 docker compose run --rm rust cargo deny --all-features check
 docker compose run --rm rust cargo audit
 docker compose -f tools/docs-check/compose.yaml run --rm repo

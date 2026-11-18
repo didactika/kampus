@@ -11,7 +11,7 @@ status: accepted
 - Decision:
   - Kampus is licensed under the **GNU Affero General Public License, version 3 or (at your option) any later version** (`AGPL-3.0-or-later`); `LICENSE` holds its text and every file carries the notice in its header (DEC-083).
   - The copyright holder is Didactika; contributions are made under the same licence.
-  - Dependencies must be compatible with AGPLv3: permissive licences (MIT, Apache-2.0, BSD, ISC, Zlib, Unicode-3.0, CDLA-Permissive-2.0), MPL-2.0, LGPL-2.1-or-later, LGPL-3.0, GPL-3.0 and AGPL-3.0. GPL-2.0-only and every licence incompatible with GPLv3 are rejected. `cargo deny` enforces the list.
+  - Dependencies must be compatible with AGPLv3: permissive licences (MIT, Apache-2.0, BSD, ISC, Zlib, BSL-1.0, CC0-1.0, Unicode-3.0, CDLA-Permissive-2.0), MPL-2.0, LGPL-2.1-or-later, LGPL-3.0, GPL-3.0 and AGPL-3.0. GPL-2.0-only and every licence incompatible with GPLv3 are rejected. `cargo deny` enforces the list.
   - The documentation (`didactika/kampus-docs`) carries the same licence.
   - Plugins are separate works when they only use the SDK interfaces; plugins converted by `moodle2kampus` (GPL) are now license-compatible with the platform.
 - Consequences: Kampus and every derivative stay free, including when offered as a hosted service; the repositories can be made public whenever the owner decides.
