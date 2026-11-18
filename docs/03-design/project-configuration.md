@@ -25,10 +25,11 @@ sourceOfTruth: model
 | Formatting | `cargo fmt --check`, Prettier for the web client |
 | Lints | `cargo clippy` with warnings as errors, ESLint |
 | Tests | `cargo test` against PostgreSQL, Playwright end to end |
-| Architecture | the dependency rules of the architecture (levels, ports) |
+| Architecture | the dependency rules of the architecture (levels, ports), checked on the crate manifests |
 | Schema | the schema linter of DEC-014 |
 | Supply chain | `cargo deny` (licences of DEC-010, advisories), `cargo audit`, npm audit |
 | Documentation | link and diagram checks, schema dependencies and OpenAPI validation (`tools/docs-check`) |
+| Repository | file headers (DEC-083), changelog entry and version consistency (DEC-081), crate dependency rules (`tools/repo-check`) |
 
 ## Deployment configuration
 

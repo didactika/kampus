@@ -89,3 +89,5 @@ What makes Kampus stand out. This register is the source for the release notes, 
 | HL-067 | Handbook | A handbook per role for every release, with references that always match the product | DEC-078 | planned | Documentation you can trust. |
 | HL-068 | Data | A relational model whose module dependencies are checked on every change: no cycles, one owner per fact | DEC-079 | planned | A database that stays clean as Kampus grows. |
 | HL-069 | Data | Upgrades and rollbacks without downtime or data loss | DEC-080 | planned | Upgrade during the term without fear. |
+| HL-070 | Upgrades | Upgrade from any supported release straight to the latest, in one run, with integrations and plugins still working | DEC-082 | planned | No more upgrading release by release. |
+| HL-071 | Releases | Every release with complete notes, upgrade steps and a published support window | DEC-081 | planned | Plan upgrades with confidence. |

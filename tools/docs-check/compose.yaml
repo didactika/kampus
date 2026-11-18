@@ -1,3 +1,13 @@
+# This file is part of Kampus - Knowledge Academic Modular Platform for Universal Study.
+#
+# Copyright (c) 2026 Didactika. All rights reserved.
+# Proprietary and confidential: see the LICENSE file at the root of the repository.
+# SPDX-License-Identifier: LicenseRef-Didactika-Proprietary
+#
+# @package   tools/docs-check
+# @author    hector-ae21
+# @since     0.1.0
+
 name: kampus-docs-check
 
 services:
@@ -21,3 +31,10 @@ services:
     volumes:
       - ../..:/repo:ro
     entrypoint: ["sh", "-c", "redocly lint --extends=minimal --format=summary docs/03-design/api/*.openapi.yaml"]
+
+  repo:
+    image: node:24-slim
+    working_dir: /repo
+    volumes:
+      - ../..:/repo
+    entrypoint: ["node", "tools/repo-check/check.mjs"]

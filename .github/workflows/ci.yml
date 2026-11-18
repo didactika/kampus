@@ -1,0 +1,138 @@
+# This file is part of Kampus - Knowledge Academic Modular Platform for Universal Study.
+#
+# Copyright (c) 2026 Didactika. All rights reserved.
+# Proprietary and confidential: see the LICENSE file at the root of the repository.
+# SPDX-License-Identifier: LicenseRef-Didactika-Proprietary
+#
+# @package   kampus
+# @author    hector-ae21
+# @since     0.1.0
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, 'release/**', 'support/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  repository:
+    name: Headers, version and changelog
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      - name: List the files and the changes of the pull request
+        run: |
+          git ls-files > "$RUNNER_TEMP/files.txt"
+          if [ -n "${{ github.base_ref }}" ]; then
+            git diff --name-only "origin/${{ github.base_ref }}...HEAD" > "$RUNNER_TEMP/changed.txt"
+          else
+            : > "$RUNNER_TEMP/changed.txt"
+          fi
+
+      - name: Check the repository
+        run: >-
+          node tools/repo-check/check.mjs
+          --files "$RUNNER_TEMP/files.txt"
+          $([ -n "${{ github.base_ref }}" ] && echo --changed "$RUNNER_TEMP/changed.txt")
+
+  format:
+    name: Formatting
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install the pinned toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+      - run: cargo fmt --all --check
+
+  lint:
+    name: Clippy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install the pinned toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: clippy-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+  test:
+    name: Tests against PostgreSQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: kampus
+          POSTGRES_PASSWORD: kampus
+          POSTGRES_DB: kampus
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U kampus -d kampus"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      KAMPUS_TEST_DATABASE_URL: postgres://kampus:kampus@127.0.0.1:5432/kampus
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install the pinned toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: test-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}
+      - run: cargo test --workspace --locked
+
+  supply-chain:
+    name: Licences and advisories
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CARGO_DENY: 0.21.0
+      CARGO_AUDIT: 0.22.2
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install the pinned toolchain
+        run: rustup show active-toolchain || rustup toolchain install
+      - name: Install cargo-deny and cargo-audit
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL "https://github.com/EmbarkStudios/cargo-deny/releases/download/${CARGO_DENY}/cargo-deny-${CARGO_DENY}-x86_64-unknown-linux-musl.tar.gz" \
+            | tar -xz --strip-components=1 -C "$HOME/.local/bin" "cargo-deny-${CARGO_DENY}-x86_64-unknown-linux-musl/cargo-deny"
+          curl -fsSL "https://github.com/rustsec/rustsec/releases/download/cargo-audit%2Fv${CARGO_AUDIT}/cargo-audit-x86_64-unknown-linux-musl-v${CARGO_AUDIT}.tgz" \
+            | tar -xz --strip-components=1 -C "$HOME/.local/bin" "cargo-audit-x86_64-unknown-linux-musl-v${CARGO_AUDIT}/cargo-audit"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: cargo deny --all-features check
+      - run: cargo audit
