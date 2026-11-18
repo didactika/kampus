@@ -8,7 +8,7 @@ A modular learning platform written from scratch in Rust: courses, enrolment, ro
 
 ## Status
 
-Version 0.1.0 is in progress on the `release/0.1.0` branch: the specification of the platform. See the [documentation](docs/README.md) and the [milestones](../../milestones).
+Version 0.1.0 is in progress on the `release/0.1.0` branch: the specification of the platform is complete and the core is being built. Changes are recorded in the [changelog](CHANGELOG.md). See the [documentation](docs/README.md) and the [milestones](../../milestones).
 
 ## Repository
 
@@ -16,7 +16,10 @@ Version 0.1.0 is in progress on the `release/0.1.0` branch: the specification of
 | --- | --- |
 | [`docs/`](docs/README.md) | The specification: requirements, domain model, design, decisions and highlights |
 | [`tools/docs-check/`](tools/docs-check/) | Documentation checks run in CI and locally with Docker |
-| `crates/` | Rust workspace, one crate per module (coming) |
+| `crates/` | Rust workspace, one crate per module |
+| [`CHANGELOG.md`](CHANGELOG.md) | Changes of every version and the upgrade steps |
+| [`tools/repo-check/`](tools/repo-check/) | File headers, version and changelog, and the dependency rules of the crates |
+| [`tools/dev/`](tools/dev/) | Toolbox image for local development and CI parity |
 | `web/` | Web client (coming) |
 | `handbook/` | Documentation for every role (coming) |
 

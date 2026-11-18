@@ -1,0 +1,46 @@
+# This file is part of Kampus - Knowledge Academic Modular Platform for Universal Study.
+#
+# Copyright (c) 2026 Didactika. All rights reserved.
+# Proprietary and confidential: see the LICENSE file at the root of the repository.
+# SPDX-License-Identifier: LicenseRef-Didactika-Proprietary
+#
+# @package   kampus
+# @author    hector-ae21
+# @since     0.1.0
+
+[graph]
+all-features = true
+
+[advisories]
+version = 2
+yanked = "deny"
+
+[licenses]
+version = 2
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "CDLA-Permissive-2.0",
+]
+confidence-threshold = 0.9
+unused-allowed-license = "allow"
+
+[licenses.private]
+ignore = true
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

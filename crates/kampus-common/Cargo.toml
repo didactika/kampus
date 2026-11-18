@@ -1,0 +1,28 @@
+# This file is part of Kampus - Knowledge Academic Modular Platform for Universal Study.
+#
+# Copyright (c) 2026 Didactika. All rights reserved.
+# Proprietary and confidential: see the LICENSE file at the root of the repository.
+# SPDX-License-Identifier: LicenseRef-Didactika-Proprietary
+#
+# @package   kampus-common
+# @author    hector-ae21
+# @since     0.1.0
+
+[package]
+name = "kampus-common"
+description = "Foundations shared by every Kampus module"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license-file.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[dev-dependencies]
+sqlx.workspace = true
+tokio.workspace = true
+
+[lints]
+workspace = true

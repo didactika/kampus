@@ -4,6 +4,7 @@
 
 - `main` holds released versions only. Nobody pushes to it; a release branch is merged into it when a version ships.
 - `release/<version>` (now `release/0.1.0`) integrates the work of the next version.
+- `support/X.Y` receives the patch releases of a supported minor version (DEC-081).
 - Work happens on short branches cut from the release branch: `design/<module>`, `feat/<module>`, `fix/<topic>`, `docs/<topic>`, `chore/<topic>`. Each one is merged into the release branch through a pull request.
 
 ## Commits and pull requests
@@ -33,4 +34,28 @@
 
 ## Toolchain
 
-Everything runs in containers: nothing but Git and Docker is needed on the host.
+Everything runs in containers: nothing but Git and Docker is needed on the host. The `rust` service of `compose.yaml` is a toolbox with the pinned toolchain (`rust-toolchain.toml`), `cargo deny` and `cargo audit`, next to PostgreSQL 17.
+
+```bash
+docker compose up -d postgres                     # PostgreSQL 17 on localhost:55432 (kampus / kampus)
+docker compose run --rm rust cargo fmt --all
+docker compose run --rm rust cargo clippy --workspace --all-targets --locked -- -D warnings
+docker compose run --rm rust cargo test --workspace --locked
+docker compose run --rm rust cargo deny --all-features check
+docker compose run --rm rust cargo audit
+docker compose -f tools/docs-check/compose.yaml run --rm repo
+```
+
+The same gates run in CI on every pull request (`.github/workflows/ci.yml`).
+
+## Source files
+
+- Every file outside `docs/` starts with the standard header of DEC-083, in the comment syntax of its type: the project, the copyright and licence, then `@package`, `@author` and `@since`. `docker compose -f tools/docs-check/compose.yaml run --rm repo --fix --author "<your name>"` adds the missing ones.
+- Every item has a documentation comment above it, public or private (`//!` and `///` in Rust, TSDoc in TypeScript and Svelte): what it is for, not how it works. Comments inside bodies only for what the code cannot say.
+
+## Versions, changelog and releases
+
+- Kampus has one semantic version, in `[workspace.package]` of `Cargo.toml` (DEC-081). On `release/X.Y.Z` it equals `X.Y.Z`.
+- Every pull request that changes anything outside `docs/` adds its entry under `## [Unreleased]` in `CHANGELOG.md`, in one of the groups Added, Changed, Deprecated, Removed, Fixed, Security or **Upgrade** (every action an operator must take).
+- Upgrades must work from any supported release straight to the new one (DEC-082): migrations are forward-only and never edited once released, interfaces change additively within a major version, and whatever is removed is deprecated first.
+- Releasing `X.Y.Z`: move the `Unreleased` entries into `## [X.Y.Z] - <date>`, merge `release/X.Y.Z` into `main`, tag `vX.Y.Z`, cut `support/X.Y` for its patch releases and open `release/<next>`.
