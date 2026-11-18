@@ -1,6 +1,6 @@
 ---
 id: DEC-015
-status: proposed
+status: accepted
 ---
 
 # DEC-015 Module contract: service APIs, events and declared contributions

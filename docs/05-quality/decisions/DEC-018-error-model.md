@@ -1,6 +1,6 @@
 ---
 id: DEC-018
-status: proposed
+status: accepted
 ---
 
 # DEC-018 One error model, problem details on the API

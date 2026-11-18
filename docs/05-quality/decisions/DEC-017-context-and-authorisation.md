@@ -1,6 +1,6 @@
 ---
 id: DEC-017
-status: proposed
+status: accepted
 ---
 
 # DEC-017 Request context, and permissions checked inside every service operation

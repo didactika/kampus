@@ -1,6 +1,6 @@
 ---
 id: DEC-016
-status: proposed
+status: accepted
 ---
 
 # DEC-016 Transactional outbox and durable jobs on the database

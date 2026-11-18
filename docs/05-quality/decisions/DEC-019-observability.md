@@ -1,6 +1,6 @@
 ---
 id: DEC-019
-status: proposed
+status: accepted
 ---
 
 # DEC-019 Observability with OpenTelemetry, and an audit log apart

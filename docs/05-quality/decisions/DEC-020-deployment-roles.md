@@ -1,6 +1,6 @@
 ---
 id: DEC-020
-status: proposed
+status: accepted
 ---
 
 # DEC-020 One image with three roles; the web client apart
