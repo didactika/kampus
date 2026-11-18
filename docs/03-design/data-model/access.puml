@@ -5,13 +5,9 @@ hide circle
 skinparam linetype ortho
 title Schema access (PostgreSQL)
 
-entity scope_kind {
-  * code : text <<PK>>
-  rank : smallint
-}
 entity scope {
   * id : uuid <<PK>>
-  kind : text <<FK>>
+  kind : text <<CHECK>>
   parent_id : uuid <<FK>>
   campus_id : uuid <<FK>>
   frozen : boolean
@@ -60,6 +56,7 @@ entity principal {
   * id : uuid <<PK>>
   kind : account
   campus_id : uuid <<FK>>
+  active : boolean
 }
 entity grant {
   * id : uuid <<PK>>
@@ -71,13 +68,11 @@ entity grant {
   valid_until : timestamptz
 }
 
-scope }o--|| scope_kind
 principal }o--|| scope : campus
 grant }o--|| principal
 scope }o--o| scope : parent
 scope_closure }o--|| scope : ancestor
 scope_closure }o--|| scope : descendant
-permission }o--|| scope_kind : lowest kind
 role }o--|| scope : campus
 role }o--|| role_template
 role_permission }o--|| role

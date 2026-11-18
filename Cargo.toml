@@ -49,6 +49,7 @@ kampus-common = { path = "crates/common" }
 kampus-db = { path = "crates/db" }
 kampus-storage = { path = "crates/storage" }
 kampus-cache = { path = "crates/cache" }
+kampus-access = { path = "crates/access" }
 async-trait = "0.1.92"
 bytes = "1.12.2"
 moka = { version = "0.12.16", features = ["future"] }
@@ -62,7 +63,7 @@ http-body-util = "0.1.5"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.154"
 sha2 = "0.11.1"
-sqlx = { version = "0.9.1", default-features = false, features = ["runtime-tokio", "tls-rustls-ring-webpki", "postgres", "uuid", "time"] }
+sqlx = { version = "0.9.1", default-features = false, features = ["runtime-tokio", "tls-rustls-ring-webpki", "postgres", "uuid", "time", "json"] }
 time = { version = "0.3.55", features = ["serde", "formatting", "parsing", "macros"] }
 tokio = { version = "1.54.1", features = ["macros", "rt-multi-thread", "signal", "net", "time", "sync"] }
 toml = { version = "1.2.1", default-features = false, features = ["parse", "serde"] }

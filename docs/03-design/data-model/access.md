@@ -15,9 +15,7 @@ PostgreSQL schema `access`, owned by `kampus-access` (DEC-014). Keys are UUID ve
 
 | Table | Columns | Constraints and indexes |
 | --- | --- | --- |
-| `scope_kind` | `code` text PK, `rank` smallint | Lookup of the nine kinds; `rank` orders them for RN-012 |
-| `scope_kind_parent` | `kind` FK, `parent_kind` FK | PK (`kind`, `parent_kind`): which kinds may contain which (RN-001) |
-| `scope` | `id`, `kind` FK, `parent_id` FK → `scope` (`ON DELETE CASCADE`), `campus_id` FK → `scope`, `frozen` boolean, `version` | `CHECK` root has no parent; a trigger checks `scope_kind_parent`; index on `parent_id` |
+| `scope` | `id`, `kind` (checked against the nine kinds), `parent_id` FK → `scope` (`ON DELETE CASCADE`), `campus_id` FK → `scope` (the campus itself for a campus), `frozen` boolean, `version` | Which kinds may contain which (RN-001) is a rule of the service, checked when a scope is created; index on `parent_id` |
 | `scope_closure` | `ancestor_id` FK → `scope`, `descendant_id` FK → `scope`, `depth` smallint | PK (`ancestor_id`, `descendant_id`); index (`descendant_id`, `depth`); kept in the same transaction as every insert or move of a scope |
 | `permission` | `code` text PK, `module` text, `kind` (`read`, `write`), `risks` text[] checked against a fixed set, `lowest_kind` FK → `scope_kind`, `retired_at` | Rows synchronised from module declarations at start-up (DEC-015); never deleted while referenced, only retired |
 | `role_template` | `id`, `code`, `version` integer, `name_message` | `UNIQUE` (`code`, `version`) |
@@ -26,11 +24,11 @@ PostgreSQL schema `access`, owned by `kampus-access` (DEC-014). Keys are UUID ve
 | `role_scope_kind` | `role_id` FK (`CASCADE`), `kind` FK | PK (`role_id`, `kind`): where the role can be granted |
 | `role_permission` | `role_id` FK (`CASCADE`), `permission_code` FK, `value` | PK (`role_id`, `permission_code`) |
 | `role_allowance` | `role_id` FK (`CASCADE`), `target_role_id` FK (`CASCADE`), `kind` | PK (`role_id`, `target_role_id`, `kind`); `kind` in (`grant`, `override`, `view_as`, `view`) — one table instead of one per kind |
-| `permission_override` | `scope_id` FK (`CASCADE`), `role_id` FK (`CASCADE`), `permission_code` FK, `value`, `version` | PK (`scope_id`, `role_id`, `permission_code`); a trigger enforces RN-012 |
-| `principal` | `id`, `kind` (`account`), `campus_id` FK → `scope` (`RESTRICT`), `created_at` | Supertype of everything that can hold grants (DEC-014 rule 2, DEC-079): `identity.account.id` is a foreign key to it, so access never references a higher module |
+| `permission_override` | `scope_id` FK (`CASCADE`), `role_id` FK (`CASCADE`), `permission_code` FK, `value`, `version` | PK (`scope_id`, `role_id`, `permission_code`); the lowest kind of RN-012 is checked by the service |
+| `principal` | `id`, `kind` (`account`), `campus_id` FK → `scope` (`RESTRICT`), `active` boolean, `created_at` | Supertype of everything that can hold grants (DEC-014 rule 2, DEC-079): `identity.account.id` is a foreign key to it, so access never references a higher module `active` is kept by identity when an account is suspended, restored or deleted, so access never reads identity (RN-010) |
 | `grant` | `id`, `role_id` FK (`RESTRICT`), `scope_id` FK (`CASCADE`), `principal_id` FK → `principal` (`CASCADE`), `origin` (`manual`, `module`), `origin_module` text, `valid_from`, `valid_until`, `granted_by` FK → `principal` | `CHECK` `valid_until` > `valid_from`; `CHECK` `origin_module` set if and only if origin is `module`; partial `UNIQUE` (`role_id`, `scope_id`, `user_id`) where origin is `manual`; index (`user_id`, `scope_id`) |
 | `view_as_session` | `id`, `principal_id` FK → `principal` (`CASCADE`), `scope_id` FK (`CASCADE`), `role_id` FK (`CASCADE`), `started_at`, `ended_at` | `CHECK` `ended_at` > `started_at` |
-| `change` | `id`, `actor_id`, `entity` text, `entity_id`, `before` jsonb, `after` jsonb, `at` | Append-only history of grants, overrides and roles (RN-015); feeds the audit log (DEC-019) |
+| `change` | `id`, `actor` (the principal, kept without a foreign key so history survives), `entity` text, `entity_key` text, `before` jsonb, `after` jsonb, `at` | Append-only history of grants, overrides and roles (RN-015); feeds the audit log (DEC-019) |
 
 Entities of other modules point to their scope: `courses.course.scope_id` FK → `access.scope` `UNIQUE`, and so on for categories, sections, activities, widgets and users. Modules that own grants keep their own link table (for example `enrol.enrolment_grant (enrolment_id, grant_id)`), so `grant` never references a higher module (RN-016, DEC-014 rule 7).
 
