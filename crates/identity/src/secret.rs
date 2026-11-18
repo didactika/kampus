@@ -40,6 +40,8 @@ use std::sync::{Arc, OnceLock};
 use argon2::{Algorithm, Argon2, Params, Version};
 use base64::Engine;
 use base64::engine::general_purpose::{STANDARD_NO_PAD, URL_SAFE_NO_PAD};
+use chacha20poly1305::aead::{Aead, Key, KeyInit};
+use chacha20poly1305::{XChaCha20Poly1305, XNonce};
 use kampus_common::{Error, Result};
 use sha2::{Digest, Sha256};
 
@@ -242,9 +244,93 @@ fn verify_phc(password: &str, stored: &str) -> Result<bool> {
     Ok(same(&raw(cost, password, &salt)?, &expected))
 }
 
+/// The version byte of sealed secrets, so the key or the cipher can change later.
+const SEALED_V1: u8 = 1;
+
+/// The key that seals secrets identity must read back, such as TOTP secrets and provider secrets.
+#[derive(Clone)]
+pub struct SecretKey([u8; 32]);
+
+impl std::fmt::Debug for SecretKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("SecretKey(..)")
+    }
+}
+
+impl SecretKey {
+    /// A key from 32 bytes in base64, as the configuration gives it.
+    ///
+    /// # Errors
+    ///
+    /// `validation` on `secret_key` when it is not 32 bytes of base64.
+    pub fn from_base64(text: &str) -> Result<Self> {
+        STANDARD_NO_PAD
+            .decode(text.trim().trim_end_matches('='))
+            .ok()
+            .and_then(|bytes| <[u8; 32]>::try_from(bytes).ok())
+            .map(Self)
+            .ok_or_else(|| {
+                Error::validation(
+                    "identity.secret_key_invalid",
+                    vec![kampus_common::FieldError::new("secret_key", "base64_32_bytes")],
+                )
+            })
+    }
+
+    /// A new random key.
+    ///
+    /// # Errors
+    ///
+    /// As [`random_bytes`].
+    pub fn generate() -> Result<Self> {
+        random_bytes::<32>().map(Self)
+    }
+
+    /// The key in base64, to put in the configuration.
+    #[must_use]
+    pub fn to_base64(&self) -> String {
+        STANDARD_NO_PAD.encode(self.0)
+    }
+
+    /// Seals a secret: a version byte, a random nonce and the XChaCha20-Poly1305 ciphertext.
+    ///
+    /// # Errors
+    ///
+    /// An `internal` error when sealing fails.
+    pub fn seal(&self, plain: &[u8]) -> Result<Vec<u8>> {
+        let nonce = random_bytes::<24>()?;
+        let sealed = XChaCha20Poly1305::new(&Key::<XChaCha20Poly1305>::from(self.0))
+            .encrypt(&XNonce::from(nonce), plain)
+            .map_err(|_| Error::internal("identity.seal_failed"))?;
+        let mut out = Vec::with_capacity(1 + nonce.len() + sealed.len());
+        out.push(SEALED_V1);
+        out.extend_from_slice(&nonce);
+        out.extend_from_slice(&sealed);
+        Ok(out)
+    }
+
+    /// Opens a sealed secret.
+    ///
+    /// # Errors
+    ///
+    /// An `internal` error when the secret was sealed with another key or changed.
+    pub fn open(&self, sealed: &[u8]) -> Result<Vec<u8>> {
+        let unreadable = || Error::internal("identity.sealed_secret_unreadable");
+        let (&version, rest) = sealed.split_first().ok_or_else(unreadable)?;
+        if version != SEALED_V1 || rest.len() < 24 {
+            return Err(unreadable());
+        }
+        let (nonce, ciphertext) = rest.split_at(24);
+        let nonce = <[u8; 24]>::try_from(nonce).map_err(|_| unreadable())?;
+        XChaCha20Poly1305::new(&Key::<XChaCha20Poly1305>::from(self.0))
+            .decrypt(&XNonce::from(nonce), ciphertext)
+            .map_err(|_| unreadable())
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{PasswordCost, PasswordHasher, new_token, same, token_hash};
+    use super::{PasswordCost, PasswordHasher, SecretKey, new_token, same, token_hash};
 
     /// A cheap cost for tests.
     const CHEAP: PasswordCost = PasswordCost {
@@ -267,6 +353,23 @@ mod tests {
         assert!(!hasher.verify("wrong horse battery", Some(&stored)).await.unwrap());
         assert!(!hasher.verify("correct horse battery", None).await.unwrap());
         assert_ne!(stored, hasher.hash("correct horse battery").await.unwrap());
+    }
+
+    #[test]
+    fn sealed_secrets_open_only_with_their_key() {
+        let key = SecretKey::generate().unwrap();
+        let sealed = key.seal(b"totp secret").unwrap();
+        assert_eq!(key.open(&sealed).unwrap(), b"totp secret");
+        assert_ne!(key.seal(b"totp secret").unwrap(), sealed);
+        assert!(SecretKey::generate().unwrap().open(&sealed).is_err());
+        let mut changed = sealed.clone();
+        if let Some(last) = changed.last_mut() {
+            *last ^= 1;
+        }
+        assert!(key.open(&changed).is_err());
+        let again = SecretKey::from_base64(&key.to_base64()).unwrap();
+        assert_eq!(again.open(&sealed).unwrap(), b"totp secret");
+        assert!(SecretKey::from_base64("short").is_err());
     }
 
     #[test]

@@ -20,7 +20,7 @@ PostgreSQL schema `access`, owned by `kampus-access` (DEC-014). Keys are UUID ve
 | `permission` | `code` text PK, `module` text, `kind` (`read`, `write`), `risks` text[] checked against a fixed set, `lowest_kind` FK → `scope_kind`, `retired_at` | Rows synchronised from module declarations at start-up (DEC-015); never deleted while referenced, only retired |
 | `role_template` | `id`, `code`, `version` integer, `name_message` | `UNIQUE` (`code`, `version`) |
 | `role_template_value` | `template_id` FK (`CASCADE`), `permission_code` FK, `value` | PK (`template_id`, `permission_code`); `value` in (`allow`, `deny`, `forbid`) |
-| `role` | `id`, `campus_id` FK → `scope`, `short_name`, `template_id` FK → `role_template`, `version` | `UNIQUE` (`campus_id`, lower(`short_name`)) |
+| `role` | `id`, `campus_id` FK → `scope`, `short_name`, `template_id` FK → `role_template`, `version`, `second_factor_required` boolean (added in step 2, RN-029) | `UNIQUE` (`campus_id`, lower(`short_name`)) |
 | `role_scope_kind` | `role_id` FK (`CASCADE`), `kind` FK | PK (`role_id`, `kind`): where the role can be granted |
 | `role_permission` | `role_id` FK (`CASCADE`), `permission_code` FK, `value` | PK (`role_id`, `permission_code`) |
 | `role_allowance` | `role_id` FK (`CASCADE`), `target_role_id` FK (`CASCADE`), `kind` | PK (`role_id`, `target_role_id`, `kind`); `kind` in (`grant`, `override`, `view_as`, `view`) — one table instead of one per kind |

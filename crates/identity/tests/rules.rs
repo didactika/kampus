@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! One test per business rule of identity built so far (RN-022 to RN-027, RN-031 to RN-035, RN-039),
+//! One test per business rule of identity built so far (RN-022 to RN-027, RN-029 to RN-035, RN-039),
 //! against PostgreSQL, on a campus with its default roles, an administrator and a manager.
 
 #![allow(
@@ -51,11 +51,13 @@ use kampus_db::{Database, Prefix, Upgrader};
 use kampus_identity::account::SignUp;
 use kampus_identity::api_token::{TokenRequest, TokenScope};
 use kampus_identity::declarations::{ACCOUNT_READ, TOKEN_MANAGE_OWN};
+use kampus_identity::second_factor::Proof;
 use kampus_identity::session::Client;
 use kampus_identity::sign_in::{Credential, SignIn, SignInOutcome};
+use kampus_identity::totp;
 use kampus_identity::{
-    AccountId, AccountKind, AccountStatus, CampusPolicy, FixedPolicies, Identity, MemoryCourier, Notice,
-    PasswordCost, Session,
+    AccountId, AccountKind, AccountStatus, CampusPolicy, FactorKind, FixedPolicies, Identity, MemoryCourier,
+    MfaLevel, Notice, PasswordCost, SecretKey, Session,
 };
 use sqlx::Row;
 
@@ -166,6 +168,7 @@ async fn world_with(policy: CampusPolicy) -> World {
         clock.clone(),
         Arc::new(FixedPolicies(policy)),
         courier.clone(),
+        SecretKey::generate().unwrap(),
     )
     .with_password_cost(PasswordCost {
         memory_kib: 64,
@@ -432,7 +435,7 @@ async fn rn_024_every_sign_in_runs_the_same_pipeline() {
     .await;
     strict.person("bea@example.org").await;
     match strict.sign_in("bea@example.org", PASSWORD, None).await.unwrap() {
-        SignInOutcome::SecondFactorRequired { challenge } => assert_eq!(challenge.len(), 43),
+        SignInOutcome::SecondFactorRequired { challenge, .. } => assert_eq!(challenge.len(), 43),
         SignInOutcome::SignedIn(_) => panic!("the campus requires a second factor"),
     }
 }
@@ -893,4 +896,284 @@ async fn rn_039_service_accounts_authenticate_only_with_api_tokens() {
         error(w.identity.authenticate_token(&token.token).await).0,
         ErrorKind::Unauthenticated
     );
+}
+
+/// The current code of an authenticator app with this base32 secret.
+fn current_code(w: &World, secret: &str) -> String {
+    let bytes = totp::base32_decode(secret).unwrap();
+    totp::code(
+        &bytes,
+        totp::step_of(w.identity_now().unix_timestamp()),
+        totp::DIGITS,
+    )
+}
+
+/// Signs in with [`PASSWORD`], expecting a second factor to be asked.
+async fn challenge(w: &World, name: &str) -> (String, Vec<FactorKind>) {
+    match w.sign_in(name, PASSWORD, None).await.unwrap() {
+        SignInOutcome::SecondFactorRequired { challenge, methods } => (challenge, methods),
+        SignInOutcome::SignedIn(_) => panic!("a second factor was expected"),
+    }
+}
+
+#[tokio::test]
+async fn rn_029_second_factors_are_required_once_set_up() {
+    let w = world().await;
+    let ana = w.person("ana@example.org").await;
+    let (session, _) = w.session("ana@example.org").await;
+    let client = Client::default();
+
+    let setup = w.identity.new_totp_secret(&session).await.unwrap();
+    assert!(
+        setup
+            .uri
+            .starts_with("otpauth://totp/Kampus:ana%40example.org?secret=")
+    );
+    assert_eq!(
+        error(
+            w.identity
+                .confirm_totp(&session, "phone", &setup.secret, "000000")
+                .await
+        )
+        .1,
+        "identity.totp_code_wrong"
+    );
+    let added = w
+        .identity
+        .confirm_totp(&session, "phone", &setup.secret, &current_code(&w, &setup.secret))
+        .await
+        .unwrap();
+    let codes = added
+        .recovery_codes
+        .expect("the first factor comes with recovery codes");
+    assert_eq!(codes.len(), 10);
+    assert_eq!(
+        w.courier.last_to("ana@example.org").map(|m| m.notice),
+        Some(Notice::SecondFactorAdded)
+    );
+    let sealed: Vec<u8> = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+        "select secret_encrypted from {} where account_id = $1",
+        w.table("second_factor")
+    )))
+    .bind(ana.as_uuid())
+    .fetch_one(w.db.pool())
+    .await
+    .unwrap();
+    assert_ne!(
+        sealed,
+        totp::base32_decode(&setup.secret).unwrap(),
+        "secrets are sealed"
+    );
+
+    let (first, methods) = challenge(&w, "ana@example.org").await;
+    assert_eq!(methods, vec![FactorKind::Totp]);
+    let used = current_code(&w, &setup.secret);
+    assert_eq!(
+        error(
+            w.identity
+                .complete_sign_in(&first, Proof::Totp(used.clone()), &client)
+                .await
+        ),
+        (
+            ErrorKind::Unauthenticated,
+            "identity.second_factor_failed".to_owned()
+        ),
+        "the code that confirmed the app cannot be used again"
+    );
+    assert_eq!(
+        error(
+            w.identity
+                .complete_sign_in(&first, Proof::Totp(used), &client)
+                .await
+        )
+        .1,
+        "identity.token_invalid",
+        "a challenge works once"
+    );
+    w.advance(time::Duration::seconds(30));
+    let (second, _) = challenge(&w, "ana@example.org").await;
+    let completed = w
+        .identity
+        .complete_sign_in(&second, Proof::Totp(current_code(&w, &setup.secret)), &client)
+        .await
+        .unwrap();
+    assert_eq!(completed.session.session.mfa_level, MfaLevel::SecondFactor);
+
+    let (third, _) = challenge(&w, "ana@example.org").await;
+    w.identity
+        .complete_sign_in(&third, Proof::RecoveryCode(codes[0].to_uppercase()), &client)
+        .await
+        .unwrap();
+    let (fourth, _) = challenge(&w, "ana@example.org").await;
+    assert_eq!(
+        error(
+            w.identity
+                .complete_sign_in(&fourth, Proof::RecoveryCode(codes[0].clone()), &client)
+                .await
+        )
+        .1,
+        "identity.second_factor_failed",
+        "a recovery code works once"
+    );
+
+    let session = completed.session.session;
+    let email = w.identity.add_email_factor(&session, "mail").await.unwrap();
+    assert!(email.recovery_codes.is_none(), "the recovery codes stay");
+    let (fifth, methods) = challenge(&w, "ana@example.org").await;
+    assert_eq!(methods, vec![FactorKind::Email, FactorKind::Totp]);
+    w.identity.send_email_code(&fifth).await.unwrap();
+    let Some(Notice::EmailCode { code }) = w.courier.last_to("ana@example.org").map(|m| m.notice) else {
+        panic!("an email code was sent");
+    };
+    w.identity
+        .complete_sign_in(&fifth, Proof::EmailCode(code), &client)
+        .await
+        .unwrap();
+
+    let factors = w.identity.second_factors(&session).await.unwrap();
+    assert_eq!(factors.len(), 2);
+    for factor in factors {
+        w.identity
+            .remove_second_factor(&session, factor.id)
+            .await
+            .unwrap();
+    }
+    assert_eq!(w.count("recovery_code", ana).await, 0);
+    w.session("ana@example.org").await;
+}
+
+#[tokio::test]
+async fn rn_029_a_role_can_require_a_second_factor() {
+    let w = world().await;
+    let bea = w.person("bea@example.org").await;
+    w.access
+        .set_role_second_factor(&w.admin, w.roles["manager"], true)
+        .await
+        .unwrap();
+    assert_eq!(
+        error(
+            w.access
+                .set_role_second_factor(&Actor::Principal(bea), w.roles["manager"], false)
+                .await
+        )
+        .0,
+        ErrorKind::PermissionDenied
+    );
+    w.session("bea@example.org").await;
+    w.access
+        .grant(&w.admin, w.roles["manager"], w.campus, bea, None)
+        .await
+        .unwrap();
+    let (challenge_token, methods) = challenge(&w, "bea@example.org").await;
+    assert!(methods.is_empty(), "the account must set up an app first");
+    let secret = totp::base32_encode(&[9_u8; 20]);
+    let completed = w
+        .identity
+        .complete_sign_in(
+            &challenge_token,
+            Proof::EnrolTotp {
+                label: "phone".to_owned(),
+                secret: secret.clone(),
+                code: current_code(&w, &secret),
+            },
+            &Client::default(),
+        )
+        .await
+        .unwrap();
+    assert_eq!(completed.recovery_codes.map(|c| c.len()), Some(10));
+    let session = completed.session.session;
+    let factor = w.identity.second_factors(&session).await.unwrap()[0].id;
+    assert_eq!(
+        error(w.identity.remove_second_factor(&session, factor).await),
+        (ErrorKind::Conflict, "identity.second_factor_required".to_owned())
+    );
+}
+
+#[tokio::test]
+async fn rn_030_recovery_checks_the_second_factor_first_and_never_signs_in() {
+    let w = world().await;
+    let ana = w.person("ana@example.org").await;
+    let (session, old_token) = w.session("ana@example.org").await;
+    let setup = w.identity.new_totp_secret(&session).await.unwrap();
+    w.identity
+        .confirm_totp(&session, "phone", &setup.secret, &current_code(&w, &setup.secret))
+        .await
+        .unwrap();
+    let recovery_link = |w: &World| match w.courier.last_to("ana@example.org").map(|m| m.notice) {
+        Some(Notice::Recovery { token }) => token,
+        other => panic!("a recovery link was expected: {other:?}"),
+    };
+
+    let before = w.courier.sent().len();
+    w.identity
+        .start_recovery(w.campus, "nobody@example.org")
+        .await
+        .unwrap();
+    w.identity.start_recovery(w.campus, "not an email").await.unwrap();
+    assert_eq!(
+        w.courier.sent().len(),
+        before,
+        "unknown emails get the same answer and no message"
+    );
+
+    w.identity
+        .start_recovery(w.campus, "ANA@example.org")
+        .await
+        .unwrap();
+    let first = recovery_link(&w);
+    assert_eq!(
+        w.identity.recovery_needs(&first).await.unwrap().methods,
+        vec![FactorKind::Totp]
+    );
+    let new_password = "a recovered and quiet river";
+    assert_eq!(
+        error(w.identity.complete_recovery(&first, None, new_password).await).1,
+        "identity.second_factor_failed"
+    );
+    assert_eq!(
+        error(w.identity.complete_recovery(&first, None, new_password).await).1,
+        "identity.token_invalid",
+        "a failed recovery uses up its link"
+    );
+    w.identity.authenticate(&old_token).await.unwrap();
+
+    w.advance(time::Duration::seconds(30));
+    w.identity
+        .start_recovery(w.campus, "ana@example.org")
+        .await
+        .unwrap();
+    let second = recovery_link(&w);
+    w.identity
+        .complete_recovery(
+            &second,
+            Some(Proof::Totp(current_code(&w, &setup.secret))),
+            new_password,
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        w.courier.last_to("ana@example.org").map(|m| m.notice),
+        Some(Notice::RecoveryUsed)
+    );
+    assert_eq!(
+        error(w.identity.authenticate(&old_token).await).0,
+        ErrorKind::Unauthenticated
+    );
+    assert_eq!(w.count("session", ana).await, 0, "recovery does not sign in");
+    assert!(matches!(
+        w.sign_in("ana@example.org", new_password, None).await.unwrap(),
+        SignInOutcome::SecondFactorRequired { .. }
+    ));
+
+    w.identity
+        .start_recovery(w.campus, "ana@example.org")
+        .await
+        .unwrap();
+    let links = w
+        .courier
+        .sent()
+        .iter()
+        .filter(|m| matches!(m.notice, Notice::Recovery { .. }))
+        .count();
+    assert_eq!(links, 3, "at most three links an hour");
 }

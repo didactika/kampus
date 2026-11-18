@@ -45,7 +45,7 @@ use sqlx::Row;
 
 use crate::one_time::Purpose;
 use crate::session::{Client, NewSession};
-use crate::{Account, AccountKind, AccountStatus, CampusPolicy, Identity, MfaLevel, sql};
+use crate::{Account, AccountKind, AccountStatus, CampusPolicy, FactorKind, Identity, MfaLevel, sql};
 
 /// How long a sign-in waits for its second factor.
 const SECOND_FACTOR_LIFETIME: time::Duration = time::Duration::minutes(5);
@@ -80,6 +80,10 @@ pub enum SignInOutcome {
     SecondFactorRequired {
         /// The one-time token of the pending sign-in.
         challenge: String,
+        /// The kinds of factor the account has; empty when it must set up an authenticator app first
+        /// ([`crate::second_factor::Proof::EnrolTotp`]). Recovery codes work whenever the account has a
+        /// factor.
+        methods: Vec<FactorKind>,
     },
 }
 
@@ -109,8 +113,14 @@ impl Outcome {
 }
 
 /// The hash a tried name is kept as, so the log holds no names.
-fn name_hash(campus: ScopeId, name: &str) -> Vec<u8> {
+pub(crate) fn name_hash(campus: ScopeId, name: &str) -> Vec<u8> {
     Sha256::digest(format!("{campus}:{name}").as_bytes()).to_vec()
+}
+
+/// The answer to a throttled sign-in, with the seconds to wait.
+pub(crate) fn throttled_error(retry_after: i64) -> Error {
+    Error::new(ErrorKind::RateLimited, "identity.sign_in_throttled")
+        .with_param("retry_after", retry_after.to_string())
 }
 
 /// The answer to every failed sign-in.
@@ -139,8 +149,7 @@ impl Identity {
         if let Some(retry_after) = self.throttled(campus, &policy, id, &hash, address).await? {
             self.record_attempt(campus, id, &hash, address, Outcome::Throttled)
                 .await?;
-            return Err(Error::new(ErrorKind::RateLimited, "identity.sign_in_throttled")
-                .with_param("retry_after", retry_after.to_string()));
+            return Err(throttled_error(retry_after));
         }
 
         let Some(account) = self.verify(account, &request.credential).await? else {
@@ -149,15 +158,16 @@ impl Identity {
             return Err(failed());
         };
 
-        if self.second_factor_required(&account, &policy).await? {
+        if self.second_factor_needed(&account, &policy).await? {
             let mut tx = self.db.begin().await?;
             let challenge = self
                 .issue_in(&mut tx, account.id, Purpose::SecondFactor, SECOND_FACTOR_LIFETIME)
                 .await?;
+            let methods = self.factor_kinds_in(&mut tx, account.id).await?;
             tx.commit().await.map_err(kampus_db::classify)?;
             self.record_attempt(campus, id, &hash, address, Outcome::SecondFactorRequired)
                 .await?;
-            return Ok(SignInOutcome::SecondFactorRequired { challenge });
+            return Ok(SignInOutcome::SecondFactorRequired { challenge, methods });
         }
 
         let session = self
@@ -188,21 +198,6 @@ impl Identity {
         }
     }
 
-    /// Whether the account must give a second factor: it set one up, or the campus requires one.
-    async fn second_factor_required(&self, account: &Account, policy: &CampusPolicy) -> Result<bool> {
-        if policy.second_factor_required {
-            return Ok(true);
-        }
-        sqlx::query_scalar(sql(format!(
-            "select exists (select 1 from {} where account_id = $1)",
-            self.table("second_factor")
-        )))
-        .bind(account.id.as_uuid())
-        .fetch_one(self.db.pool())
-        .await
-        .map_err(kampus_db::classify)
-    }
-
     /// Opens the session at the end of the pipeline and stamps the account's last sign-in.
     pub(crate) async fn open(
         &self,
@@ -230,7 +225,7 @@ impl Identity {
 
     /// The seconds to wait before trying again, when throttled (RN-027): failures since the last success
     /// first slow down, doubling the wait, then lock; an address with too many failures locks too.
-    async fn throttled(
+    pub(crate) async fn throttled(
         &self,
         campus: ScopeId,
         policy: &CampusPolicy,
@@ -288,6 +283,20 @@ impl Identity {
             }
         }
         Ok((wait > 0).then_some(wait))
+    }
+
+    /// Records a failed second factor of an account, so it counts for throttling.
+    pub(crate) async fn record_failure(&self, account: &Account, address: Option<&str>) -> Result<()> {
+        let hash = name_hash(account.campus, account.username.as_deref().unwrap_or_default());
+        self.record_attempt(account.campus, Some(account.id), &hash, address, Outcome::Failure)
+            .await
+    }
+
+    /// Records a sign-in of an account completed with its second factor.
+    pub(crate) async fn record_success(&self, account: &Account, address: Option<&str>) -> Result<()> {
+        let hash = name_hash(account.campus, account.username.as_deref().unwrap_or_default());
+        self.record_attempt(account.campus, Some(account.id), &hash, address, Outcome::Success)
+            .await
     }
 
     /// Records an attempt, for throttling and the account's security log.

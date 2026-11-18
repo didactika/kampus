@@ -33,7 +33,8 @@
 // ------------------------------------------------------------------------------
 
 //! Identity of Kampus (DEC-030 to DEC-033): accounts of a campus and their lifecycle, passwords, one-time
-//! tokens, the sign-in pipeline with throttling, server-side sessions with step-up, and API tokens.
+//! tokens, the sign-in pipeline with throttling, second factors and recovery, server-side sessions with
+//! step-up, and API tokens.
 //!
 //! Every account is a principal of access with the same id; identity keeps the principal active only
 //! while the account is (RN-010), so access never reads identity.
@@ -48,10 +49,13 @@ pub mod model;
 pub mod one_time;
 pub mod password;
 pub mod policy;
+pub mod recovery;
 pub mod schema;
+pub mod second_factor;
 pub mod secret;
 pub mod session;
 pub mod sign_in;
+pub mod totp;
 
 use std::sync::Arc;
 
@@ -61,10 +65,11 @@ use kampus_db::Database;
 
 pub use courier::{Courier, MemoryCourier, Message, Notice};
 pub use model::{
-    Account, AccountId, AccountKind, AccountStatus, MfaLevel, Session, SessionId, SessionSummary, TokenId,
+    Account, AccountId, AccountKind, AccountStatus, FactorId, FactorKind, MfaLevel, SecondFactor, Session,
+    SessionId, SessionSummary, TokenId,
 };
 pub use policy::{CampusPolicy, FixedPolicies, Policies, Throttle};
-pub use secret::{PasswordCost, PasswordHasher};
+pub use secret::{PasswordCost, PasswordHasher, SecretKey};
 
 /// The module name, as owner of the grants it gives (RN-016).
 pub const MODULE: &str = "identity";
@@ -84,6 +89,8 @@ pub struct Identity {
     courier: Arc<dyn Courier>,
     /// Hashes passwords.
     hasher: PasswordHasher,
+    /// Seals the secrets identity reads back.
+    key: SecretKey,
 }
 
 impl std::fmt::Debug for Identity {
@@ -103,6 +110,7 @@ impl Identity {
         clock: Arc<dyn Clock>,
         policies: Arc<dyn Policies>,
         courier: Arc<dyn Courier>,
+        key: SecretKey,
     ) -> Self {
         Self {
             db,
@@ -111,6 +119,7 @@ impl Identity {
             policies,
             courier,
             hasher: PasswordHasher::new(PasswordCost::default()),
+            key,
         }
     }
 
