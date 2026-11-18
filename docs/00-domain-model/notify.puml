@@ -1,0 +1,80 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus notifications and messaging
+
+class "Notification type" as Notificationtype {
+  code
+  module
+  default channels
+  required
+}
+class "Channel" as Channel {
+  code
+  enabled
+}
+class "Preference" as Preference {
+  account
+  type
+  enabled
+  digest
+}
+class "Notification" as Notification {
+  type
+  recipient
+  subject object
+  payload
+  created
+  read at
+}
+class "Delivery" as Delivery {
+  state (queued
+  sent
+  failed
+  dead)
+  attempts
+  last error
+}
+class "Template" as Template {
+  type
+  locale
+  scope
+  body
+}
+class "Conversation" as Conversation {
+  kind (direct
+  group
+  course group)
+  course group
+}
+class "Member" as Member {
+  account
+  joined
+  left
+  muted
+  last read
+}
+class "Message" as Message {
+  author
+  body (sanitised rich text)
+  sent at
+}
+class "Message deletion" as Messagedeletion {
+  account
+  at
+}
+class "Block" as Block {
+  account
+  blocked account
+}
+
+Notificationtype "*" --> "1" Template
+Preference "*" --> "1" Channel
+Delivery "*" --> "1" Notification
+Delivery "*" --> "1" Channel
+Template "*" --> "1" Channel
+Member "*" --> "1" Conversation
+Message "*" --> "1" Conversation
+Messagedeletion "*" --> "1" Message
+@enduml

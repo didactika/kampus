@@ -1,0 +1,19 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Authenticated user" as a
+participant "kampus-api" as api
+participant "Subscription refresher" as svc
+database "calendar schema + outbox" as db
+
+a -> api : Adds an external calendar URL
+api -> svc : request
+svc -> db : Saves the subscription and queues its first refresh
+svc -> db : Matches entries by UID and sequence; records added, changed and removed ones (RN-159)
+a -> api : Creates a personal feed
+api -> svc : request
+svc -> db : Issues a token, stores its hash and shows the URL once (RN-161)
+svc --> a : result
+@enduml

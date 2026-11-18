@@ -1,0 +1,61 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus events and audit log
+
+class "Event type" as Eventtype {
+  code (courses.section_moved)
+  version
+  schema
+  audit (yes or no)
+  personal data fields
+}
+class "Event" as Event {
+  id
+  type
+  version
+  scope
+  actor
+  object
+  payload
+  occurred at
+  request id
+}
+class "Outbox entry" as Outboxentry {
+  created at
+  dispatched at
+}
+class "Listener" as Listener {
+  module
+  handler
+  ordering key
+}
+class "Delivery" as Delivery {
+  attempts
+  state (pending
+  done
+  failed
+  dead)
+  last error
+  next attempt
+}
+class "Audit entry" as Auditentry {
+  actor
+  scope
+  object
+  summary
+  at
+}
+class "Retention policy" as Retentionpolicy {
+  campus
+  kind
+  keep for
+}
+
+Outboxentry "*" --> "1" Event
+Listener "*" --> "1" Eventtype
+Delivery "*" --> "1" Listener
+Delivery "*" --> "1" Event
+Auditentry "*" --> "1" Event
+@enduml

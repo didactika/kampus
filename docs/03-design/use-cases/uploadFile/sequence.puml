@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Authenticated user" as a
+participant "kampus-api" as api
+participant "Upload pipeline" as svc
+database "files schema + outbox" as db
+
+a -> api : Chooses a file for an area
+api -> svc : request
+svc -> db : Opens an upload session after checking size, type and quota (RN-129, RN-134)
+a -> api : Sends the content
+api -> svc : request
+svc -> db : Sniffs the type and computes the hash; reuses an existing blob (RN-126, RN-130)
+a -> api : Completes
+api -> svc : request
+svc -> db : Creates the file and the owner's link in one transaction; queues the scan (RN-127)
+svc --> a : result
+@enduml

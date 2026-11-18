@@ -1,0 +1,18 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Authenticated user" as a
+participant "kampus-api" as api
+participant "Messaging service" as svc
+database "notify schema + outbox" as db
+
+a -> api : Opens a conversation with a person or group
+api -> svc : request
+svc -> db : Finds or creates it under its unique key (RN-152)
+a -> api : Writes and sends
+api -> svc : request
+svc -> db : Checks rules and blocks (RN-153), sanitises the body (RN-155), stores it and queues notifications
+svc --> a : result
+@enduml

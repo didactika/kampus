@@ -61,3 +61,9 @@ What makes Kampus stand out. This register is the source for the release notes, 
 | HL-039 | Records | Full history of every grade, and totals that never leak hidden grades | DEC-048, DEC-049 | planned | Every grade explained, and hidden grades stay hidden everywhere. |
 | HL-040 | Records | Aggregation methods with worked examples, and calculation behaviour versioned per course | DEC-050 | planned | Totals teachers can predict, unchanged by upgrades. |
 | HL-041 | Progress | Progress always current, revocable when criteria change, and never erasing what teachers decided | DEC-051 | planned | Progress you can trust, and explain. |
+| HL-042 | Files | Each file stored once, readable exactly when what it belongs to is readable, served by expiring links | DEC-053 | planned | No orphaned files and no leaked downloads. |
+| HL-043 | Files | One upload path with the same limits, scanning and quotas for every client | DEC-054 | planned | Clear errors before uploading too much. |
+| HL-044 | Events | Typed events delivered reliably, with failures visible and retryable, and an audit log that cannot be altered | DEC-055 | planned | Know who did what, and trust integrations. |
+| HL-045 | Notifications | Preferences per notification and channel, required notices that cannot be lost, and texts in the campus language | DEC-056 | planned | The right notices, on the right channel. |
+| HL-046 | Messaging | One conversation per pair, campus rules on who may write, and deleted messages that really go away | DEC-057 | planned | Private messaging you can trust. |
+| HL-047 | Calendar | Activity dates and extensions always current in the calendar, repeating events and subscriptions without duplicates | DEC-058 | planned | One calendar that is always right. |

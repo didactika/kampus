@@ -1,0 +1,18 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Teacher" as a
+participant "kampus-api" as api
+participant "Audit query service" as svc
+database "events schema + outbox" as db
+
+a -> api : Filters by scope, person, object and dates
+api -> svc : request
+svc -> db : Returns a page of entries visible to the actor (RN-144)
+a -> api : Exports the range
+api -> svc : request
+svc -> db : Queues an export job and notifies when ready
+svc --> a : result
+@enduml

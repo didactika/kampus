@@ -1,0 +1,60 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema calendar (PostgreSQL)
+
+entity entry {
+  id <<PK>>
+  scope_id <<FK>>
+  group_id <<FK>>
+  owner_id <<FK>>
+  title
+  description
+  starts_at
+  ends_at
+  all_day_date
+  time_zone
+  rrule
+  version
+}
+entity entry_exception {
+  entry_id <<FK>>
+  occurrence_at
+  cancelled
+  override
+}
+entity activity_date {
+  course_module_id <<FK>>
+  kind
+  at
+}
+entity subscription {
+  id <<PK>>
+  scope_id <<FK>>
+  url
+  refresh_every
+  last_refreshed_at
+  last_error
+}
+entity imported_entry {
+  subscription_id <<FK>>
+  uid
+  sequence
+  starts_at
+  ends_at
+  rrule
+  data
+}
+entity feed_token {
+  id <<PK>>
+  account_id <<FK>>
+  hash
+  created_at
+  revoked_at
+}
+
+entry_exception }o--|| entry
+imported_entry }o--|| subscription
+@enduml

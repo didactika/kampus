@@ -1,0 +1,19 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Authenticated user" as a
+participant "kampus-api" as api
+participant "File access service" as svc
+database "files schema + outbox" as db
+
+a -> api : Opens a link to a file
+api -> svc : request
+svc -> db : Resolves the owner and asks its module whether the actor may read it (RN-128)
+svc -> db : Issues a signed URL valid for minutes (RN-131) and redirects
+a -> api : Downloads
+api -> svc : request
+svc -> db : Serves active content from the files origin with a restrictive policy (RN-132)
+svc --> a : result
+@enduml

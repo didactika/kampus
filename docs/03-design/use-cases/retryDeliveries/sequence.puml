@@ -1,0 +1,18 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as a
+participant "kampus-api" as api
+participant "Dispatcher" as svc
+database "events schema + outbox" as db
+
+a -> api : Opens the dead-letter list
+api -> svc : request
+svc -> db : Lists dead deliveries with the event, the listener and the last error (RN-139)
+a -> api : Retries one or many
+api -> svc : request
+svc -> db : Queues them again, in the object's order (RN-140)
+svc --> a : result
+@enduml
