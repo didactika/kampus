@@ -9,4 +9,5 @@ All notable changes to Kampus are recorded here, following [Keep a Changelog](ht
 - Rust workspace (edition 2024, toolchain 1.100.0) with shared lints that require documentation on every item, and the first crate, `kampus-common`.
 - Quality gates in CI: formatting, Clippy with warnings as errors, tests against PostgreSQL 17, `cargo deny` with the licence policy of DEC-010, `cargo audit`, and `tools/repo-check` for file headers, version and changelog, and the dependency rules of the crates.
 - Local development with Docker Compose: PostgreSQL 17 and a Rust toolbox image with the same tools as CI.
-- The specification of version 0.1.0: requirements, domain models, data models, API fragments, use cases, decisions DEC-001 to DEC-083 and highlights.
+- The specification of version 0.1.0: requirements, domain models, data models, API fragments, use cases, decisions DEC-001 to DEC-084 and highlights.
+- The handbook for every role lives in the private repository `didactika/kampus-docs`, served locally at http://localhost:8096 (DEC-084).

@@ -21,7 +21,7 @@ Version 0.1.0 is in progress on the `release/0.1.0` branch: the specification of
 | [`tools/repo-check/`](tools/repo-check/) | File headers, version and changelog, and the dependency rules of the crates |
 | [`tools/dev/`](tools/dev/) | Toolbox image for local development and CI parity |
 | `web/` | Web client (coming) |
-| `handbook/` | Documentation for every role (coming) |
+| [`kampus-docs`](https://github.com/didactika/kampus-docs) | Documentation for every role, in its own repository (DEC-084) |
 
 ## Stack
 

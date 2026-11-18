@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/openHelp/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Help panel and resolver | UI | `web/src/shell/help/` |
-| Help topics of the handbook | content | `handbook/` |
+| Help topics of the handbook | content | `didactika/kampus-docs` |
 
 ## Sequence
 

@@ -7,7 +7,7 @@ sourceOfTruth: model
 
 # Handbook
 
-The product documentation of Kampus (DEC-011, DEC-077, DEC-078): a static site in `handbook/` built with Starlight, versioned per release, translatable and accessible, with **one guide per audience**, **generated references** and **help topics** opened from every screen. `docs/` stays the engineering specification. Requirement RF-009; RNF-020.
+The product documentation of Kampus (DEC-011, DEC-077, DEC-078): a static site in the repository `didactika/kampus-docs` (DEC-084) built with Starlight, versioned per release, translatable and accessible, with **one guide per audience**, **generated references** and **help topics** opened from every screen. `docs/` stays the engineering specification. Requirement RF-009; RNF-020.
 
 ![Handbook structure](./structure.svg)
 

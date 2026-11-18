@@ -46,4 +46,4 @@ status: accepted
   - The use cases and wireframes of the design are the source of the user guides.
   - The handbook is translated with the same internationalisation process as the product (RNF-010).
 - Affected artifacts: RF-009, RNF-020, `handbook/`, the definition of done.
-- Refined by: DEC-077 (help topics and tours) and DEC-078 (handbook structure); design in the [handbook](../../03-design/handbook/README.md).
+- Refined by: DEC-077 (help topics and tours) and DEC-078 (handbook structure) and DEC-084 (its own repository); design in the [handbook](../../03-design/handbook/README.md).
