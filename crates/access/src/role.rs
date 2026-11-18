@@ -43,7 +43,7 @@ use serde_json::json;
 use sqlx::{PgConnection, Row};
 
 use crate::declarations::ROLE_MANAGE;
-use crate::{Access, Actor, AllowanceKind, RoleId, ScopeId, ScopeKind, Value, sql};
+use crate::{Access, Actor, AllowanceKind, PrincipalId, RoleId, ScopeId, ScopeKind, Value, sql};
 
 /// A permission whose value differs between a role and its template.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -384,6 +384,65 @@ impl Access {
     pub async fn template_differences(&self, role: RoleId) -> Result<Vec<RoleDifference>> {
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
         self.differences(&mut conn, role).await
+    }
+
+    /// Makes a role require a second factor from the people who hold it, or not (RN-029); needs
+    /// `access.role.manage` in the role's campus. The change is recorded.
+    ///
+    /// # Errors
+    ///
+    /// `permission_denied` without the permission, `not_found` for an unknown role.
+    pub async fn set_role_second_factor(&self, actor: &Actor, role: RoleId, required: bool) -> Result<()> {
+        let mut tx = self.db.begin().await?;
+        let campus = self.role_campus(&mut tx, role).await?;
+        if !self
+            .evaluate(&mut tx, actor, ROLE_MANAGE, campus, false)
+            .await?
+            .allowed
+        {
+            return Err(Error::permission_denied("access.denied").with_param("permission", ROLE_MANAGE));
+        }
+        let before: bool = sqlx::query_scalar(sql(format!(
+            "update {} r set second_factor_required = $2, version = r.version + 1 from {} o
+             where r.id = $1 and o.id = r.id returning o.second_factor_required",
+            self.table("role"),
+            self.table("role")
+        )))
+        .bind(role.as_uuid())
+        .bind(required)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(kampus_db::classify)?;
+        self.record(
+            &mut tx,
+            principal(actor),
+            "role_second_factor",
+            &role.to_string(),
+            Some(json!({ "required": before })),
+            Some(json!({ "required": required })),
+        )
+        .await?;
+        tx.commit().await.map_err(kampus_db::classify)
+    }
+
+    /// Whether a principal holds, now, a role that requires a second factor (RN-029).
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn second_factor_required(&self, principal: PrincipalId) -> Result<bool> {
+        sqlx::query_scalar(sql(format!(
+            "select exists (select 1 from {} g join {} r on r.id = g.role_id
+             where g.principal_id = $1 and r.second_factor_required
+             and g.valid_from <= $2 and (g.valid_until is null or g.valid_until > $2))",
+            self.table("grant"),
+            self.table("role")
+        )))
+        .bind(principal.as_uuid())
+        .bind(self.now().as_offset_date_time())
+        .fetch_one(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)
     }
 
     /// Resets a role to the latest version of its template: without `confirm` it only shows the

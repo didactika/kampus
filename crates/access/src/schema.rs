@@ -63,287 +63,298 @@ const fn local(columns: &'static [&'static str], table: &'static str, on_delete:
 /// The upgrade steps of this module.
 pub const STEPS: ModuleSteps = ModuleSteps {
     module: MODULE,
-    steps: &[Step {
-        sequence: 1,
-        name: "scopes, permissions, roles and grants",
-        changes: &[
-            Change::CreateTable(Table {
-                name: "scope",
-                columns: &[
-                    Column::new("id", Type::Uuid),
-                    Column::new("kind", Type::Text),
-                    Column::new("parent_id", Type::Uuid).nullable(),
-                    Column::new("campus_id", Type::Uuid).nullable(),
-                    Column::new("frozen", Type::Boolean).default(ColumnDefault::Bool(false)),
-                    Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
-                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
-                ],
-                primary_key: &["id"],
-                foreign_keys: &[
-                    local(&["parent_id"], "scope", OnDelete::Cascade),
-                    local(&["campus_id"], "scope", OnDelete::Cascade),
-                ],
-                checks: &[Check::OneOf("kind", KINDS)],
-                without_natural_key: Some(
-                    "a scope is identified by the entity it belongs to, which holds the natural key",
-                ),
-                ..Table::EMPTY
-            }),
-            Change::CreateTable(Table {
-                name: "scope_closure",
-                columns: &[
-                    Column::new("ancestor_id", Type::Uuid),
-                    Column::new("descendant_id", Type::Uuid),
-                    Column::new("depth", Type::Integer),
-                ],
-                primary_key: &["ancestor_id", "descendant_id"],
-                foreign_keys: &[
-                    local(&["ancestor_id"], "scope", OnDelete::Cascade),
-                    local(&["descendant_id"], "scope", OnDelete::Cascade),
-                ],
-                checks: &[Check::NonNegative("depth")],
-                indexes: &[kampus_db::schema::Index {
-                    columns: &["descendant_id", "depth"],
-                    unique: false,
-                }],
-                ..Table::EMPTY
-            }),
-            Change::CreateTable(Table {
-                name: "permission",
-                columns: &[
-                    Column::new("code", Type::Text),
-                    Column::new("module", Type::Text),
-                    Column::new("kind", Type::Text),
-                    Column::new("risks", Type::TextArray),
-                    Column::new("lowest_kind", Type::Text),
-                    Column::new("retired_at", Type::Timestamptz).nullable(),
-                ],
-                primary_key: &["code"],
-                checks: &[
-                    Check::OneOf("kind", &["read", "write"]),
-                    Check::OneOf("lowest_kind", KINDS),
-                ],
-                without_natural_key: Some("the primary key is the natural code"),
-                ..Table::EMPTY
-            }),
-            Change::CreateTable(Table {
-                name: "role_template",
-                columns: &[
-                    Column::new("id", Type::Uuid),
-                    Column::new("code", Type::Text),
-                    Column::new("version", Type::Integer),
-                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
-                ],
-                primary_key: &["id"],
-                unique: &[&["code", "version"]],
-                ..Table::EMPTY
-            }),
-            Change::CreateTable(Table {
-                name: "role_template_value",
-                columns: &[
-                    Column::new("template_id", Type::Uuid),
-                    Column::new("permission_code", Type::Text),
-                    Column::new("value", Type::Text),
-                ],
-                primary_key: &["template_id", "permission_code"],
-                foreign_keys: &[
-                    local(&["template_id"], "role_template", OnDelete::Cascade),
-                    ForeignKey {
-                        columns: &["permission_code"],
-                        module: None,
-                        table: "permission",
-                        references: &["code"],
-                        on_delete: OnDelete::Restrict,
-                    },
-                ],
-                checks: &[Check::OneOf("value", VALUES)],
-                without_natural_key: Some("the primary key is the natural key"),
-                ..Table::EMPTY
-            }),
-            Change::CreateTable(Table {
-                name: "role",
-                columns: &[
-                    Column::new("id", Type::Uuid),
-                    Column::new("campus_id", Type::Uuid),
-                    Column::new("short_name", Type::Varchar(100)),
-                    Column::new("template_id", Type::Uuid),
-                    Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
-                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
-                ],
-                primary_key: &["id"],
-                unique: &[&["campus_id", "short_name"]],
-                foreign_keys: &[
-                    local(&["campus_id"], "scope", OnDelete::Cascade),
-                    local(&["template_id"], "role_template", OnDelete::Restrict),
-                ],
-                ..Table::EMPTY
-            }),
-            Change::CreateTable(Table {
-                name: "role_scope_kind",
-                columns: &[
-                    Column::new("role_id", Type::Uuid),
-                    Column::new("kind", Type::Text),
-                ],
-                primary_key: &["role_id", "kind"],
-                foreign_keys: &[local(&["role_id"], "role", OnDelete::Cascade)],
-                checks: &[Check::OneOf("kind", KINDS)],
-                without_natural_key: Some("the primary key is the natural key"),
-                ..Table::EMPTY
-            }),
-            Change::CreateTable(Table {
-                name: "role_permission",
-                columns: &[
-                    Column::new("role_id", Type::Uuid),
-                    Column::new("permission_code", Type::Text),
-                    Column::new("value", Type::Text),
-                ],
-                primary_key: &["role_id", "permission_code"],
-                foreign_keys: &[
-                    local(&["role_id"], "role", OnDelete::Cascade),
-                    ForeignKey {
-                        columns: &["permission_code"],
-                        module: None,
-                        table: "permission",
-                        references: &["code"],
-                        on_delete: OnDelete::Restrict,
-                    },
-                ],
-                checks: &[Check::OneOf("value", VALUES)],
-                without_natural_key: Some("the primary key is the natural key"),
-                ..Table::EMPTY
-            }),
-            Change::CreateTable(Table {
-                name: "role_allowance",
-                columns: &[
-                    Column::new("role_id", Type::Uuid),
-                    Column::new("target_role_id", Type::Uuid),
-                    Column::new("kind", Type::Text),
-                ],
-                primary_key: &["role_id", "target_role_id", "kind"],
-                foreign_keys: &[
-                    local(&["role_id"], "role", OnDelete::Cascade),
-                    local(&["target_role_id"], "role", OnDelete::Cascade),
-                ],
-                checks: &[Check::OneOf("kind", &["grant", "override", "view_as"])],
-                without_natural_key: Some("the primary key is the natural key"),
-                ..Table::EMPTY
-            }),
-            Change::CreateTable(Table {
-                name: "permission_override",
-                columns: &[
-                    Column::new("scope_id", Type::Uuid),
-                    Column::new("role_id", Type::Uuid),
-                    Column::new("permission_code", Type::Text),
-                    Column::new("value", Type::Text),
-                    Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
-                ],
-                primary_key: &["scope_id", "role_id", "permission_code"],
-                foreign_keys: &[
-                    local(&["scope_id"], "scope", OnDelete::Cascade),
-                    local(&["role_id"], "role", OnDelete::Cascade),
-                    ForeignKey {
-                        columns: &["permission_code"],
-                        module: None,
-                        table: "permission",
-                        references: &["code"],
-                        on_delete: OnDelete::Restrict,
-                    },
-                ],
-                checks: &[Check::OneOf("value", VALUES)],
-                ..Table::EMPTY
-            }),
-            Change::CreateTable(Table {
-                name: "principal",
-                columns: &[
-                    Column::new("id", Type::Uuid),
-                    Column::new("kind", Type::Text).default(ColumnDefault::Text("account")),
-                    Column::new("campus_id", Type::Uuid),
-                    Column::new("active", Type::Boolean).default(ColumnDefault::Bool(true)),
-                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
-                ],
-                primary_key: &["id"],
-                foreign_keys: &[local(&["campus_id"], "scope", OnDelete::Restrict)],
-                checks: &[Check::OneOf("kind", &["account"])],
-                without_natural_key: Some(
-                    "a principal is identified by its account, which holds the natural keys",
-                ),
-                ..Table::EMPTY
-            }),
-            Change::CreateTable(Table {
-                name: "grant",
-                columns: &[
-                    Column::new("id", Type::Uuid),
-                    Column::new("role_id", Type::Uuid),
-                    Column::new("scope_id", Type::Uuid),
-                    Column::new("principal_id", Type::Uuid),
-                    Column::new("origin", Type::Text),
-                    Column::new("origin_module", Type::Text).nullable(),
-                    Column::new("valid_from", Type::Timestamptz),
-                    Column::new("valid_until", Type::Timestamptz).nullable(),
-                    Column::new("granted_by", Type::Uuid).nullable(),
-                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
-                ],
-                primary_key: &["id"],
-                foreign_keys: &[
-                    local(&["role_id"], "role", OnDelete::Restrict),
-                    local(&["scope_id"], "scope", OnDelete::Cascade),
-                    local(&["principal_id"], "principal", OnDelete::Cascade),
-                    local(&["granted_by"], "principal", OnDelete::SetNull),
-                ],
-                checks: &[
-                    Check::OneOf("origin", &["manual", "module"]),
-                    Check::After("valid_until", "valid_from"),
-                ],
-                without_natural_key: Some(
-                    "manual grants are unique by role, scope and principal through a partial index of the next change",
-                ),
-                ..Table::EMPTY
-            }),
-            Change::Postgres {
-                sql: "alter table {schema}.\"grant\" add constraint \"grant_origin_module_check\" check ((\"origin\" = 'module') = (\"origin_module\" is not null));\ncreate unique index \"grant_manual_key\" on {schema}.\"grant\" (\"role_id\", \"scope_id\", \"principal_id\") where \"origin\" = 'manual';",
-                reason: "the neutral schema has no condition between two columns and no partial unique index",
-            },
-            Change::CreateTable(Table {
-                name: "view_as_session",
-                columns: &[
-                    Column::new("id", Type::Uuid),
-                    Column::new("principal_id", Type::Uuid),
-                    Column::new("scope_id", Type::Uuid),
-                    Column::new("role_id", Type::Uuid),
-                    Column::new("started_at", Type::Timestamptz).default(ColumnDefault::Now),
-                    Column::new("ended_at", Type::Timestamptz).nullable(),
-                ],
-                primary_key: &["id"],
-                foreign_keys: &[
-                    local(&["principal_id"], "principal", OnDelete::Cascade),
-                    local(&["scope_id"], "scope", OnDelete::Cascade),
-                    local(&["role_id"], "role", OnDelete::Cascade),
-                ],
-                checks: &[Check::After("ended_at", "started_at")],
-                without_natural_key: Some("a session is an event, identified by its id"),
-                ..Table::EMPTY
-            }),
-            Change::CreateTable(Table {
-                name: "change",
-                columns: &[
-                    Column::new("id", Type::Uuid),
-                    Column::new("actor", Type::Uuid).nullable(),
-                    Column::new("entity", Type::Text),
-                    Column::new("entity_key", Type::Text),
-                    Column::new("before", Type::Json("access.change")).nullable(),
-                    Column::new("after", Type::Json("access.change")).nullable(),
-                    Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
-                ],
-                primary_key: &["id"],
-                indexes: &[kampus_db::schema::Index {
-                    columns: &["entity", "entity_key", "at"],
-                    unique: false,
-                }],
-                without_natural_key: Some("an append-only history of changes (RN-015)"),
-                ..Table::EMPTY
-            }),
-        ],
-    }],
+    steps: &[
+        Step {
+            sequence: 1,
+            name: "scopes, permissions, roles and grants",
+            changes: &[
+                Change::CreateTable(Table {
+                    name: "scope",
+                    columns: &[
+                        Column::new("id", Type::Uuid),
+                        Column::new("kind", Type::Text),
+                        Column::new("parent_id", Type::Uuid).nullable(),
+                        Column::new("campus_id", Type::Uuid).nullable(),
+                        Column::new("frozen", Type::Boolean).default(ColumnDefault::Bool(false)),
+                        Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+                        Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                    ],
+                    primary_key: &["id"],
+                    foreign_keys: &[
+                        local(&["parent_id"], "scope", OnDelete::Cascade),
+                        local(&["campus_id"], "scope", OnDelete::Cascade),
+                    ],
+                    checks: &[Check::OneOf("kind", KINDS)],
+                    without_natural_key: Some(
+                        "a scope is identified by the entity it belongs to, which holds the natural key",
+                    ),
+                    ..Table::EMPTY
+                }),
+                Change::CreateTable(Table {
+                    name: "scope_closure",
+                    columns: &[
+                        Column::new("ancestor_id", Type::Uuid),
+                        Column::new("descendant_id", Type::Uuid),
+                        Column::new("depth", Type::Integer),
+                    ],
+                    primary_key: &["ancestor_id", "descendant_id"],
+                    foreign_keys: &[
+                        local(&["ancestor_id"], "scope", OnDelete::Cascade),
+                        local(&["descendant_id"], "scope", OnDelete::Cascade),
+                    ],
+                    checks: &[Check::NonNegative("depth")],
+                    indexes: &[kampus_db::schema::Index {
+                        columns: &["descendant_id", "depth"],
+                        unique: false,
+                    }],
+                    ..Table::EMPTY
+                }),
+                Change::CreateTable(Table {
+                    name: "permission",
+                    columns: &[
+                        Column::new("code", Type::Text),
+                        Column::new("module", Type::Text),
+                        Column::new("kind", Type::Text),
+                        Column::new("risks", Type::TextArray),
+                        Column::new("lowest_kind", Type::Text),
+                        Column::new("retired_at", Type::Timestamptz).nullable(),
+                    ],
+                    primary_key: &["code"],
+                    checks: &[
+                        Check::OneOf("kind", &["read", "write"]),
+                        Check::OneOf("lowest_kind", KINDS),
+                    ],
+                    without_natural_key: Some("the primary key is the natural code"),
+                    ..Table::EMPTY
+                }),
+                Change::CreateTable(Table {
+                    name: "role_template",
+                    columns: &[
+                        Column::new("id", Type::Uuid),
+                        Column::new("code", Type::Text),
+                        Column::new("version", Type::Integer),
+                        Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                    ],
+                    primary_key: &["id"],
+                    unique: &[&["code", "version"]],
+                    ..Table::EMPTY
+                }),
+                Change::CreateTable(Table {
+                    name: "role_template_value",
+                    columns: &[
+                        Column::new("template_id", Type::Uuid),
+                        Column::new("permission_code", Type::Text),
+                        Column::new("value", Type::Text),
+                    ],
+                    primary_key: &["template_id", "permission_code"],
+                    foreign_keys: &[
+                        local(&["template_id"], "role_template", OnDelete::Cascade),
+                        ForeignKey {
+                            columns: &["permission_code"],
+                            module: None,
+                            table: "permission",
+                            references: &["code"],
+                            on_delete: OnDelete::Restrict,
+                        },
+                    ],
+                    checks: &[Check::OneOf("value", VALUES)],
+                    without_natural_key: Some("the primary key is the natural key"),
+                    ..Table::EMPTY
+                }),
+                Change::CreateTable(Table {
+                    name: "role",
+                    columns: &[
+                        Column::new("id", Type::Uuid),
+                        Column::new("campus_id", Type::Uuid),
+                        Column::new("short_name", Type::Varchar(100)),
+                        Column::new("template_id", Type::Uuid),
+                        Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+                        Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                    ],
+                    primary_key: &["id"],
+                    unique: &[&["campus_id", "short_name"]],
+                    foreign_keys: &[
+                        local(&["campus_id"], "scope", OnDelete::Cascade),
+                        local(&["template_id"], "role_template", OnDelete::Restrict),
+                    ],
+                    ..Table::EMPTY
+                }),
+                Change::CreateTable(Table {
+                    name: "role_scope_kind",
+                    columns: &[
+                        Column::new("role_id", Type::Uuid),
+                        Column::new("kind", Type::Text),
+                    ],
+                    primary_key: &["role_id", "kind"],
+                    foreign_keys: &[local(&["role_id"], "role", OnDelete::Cascade)],
+                    checks: &[Check::OneOf("kind", KINDS)],
+                    without_natural_key: Some("the primary key is the natural key"),
+                    ..Table::EMPTY
+                }),
+                Change::CreateTable(Table {
+                    name: "role_permission",
+                    columns: &[
+                        Column::new("role_id", Type::Uuid),
+                        Column::new("permission_code", Type::Text),
+                        Column::new("value", Type::Text),
+                    ],
+                    primary_key: &["role_id", "permission_code"],
+                    foreign_keys: &[
+                        local(&["role_id"], "role", OnDelete::Cascade),
+                        ForeignKey {
+                            columns: &["permission_code"],
+                            module: None,
+                            table: "permission",
+                            references: &["code"],
+                            on_delete: OnDelete::Restrict,
+                        },
+                    ],
+                    checks: &[Check::OneOf("value", VALUES)],
+                    without_natural_key: Some("the primary key is the natural key"),
+                    ..Table::EMPTY
+                }),
+                Change::CreateTable(Table {
+                    name: "role_allowance",
+                    columns: &[
+                        Column::new("role_id", Type::Uuid),
+                        Column::new("target_role_id", Type::Uuid),
+                        Column::new("kind", Type::Text),
+                    ],
+                    primary_key: &["role_id", "target_role_id", "kind"],
+                    foreign_keys: &[
+                        local(&["role_id"], "role", OnDelete::Cascade),
+                        local(&["target_role_id"], "role", OnDelete::Cascade),
+                    ],
+                    checks: &[Check::OneOf("kind", &["grant", "override", "view_as"])],
+                    without_natural_key: Some("the primary key is the natural key"),
+                    ..Table::EMPTY
+                }),
+                Change::CreateTable(Table {
+                    name: "permission_override",
+                    columns: &[
+                        Column::new("scope_id", Type::Uuid),
+                        Column::new("role_id", Type::Uuid),
+                        Column::new("permission_code", Type::Text),
+                        Column::new("value", Type::Text),
+                        Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+                    ],
+                    primary_key: &["scope_id", "role_id", "permission_code"],
+                    foreign_keys: &[
+                        local(&["scope_id"], "scope", OnDelete::Cascade),
+                        local(&["role_id"], "role", OnDelete::Cascade),
+                        ForeignKey {
+                            columns: &["permission_code"],
+                            module: None,
+                            table: "permission",
+                            references: &["code"],
+                            on_delete: OnDelete::Restrict,
+                        },
+                    ],
+                    checks: &[Check::OneOf("value", VALUES)],
+                    ..Table::EMPTY
+                }),
+                Change::CreateTable(Table {
+                    name: "principal",
+                    columns: &[
+                        Column::new("id", Type::Uuid),
+                        Column::new("kind", Type::Text).default(ColumnDefault::Text("account")),
+                        Column::new("campus_id", Type::Uuid),
+                        Column::new("active", Type::Boolean).default(ColumnDefault::Bool(true)),
+                        Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                    ],
+                    primary_key: &["id"],
+                    foreign_keys: &[local(&["campus_id"], "scope", OnDelete::Restrict)],
+                    checks: &[Check::OneOf("kind", &["account"])],
+                    without_natural_key: Some(
+                        "a principal is identified by its account, which holds the natural keys",
+                    ),
+                    ..Table::EMPTY
+                }),
+                Change::CreateTable(Table {
+                    name: "grant",
+                    columns: &[
+                        Column::new("id", Type::Uuid),
+                        Column::new("role_id", Type::Uuid),
+                        Column::new("scope_id", Type::Uuid),
+                        Column::new("principal_id", Type::Uuid),
+                        Column::new("origin", Type::Text),
+                        Column::new("origin_module", Type::Text).nullable(),
+                        Column::new("valid_from", Type::Timestamptz),
+                        Column::new("valid_until", Type::Timestamptz).nullable(),
+                        Column::new("granted_by", Type::Uuid).nullable(),
+                        Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                    ],
+                    primary_key: &["id"],
+                    foreign_keys: &[
+                        local(&["role_id"], "role", OnDelete::Restrict),
+                        local(&["scope_id"], "scope", OnDelete::Cascade),
+                        local(&["principal_id"], "principal", OnDelete::Cascade),
+                        local(&["granted_by"], "principal", OnDelete::SetNull),
+                    ],
+                    checks: &[
+                        Check::OneOf("origin", &["manual", "module"]),
+                        Check::After("valid_until", "valid_from"),
+                    ],
+                    without_natural_key: Some(
+                        "manual grants are unique by role, scope and principal through a partial index of the next change",
+                    ),
+                    ..Table::EMPTY
+                }),
+                Change::Postgres {
+                    sql: "alter table {schema}.\"grant\" add constraint \"grant_origin_module_check\" check ((\"origin\" = 'module') = (\"origin_module\" is not null));\ncreate unique index \"grant_manual_key\" on {schema}.\"grant\" (\"role_id\", \"scope_id\", \"principal_id\") where \"origin\" = 'manual';",
+                    reason: "the neutral schema has no condition between two columns and no partial unique index",
+                },
+                Change::CreateTable(Table {
+                    name: "view_as_session",
+                    columns: &[
+                        Column::new("id", Type::Uuid),
+                        Column::new("principal_id", Type::Uuid),
+                        Column::new("scope_id", Type::Uuid),
+                        Column::new("role_id", Type::Uuid),
+                        Column::new("started_at", Type::Timestamptz).default(ColumnDefault::Now),
+                        Column::new("ended_at", Type::Timestamptz).nullable(),
+                    ],
+                    primary_key: &["id"],
+                    foreign_keys: &[
+                        local(&["principal_id"], "principal", OnDelete::Cascade),
+                        local(&["scope_id"], "scope", OnDelete::Cascade),
+                        local(&["role_id"], "role", OnDelete::Cascade),
+                    ],
+                    checks: &[Check::After("ended_at", "started_at")],
+                    without_natural_key: Some("a session is an event, identified by its id"),
+                    ..Table::EMPTY
+                }),
+                Change::CreateTable(Table {
+                    name: "change",
+                    columns: &[
+                        Column::new("id", Type::Uuid),
+                        Column::new("actor", Type::Uuid).nullable(),
+                        Column::new("entity", Type::Text),
+                        Column::new("entity_key", Type::Text),
+                        Column::new("before", Type::Json("access.change")).nullable(),
+                        Column::new("after", Type::Json("access.change")).nullable(),
+                        Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
+                    ],
+                    primary_key: &["id"],
+                    indexes: &[kampus_db::schema::Index {
+                        columns: &["entity", "entity_key", "at"],
+                        unique: false,
+                    }],
+                    without_natural_key: Some("an append-only history of changes (RN-015)"),
+                    ..Table::EMPTY
+                }),
+            ],
+        },
+        Step {
+            sequence: 2,
+            name: "roles that require a second factor",
+            changes: &[Change::AddColumn {
+                table: "role",
+                column: Column::new("second_factor_required", Type::Boolean)
+                    .default(ColumnDefault::Bool(false)),
+            }],
+        },
+    ],
 };
 
 #[cfg(test)]

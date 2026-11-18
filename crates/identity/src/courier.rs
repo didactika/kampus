@@ -62,6 +62,22 @@ pub enum Notice {
     PasswordChanged,
     /// The account was suspended, or its deletion scheduled.
     Suspended,
+    /// The link that starts recovering access (RN-030).
+    Recovery {
+        /// The one-time token of the link.
+        token: String,
+    },
+    /// A code to sign in with, as a second factor.
+    EmailCode {
+        /// The code.
+        code: String,
+    },
+    /// Access was recovered and the password changed; sessions and tokens were revoked.
+    RecoveryUsed,
+    /// A second factor was added.
+    SecondFactorAdded,
+    /// A second factor was removed.
+    SecondFactorRemoved,
 }
 
 impl Notice {
@@ -74,6 +90,11 @@ impl Notice {
             Self::Invitation { .. } => "invitation",
             Self::PasswordChanged => "password_changed",
             Self::Suspended => "suspended",
+            Self::Recovery { .. } => "recovery",
+            Self::EmailCode { .. } => "email_code",
+            Self::RecoveryUsed => "recovery_used",
+            Self::SecondFactorAdded => "second_factor_added",
+            Self::SecondFactorRemoved => "second_factor_removed",
         }
     }
 }

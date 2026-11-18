@@ -54,6 +54,66 @@ kampus_common::define_id! {
     pub struct TokenId;
 }
 
+kampus_common::define_id! {
+    /// Identifies a second factor.
+    pub struct FactorId;
+}
+
+/// The kind of a second factor (RN-029).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FactorKind {
+    /// A code from an authenticator app.
+    Totp,
+    /// A passkey (WebAuthn).
+    Passkey,
+    /// A code sent by email.
+    Email,
+}
+
+impl FactorKind {
+    /// The kind as stored.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Totp => "totp",
+            Self::Passkey => "passkey",
+            Self::Email => "email",
+        }
+    }
+}
+
+impl FromStr for FactorKind {
+    type Err = Error;
+
+    fn from_str(text: &str) -> Result<Self, Self::Err> {
+        match text {
+            "totp" => Ok(Self::Totp),
+            "passkey" => Ok(Self::Passkey),
+            "email" => Ok(Self::Email),
+            _ => Err(Error::validation(
+                "identity.factor_kind_invalid",
+                vec![FieldError::new("kind", "one_of")],
+            )),
+        }
+    }
+}
+
+/// A second factor as listed to its owner; its secret never leaves identity.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct SecondFactor {
+    /// The factor.
+    pub id: FactorId,
+    /// Its kind.
+    pub kind: FactorKind,
+    /// The name its owner gave it.
+    pub label: String,
+    /// When it was added.
+    pub created_at: Timestamp,
+    /// When it was last used.
+    pub last_used_at: Option<Timestamp>,
+}
+
 /// The status of an account, a state machine (RN-023).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
