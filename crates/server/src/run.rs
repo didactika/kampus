@@ -89,6 +89,7 @@ pub async fn serve(config: &Config) -> Result<()> {
             return Err(not_current(&plan));
         }
     }
+    crate::modules::sync_declarations(&db).await?;
 
     let listener = TcpListener::bind(config.http_address).await.map_err(|error| {
         Error::unavailable("server.bind")

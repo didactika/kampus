@@ -38,7 +38,23 @@
 use kampus_db::ModuleSteps;
 
 /// The upgrade steps of every module of this build, in dependency order.
-pub const MODULES: &[ModuleSteps] = &[];
+pub const MODULES: &[ModuleSteps] = &[kampus_access::schema::STEPS];
+
+/// Brings what the modules of this build declare into the database at start-up (DEC-015): permissions
+/// and role templates.
+///
+/// # Errors
+///
+/// The errors of [`kampus_access::Access::sync`].
+pub async fn sync_declarations(db: &kampus_db::Database) -> kampus_common::Result<()> {
+    let access = kampus_access::Access::new(db.clone(), std::sync::Arc::new(kampus_common::SystemClock));
+    access
+        .sync(
+            &[("access", kampus_access::declarations::PERMISSIONS)],
+            kampus_access::declarations::TEMPLATES,
+        )
+        .await
+}
 
 /// The oldest release still supported: columns may be dropped only when it no longer reads them (DEC-081).
 pub const OLDEST_SUPPORTED: &str = "0.1.0";

@@ -1,6 +1,6 @@
 requirement,use_case,name,analysis,design,code,test
 RF-020,UC-001,grantRole,docs/02-analysis/use-cases/grantRole,docs/03-design/use-cases/grantRole,crates/access/src/grant.rs,crates/access/tests
-RF-024,UC-002,overridePermission,docs/02-analysis/use-cases/overridePermission,docs/03-design/use-cases/overridePermission,crates/access/src/override.rs,crates/access/tests
+RF-024,UC-002,overridePermission,docs/02-analysis/use-cases/overridePermission,docs/03-design/use-cases/overridePermission,crates/access/src/overrides.rs,crates/access/tests
 RF-022,UC-003,checkPermission,docs/02-analysis/use-cases/checkPermission,docs/03-design/use-cases/checkPermission,crates/access/src/check.rs,crates/access/tests
 RF-021,UC-004,defineRole,docs/02-analysis/use-cases/defineRole,docs/03-design/use-cases/defineRole,crates/access/src/role.rs,crates/access/tests
 RF-023,UC-005,viewAsRole,docs/02-analysis/use-cases/viewAsRole,docs/03-design/use-cases/viewAsRole,crates/access/src/view_as.rs,crates/access/tests
