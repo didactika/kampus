@@ -24,8 +24,7 @@ package "Ports (traits)" {
 
 package "Adapters (first release)" {
   [kampus-db-postgres] as pg
-  [kampus-storage-local] as loc
-  [kampus-storage-s3] as s3
+  [kampus-storage-opendal] as dal
   [kampus-cache-moka] as moka
   [kampus-cache-redis] as redis
   [SMTP adapter] as smtp
@@ -48,13 +47,13 @@ pg ..|> DB
 pg ..|> SE
 pg ..|> TQ
 pg ..|> SR
-loc ..|> ST
-s3 ..|> ST
+dal ..|> ST
 moka ..|> CA
 redis ..|> CA
 smtp ..|> MA
 
 suite ..> pg : tests
-suite ..> s3 : tests
+suite ..> dal : tests
+suite ..> moka : tests
 suite ..> redis : tests
 @enduml

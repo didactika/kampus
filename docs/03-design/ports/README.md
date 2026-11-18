@@ -17,7 +17,7 @@ Every piece of infrastructure is a **port** (a Rust trait in a foundation crate)
 | --- | --- |
 | PR-01 | A port declares its operations, its guarantees (atomicity, ordering, consistency, durability) and its **capabilities** (optional features such as JSON indexes or presigned uploads). Callers ask for a capability; they never test for an adapter. |
 | PR-02 | Each port has one conformance suite, written against the trait. Every adapter runs it in CI; an adapter that fails a test is not released. |
-| PR-03 | Adapters live in their own crates (`kampus-db-postgres`, `kampus-storage-s3`, …). An architecture test fails the build when a module depends on an adapter. |
+| PR-03 | Adapters live in their own crates (`kampus-db-postgres`, `kampus-storage-opendal`, `kampus-cache-redis`, …). An architecture test fails the build when a module depends on an adapter. |
 | PR-04 | Adapters are chosen by URL scheme in the deployment configuration and validated at start-up for the role being started (DEC-020); a missing capability that a module requires stops the start with a clear error. |
 | PR-05 | Every adapter reports health, latency and error metrics with the same names (DEC-019), so dashboards do not depend on the backend. |
 | PR-06 | Plugins (DEC-003) may add adapters; they pass the same suite and are loaded only when the operator configures them. |
@@ -39,7 +39,7 @@ Every piece of infrastructure is a **port** (a Rust trait in a foundation crate)
 | --- | --- |
 | Operations | `put` (streamed, with expected hash), `get` (streamed, ranges), `head`, `delete`, `presign_get`, `presign_put` (capability), `copy` |
 | Guarantees | A `put` is visible only once complete; keys are content hashes chosen by `kampus-files` (DEC-053), so overwrites never happen |
-| First adapters | Local disk and S3-compatible. Next: Azure Blob, Google Cloud Storage, WebDAV, SFTP, through Apache OpenDAL |
+| First adapters | Local disk and S3-compatible, both through Apache OpenDAL (`kampus-storage-opendal`). Next: Azure Blob, Google Cloud Storage, WebDAV, SFTP, through the same adapter |
 | Moving backends | A job copies, verifies the hash, switches and deletes (RN-136) |
 
 ## Cache (`kampus-cache`)
@@ -50,7 +50,7 @@ Every piece of infrastructure is a **port** (a Rust trait in a foundation crate)
 | Levels | In-process (moka) in front of a shared cache (Redis or Valkey); without a shared cache only one instance may run, and the start checks it |
 | Invalidation | By event through the bus on every node, never by hand in the code that writes; a value is always recomputable from the database |
 | Extra operations | Counters with expiry (rate limits, RN-198) and short locks with a lease |
-| First adapters | moka, Redis or Valkey. Next: Memcached |
+| First adapters | in-process (`kampus-cache-moka`) and Redis or Valkey (`kampus-cache-redis`), composed in two levels by `Layered`. Next: Memcached |
 
 ## Sessions
 
