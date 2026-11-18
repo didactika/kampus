@@ -11,10 +11,18 @@ rectangle "Kampus" {
     usecase "Override permissions in a scope" as UC_overridePermission
     usecase "View a scope as another role" as UC_viewAsRole
   }
+  package "identity" {
+    usecase "Manage the lifecycle of accounts" as UC_manageAccountLifecycle
+  }
+  package "users" {
+    usecase "Edit a profile" as UC_editProfile
+  }
 }
 
 A_Manager --> UC_grantRole
 A_Manager --> UC_overridePermission
 A_Manager --> UC_viewAsRole
+A_Manager --> UC_manageAccountLifecycle
+A_Manager --> UC_editProfile
 
 @enduml

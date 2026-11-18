@@ -25,11 +25,11 @@ The modules and their dependency levels: a module calls only lower levels, and l
 
 ![Data model](./data-model/data-model.svg)
 
-Per module: [access](./data-model/access.md).
+Per module: [access](./data-model/access.md), [identity and users](./data-model/identity.md).
 
 ## API
 
-OpenAPI fragments per module, following DEC-025 and DEC-026: [access](./api/access.openapi.yaml).
+OpenAPI fragments per module, following DEC-025 and DEC-026: [access](./api/access.openapi.yaml), [identity and users](./api/identity.openapi.yaml).
 
 ## Deployment
 

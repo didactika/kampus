@@ -1,0 +1,28 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Manager" as m
+participant "kampus-api" as api
+participant "Lifecycle service" as svc
+participant "Deletion job" as job
+participant "Privacy handlers\n(every module)" as priv
+database "identity schema + outbox" as db
+
+m -> api : POST /accounts/{id}/transitions (to, reason, If-Match)
+api -> svc : transition
+svc -> svc : permission of this transition; allowed from current status? (RN-023)
+group one transaction
+  svc -> db : status, transition record
+  svc -> db : revoke sessions and API tokens when suspending or deleting (RN-031)
+  svc -> db : one event into outbox
+end
+svc --> m : 200
+== deletion scheduled ==
+job -> db : grace period over and not cancelled? (RN-035)
+job -> priv : erase personal data of the account
+priv --> job : done per module
+job -> db : erase personal columns, set pseudonym, status deleted (RN-034)
+job -> db : identity.account_deleted into outbox
+@enduml

@@ -1,0 +1,34 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Visitor" as v
+participant "kampus-api" as api
+participant "Sign-in pipeline" as p
+participant "Identity provider (OIDC)" as idp
+database "identity schema + outbox" as db
+
+alt password or passkey
+  v -> api : POST /auth/sign-in
+  api -> p : identify account (username or email, case-insensitive)
+else identity provider
+  v -> api : GET /auth/oidc/{provider}/start
+  api --> v : redirect
+  v -> idp : authenticate
+  idp --> api : callback with code
+  api -> p : identify by issuer and subject (RN-028)
+end
+p -> db : account status, throttling counters (RN-023, RN-027)
+p -> p : verify credential
+opt second factor required (RN-029)
+  p --> v : second factor needed
+  v -> api : POST /auth/second-factor
+  api -> p : verify factor
+end
+group one transaction
+  p -> db : session (hashed token, MFA level)
+  p -> db : sign-in attempt, identity.signed_in into outbox
+end
+p --> v : session cookie
+@enduml

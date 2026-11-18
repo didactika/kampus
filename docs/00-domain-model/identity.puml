@@ -1,0 +1,72 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus identity and users
+
+package "kampus-identity" {
+  class Account {
+    username
+    email
+    status
+    kind : person | service
+    pseudonym (when deleted)
+  }
+  class Credential {
+    kind : password | passkey | external
+  }
+  class ExternalIdentity {
+    issuer
+    subject
+  }
+  class IdentityProvider {
+    issuer
+    linking_policy
+  }
+  class SecondFactor {
+    kind : totp | passkey | email
+  }
+  class Session {
+    mfa_level
+    expires_at
+  }
+  class ApiToken {
+    prefix
+    scopes
+    expires_at
+  }
+  class OneTimeToken {
+    purpose
+    expires_at
+  }
+}
+package "kampus-users" {
+  class Profile {
+    display names
+    locale
+    time_zone
+  }
+  class ProfileField {
+    type
+    visibility
+  }
+  class SystemGroup {
+    kind : manual | rule
+  }
+  class Membership {
+    origin
+  }
+}
+
+Account "1" *-- "*" Credential
+Credential <|-- ExternalIdentity
+ExternalIdentity "*" --> "1" IdentityProvider
+Account "1" *-- "*" SecondFactor
+Account "1" *-- "*" Session
+Account "1" *-- "*" ApiToken
+Account "1" *-- "*" OneTimeToken
+Profile "1" --> "1" Account
+Profile "1" *-- "*" ProfileField : values
+SystemGroup "1" *-- "*" Membership
+Membership "*" --> "1" Account
+@enduml

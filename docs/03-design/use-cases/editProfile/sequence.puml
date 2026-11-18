@@ -1,0 +1,22 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Person or Manager" as a
+participant "kampus-api" as api
+participant "Profile service" as svc
+participant "Permission checker" as check
+database "users schema + outbox" as db
+
+a -> api : GET /accounts/{id}/profile
+api -> svc : profile(context, account)
+svc -> check : which fields may this actor see? (RN-036)
+svc -> db : profile and visible field values only
+svc --> a : profile + version
+a -> api : PATCH /accounts/{id}/profile (If-Match)
+api -> svc : update
+svc -> svc : each changed field editable and valid?
+svc -> db : version matches? update, users.profile_updated into outbox
+svc --> a : 200
+@enduml

@@ -1,0 +1,23 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Authenticated user" as u
+participant "kampus-api" as api
+participant "Second-factor service" as svc
+database "identity schema + outbox" as db
+
+u -> api : POST /me/second-factors (kind)
+api -> svc : add
+svc -> svc : strong authentication recent? else step-up (RN-032)
+svc --> u : challenge (passkey options or TOTP secret)
+u -> api : registration or first code
+api -> svc : verify
+group one transaction
+  svc -> db : second factor (encrypted secret or passkey)
+  svc -> db : recovery codes (hashes only)
+  svc -> db : identity.second_factor_added into outbox
+end
+svc --> u : recovery codes, shown once
+@enduml
