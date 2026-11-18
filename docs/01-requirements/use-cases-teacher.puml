@@ -36,6 +36,9 @@ rectangle "Kampus" {
     usecase "Configure course progress" as UC_configureCourseProgress
     usecase "Set a progress exception" as UC_setProgressException
   }
+  package "events" {
+    usecase "Review the audit log" as UC_reviewAuditLog
+  }
 }
 
 A_Teacher --> UC_grantRole
@@ -56,5 +59,6 @@ A_Teacher --> UC_overrideGrade
 A_Teacher --> UC_viewGrades
 A_Teacher --> UC_configureCourseProgress
 A_Teacher --> UC_setProgressException
+A_Teacher --> UC_reviewAuditLog
 
 @enduml

@@ -1,0 +1,68 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema files (PostgreSQL)
+
+entity blob {
+  id <<PK>>
+  hash
+  size
+  media_type
+  storage_key
+  ref_count
+  scan_status
+  created_at
+}
+entity area {
+  code
+  module
+  max_size
+  allowed_types
+  quota_class
+}
+entity file {
+  id <<PK>>
+  blob_id <<FK>>
+  area_code <<FK>>
+  name
+  media_type
+  size
+  uploaded_by <<FK>>
+  created_at
+}
+entity upload_session {
+  id <<PK>>
+  area_code <<FK>>
+  account_id <<FK>>
+  max_size
+  token_hash
+  expires_at
+  completed_file_id <<FK>>
+}
+entity quota {
+  scope_id <<FK>>
+  limit_bytes
+  used_bytes
+}
+entity conversion {
+  id <<PK>>
+  source_blob_id <<FK>>
+  kind
+  result_blob_id <<FK>>
+  state
+  error
+}
+entity trash {
+  blob_id <<FK>>
+  since
+}
+
+file }o--|| blob
+file }o--|| area
+upload_session }o--|| area
+upload_session }o--|| file
+conversion }o--|| blob
+trash }o--|| blob
+@enduml

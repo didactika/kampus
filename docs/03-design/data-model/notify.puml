@@ -1,0 +1,94 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema notify (PostgreSQL)
+
+entity notification_type {
+  code
+  module
+  required
+  default_channels
+}
+entity channel {
+  code
+  enabled
+}
+entity preference {
+  account_id <<FK>>
+  type_code <<FK>>
+  channel_code <<FK>>
+  enabled
+  digest
+}
+entity campus_default {
+  campus_id
+  type_code <<FK>>
+  channel_code <<FK>>
+  enabled
+  locked
+}
+entity template {
+  id <<PK>>
+  type_code <<FK>>
+  channel_code <<FK>>
+  locale
+  scope_id <<FK>>
+  body
+}
+entity notification {
+  id <<PK>>
+  type_code <<FK>>
+  recipient_id <<FK>>
+  object_id
+  payload
+  created_at
+  read_at
+}
+entity delivery {
+  notification_id <<FK>>
+  channel_code <<FK>>
+  state
+  attempts
+  next_attempt_at
+  last_error
+}
+entity conversation {
+  id <<PK>>
+  kind
+  course_group_id <<FK>>
+  direct_key
+}
+entity member {
+  conversation_id <<FK>>
+  account_id <<FK>>
+  joined_at
+  left_at
+  muted
+  last_read_message_id
+}
+entity message {
+  id <<PK>>
+  conversation_id <<FK>>
+  author_id <<FK>>
+  body
+  sent_at
+}
+entity message_deletion {
+  message_id <<FK>>
+  account_id <<FK>>
+  at
+}
+entity block {
+  account_id <<FK>>
+  blocked_id <<FK>>
+}
+
+preference }o--|| notification_type
+preference }o--|| channel
+delivery }o--|| notification
+member }o--|| conversation
+message }o--|| conversation
+message_deletion }o--|| message
+@enduml

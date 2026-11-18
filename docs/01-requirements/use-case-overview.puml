@@ -61,6 +61,22 @@ rectangle "Kampus" {
     usecase "Configure course progress" as UC_configureCourseProgress
     usecase "Set a progress exception" as UC_setProgressException
   }
+  package "files" {
+    usecase "Upload a file" as UC_uploadFile
+    usecase "Open or download a file" as UC_downloadFile
+  }
+  package "events" {
+    usecase "Review and retry failed event deliveries" as UC_retryDeliveries
+    usecase "Review the audit log" as UC_reviewAuditLog
+  }
+  package "notify" {
+    usecase "Choose how to be notified" as UC_setNotificationPreferences
+    usecase "Send a message" as UC_sendMessage
+  }
+  package "calendar" {
+    usecase "See the calendar" as UC_viewCalendar
+    usecase "Subscribe to or export a calendar" as UC_subscribeCalendar
+  }
 }
 
 A_Manager --> UC_grantRole
@@ -103,5 +119,14 @@ A_Teacher --> UC_viewGrades
 A_System --> UC_trackActivityProgress
 A_Teacher --> UC_configureCourseProgress
 A_Teacher --> UC_setProgressException
+A_Authenticated_user --> UC_uploadFile
+A_Authenticated_user --> UC_downloadFile
+A_Campus_administrator --> UC_retryDeliveries
+A_Teacher --> UC_reviewAuditLog
+A_Manager --> UC_reviewAuditLog
+A_Authenticated_user --> UC_setNotificationPreferences
+A_Authenticated_user --> UC_sendMessage
+A_Authenticated_user --> UC_viewCalendar
+A_Authenticated_user --> UC_subscribeCalendar
 
 @enduml

@@ -15,10 +15,28 @@ rectangle "Kampus" {
   package "enrolment" {
     usecase "Enrol oneself in a course" as UC_selfEnrol
   }
+  package "files" {
+    usecase "Upload a file" as UC_uploadFile
+    usecase "Open or download a file" as UC_downloadFile
+  }
+  package "notify" {
+    usecase "Choose how to be notified" as UC_setNotificationPreferences
+    usecase "Send a message" as UC_sendMessage
+  }
+  package "calendar" {
+    usecase "See the calendar" as UC_viewCalendar
+    usecase "Subscribe to or export a calendar" as UC_subscribeCalendar
+  }
 }
 
 A_Authenticated_user --> UC_setUpSecondFactor
 A_Authenticated_user --> UC_editProfile
 A_Authenticated_user --> UC_selfEnrol
+A_Authenticated_user --> UC_uploadFile
+A_Authenticated_user --> UC_downloadFile
+A_Authenticated_user --> UC_setNotificationPreferences
+A_Authenticated_user --> UC_sendMessage
+A_Authenticated_user --> UC_viewCalendar
+A_Authenticated_user --> UC_subscribeCalendar
 
 @enduml

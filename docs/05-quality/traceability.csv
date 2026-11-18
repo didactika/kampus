@@ -31,3 +31,11 @@ RF-062,UC-029,viewGrades,docs/02-analysis/use-cases/viewGrades,docs/03-design/us
 RF-063,UC-030,trackActivityProgress,docs/02-analysis/use-cases/trackActivityProgress,docs/03-design/use-cases/trackActivityProgress,crates/kampus-progress/src/activity.rs,crates/kampus-progress/tests
 RF-063,UC-031,configureCourseProgress,docs/02-analysis/use-cases/configureCourseProgress,docs/03-design/use-cases/configureCourseProgress,crates/kampus-progress/src/course.rs,crates/kampus-progress/tests
 RF-063,UC-032,setProgressException,docs/02-analysis/use-cases/setProgressException,docs/03-design/use-cases/setProgressException,crates/kampus-progress/src/exception.rs,crates/kampus-progress/tests
+RF-080,UC-033,uploadFile,docs/02-analysis/use-cases/uploadFile,docs/03-design/use-cases/uploadFile,crates/kampus-files/src/upload.rs,crates/kampus-files/tests
+RF-080,UC-034,downloadFile,docs/02-analysis/use-cases/downloadFile,docs/03-design/use-cases/downloadFile,crates/kampus-files/src/access.rs,crates/kampus-files/tests
+RF-081,UC-035,retryDeliveries,docs/02-analysis/use-cases/retryDeliveries,docs/03-design/use-cases/retryDeliveries,crates/kampus-events/src/dispatch.rs,crates/kampus-events/tests
+RF-082,UC-036,reviewAuditLog,docs/02-analysis/use-cases/reviewAuditLog,docs/03-design/use-cases/reviewAuditLog,crates/kampus-events/src/audit.rs,crates/kampus-events/tests
+RF-070,UC-037,setNotificationPreferences,docs/02-analysis/use-cases/setNotificationPreferences,docs/03-design/use-cases/setNotificationPreferences,crates/kampus-notify/src/preferences.rs,crates/kampus-notify/tests
+RF-071,UC-038,sendMessage,docs/02-analysis/use-cases/sendMessage,docs/03-design/use-cases/sendMessage,crates/kampus-notify/src/messaging.rs,crates/kampus-notify/tests
+RF-072,UC-039,viewCalendar,docs/02-analysis/use-cases/viewCalendar,docs/03-design/use-cases/viewCalendar,crates/kampus-calendar/src/view.rs,crates/kampus-calendar/tests
+RF-072,UC-040,subscribeCalendar,docs/02-analysis/use-cases/subscribeCalendar,docs/03-design/use-cases/subscribeCalendar,crates/kampus-calendar/src/subscriptions.rs,crates/kampus-calendar/tests

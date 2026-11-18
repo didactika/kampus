@@ -88,17 +88,17 @@ Priorities: **Must** (tier 1, core), **Should** (tier 2, standard activities and
 
 | ID | Requirement | Priority | Origin | Confirmed by | Use cases |
 | --- | --- | --- | --- | --- | --- |
-| RF-070 | Users receive notifications through configurable channels (web, email, push) | Must | baseline | | |
-| RF-071 | Users send direct and group messages | Should | baseline | | |
-| RF-072 | A calendar shows campus, course, group and user events and activity dates | Must | baseline | | |
+| RF-070 | Users receive notifications through configurable channels (web, email, push) | Must | baseline | | UC-037 |
+| RF-071 | Users send direct and group messages | Should | baseline | | UC-038 |
+| RF-072 | A calendar shows campus, course, group and user events and activity dates | Must | baseline | | UC-039, UC-040 |
 
 ### Files, events and logs
 
 | ID | Requirement | Priority | Origin | Confirmed by | Use cases |
 | --- | --- | --- | --- | --- | --- |
-| RF-080 | Files are stored once, referenced by scope and area, and served only with permission checks | Must | baseline | | |
-| RF-081 | Every significant action is recorded as an event, logged and observable by modules and plugins | Must | baseline | | |
-| RF-082 | Teachers and managers see logs and activity reports | Should | baseline | | |
+| RF-080 | Files are stored once, referenced by scope and area, and served only with permission checks | Must | baseline | | UC-033, UC-034 |
+| RF-081 | Every significant action is recorded as an event, logged and observable by modules and plugins | Must | baseline | | UC-035 |
+| RF-082 | Teachers and managers see logs and activity reports | Should | baseline | | UC-036 |
 
 ### Administration
 

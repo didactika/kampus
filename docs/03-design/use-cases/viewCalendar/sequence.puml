@@ -1,0 +1,19 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Authenticated user" as a
+participant "kampus-api" as api
+participant "Calendar view service" as svc
+database "calendar schema + outbox" as db
+
+a -> api : Opens a period
+api -> svc : request
+svc -> db : Collects entries of the scopes the person sees (RN-156)
+svc -> db : Expands recurrences for the window (RN-158) and adds activity dates with exceptions (RN-157)
+a -> api : Adds a personal or course entry
+api -> svc : request
+svc -> db : Creates it in its scope, if allowed
+svc --> a : result
+@enduml

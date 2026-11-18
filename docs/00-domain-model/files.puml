@@ -1,0 +1,56 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus files
+
+class "Blob" as Blob {
+  hash
+  size
+  media type (sniffed)
+  reference count
+  scan status
+}
+class "File" as File {
+  name
+  media type
+  size
+  owner module
+  owner area
+  uploaded by
+  created
+}
+class "File area" as Filearea {
+  module
+  code
+  max size
+  allowed types
+  quota class
+}
+class "Owner link" as Ownerlink {
+  entity
+}
+class "Upload session" as Uploadsession {
+  area
+  account
+  max size
+  expires
+}
+class "Quota" as Quota {
+  scope
+  limit
+  used
+}
+class "Conversion" as Conversion {
+  source blob
+  kind
+  state
+}
+class "Trash item" as Trashitem {
+  since
+}
+
+File "*" --> "1" Blob
+Ownerlink "*" --> "1" File
+Trashitem "*" --> "1" Blob
+@enduml

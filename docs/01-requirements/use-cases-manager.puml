@@ -26,6 +26,9 @@ rectangle "Kampus" {
     usecase "Manage an enrolment" as UC_manageEnrolment
     usecase "Link a system group or a course" as UC_linkEnrolmentSource
   }
+  package "events" {
+    usecase "Review the audit log" as UC_reviewAuditLog
+  }
 }
 
 A_Manager --> UC_grantRole
@@ -38,5 +41,6 @@ A_Manager --> UC_createCourse
 A_Manager --> UC_enrolPeople
 A_Manager --> UC_manageEnrolment
 A_Manager --> UC_linkEnrolmentSource
+A_Manager --> UC_reviewAuditLog
 
 @enduml

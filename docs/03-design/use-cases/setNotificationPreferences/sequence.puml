@@ -1,0 +1,18 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Authenticated user" as a
+participant "kampus-api" as api
+participant "Preference resolver" as svc
+database "notify schema + outbox" as db
+
+a -> api : Opens the preferences
+api -> svc : request
+svc -> db : Shows each type with its channels, the campus defaults and what is locked (RN-148)
+a -> api : Changes channels or digests and saves
+api -> svc : request
+svc -> db : Validates and replaces the rows with If-Match
+svc --> a : result
+@enduml

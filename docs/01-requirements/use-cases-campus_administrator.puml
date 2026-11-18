@@ -9,8 +9,12 @@ rectangle "Kampus" {
   package "access" {
     usecase "Define a role from a template" as UC_defineRole
   }
+  package "events" {
+    usecase "Review and retry failed event deliveries" as UC_retryDeliveries
+  }
 }
 
 A_Campus_administrator --> UC_defineRole
+A_Campus_administrator --> UC_retryDeliveries
 
 @enduml

@@ -27,11 +27,11 @@ The modules and their dependency levels: a module calls only lower levels, and l
 
 Names in the data models are **logical** (`module.table`); the installation prefix, `kmp_` by default, goes on the module schema (DEC-039): `courses.group` is `kmp_courses.group` on PostgreSQL and `kmp_courses_group` on dialects without schemas.
 
-Per module: [access](./data-model/access.md), [identity and users](./data-model/identity.md), [courses](./data-model/courses.md), [enrolment](./data-model/enrolment.md), [activities](./data-model/activities.md), [records](./data-model/records.md), [progress](./data-model/progress.md).
+Per module: [access](./data-model/access.md), [identity and users](./data-model/identity.md), [courses](./data-model/courses.md), [enrolment](./data-model/enrolment.md), [activities](./data-model/activities.md), [records](./data-model/records.md), [progress](./data-model/progress.md), [files](./data-model/files.md), [events](./data-model/events.md), [notifications](./data-model/notify.md), [calendar](./data-model/calendar.md).
 
 ## API
 
-OpenAPI fragments per module, following DEC-025 and DEC-026: [access](./api/access.openapi.yaml), [identity and users](./api/identity.openapi.yaml), [courses](./api/courses.openapi.yaml), [enrolment](./api/enrolment.openapi.yaml), [activities](./api/activities.openapi.yaml), [records](./api/records.openapi.yaml), [progress](./api/progress.openapi.yaml).
+OpenAPI fragments per module, following DEC-025 and DEC-026: [access](./api/access.openapi.yaml), [identity and users](./api/identity.openapi.yaml), [courses](./api/courses.openapi.yaml), [enrolment](./api/enrolment.openapi.yaml), [activities](./api/activities.openapi.yaml), [records](./api/records.openapi.yaml), [progress](./api/progress.openapi.yaml), [files](./api/files.openapi.yaml), [events](./api/events.openapi.yaml), [notifications](./api/notify.openapi.yaml), [calendar](./api/calendar.openapi.yaml).
 
 ## Deployment
 

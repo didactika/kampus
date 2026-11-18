@@ -1,0 +1,47 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus calendar
+
+class "Calendar entry" as Calendarentry {
+  scope
+  group
+  owner
+  title
+  description
+  starts
+  ends
+  all day
+  recurrence rule
+  time zone
+}
+class "Activity date" as Activitydate {
+  course module
+  kind
+  at
+}
+class "Recurrence" as Recurrence {
+  rule
+  exception dates
+}
+class "Subscription" as Subscription {
+  scope
+  url
+  refresh interval
+  last refreshed
+  last error
+}
+class "Imported entry" as Importedentry {
+  uid
+  sequence
+  data
+}
+class "Export feed" as Exportfeed {
+  account
+  token hash
+  scopes
+}
+
+Importedentry "*" --> "1" Subscription
+@enduml

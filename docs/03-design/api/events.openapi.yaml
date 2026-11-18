@@ -1,0 +1,27 @@
+openapi: 3.1.0
+info:
+  title: Kampus events and audit API (design fragment)
+  version: 0.1.0
+  description: >-
+    Declared event types, the audit log (RN-143, RN-144), deliveries and the dead-letter list (RN-139).
+    Conventions of DEC-025 and DEC-026.
+paths:
+  /api/v1/event-types:
+    get: { summary: Declared event types with version and schema, responses: { '200': { description: Types } } }
+  /api/v1/audit:
+    get: { summary: 'Audit entries filtered by scope, actor, object and dates, as the caller may see them (RN-144)', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page of entries } } }
+  /api/v1/audit/export:
+    post: { summary: Queue an export of a filtered audit range, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '202': { description: Job } } }
+  /api/v1/deliveries/dead:
+    get: { summary: Deliveries that exhausted their retries, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
+  /api/v1/deliveries/{listener_id}/{event_id}/retry:
+    post: { summary: Retry a dead delivery, responses: { '202': { description: Queued } } }
+  /api/v1/retention-policies:
+    get: { summary: Retention policies of the campus, responses: { '200': { description: Policies } } }
+    put: { summary: Replace the policies, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
+components:
+  parameters:
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+    After: { name: after, in: query, schema: { type: string } }
+    IfMatch: { name: If-Match, in: header, required: true, schema: { type: string } }
+    IdempotencyKey: { name: Idempotency-Key, in: header, required: true, schema: { type: string } }
