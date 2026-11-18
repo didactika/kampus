@@ -32,8 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Accounts (RN-022) and sign-up with confirmation (UC-006). The answer to a sign-up never depends on
-//! whether the email has an account (RN-027): the owner of the email is told instead.
+//! Accounts and sign-up with confirmation. The answer to a sign-up never depends on
+//! whether the email has an account: the owner of the email is told instead.
 
 use kampus_access::{Actor, ScopeId, ScopeKind};
 use kampus_common::{Error, FieldError, Result, Timestamp};
@@ -49,7 +49,7 @@ pub(crate) const COLUMNS: &str =
     "id, campus_id, scope_id, kind, username, email, email_verified_at, status, status_reason,
     last_sign_in_at, deletion_due_at, pseudonym, version";
 
-/// A sign-up request (UC-006).
+/// A sign-up request.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SignUp {
     /// The email, which is also the username.
@@ -201,7 +201,7 @@ impl Identity {
             .map(drop)
     }
 
-    /// Records one step of the lifecycle (RN-023).
+    /// Records one step of the lifecycle.
     pub(crate) async fn record_transition_in(
         &self,
         conn: &mut PgConnection,
@@ -285,7 +285,7 @@ impl Identity {
         Ok(account)
     }
 
-    /// Signs up a visitor (UC-006): the account waits for the link sent to the email. When the email has
+    /// Signs up a visitor: the account waits for the link sent to the email. When the email has
     /// an account already, its owner is told instead and the answer is the same (A1).
     ///
     /// # Errors
@@ -392,8 +392,7 @@ impl Identity {
         Ok(notice)
     }
 
-    /// Confirms a signed-up account with the link's token and the password the person chooses (UC-006
-    /// step 3): the account becomes active and joins its campus.
+    /// Confirms a signed-up account with the link's token and the password the person chooses: the account becomes active and joins its campus.
     ///
     /// # Errors
     ///

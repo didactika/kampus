@@ -46,9 +46,9 @@ pub struct Module {
     pub name: &'static str,
     /// What the module does, in one sentence.
     pub summary: &'static str,
-    /// The upgrade steps of its schema, from `src/db/steps.rs` (DEC-082).
+    /// The upgrade steps of its schema, from `src/db/steps.rs`.
     pub steps: &'static [Step],
-    /// The permissions it declares, from `src/permissions/mod.rs` (RN-021).
+    /// The permissions it declares, from `src/permissions/mod.rs`.
     pub permissions: &'static [PermissionDeclaration],
     /// The values it gives in role templates, from `src/permissions/templates.rs`; the values of every
     /// module for one template are merged.

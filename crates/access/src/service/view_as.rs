@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! "View as" (UC-005, RN-018): a principal sees a scope and its descendants as another role, read-only,
+//! "View as": a principal sees a scope and its descendants as another role, read-only,
 //! until the session ends; starting and ending it is recorded.
 
 use kampus_common::{Error, Result};

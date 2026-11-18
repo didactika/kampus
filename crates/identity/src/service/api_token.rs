@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! API tokens (RN-033): scoped to permissions in scopes, expiring, shown once and stored as hashes. A
+//! API tokens: scoped to permissions in scopes, expiring, shown once and stored as hashes. A
 //! token is `kmp_<prefix>_<secret>`; its prefix names it in lists and logs. A request with a token may do
 //! only what both the token's scopes and the account's roles allow.
 
@@ -122,7 +122,7 @@ fn invalid_token() -> Error {
 
 impl Identity {
     /// Creates a token for the session's own account: needs `identity.token.manage_own` and a recent strong
-    /// authentication (RN-032), since a token is a credential.
+    /// authentication, since a token is a credential.
     ///
     /// # Errors
     ///
@@ -141,7 +141,7 @@ impl Identity {
         self.insert_token(session.account, request).await
     }
 
-    /// Creates a token for another account, such as a service account (RN-039): needs
+    /// Creates a token for another account, such as a service account: needs
     /// `identity.token.manage_any` in its campus.
     ///
     /// # Errors

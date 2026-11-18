@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The database of access: the upgrade steps of its schema (DEC-082). Its queries live with the
+//! The database of access: the upgrade steps of its schema. Its queries live with the
 //! services that run them.
 
 pub mod steps;

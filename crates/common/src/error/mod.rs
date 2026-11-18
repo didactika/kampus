@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The error model shared by every module (DEC-018): a closed set of kinds, a stable code of the module
+//! The error model shared by every module: a closed set of kinds, a stable code of the module
 //! that raised the error, translatable parameters and, for validation, every failing field at once.
 
 use std::fmt;

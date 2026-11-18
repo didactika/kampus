@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Deletes the accounts whose grace period ended (RN-034, RN-035): their personal data is erased and the
+//! Deletes the accounts whose grace period ended: their personal data is erased and the
 //! row stays as a tombstone with a pseudonym, so academic records keep a valid reference. Each module
 //! erases its own data through its privacy handler; this job erases what identity holds.
 

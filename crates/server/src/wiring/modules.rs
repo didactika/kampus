@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The composition of modules: the server reads the descriptor of every module of the build (DEC-087)
+//! The composition of modules: the server reads the descriptor of every module of the build
 //! from the generated registry, in the order of the module table of the architecture. `kampus-db` adds
 //! its own steps first.
 
@@ -46,7 +46,7 @@ use crate::wiring::registry::MODULES;
 pub static SCHEMAS: LazyLock<Vec<ModuleSteps>> =
     LazyLock::new(|| MODULES.iter().map(|m| m.schema()).collect());
 
-/// Brings what the modules of this build declare into the database at start-up (DEC-015): permissions
+/// Brings what the modules of this build declare into the database at start-up: permissions
 /// and role templates, with the values of every module for each template merged.
 ///
 /// # Errors
@@ -58,7 +58,7 @@ pub async fn sync_declarations(db: &kampus_db::Database) -> kampus_common::Resul
         .await
 }
 
-/// The oldest release still supported: columns may be dropped only when it no longer reads them (DEC-081).
+/// The oldest release still supported: columns may be dropped only when it no longer reads them.
 pub const OLDEST_SUPPORTED: &str = "0.1.0";
 
 #[cfg(test)]

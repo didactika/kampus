@@ -32,8 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Passwords (RN-025): chosen by the person, checked against the campus policy at every change, hashed
-//! with Argon2id; never generated, sent or shown. Changing one revokes every session and token (RN-031).
+//! Passwords: chosen by the person, checked against the campus policy at every change, hashed
+//! with Argon2id; never generated, sent or shown. Changing one revokes every session and token.
 
 use kampus_common::{Error, FieldError, Result};
 use sqlx::PgConnection;
@@ -126,8 +126,8 @@ impl Identity {
         .map_err(kampus_db::classify)
     }
 
-    /// Changes the password of the session's account: needs a recent strong authentication (RN-032) and
-    /// the current password; every session and token of the account ends (RN-031), this one included.
+    /// Changes the password of the session's account: needs a recent strong authentication and
+    /// the current password; every session and token of the account ends, this one included.
     ///
     /// # Errors
     ///

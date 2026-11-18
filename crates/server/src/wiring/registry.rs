@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The modules of this build (DEC-087), in dependency order, written by `tools/repo-check --fix` from
+//! The modules of this build, in dependency order, written by `tools/repo-check --fix` from
 //! the module crates and `crates/server/modules.toml`. Do not edit by hand.
 
 /// Every module of this build.

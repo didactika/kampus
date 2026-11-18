@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The upgrade runner (DEC-082): from any supported release, every pending step of every module is
+//! The upgrade runner: from any supported release, every pending step of every module is
 //! applied in one run, in dependency order, each in its own transaction and recorded in a ledger. A
 //! database whose steps changed, or that is newer than the code, is refused.
 

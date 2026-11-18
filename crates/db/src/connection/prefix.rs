@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The installation prefix (DEC-039): every physical namespace the platform creates starts with it, so
+//! The installation prefix: every physical namespace the platform creates starts with it, so
 //! several installations can share one database and table names may be reserved words.
 
 use std::fmt;

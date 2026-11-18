@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The Kampus binary (DEC-020): one image whose process takes a role, validates the configuration that
+//! The Kampus binary: one image whose process takes a role, validates the configuration that
 //! role reads, brings the database to the code's upgrade steps, and serves HTTP until it is told to stop.
 
 pub mod commands;

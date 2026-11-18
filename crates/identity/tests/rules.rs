@@ -32,8 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! One test per business rule of identity built so far (RN-022 to RN-035, RN-039),
-//! against PostgreSQL, on a campus with its default roles, an administrator and a manager.
+//! One test per behaviour of identity, against PostgreSQL, on a campus with its default roles, an administrator and a manager.
 
 #![allow(
     clippy::unwrap_used,
@@ -273,7 +272,7 @@ impl World {
 }
 
 #[tokio::test]
-async fn rn_022_usernames_and_emails_are_unique_in_a_campus() {
+async fn usernames_and_emails_are_unique_in_a_campus() {
     let w = world().await;
     w.identity
         .invite(&w.admin, w.campus, "Ana@Example.org", Some("Ana"))
@@ -306,7 +305,7 @@ async fn rn_022_usernames_and_emails_are_unique_in_a_campus() {
 }
 
 #[tokio::test]
-async fn rn_023_the_lifecycle_is_a_recorded_state_machine() {
+async fn the_lifecycle_is_a_recorded_state_machine() {
     let w = world().await;
     let ana = w.person("ana@example.org").await;
     let account = w.account(ana).await;
@@ -394,7 +393,7 @@ async fn rn_023_the_lifecycle_is_a_recorded_state_machine() {
 }
 
 #[tokio::test]
-async fn rn_024_every_sign_in_runs_the_same_pipeline() {
+async fn every_sign_in_runs_the_same_pipeline() {
     let w = world().await;
     let ana = w.person("ana@example.org").await;
     let (session, _) = w.session("ANA@example.org ").await;
@@ -433,7 +432,7 @@ async fn rn_024_every_sign_in_runs_the_same_pipeline() {
 }
 
 #[tokio::test]
-async fn rn_025_passwords_follow_the_policy_and_are_hashed() {
+async fn passwords_follow_the_policy_and_are_hashed() {
     let w = world().await;
     w.identity
         .invite(&w.admin, w.campus, "carla.ruiz@example.org", Some("carla"))
@@ -472,7 +471,7 @@ async fn rn_025_passwords_follow_the_policy_and_are_hashed() {
 }
 
 #[tokio::test]
-async fn rn_026_one_time_tokens_are_hashed_expire_and_work_once() {
+async fn one_time_tokens_are_hashed_expire_and_work_once() {
     let w = world().await;
     w.identity
         .sign_up(
@@ -520,7 +519,7 @@ async fn rn_026_one_time_tokens_are_hashed_expire_and_work_once() {
 }
 
 #[tokio::test]
-async fn rn_027_answers_never_reveal_accounts_and_sign_in_is_throttled() {
+async fn answers_never_reveal_accounts_and_sign_in_is_throttled() {
     let w = world().await;
     let request = || SignUp {
         email: "eva@example.org".to_owned(),
@@ -595,7 +594,7 @@ async fn rn_027_answers_never_reveal_accounts_and_sign_in_is_throttled() {
 }
 
 #[tokio::test]
-async fn rn_031_sessions_are_checked_on_every_request_and_revoked_centrally() {
+async fn sessions_are_checked_on_every_request_and_revoked_centrally() {
     let w = world().await;
     let ana = w.person("ana@example.org").await;
     let (session, token) = w.session("ana@example.org").await;
@@ -664,7 +663,7 @@ async fn rn_031_sessions_are_checked_on_every_request_and_revoked_centrally() {
 }
 
 #[tokio::test]
-async fn rn_032_sensitive_operations_need_a_recent_strong_authentication() {
+async fn sensitive_operations_need_a_recent_strong_authentication() {
     let w = world().await;
     w.person("ana@example.org").await;
     let (session, token) = w.session("ana@example.org").await;
@@ -693,7 +692,7 @@ async fn rn_032_sensitive_operations_need_a_recent_strong_authentication() {
 }
 
 #[tokio::test]
-async fn rn_033_api_tokens_are_scoped_expiring_and_hashed() {
+async fn api_tokens_are_scoped_expiring_and_hashed() {
     let w = world().await;
     let ana = w.person("ana@example.org").await;
     let (session, _) = w.session("ana@example.org").await;
@@ -784,7 +783,7 @@ async fn rn_033_api_tokens_are_scoped_expiring_and_hashed() {
 }
 
 #[tokio::test]
-async fn rn_034_deletion_erases_personal_data_and_leaves_a_tombstone() {
+async fn deletion_erases_personal_data_and_leaves_a_tombstone() {
     let w = world().await;
     let ana = w.person("ana@example.org").await;
     w.session("ana@example.org").await;
@@ -813,7 +812,7 @@ async fn rn_034_deletion_erases_personal_data_and_leaves_a_tombstone() {
 }
 
 #[tokio::test]
-async fn rn_035_deletion_waits_for_the_grace_period_and_can_be_cancelled() {
+async fn deletion_waits_for_the_grace_period_and_can_be_cancelled() {
     let w = world().await;
     let ana = w.person("ana@example.org").await;
     w.identity
@@ -841,7 +840,7 @@ async fn rn_035_deletion_waits_for_the_grace_period_and_can_be_cancelled() {
 }
 
 #[tokio::test]
-async fn rn_039_service_accounts_authenticate_only_with_api_tokens() {
+async fn service_accounts_authenticate_only_with_api_tokens() {
     let w = world().await;
     let service = w
         .identity
@@ -909,7 +908,7 @@ async fn challenge(w: &World, name: &str) -> (String, Vec<FactorKind>) {
 }
 
 #[tokio::test]
-async fn rn_029_second_factors_are_required_once_set_up() {
+async fn second_factors_are_required_once_set_up() {
     let w = world().await;
     let ana = w.person("ana@example.org").await;
     let (session, _) = w.session("ana@example.org").await;
@@ -1035,7 +1034,7 @@ async fn rn_029_second_factors_are_required_once_set_up() {
 }
 
 #[tokio::test]
-async fn rn_029_a_role_can_require_a_second_factor() {
+async fn a_role_can_require_a_second_factor() {
     let w = world().await;
     let bea = w.person("bea@example.org").await;
     w.access
@@ -1082,7 +1081,7 @@ async fn rn_029_a_role_can_require_a_second_factor() {
 }
 
 #[tokio::test]
-async fn rn_030_recovery_checks_the_second_factor_first_and_never_signs_in() {
+async fn recovery_checks_the_second_factor_first_and_never_signs_in() {
     let w = world().await;
     let ana = w.person("ana@example.org").await;
     let (session, old_token) = w.session("ana@example.org").await;
@@ -1219,7 +1218,7 @@ async fn through_provider(w: &World, provider: ProviderId) -> Result<OidcOutcome
 }
 
 #[tokio::test]
-async fn rn_028_a_verified_email_links_by_policy_and_then_by_subject() {
+async fn a_verified_email_links_by_policy_and_then_by_subject() {
     let w = world().await;
     let ana = w.person("ana@example.org").await;
     let google = provider(&w, "verified", LinkingPolicy::VerifiedEmail).await;
@@ -1316,7 +1315,7 @@ async fn provider_again(w: &World) -> Result<ProviderId> {
 }
 
 #[tokio::test]
-async fn rn_028_an_unverified_or_unknown_email_never_links() {
+async fn an_unverified_or_unknown_email_never_links() {
     let not_linked = (
         ErrorKind::Unauthenticated,
         "identity.external_identity_not_linked".to_owned(),
@@ -1359,7 +1358,7 @@ async fn rn_028_an_unverified_or_unknown_email_never_links() {
 }
 
 #[tokio::test]
-async fn rn_028_the_owner_can_confirm_a_link() {
+async fn the_owner_can_confirm_a_link() {
     let w = world().await;
     let ana = w.person("ana@example.org").await;
     let provider = provider(&w, "verified", LinkingPolicy::Confirm).await;

@@ -110,7 +110,7 @@ components:
       properties:
         permission: { type: string }
         allowed: { type: boolean }
-        rule: { enum: [allowed, no_allow, forbidden, guest_limit, frozen_scope, inactive_account, unknown_permission] }
+        rule: { enum: [allowed, no_allow, forbidden, guest_limit, frozen_scope, inactive_account, view_as_limit, unknown_permission] }
         explanation:
           type: array
           items:

@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The history of grants, overrides and roles (RN-015): who changed what, when, and the value before.
+//! The history of grants, overrides and roles: who changed what, when, and the value before.
 
 use kampus_common::Result;
 use serde_json::Value as Json;

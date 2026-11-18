@@ -32,14 +32,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The permission check (UC-003) and its explanation (RN-019).
+//! The permission check and its explanation.
 //!
-//! 1. An undeclared or retired permission fails (RN-021); an inactive principal fails (RN-010).
-//! 2. A write in a frozen scope or below fails (RN-011); "view as" never writes and stays in its scope (RN-018).
-//! 3. The active grants of the actor on the scope and its ancestors count (RN-003).
+//! 1. An undeclared or retired permission fails; an inactive principal fails.
+//! 2. A write in a frozen scope or below fails; "view as" never writes and stays in its scope.
+//! 3. The active grants of the actor on the scope and its ancestors count.
 //! 4. For each granted role, the value is the first override from the scope up to its campus, otherwise
-//!    the role's own value (RN-004); guests and visitors never get a write or a risky permission (RN-009).
-//! 5. Any `forbid` fails (RN-005); otherwise one `allow` passes (RN-006).
+//!    the role's own value; guests and visitors never get a write or a risky permission.
+//! 5. Any `forbid` fails; otherwise one `allow` passes.
 
 use std::collections::HashMap;
 
@@ -67,12 +67,13 @@ pub struct GrantEvaluation {
     pub set_at: Option<ScopeId>,
 }
 
-/// The result of a check, with its explanation (RN-019).
+/// The result of a check, with its explanation.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Decision {
     /// Whether the actor may.
     pub allowed: bool,
-    /// The rule that decided (`RN-005`…).
+    /// Why: `allowed`, `no_allow`, `forbidden`, `guest_limit`, `frozen_scope`, `inactive_account`,
+    /// `view_as_limit` or `unknown_permission`.
     pub rule: &'static str,
     /// The permission checked.
     pub permission: String,
@@ -147,7 +148,7 @@ impl Access {
         }
     }
 
-    /// Evaluates a check on a connection, so it can run inside the transaction of a change (RN-008).
+    /// Evaluates a check on a connection, so it can run inside the transaction of a change.
     /// `ignore_frozen` lets unfreezing be checked as if the scope were open.
     pub(crate) async fn evaluate(
         &self,
@@ -159,19 +160,19 @@ impl Access {
     ) -> Result<Decision> {
         let Some(declared) = self.declared(conn, permission).await? else {
             tracing::warn!(permission, "check of an undeclared or retired permission");
-            return Ok(Decision::refuse(permission, "RN-021"));
+            return Ok(Decision::refuse(permission, "unknown_permission"));
         };
         let path = self.path(conn, scope).await?;
         let Some(held) = self.held(conn, actor, &path, declared.kind).await? else {
             let rule = if matches!(actor, Actor::ViewAs(..)) {
-                "RN-018"
+                "view_as_limit"
             } else {
-                "RN-010"
+                "inactive_account"
             };
             return Ok(Decision::refuse(permission, rule));
         };
         if !ignore_frozen && declared.kind == PermissionKind::Write && path.iter().any(|s| s.frozen) {
-            return Ok(Decision::refuse(permission, "RN-011"));
+            return Ok(Decision::refuse(permission, "frozen_scope"));
         }
 
         let values = self.role_values(conn, permission, &held, &path).await?;
@@ -203,16 +204,19 @@ impl Access {
             .collect();
 
         let (allowed, rule) = if grants.iter().any(|g| g.value == Some(Value::Forbid)) {
-            (false, "RN-005")
+            (false, "forbidden")
         } else {
-            (grants.iter().any(|g| g.value == Some(Value::Allow)), "RN-006")
+            {
+                let allowed = grants.iter().any(|g| g.value == Some(Value::Allow));
+                (allowed, if allowed { "allowed" } else { "no_allow" })
+            }
         };
         let rule = if !allowed
             && limited
             && (visitor || grants.iter().any(|g| guests.contains(&g.role.as_uuid())))
-            && rule == "RN-006"
+            && rule == "no_allow"
         {
-            "RN-009"
+            "guest_limit"
         } else {
             rule
         };
@@ -400,7 +404,7 @@ impl Access {
         }
     }
 
-    /// Whether a principal exists and is active (RN-010).
+    /// Whether a principal exists and is active.
     async fn principal_active(&self, conn: &mut PgConnection, principal: crate::PrincipalId) -> Result<bool> {
         let active: Option<bool> = sqlx::query_scalar(sql(format!(
             "select active from {} where id = $1",
@@ -414,7 +418,7 @@ impl Access {
     }
 
     /// The scopes, among those under the actor's grants, where a permission is allowed: what a list
-    /// filters by in its query, before paging (RN-020).
+    /// filters by in its query, before paging.
     ///
     /// # Errors
     ///

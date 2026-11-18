@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Instants and the clock (DEC-022): instants are UTC with microsecond precision, exchanged as RFC 3339,
+//! Instants and the clock: instants are UTC with microsecond precision, exchanged as RFC 3339,
 //! and "now" always comes from a clock that tests and jobs can fix.
 
 use std::fmt;

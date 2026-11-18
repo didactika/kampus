@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The service API of identity, one file per area of its use cases.
+//! The service API of identity, one file per area.
 
 pub mod account;
 pub mod api_token;

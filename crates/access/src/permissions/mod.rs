@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The permissions access declares (DEC-015, RN-021); the values its role templates give them are in
+//! The permissions access declares; the values its role templates give them are in
 //! [`templates`].
 //! campus starts from. Other modules add their own permissions and values to the templates.
 
@@ -42,19 +42,19 @@ pub mod templates;
 
 pub use templates::{GUEST_TEMPLATE, TEMPLATES};
 
-/// Grant a role in a scope (RN-013).
+/// Grant a role in a scope.
 pub const GRANT_CREATE: &str = "access.grant.create";
-/// Remove a manual grant (RN-016).
+/// Remove a manual grant.
 pub const GRANT_DELETE: &str = "access.grant.delete";
-/// Override a role's permission in a scope (RN-014).
+/// Override a role's permission in a scope.
 pub const OVERRIDE_UPDATE: &str = "access.override.update";
-/// Override a permission with risks (RN-014).
+/// Override a permission with risks.
 pub const OVERRIDE_RISKY: &str = "access.override.risky";
 /// Create and change roles.
 pub const ROLE_MANAGE: &str = "access.role.manage";
-/// Freeze and unfreeze a scope (RN-011).
+/// Freeze and unfreeze a scope.
 pub const SCOPE_FREEZE: &str = "access.scope.freeze";
-/// See a scope as another role (RN-018).
+/// See a scope as another role.
 pub const VIEW_AS: &str = "access.view_as";
 /// Read who holds which roles and why a check is decided.
 pub const REVIEW: &str = "access.review";

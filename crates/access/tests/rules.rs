@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! One test per business rule of access (RN-001 to RN-021), against PostgreSQL, on a campus with nested
+//! One test per behaviour of access, against PostgreSQL, on a campus with nested
 //! scopes, the default roles and a few people.
 
 #![allow(
@@ -278,7 +278,7 @@ impl World {
 }
 
 #[tokio::test]
-async fn rn_001_scopes_form_one_tree_of_allowed_kinds() {
+async fn scopes_form_one_tree_of_allowed_kinds() {
     let w = world().await;
     let error = w
         .access
@@ -307,7 +307,7 @@ async fn rn_001_scopes_form_one_tree_of_allowed_kinds() {
 }
 
 #[tokio::test]
-async fn rn_002_a_section_is_a_scope() {
+async fn a_section_is_a_scope() {
     let w = world().await;
     let leader = PrincipalId::generate();
     w.access.create_principal(leader, w.campus).await.unwrap();
@@ -334,7 +334,7 @@ async fn rn_002_a_section_is_a_scope() {
 }
 
 #[tokio::test]
-async fn rn_003_only_active_grants_count() {
+async fn only_active_grants_count() {
     let w = world().await;
     let temporary = PrincipalId::generate();
     w.access.create_principal(temporary, w.campus).await.unwrap();
@@ -357,7 +357,7 @@ async fn rn_003_only_active_grants_count() {
 }
 
 #[tokio::test]
-async fn rn_004_the_nearest_override_up_to_the_campus_decides_for_each_role() {
+async fn the_nearest_override_up_to_the_campus_decides_for_each_role() {
     let w = world().await;
     let teacher = w.roles["teacher"];
     w.access
@@ -381,7 +381,7 @@ async fn rn_004_the_nearest_override_up_to_the_campus_decides_for_each_role() {
 }
 
 #[tokio::test]
-async fn rn_005_a_forbid_on_any_role_fails_the_check() {
+async fn a_forbid_on_any_role_fails_the_check() {
     let w = world().await;
     w.access
         .grant(&w.teacher, w.roles["learner"], w.course, id(w.teacher), None)
@@ -393,31 +393,31 @@ async fn rn_005_a_forbid_on_any_role_fails_the_check() {
         .unwrap();
     assert_eq!(
         w.can(&w.teacher, EDIT, w.activity).await,
-        (false, "RN-005"),
+        (false, "forbidden"),
         "the learner role's forbid beats the teacher role's allow"
     );
     w.drop().await;
 }
 
 #[tokio::test]
-async fn rn_006_one_allow_passes_and_none_fails() {
+async fn one_allow_passes_and_none_fails() {
     let w = world().await;
-    assert_eq!(w.can(&w.teacher, EDIT, w.activity).await, (true, "RN-006"));
+    assert_eq!(w.can(&w.teacher, EDIT, w.activity).await, (true, "allowed"));
     assert_eq!(
         w.can(&w.outsider, VIEW, w.course).await,
-        (false, "RN-006"),
+        (false, "no_allow"),
         "no role, no allow"
     );
     assert_eq!(
         w.can(&w.learner, EDIT, w.course).await,
-        (false, "RN-006"),
+        (false, "no_allow"),
         "a role without a value does not allow"
     );
     w.drop().await;
 }
 
 #[tokio::test]
-async fn rn_007_there_is_no_bypass() {
+async fn there_is_no_bypass() {
     let w = world().await;
     assert!(
         !w.can(&w.admin, VIEW, w.course).await.0,
@@ -428,7 +428,7 @@ async fn rn_007_there_is_no_bypass() {
 }
 
 #[tokio::test]
-async fn rn_008_a_campus_is_never_left_unmanaged() {
+async fn a_campus_is_never_left_unmanaged() {
     let w = world().await;
     let admin_grant = w
         .access
@@ -471,7 +471,7 @@ async fn rn_008_a_campus_is_never_left_unmanaged() {
 }
 
 #[tokio::test]
-async fn rn_009_visitors_and_guests_never_write_or_take_risks() {
+async fn visitors_and_guests_never_write_or_take_risks() {
     let w = world().await;
     let visitor = Actor::Visitor(w.campus);
     assert!(
@@ -480,12 +480,12 @@ async fn rn_009_visitors_and_guests_never_write_or_take_risks() {
     );
     assert_eq!(
         w.can(&visitor, UPDATE, w.course).await,
-        (false, "RN-009"),
+        (false, "guest_limit"),
         "the guest role's allow of a write is ignored"
     );
     assert_eq!(
         w.can(&visitor, SCRIPT, w.activity).await,
-        (false, "RN-009"),
+        (false, "guest_limit"),
         "and of a risky permission"
     );
     let guest = PrincipalId::generate();
@@ -496,29 +496,32 @@ async fn rn_009_visitors_and_guests_never_write_or_take_risks() {
         .unwrap();
     assert_eq!(
         w.can(&Actor::Principal(guest), UPDATE, w.course).await,
-        (false, "RN-009"),
+        (false, "guest_limit"),
         "a granted guest role is limited too"
     );
     w.drop().await;
 }
 
 #[tokio::test]
-async fn rn_010_inactive_accounts_fail_every_check() {
+async fn inactive_accounts_fail_every_check() {
     let w = world().await;
     w.access.set_principal_active(id(w.teacher), false).await.unwrap();
-    assert_eq!(w.can(&w.teacher, VIEW, w.course).await, (false, "RN-010"));
+    assert_eq!(
+        w.can(&w.teacher, VIEW, w.course).await,
+        (false, "inactive_account")
+    );
     w.access.set_principal_active(id(w.teacher), true).await.unwrap();
     assert!(w.can(&w.teacher, VIEW, w.course).await.0);
     w.drop().await;
 }
 
 #[tokio::test]
-async fn rn_011_a_frozen_scope_only_reads() {
+async fn a_frozen_scope_only_reads() {
     let w = world().await;
     w.access.set_frozen(&w.admin, w.course, true).await.unwrap();
     assert_eq!(
         w.can(&w.teacher, EDIT, w.activity).await,
-        (false, "RN-011"),
+        (false, "frozen_scope"),
         "nothing is written in or below a frozen scope"
     );
     assert!(w.can(&w.teacher, VIEW, w.activity).await.0, "reading goes on");
@@ -537,7 +540,7 @@ async fn rn_011_a_frozen_scope_only_reads() {
 }
 
 #[tokio::test]
-async fn rn_012_overrides_stop_at_the_lowest_kind_of_a_permission() {
+async fn overrides_stop_at_the_lowest_kind_of_a_permission() {
     let w = world().await;
     let error = w
         .access
@@ -559,7 +562,7 @@ async fn rn_012_overrides_stop_at_the_lowest_kind_of_a_permission() {
 }
 
 #[tokio::test]
-async fn rn_013_granting_needs_the_permission_an_allowance_and_an_assignable_kind() {
+async fn granting_needs_the_permission_an_allowance_and_an_assignable_kind() {
     let w = world().await;
     let someone = PrincipalId::generate();
     w.access.create_principal(someone, w.campus).await.unwrap();
@@ -609,7 +612,7 @@ async fn rn_013_granting_needs_the_permission_an_allowance_and_an_assignable_kin
 }
 
 #[tokio::test]
-async fn rn_014_overriding_needs_the_permission_an_allowance_and_risky_rights() {
+async fn overriding_needs_the_permission_an_allowance_and_risky_rights() {
     let w = world().await;
     let denied = w
         .access
@@ -653,7 +656,7 @@ async fn rn_014_overriding_needs_the_permission_an_allowance_and_risky_rights() 
 }
 
 #[tokio::test]
-async fn rn_015_inherit_deletes_the_override_and_every_change_is_recorded() {
+async fn inherit_deletes_the_override_and_every_change_is_recorded() {
     let w = world().await;
     let learner = w.roles["learner"];
     w.access
@@ -682,7 +685,7 @@ async fn rn_015_inherit_deletes_the_override_and_every_change_is_recorded() {
 }
 
 #[tokio::test]
-async fn rn_016_a_module_owns_the_grants_it_makes() {
+async fn a_module_owns_the_grants_it_makes() {
     let w = world().await;
     let someone = PrincipalId::generate();
     w.access.create_principal(someone, w.campus).await.unwrap();
@@ -708,7 +711,7 @@ async fn rn_016_a_module_owns_the_grants_it_makes() {
 }
 
 #[tokio::test]
-async fn rn_017_roles_come_from_templates_and_reset_only_when_confirmed() {
+async fn roles_come_from_templates_and_reset_only_when_confirmed() {
     let w = world().await;
     let unknown = w
         .access
@@ -753,7 +756,7 @@ async fn rn_017_roles_come_from_templates_and_reset_only_when_confirmed() {
 }
 
 #[tokio::test]
-async fn rn_018_view_as_is_read_only_scoped_and_ends() {
+async fn view_as_is_read_only_scoped_and_ends() {
     let w = world().await;
     let session = w
         .access
@@ -767,12 +770,12 @@ async fn rn_018_view_as_is_read_only_scoped_and_ends() {
     );
     assert_eq!(
         w.can(&viewing, EDIT, w.activity).await,
-        (false, "RN-018"),
+        (false, "view_as_limit"),
         "never writes"
     );
     assert_eq!(
         w.can(&viewing, VIEW, w.other_course).await,
-        (false, "RN-018"),
+        (false, "view_as_limit"),
         "stays in its scope"
     );
     let manager = w
@@ -794,7 +797,7 @@ async fn rn_018_view_as_is_read_only_scoped_and_ends() {
 }
 
 #[tokio::test]
-async fn rn_019_every_check_explains_itself() {
+async fn every_check_explains_itself() {
     let w = world().await;
     w.access
         .set_override(&w.admin, w.section, w.roles["teacher"], EDIT, Some(Value::Deny))
@@ -814,12 +817,12 @@ async fn rn_019_every_check_explains_itself() {
         (w.roles["teacher"], w.course, Some(Value::Deny), Some(w.section))
     );
     let json = serde_json::to_value(&decision).unwrap();
-    assert_eq!(json["rule"], "RN-006");
+    assert_eq!(json["rule"], "no_allow");
     w.drop().await;
 }
 
 #[tokio::test]
-async fn rn_020_lists_filter_by_the_scopes_where_a_permission_is_allowed() {
+async fn lists_filter_by_the_scopes_where_a_permission_is_allowed() {
     let w = world().await;
     w.access
         .set_override(
@@ -845,11 +848,11 @@ async fn rn_020_lists_filter_by_the_scopes_where_a_permission_is_allowed() {
 }
 
 #[tokio::test]
-async fn rn_021_undeclared_and_retired_permissions_fail() {
+async fn undeclared_and_retired_permissions_fail() {
     let w = world().await;
     assert_eq!(
         w.can(&w.teacher, "courses.course.teleport", w.course).await,
-        (false, "RN-021")
+        (false, "unknown_permission")
     );
     w.access
         .sync(
@@ -863,7 +866,7 @@ async fn rn_021_undeclared_and_retired_permissions_fail() {
         .unwrap();
     assert_eq!(
         w.can(&w.teacher, SCRIPT, w.activity).await,
-        (false, "RN-021"),
+        (false, "unknown_permission"),
         "a permission no module declares any more is retired"
     );
     w.drop().await;

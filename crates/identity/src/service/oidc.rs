@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! OpenID Connect providers (RN-028): a campus signs people in through its providers with the
+//! OpenID Connect providers: a campus signs people in through its providers with the
 //! authorization code flow, PKCE and a nonce, and the identity of the provider links to an account by
 //! issuer and subject. A link by email needs the provider's verified email and the campus policy, or the
 //! owner's confirmation; never the first account that shares the email.
@@ -293,8 +293,8 @@ impl Identity {
     }
 
     /// Finishes a sign-in at a provider with the code and state it sent back and the sealed flow: the ID
-    /// token is verified, the identity finds its account by issuer and subject (RN-028), and the pipeline
-    /// goes on as for any method (RN-024).
+    /// token is verified, the identity finds its account by issuer and subject, and the pipeline
+    /// goes on as for any method.
     ///
     /// # Errors
     ///
@@ -371,8 +371,8 @@ impl Identity {
             .map(OidcOutcome::SignedIn)
     }
 
-    /// Links a provider identity to the session's account once its owner confirms it (RN-028); needs a
-    /// recent strong authentication (RN-032), since a link is a new way in.
+    /// Links a provider identity to the session's account once its owner confirms it; needs a
+    /// recent strong authentication, since a link is a new way in.
     ///
     /// # Errors
     ///

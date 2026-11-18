@@ -41,10 +41,10 @@ use sqlx::postgres::{PgPool, PgPoolOptions};
 
 use crate::Prefix;
 
-/// A transaction: every service operation is one (DEC-016).
+/// A transaction: every service operation is one.
 pub type Transaction = sqlx::Transaction<'static, sqlx::Postgres>;
 
-/// The optional features of a database adapter; modules ask for these, never for the dialect (DEC-066).
+/// The optional features of a database adapter; modules ask for these, never for the dialect.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(
     clippy::struct_excessive_bools,
@@ -57,11 +57,11 @@ pub struct Capabilities {
     pub upsert: bool,
     /// Locks held by a session or a transaction that are not rows (advisory locks).
     pub advisory_locks: bool,
-    /// One schema per module; without it, tables carry the module in their name (DEC-039).
+    /// One schema per module; without it, tables carry the module in their name.
     pub schemas: bool,
 }
 
-/// Turns a database failure into the error model (DEC-018): violated keys and references are conflicts,
+/// Turns a database failure into the error model: violated keys and references are conflicts,
 /// violated checks and missing values are validation errors naming the constraint or column, and
 /// serialisation failures and deadlocks are unavailable, to be retried.
 #[must_use]

@@ -32,17 +32,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The neutral schema (DEC-065): modules declare their tables once, with the portable types of the port,
+//! The neutral schema: modules declare their tables once, with the portable types of the port,
 //! and the port writes the SQL of each dialect. Identifiers are always quoted, so tables may keep natural
 //! names that are reserved words (`group`, `grant`), and schemas are written as placeholders that the
-//! upgrade runner replaces with the installation's prefixed names (DEC-039).
+//! upgrade runner replaces with the installation's prefixed names.
 
 use std::fmt::Write as _;
 
 /// The portable column types; no other type is allowed in a module's schema.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Type {
-    /// A UUID, for identifiers (DEC-021).
+    /// A UUID, for identifiers.
     Uuid,
     /// Text without a length limit.
     Text,
@@ -52,13 +52,13 @@ pub enum Type {
     Integer,
     /// A 64-bit integer.
     BigInt,
-    /// An exact number with precision and scale (DEC-023).
+    /// An exact number with precision and scale.
     Numeric(u8, u8),
     /// A boolean.
     Boolean,
     /// A calendar date.
     Date,
-    /// An instant with time zone (DEC-022).
+    /// An instant with time zone.
     Timestamptz,
     /// A duration.
     Interval,
@@ -123,7 +123,7 @@ pub struct Column {
     pub name: &'static str,
     /// The type.
     pub ty: Type,
-    /// Whether the column may be null; columns are `NOT NULL` unless absence has a meaning (DEC-014).
+    /// Whether the column may be null; columns are `NOT NULL` unless absence has a meaning.
     pub nullable: bool,
     /// The default, if any.
     pub default: Option<ColumnDefault>,
@@ -172,7 +172,7 @@ impl Column {
     }
 }
 
-/// What happens to referencing rows when the referenced row is deleted (DEC-014 rule 1).
+/// What happens to referencing rows when the referenced row is deleted.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum OnDelete {
     /// The deletion is refused while references exist (the default).
@@ -201,7 +201,7 @@ pub struct ForeignKey {
 /// A rule every row must follow, written without dialect SQL.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Check {
-    /// The column holds one of these values (enumerations as checked values, DEC-014 rule 4).
+    /// The column holds one of these values (enumerations as checked values).
     OneOf(&'static str, &'static [&'static str]),
     /// The first column is later than, or greater than, the second, when both are set.
     After(&'static str, &'static str),
@@ -209,7 +209,7 @@ pub enum Check {
     Positive(&'static str),
     /// The column is zero or more.
     NonNegative(&'static str),
-    /// Exactly one of these columns is set: the exclusive arc of DEC-014 rule 2.
+    /// Exactly one of these columns is set: the exclusive arc.
     ExactlyOne(&'static [&'static str]),
 }
 
@@ -261,13 +261,13 @@ pub struct Table {
     pub columns: &'static [Column],
     /// The primary key.
     pub primary_key: &'static [&'static str],
-    /// The natural keys (DEC-014 rule 5).
+    /// The natural keys.
     pub unique: &'static [&'static [&'static str]],
     /// The foreign keys; each gets an index unless a key already starts with its columns.
     pub foreign_keys: &'static [ForeignKey],
     /// The rules of every row.
     pub checks: &'static [Check],
-    /// Secondary indexes from the queries of the use cases.
+    /// Secondary indexes from the queries the module runs.
     pub indexes: &'static [Index],
     /// Why the table has no natural key, when it has none and is not a pure association (lint L-03).
     pub without_natural_key: Option<&'static str>,
@@ -320,7 +320,7 @@ pub enum Change {
         /// The index.
         index: Index,
     },
-    /// Drops a column no supported release reads any more (contract, DEC-080).
+    /// Drops a column no supported release reads any more (the contract half of an expand and contract change).
     DropColumn {
         /// The table.
         table: &'static str,
@@ -329,7 +329,7 @@ pub enum Change {
         /// The release that stopped reading it; it must be out of support (lint L-08).
         unused_since: &'static str,
     },
-    /// SQL for PostgreSQL only, allowed only with the reason the neutral schema cannot express it (DEC-065).
+    /// SQL for PostgreSQL only, allowed only with the reason the neutral schema cannot express it.
     Postgres {
         /// The SQL, with schema placeholders.
         sql: &'static str,

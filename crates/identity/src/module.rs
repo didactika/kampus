@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The descriptor of identity (DEC-087): what the server installs and synchronises for it.
+//! The descriptor of identity: what the server installs and synchronises for it.
 
 use kampus_module::Module;
 

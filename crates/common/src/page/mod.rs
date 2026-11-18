@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Cursor pagination (DEC-025): lists are read page by page with an opaque cursor, 50 items by default
+//! Cursor pagination: lists are read page by page with an opaque cursor, 50 items by default
 //! and 200 at most.
 
 use base64::Engine;

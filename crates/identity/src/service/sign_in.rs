@@ -32,11 +32,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The sign-in pipeline (UC-007, RN-024): every method identifies the account, checks throttling and the
+//! The sign-in pipeline: every method identifies the account, checks throttling and the
 //! status, verifies the credential, asks for the second factor when required, then opens the session.
 //! Each method is one kind of [`Credential`]; none can skip a step.
 //!
-//! Failures give one answer whatever went wrong, and unknown names are throttled like real ones (RN-027).
+//! Failures give one answer whatever went wrong, and unknown names are throttled like real ones.
 
 use kampus_access::ScopeId;
 use kampus_common::{Error, ErrorKind, Result};
@@ -56,7 +56,7 @@ const LONGEST_WAIT: i64 = 15 * 60;
 /// What a person proves themselves with.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Credential {
-    /// A password (RN-025).
+    /// A password.
     Password(String),
 }
 
@@ -76,7 +76,7 @@ pub struct SignIn {
 pub enum SignInOutcome {
     /// A session is open.
     SignedIn(NewSession),
-    /// The second factor is required (RN-029); the challenge continues the sign-in.
+    /// The second factor is required; the challenge continues the sign-in.
     SecondFactorRequired {
         /// The one-time token of the pending sign-in.
         challenge: String,
@@ -161,8 +161,8 @@ impl Identity {
         self.conclude(&account, &policy, &request.client, &hash).await
     }
 
-    /// The last steps of every method, once the credential passed: the second factor when required
-    /// (RN-029), otherwise the session.
+    /// The last steps of every method, once the credential passed: the second factor when required,
+    /// otherwise the session.
     pub(crate) async fn conclude(
         &self,
         account: &Account,
@@ -239,7 +239,7 @@ impl Identity {
         Ok(session)
     }
 
-    /// The seconds to wait before trying again, when throttled (RN-027): failures since the last success
+    /// The seconds to wait before trying again, when throttled: failures since the last success
     /// first slow down, doubling the wait, then lock; an address with too many failures locks too.
     pub(crate) async fn throttled(
         &self,

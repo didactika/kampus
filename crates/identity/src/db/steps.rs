@@ -32,13 +32,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The upgrade steps of the `identity` schema, in the neutral schema of DEC-065. Usernames and emails are
-//! stored lower-case, so plain unique keys give the case-insensitive uniqueness of RN-022.
+//! The upgrade steps of the `identity` schema, in the neutral schema. Usernames and emails are
+//! stored lower-case, so plain unique keys give case-insensitive uniqueness.
 
 use kampus_db::Step;
 use kampus_db::schema::{Change, Check, Column, ColumnDefault, ForeignKey, Index, OnDelete, Table, Type};
 
-/// The statuses of an account, as stored (RN-023).
+/// The statuses of an account, as stored.
 pub const STATUSES: &[&str] = &[
     "invited",
     "pending_confirmation",
@@ -50,7 +50,7 @@ pub const STATUSES: &[&str] = &[
 /// The kinds of account, as stored.
 const ACCOUNT_KINDS: &[&str] = &["person", "service"];
 
-/// The purposes of a one-time token, as stored (RN-026).
+/// The purposes of a one-time token, as stored.
 const PURPOSES: &[&str] = &[
     "confirm_email",
     "invitation",
@@ -149,7 +149,7 @@ pub const STEPS: &[Step] = &[Step {
             primary_key: &["id"],
             foreign_keys: &[OWNER],
             checks: &[Check::OneOf("to_status", STATUSES)],
-            without_natural_key: Some("an append-only history of the account lifecycle (RN-023)"),
+            without_natural_key: Some("an append-only history of the account lifecycle"),
             ..Table::EMPTY
         }),
         Change::CreateTable(Table {

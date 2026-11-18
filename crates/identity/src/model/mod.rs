@@ -41,7 +41,7 @@ use kampus_access::{PrincipalId, ScopeId};
 use kampus_common::{Error, FieldError, Timestamp};
 use serde::Serialize;
 
-/// An account is the principal of access with the same id (DEC-079).
+/// An account is the principal of access with the same id.
 pub type AccountId = PrincipalId;
 
 kampus_common::define_id! {
@@ -64,7 +64,7 @@ kampus_common::define_id! {
     pub struct ProviderId;
 }
 
-/// How a provider identity that is not linked yet finds its account (RN-028).
+/// How a provider identity that is not linked yet finds its account.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LinkingPolicy {
@@ -104,7 +104,7 @@ impl FromStr for LinkingPolicy {
     }
 }
 
-/// The kind of a second factor (RN-029).
+/// The kind of a second factor.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum FactorKind {
@@ -159,7 +159,7 @@ pub struct SecondFactor {
     pub last_used_at: Option<Timestamp>,
 }
 
-/// The status of an account, a state machine (RN-023).
+/// The status of an account, a state machine.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AccountStatus {
@@ -171,7 +171,7 @@ pub enum AccountStatus {
     Active,
     /// May not sign in; every session and token is revoked.
     Suspended,
-    /// A tombstone: personal data erased, the id kept (RN-034).
+    /// A tombstone: personal data erased, the id kept.
     Deleted,
 }
 
@@ -188,7 +188,7 @@ impl AccountStatus {
         }
     }
 
-    /// Whether the lifecycle allows going from this status to `to` (RN-023). An invitation link proves the
+    /// Whether the lifecycle allows going from this status to `to`. An invitation link proves the
     /// email as a confirmation link does, so an invited account becomes active directly.
     #[must_use]
     pub const fn may_become(self, to: Self) -> bool {
@@ -239,7 +239,7 @@ impl FromStr for AccountStatus {
 pub enum AccountKind {
     /// A person.
     Person,
-    /// An integration: no password and no second factor, API tokens only (RN-039).
+    /// An integration: no password and no second factor, API tokens only.
     Service,
 }
 
@@ -274,7 +274,7 @@ impl FromStr for AccountKind {
 pub struct Account {
     /// The account, which is also its principal.
     pub id: AccountId,
-    /// The campus it belongs to (RN-022).
+    /// The campus it belongs to.
     pub campus: ScopeId,
     /// The user scope of the account.
     pub scope: ScopeId,
@@ -292,7 +292,7 @@ pub struct Account {
     pub status_reason: Option<String>,
     /// When the account last signed in.
     pub last_sign_in_at: Option<Timestamp>,
-    /// When a scheduled deletion runs (RN-035).
+    /// When a scheduled deletion runs.
     pub deletion_due_at: Option<Timestamp>,
     /// The pseudonym of a tombstone.
     pub pseudonym: Option<String>,
@@ -306,7 +306,7 @@ pub struct Account {
 pub enum MfaLevel {
     /// One factor.
     None,
-    /// A second factor was verified (RN-029).
+    /// A second factor was verified.
     SecondFactor,
 }
 
@@ -342,7 +342,7 @@ pub struct Session {
     pub campus: ScopeId,
     /// How it was authenticated.
     pub mfa_level: MfaLevel,
-    /// The last strong authentication, for step-up (RN-032).
+    /// The last strong authentication, for step-up.
     pub strong_auth_at: Timestamp,
     /// When it ends at the latest.
     pub expires_at: Timestamp,

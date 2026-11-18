@@ -32,8 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Overrides (UC-002): how a role's value for a permission changes in a scope and its descendants
-//! (RN-012, RN-014, RN-015, RN-008).
+//! Overrides: how a role's value for a permission changes in a scope and its descendants.
 
 use kampus_common::{Error, FieldError, Result};
 use serde_json::json;
@@ -45,12 +44,12 @@ use crate::{Access, Actor, AllowanceKind, RoleId, ScopeId, ScopeKind, Value, sql
 
 impl Access {
     /// Sets the value of a role for a permission in a scope and its descendants; `None` inherits again,
-    /// which deletes the override (RN-014, RN-012, RN-015, RN-008).
+    /// which deletes the override.
     ///
     /// # Errors
     ///
     /// `permission_denied` without the permissions or the allowance, `validation` below the permission's
-    /// lowest kind, `conflict` for RN-008.
+    /// lowest kind, `conflict` when it would leave the campus without anyone to manage it.
     pub async fn set_override(
         &self,
         actor: &Actor,

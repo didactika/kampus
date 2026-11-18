@@ -32,8 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The upgrade steps of the `access` schema, in the neutral schema of DEC-065. Scope kinds and their
-//! parents, and the lowest kind of an override (RN-001, RN-012), are rules of the service.
+//! The upgrade steps of the `access` schema, in the neutral schema. Scope kinds and their
+//! parents, and the lowest kind of an override, are rules of the service.
 
 use kampus_db::Step;
 use kampus_db::schema::{Change, Check, Column, ColumnDefault, ForeignKey, OnDelete, Table, Type};
@@ -335,7 +335,7 @@ pub const STEPS: &[Step] = &[
                     columns: &["entity", "entity_key", "at"],
                     unique: false,
                 }],
-                without_natural_key: Some("an append-only history of changes (RN-015)"),
+                without_natural_key: Some("an append-only history of changes"),
                 ..Table::EMPTY
             }),
         ],

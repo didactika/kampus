@@ -46,14 +46,14 @@ use crate::AccountId;
 /// What an account owner is told.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Notice {
-    /// The link that confirms a new account (UC-006).
+    /// The link that confirms a new account.
     ConfirmEmail {
         /// The one-time token of the link.
         token: String,
     },
-    /// Someone tried to sign up with an email that already has an account (UC-006 A1).
+    /// Someone tried to sign up with an email that already has an account.
     AlreadyRegistered,
-    /// The link of an invitation, which sets the password (UC-009).
+    /// The link of an invitation, which sets the password.
     Invitation {
         /// The one-time token of the link.
         token: String,
@@ -62,7 +62,7 @@ pub enum Notice {
     PasswordChanged,
     /// The account was suspended, or its deletion scheduled.
     Suspended,
-    /// The link that starts recovering access (RN-030).
+    /// The link that starts recovering access.
     Recovery {
         /// The one-time token of the link.
         token: String,

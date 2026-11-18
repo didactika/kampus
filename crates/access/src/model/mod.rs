@@ -45,7 +45,7 @@ kampus_common::define_id! {
 }
 
 kampus_common::define_id! {
-    /// Identifies a principal: anything that can hold grants (DEC-079).
+    /// Identifies a principal: anything that can hold grants.
     pub struct PrincipalId;
 }
 
@@ -69,9 +69,9 @@ kampus_common::define_id! {
 pub enum Actor {
     /// A principal with its grants.
     Principal(PrincipalId),
-    /// Someone not signed in, in a campus: only what the campus's guest role reads (RN-009).
+    /// Someone not signed in, in a campus: only what the campus's guest role reads.
     Visitor(ScopeId),
-    /// A principal seeing a scope as another role, read-only (RN-018).
+    /// A principal seeing a scope as another role, read-only.
     ViewAs(PrincipalId, ViewAsId),
 }
 

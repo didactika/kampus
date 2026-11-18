@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The identity policy of a campus (DEC-008): sign-up, passwords, lifetimes, throttling and deletion.
+//! The identity policy of a campus: sign-up, passwords, lifetimes, throttling and deletion.
 //! The settings module provides it per campus; until a campus changes it, the defaults apply.
 
 use async_trait::async_trait;
@@ -40,7 +40,7 @@ use kampus_access::ScopeId;
 use kampus_common::Result;
 use time::Duration;
 
-/// The throttling of sign-in (RN-027).
+/// The throttling of sign-in.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Throttle {
     /// The period failures are counted over.
@@ -58,15 +58,15 @@ pub struct Throttle {
 /// The identity policy of a campus.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CampusPolicy {
-    /// Whether visitors may sign up by themselves (UC-006).
+    /// Whether visitors may sign up by themselves.
     pub self_sign_up: bool,
     /// The email domains allowed to sign up; empty allows any.
     pub allowed_domains: Vec<String>,
-    /// The shortest password (RN-025).
+    /// The shortest password.
     pub password_min_length: usize,
-    /// Whether every account needs a second factor (RN-029).
+    /// Whether every account needs a second factor.
     pub second_factor_required: bool,
-    /// How long a confirmation link lasts (RN-026).
+    /// How long a confirmation link lasts.
     pub confirmation_lifetime: Duration,
     /// How long an invitation link lasts.
     pub invitation_lifetime: Duration,
@@ -76,13 +76,13 @@ pub struct CampusPolicy {
     pub session_idle: Duration,
     /// How long a session lasts at most.
     pub session_lifetime: Duration,
-    /// How old the last strong authentication may be for a sensitive operation (RN-032).
+    /// How old the last strong authentication may be for a sensitive operation.
     pub step_up_window: Duration,
-    /// The lifetime of an API token when none is asked (RN-033).
+    /// The lifetime of an API token when none is asked.
     pub token_default_lifetime: Duration,
     /// The longest lifetime of an API token.
     pub token_max_lifetime: Duration,
-    /// The grace period before a deletion runs (RN-035).
+    /// The grace period before a deletion runs.
     pub deletion_grace: Duration,
     /// How long sign-in attempts are kept.
     pub attempt_retention: Duration,

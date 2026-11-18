@@ -32,12 +32,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Identity of Kampus (DEC-030 to DEC-033): accounts of a campus and their lifecycle, passwords, one-time
+//! Identity of Kampus: accounts of a campus and their lifecycle, passwords, one-time
 //! tokens, the sign-in pipeline with throttling, OpenID Connect providers, second factors and recovery,
 //! server-side sessions with step-up, and API tokens.
 //!
 //! Every account is a principal of access with the same id; identity keeps the principal active only
-//! while the account is (RN-010), so access never reads identity.
+//! while the account is, so access never reads identity.
 
 pub mod db;
 pub mod jobs;
@@ -70,7 +70,7 @@ pub struct Identity {
     db: Database,
     /// Access, for principals, grants and checks.
     access: Access,
-    /// Where "now" comes from (DEC-022).
+    /// Where "now" comes from.
     clock: Arc<dyn Clock>,
     /// The policy of each campus.
     policies: Arc<dyn Policies>,
@@ -130,7 +130,7 @@ impl Identity {
     }
 
     /// Sends a message after its change is committed; a failure is logged, never shown, so the answer of
-    /// the request does not depend on delivery (RN-027).
+    /// the request does not depend on delivery.
     async fn deliver(&self, message: Message) {
         let (account, notice) = (message.account, message.notice.name());
         if let Err(error) = self.courier.send(message).await {

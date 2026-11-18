@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The conformance suite of the database port against PostgreSQL (DEC-066): a module declared only with
+//! The conformance suite of the database port against PostgreSQL: a module declared only with
 //! the neutral schema is installed, and every type, key, reference behaviour, check, error class and
 //! capability is exercised on it.
 

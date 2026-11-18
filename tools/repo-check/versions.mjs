@@ -33,7 +33,7 @@
 // ------------------------------------------------------------------------------
 
 /**
- * Version and changelog rules of DEC-081: one workspace version, equal to the release branch it is on,
+ * Version and changelog rules: one workspace version, equal to the release branch it is on,
  * a well-formed changelog, and an entry in it for every change outside the specification.
  */
 import fs from 'node:fs';

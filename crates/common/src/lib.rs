@@ -32,8 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Foundations shared by every Kampus module, as fixed by the platform foundations: the error model
-//! (DEC-018), typed identifiers (DEC-021), instants and the clock (DEC-022), cursor pagination (DEC-025),
+//! Foundations shared by every Kampus module, as fixed by the platform foundations: the error model,
+//! typed identifiers, instants and the clock, cursor pagination,
 //! request identifiers and the platform version.
 //!
 //! This crate depends on no other Kampus crate.
@@ -53,7 +53,7 @@ pub use error::{Error, ErrorKind, FieldError, Result};
 pub use page::{Cursor, Page, PageRequest};
 pub use request::RequestId;
 
-/// The version of the Kampus platform this build belongs to (DEC-081).
+/// The version of the Kampus platform this build belongs to.
 pub const PLATFORM_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Re-exports used by the macros of this crate, so that crates using them need no extra dependency.

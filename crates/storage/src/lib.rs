@@ -32,10 +32,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The file storage port of Kampus (DEC-009, infrastructure ports): blobs addressed by keys that
-//! `kampus-files` chooses (content hashes, DEC-053), written only when complete and verified by their hash.
+//! The file storage port of Kampus: blobs addressed by keys that
+//! `kampus-files` chooses (content hashes), written only when complete and verified by their hash.
 //!
-//! Adapters implement [`Storage`]; every adapter passes the suite of [`conformance`] (DEC-066). Callers
+//! Adapters implement [`Storage`]; every adapter passes the suite of [`conformance`]. Callers
 //! ask for [`Capabilities`], never for an adapter.
 
 #[cfg(feature = "conformance")]

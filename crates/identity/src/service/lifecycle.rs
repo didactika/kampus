@@ -32,10 +32,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The account lifecycle (UC-009, RN-023): invitations, service accounts, suspension, reactivation and
-//! deletion with a grace period (RN-035). Each transition needs its permission in the account's campus,
-//! honours `If-Match`, is recorded, and keeps the principal active only while the account is (RN-010).
-//! Suspending or deleting revokes every session and token at once (RN-031).
+//! The account lifecycle: invitations, service accounts, suspension, reactivation and
+//! deletion with a grace period. Each transition needs its permission in the account's campus,
+//! honours `If-Match`, is recorded, and keeps the principal active only while the account is.
+//! Suspending or deleting revokes every session and token at once.
 
 use kampus_access::{Actor, ScopeId};
 use kampus_common::{Error, ErrorKind, Result};
@@ -125,7 +125,7 @@ impl Identity {
         Ok(account)
     }
 
-    /// Invites a person to a campus (UC-009): the account waits for the invitation link, which sets the
+    /// Invites a person to a campus: the account waits for the invitation link, which sets the
     /// password. A manager may know that an email has an account, so taken names are a conflict.
     ///
     /// # Errors
@@ -190,7 +190,7 @@ impl Identity {
             .await
     }
 
-    /// Creates a service account (RN-039): active at once, without password or second factor; it acts
+    /// Creates a service account: active at once, without password or second factor; it acts
     /// only through API tokens and holds only the roles granted to it.
     ///
     /// # Errors
@@ -286,7 +286,7 @@ impl Identity {
         tx.commit().await.map_err(kampus_db::classify)
     }
 
-    /// Schedules the deletion of an account (RN-035): it is suspended now and deleted when the grace
+    /// Schedules the deletion of an account: it is suspended now and deleted when the grace
     /// period of its campus ends, unless the deletion is cancelled or the account reactivated.
     ///
     /// # Errors

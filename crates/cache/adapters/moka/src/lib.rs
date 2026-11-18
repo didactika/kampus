@@ -41,7 +41,7 @@ use kampus_cache::Cache;
 
 pub use store::MokaCache;
 
-/// The registration of this adapter (DEC-086): `memory://` gives an in-process cache, the local level of
+/// The registration of this adapter: `memory://` gives an in-process cache, the local level of
 /// every installation; the option `max_entries` bounds it (100 000 by default).
 pub const ADAPTER: kampus_cache::Adapter = kampus_cache::Adapter {
     name: "moka",
