@@ -16,6 +16,7 @@ The business concepts of Kampus, module by module. Each module has its own docum
 | `kampus-access`: scopes, roles, permissions | [access.md](./access.md) | accepted |
 | `kampus-identity` and `kampus-users`: accounts, sign-in, profiles, system groups | [identity.md](./identity.md) | accepted |
 | `kampus-courses`: categories, courses, sections, groups | [courses.md](./courses.md) | accepted |
+| `kampus-enrol`: methods, enrolments, requests | [enrolment.md](./enrolment.md) | proposed |
 
 ## Hierarchy of entities
 
@@ -23,8 +24,8 @@ The vertical position of an entity expresses its importance to the project objec
 
 | Level | Meaning | Entities | Why they are here |
 | --- | --- | --- | --- |
-| 1 | Core: the project cannot exist without them | Scope, Permission, Role, Grant; Account, Session, Profile; Course category, Course, Section, Group | Every operation is a permission check in a scope |
-| 2 | Structural: depend directly on the core | Role permission, Permission override, Permission value; Credential, External identity, Second factor, API token, Profile field, System group, Course layout, Group set, Group membership | Define what roles allow, and where |
+| 1 | Core: the project cannot exist without them | Scope, Permission, Role, Grant; Account, Session, Profile; Course category, Course, Section, Group; Method instance, Enrolment | Every operation is a permission check in a scope |
+| 2 | Structural: depend directly on the core | Role permission, Permission override, Permission value; Credential, External identity, Second factor, API token, Profile field, System group, Course layout, Group set, Group membership, Enrolment method, Enrolment grant, Enrolment request, Linked source | Define what roles allow, and where |
 | 3 | Detail: qualify or specialise level 2 | Risk, Role template, Role allowance, View-as session | Constrain and template roles |
 | 4 | Support: catalogues, audit, configuration | Permission decision | Explanations |
 
@@ -40,13 +41,15 @@ The vertical position of an entity expresses its importance to the project objec
 
 ![Courses](./courses.svg)
 
+![Enrolment](./enrolment.svg)
+
 ## Entity dictionary
 
-Per module: [access](./access.md#entities), [identity](./identity.md#entities), [courses](./courses.md#entities).
+Per module: [access](./access.md#entities), [identity](./identity.md#entities), [courses](./courses.md#entities), [enrolment](./enrolment.md#entities).
 
 ## Business rules
 
-Per module: [access](./access.md#business-rules) (RN-001 to RN-021), [identity](./identity.md#business-rules) (RN-022 to RN-039), [courses](./courses.md#business-rules) (RN-040 to RN-059).
+Per module: [access](./access.md#business-rules) (RN-001 to RN-021), [identity](./identity.md#business-rules) (RN-022 to RN-039), [courses](./courses.md#business-rules) (RN-040 to RN-059), [enrolment](./enrolment.md#business-rules) (RN-060 to RN-074).
 
 ## Lifecycles
 

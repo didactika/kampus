@@ -35,6 +35,13 @@ rectangle "Kampus" {
     usecase "Manage groups and group sets" as UC_manageGroups
     usecase "Choose a course layout" as UC_chooseCourseLayout
   }
+  package "enrolment" {
+    usecase "Enrol people in a course" as UC_enrolPeople
+    usecase "Enrol oneself in a course" as UC_selfEnrol
+    usecase "Manage an enrolment" as UC_manageEnrolment
+    usecase "Link a system group or a course" as UC_linkEnrolmentSource
+    usecase "Expire enrolments" as UC_expireEnrolments
+  }
 }
 
 A_Manager --> UC_grantRole
@@ -57,5 +64,12 @@ A_Manager --> UC_createCourse
 A_Teacher --> UC_organiseSections
 A_Teacher --> UC_manageGroups
 A_Teacher --> UC_chooseCourseLayout
+A_Teacher --> UC_enrolPeople
+A_Manager --> UC_enrolPeople
+A_Authenticated_user --> UC_selfEnrol
+A_Teacher --> UC_manageEnrolment
+A_Manager --> UC_manageEnrolment
+A_Manager --> UC_linkEnrolmentSource
+A_System --> UC_expireEnrolments
 
 @enduml

@@ -1,0 +1,17 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Teacher" as a
+participant "kampus-api or worker" as api
+participant "Enrolment service" as svc
+database "enrol schema + outbox" as db
+
+a -> api : POST /enrolment-instances/{id}/enrolments (people, role, period)
+api -> svc : for each person: lock instance, capacity (RN-063)
+group one transaction
+  svc -> db : enrolment + owned grant (RN-061); enrol.enrolment_created
+end
+svc --> a : result
+@enduml

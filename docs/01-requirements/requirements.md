@@ -60,9 +60,9 @@ Priorities: **Must** (tier 1, core), **Should** (tier 2, standard activities and
 
 | ID | Requirement | Priority | Origin | Confirmed by | Use cases |
 | --- | --- | --- | --- | --- | --- |
-| RF-040 | Users are enrolled in courses through enrolment methods (manual, self, system group, guest, and plugins) | Must | baseline | | |
-| RF-041 | Enrolments have a status, start and end dates, and a role in the course | Must | baseline | | |
-| RF-042 | Enrolment methods can require a key, an approval or a payment (payment through plugins) | Should | baseline | | |
+| RF-040 | Users are enrolled in courses through enrolment methods (manual, self, system group, guest, and plugins) | Must | baseline | | UC-016, UC-019 |
+| RF-041 | Enrolments have a status, start and end dates, and a role in the course | Must | baseline | | UC-018, UC-020 |
+| RF-042 | Enrolment methods can require a key, an approval or a payment (payment through plugins) | Should | baseline | | UC-017 |
 
 ### Activities
 

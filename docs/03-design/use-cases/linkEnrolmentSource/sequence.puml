@@ -1,0 +1,23 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Manager" as m
+participant "kampus-api" as api
+participant "Sync service" as svc
+participant "Sync job" as job
+database "enrol schema + outbox" as db
+
+m -> api : PUT /enrolment-instances/{id}/source (system group or course)
+api -> svc : link_source
+svc -> db : serialisable: would the link create a cycle? (RN-067)
+svc -> db : linked_group or linked_course
+svc -> job : queue sync of this instance
+job -> db : members of the source (non-linked enrolments only)
+job -> db : add missing enrolments, remove extra ones (this instance only)
+job -> db : events per change
+== later ==
+db -> job : users.system_group_member_* or enrol.enrolment_* of the source
+job -> db : sync the linked instances again (idempotent)
+@enduml

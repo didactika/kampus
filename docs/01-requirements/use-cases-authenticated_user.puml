@@ -12,9 +12,13 @@ rectangle "Kampus" {
   package "users" {
     usecase "Edit a profile" as UC_editProfile
   }
+  package "enrolment" {
+    usecase "Enrol oneself in a course" as UC_selfEnrol
+  }
 }
 
 A_Authenticated_user --> UC_setUpSecondFactor
 A_Authenticated_user --> UC_editProfile
+A_Authenticated_user --> UC_selfEnrol
 
 @enduml

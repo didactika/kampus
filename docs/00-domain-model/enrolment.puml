@@ -1,0 +1,56 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus enrolment
+
+class EnrolmentMethod <<plugin>> {
+  code
+}
+class MethodInstance {
+  role
+  enabled
+  open_from
+  open_until
+  capacity
+}
+class Enrolment {
+  status : active | suspended
+  starts_at
+  ends_at
+}
+class EnrolmentGrant
+class EnrolmentRequest {
+  state : pending | approved | rejected | withdrawn
+}
+class SelfEnrolmentKey {
+  hash
+}
+class LinkedSource {
+  system group | course
+}
+class ExpiryRule {
+  action : suspend | remove | keep_without_role
+}
+class Course <<courses>>
+class Account <<identity>>
+class Grant <<access>>
+class Group <<courses>>
+
+MethodInstance "*" --> "1" EnrolmentMethod
+MethodInstance "*" --> "1" Course
+Enrolment "*" --> "1" MethodInstance
+Enrolment "*" --> "1" Account
+EnrolmentGrant "*" --> "1" Enrolment
+EnrolmentGrant "1" --> "1" Grant : owns
+EnrolmentRequest "*" --> "1" MethodInstance
+SelfEnrolmentKey "*" --> "1" MethodInstance
+SelfEnrolmentKey "*" --> "0..1" Group
+LinkedSource "0..1" --> "1" MethodInstance
+MethodInstance "1" *-- "1" ExpiryRule
+note bottom of Enrolment
+  Active participant = any enrolment active
+  (status, instance enabled, now within period),
+  computed once per request with the database clock.
+end note
+@enduml

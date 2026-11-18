@@ -16,6 +16,10 @@ rectangle "Kampus" {
     usecase "Manage groups and group sets" as UC_manageGroups
     usecase "Choose a course layout" as UC_chooseCourseLayout
   }
+  package "enrolment" {
+    usecase "Enrol people in a course" as UC_enrolPeople
+    usecase "Manage an enrolment" as UC_manageEnrolment
+  }
 }
 
 A_Teacher --> UC_grantRole
@@ -24,5 +28,7 @@ A_Teacher --> UC_viewAsRole
 A_Teacher --> UC_organiseSections
 A_Teacher --> UC_manageGroups
 A_Teacher --> UC_chooseCourseLayout
+A_Teacher --> UC_enrolPeople
+A_Teacher --> UC_manageEnrolment
 
 @enduml

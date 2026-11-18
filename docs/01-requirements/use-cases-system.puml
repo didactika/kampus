@@ -9,8 +9,12 @@ rectangle "Kampus" {
   package "access" {
     usecase "Check a permission, with its explanation" as UC_checkPermission
   }
+  package "enrolment" {
+    usecase "Expire enrolments" as UC_expireEnrolments
+  }
 }
 
 A_System --> UC_checkPermission
+A_System --> UC_expireEnrolments
 
 @enduml
