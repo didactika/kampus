@@ -1,10 +1,10 @@
 // ------------------------------------------------------------------------------
 //
-//    *   *    *    *   *  ****   *   *   ****
-//    *  *    * *   ** **  *   *  *   *  *
-//    ***    *****  * * *  ****   *   *   ***
-//    *  *   *   *  *   *  *      *   *      *
-//    *   *  *   *  *   *  *       ***   ****
+//     _  __    _    __  __ ____  _   _ ____
+//    | |/ /   / \  |  \/  |  _ \| | | / ___|
+//    | ' /   / _ \ | |\/| | |_) | | | \___ \
+//    | . \  / ___ \| |  | |  __/| |_| |___) |
+//    |_|\_\/_/   \_\_|  |_|_|    \___/|____/
 //
 //    Knowledge Academic Modular Platform for Universal Study
 //
@@ -69,15 +69,14 @@ export const MARKER = 'This file is part of Kampus';
 /** The licence of Kampus (DEC-085). */
 export const SPDX = 'AGPL-3.0-or-later';
 
-/** The letters of the banner, five rows of five columns each. */
-const LETTERS = {
-  K: ['*   *', '*  * ', '***  ', '*  * ', '*   *'],
-  A: ['  *  ', ' * * ', '*****', '*   *', '*   *'],
-  M: ['*   *', '** **', '* * *', '*   *', '*   *'],
-  P: ['**** ', '*   *', '**** ', '*    ', '*    '],
-  U: ['*   *', '*   *', '*   *', '*   *', ' *** '],
-  S: [' ****', '*    ', ' *** ', '    *', '**** '],
-};
+/** The KAMPUS banner, in the standard FIGlet font. */
+const BANNER = [
+  String.raw` _  __    _    __  __ ____  _   _ ____`,
+  String.raw`| |/ /   / \  |  \/  |  _ \| | | / ___|`,
+  String.raw`| ' /   / _ \ | |\/| | |_) | | | \___ \ `,
+  String.raw`| . \  / ___ \| |  | |  __/| |_| |___) |`,
+  String.raw`|_|\_\/_/   \_\_|  |_|_|    \___/|____/`,
+];
 
 /** The width of the rules that frame the banner. */
 const RULE = '-'.repeat(78);
@@ -114,7 +113,7 @@ export function packageOf(file, project = 'kampus') {
  * @returns {string[]} The lines.
  */
 export function headerLines({ pkg, author, since, year }) {
-  const banner = [0, 1, 2, 3, 4].map((row) => `   ${'KAMPUS'.split('').map((letter) => LETTERS[letter][row]).join('  ')}`.trimEnd());
+  const banner = BANNER.map((line) => `   ${line}`.trimEnd());
   return [
     RULE,
     '',
@@ -172,7 +171,7 @@ export function hasHeader(text) {
   const head = text.split('\n').slice(0, 45).join('\n');
   return head.includes(MARKER) && head.includes('GNU Affero General Public License') && head.includes(`SPDX-License-Identifier: ${SPDX}`)
     && ['@package', '@copyright', '@author', '@license', '@since'].every((field) => new RegExp(`${field}\\s+\\S`).test(head))
-    && head.includes('Knowledge Academic Modular Platform for Universal Study');
+    && head.includes('Knowledge Academic Modular Platform for Universal Study') && head.includes(BANNER[4]);
 }
 
 /**

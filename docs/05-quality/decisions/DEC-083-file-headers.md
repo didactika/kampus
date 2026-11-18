@@ -9,16 +9,16 @@ status: accepted
 - Context: Files moved or copied out of context lose their origin, ownership and licence; code without documentation above its items is hard to maintain, while narrative comments inside bodies go stale.
 - Options considered: no headers; a licence line only; a full standard header plus documentation comments on items, checked in CI (chosen).
 - Decision:
-  - Every source and configuration file outside `docs/` starts with the Kampus header, in the comment syntax of its type: the KAMPUS banner drawn with asterisks and the name of the platform, the project line, the notice of the GNU Affero General Public License (DEC-085), then `@package` (the crate or component), `@copyright` (the year and Didactika), `@author` (name and address of who created the file), `@license` and `@since` (the version that added it), and the SPDX identifier. In Rust:
+  - Every source and configuration file outside `docs/` starts with the Kampus header, in the comment syntax of its type: the KAMPUS banner in the standard FIGlet font with the name of the platform, the project line, the notice of the GNU Affero General Public License (DEC-085), then `@package` (the crate or component), `@copyright` (the year and Didactika), `@author` (name and address of who created the file), `@license` and `@since` (the version that added it), and the SPDX identifier. In Rust:
 
     ```rust
     // ------------------------------------------------------------------------------
     //
-    //    *   *    *    *   *  ****   *   *   ****
-    //    *  *    * *   ** **  *   *  *   *  *
-    //    ***    *****  * * *  ****   *   *   ***
-    //    *  *   *   *  *   *  *      *   *      *
-    //    *   *  *   *  *   *  *       ***   ****
+    //     _  __    _    __  __ ____  _   _ ____
+    //    | |/ /   / \  |  \/  |  _ \| | | / ___|
+    //    | ' /   / _ \ | |\/| | |_) | | | \___ \
+    //    | . \  / ___ \| |  | |  __/| |_| |___) |
+    //    |_|\_\/_/   \_\_|  |_|_|    \___/|____/
     //
     //    Knowledge Academic Modular Platform for Universal Study
     //
