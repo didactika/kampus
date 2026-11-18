@@ -1,0 +1,23 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Manager or Teacher" as actor
+participant "kampus-api" as api
+participant "Override service" as svc
+participant "Permission checker" as check
+database "access schema + outbox" as db
+
+actor -> api : PUT /scopes/{id}/overrides (If-Match)
+api -> svc : override(context, scope, role, values, version)
+svc -> check : require access.override.update (+ risky) (RN-014)
+svc -> svc : lowest scope kind (RN-012), someone keeps managing access (RN-008)
+group one transaction
+  svc -> db : version matches? else precondition_failed (DEC-026)
+  svc -> db : upsert values; delete those set to inherit (RN-015)
+  svc -> db : change records, access.override_changed into outbox
+end
+svc --> api : effective values
+api --> actor : 200
+@enduml

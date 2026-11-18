@@ -1,0 +1,16 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+left to right direction
+
+actor "Campus administrator" as A_Campus_administrator
+
+rectangle "Kampus" {
+  package "access" {
+    usecase "Define a role from a template" as UC_defineRole
+  }
+}
+
+A_Campus_administrator --> UC_defineRole
+
+@enduml

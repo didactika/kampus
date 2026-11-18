@@ -1,0 +1,16 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+left to right direction
+
+actor "System" as A_System
+
+rectangle "Kampus" {
+  package "access" {
+    usecase "Check a permission, with its explanation" as UC_checkPermission
+  }
+}
+
+A_System --> UC_checkPermission
+
+@enduml

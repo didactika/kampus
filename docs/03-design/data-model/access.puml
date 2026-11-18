@@ -1,0 +1,85 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema access (PostgreSQL)
+
+entity scope_kind {
+  * code : text <<PK>>
+  rank : smallint
+}
+entity scope {
+  * id : uuid <<PK>>
+  kind : text <<FK>>
+  parent_id : uuid <<FK>>
+  campus_id : uuid <<FK>>
+  frozen : boolean
+  version : bigint
+}
+entity scope_closure {
+  * ancestor_id : uuid <<PK, FK>>
+  * descendant_id : uuid <<PK, FK>>
+  depth : smallint
+}
+entity permission {
+  * code : text <<PK>>
+  module : text
+  kind : read | write
+  risks : text[]
+  lowest_kind : text <<FK>>
+}
+entity role_template {
+  * id : uuid <<PK>>
+  code : text
+  version : integer
+}
+entity role {
+  * id : uuid <<PK>>
+  campus_id : uuid <<FK>>
+  short_name : text
+  template_id : uuid <<FK>>
+}
+entity role_permission {
+  * role_id : uuid <<PK, FK>>
+  * permission_code : text <<PK, FK>>
+  value : allow | deny | forbid
+}
+entity permission_override {
+  * scope_id : uuid <<PK, FK>>
+  * role_id : uuid <<PK, FK>>
+  * permission_code : text <<PK, FK>>
+  value : allow | deny | forbid
+}
+entity role_allowance {
+  * role_id : uuid <<PK, FK>>
+  * target_role_id : uuid <<PK, FK>>
+  * kind : text <<PK>>
+}
+entity grant {
+  * id : uuid <<PK>>
+  role_id : uuid <<FK>>
+  scope_id : uuid <<FK>>
+  user_id : uuid <<FK>>
+  origin : manual | module
+  valid_from : timestamptz
+  valid_until : timestamptz
+}
+
+scope }o--|| scope_kind
+scope }o--o| scope : parent
+scope_closure }o--|| scope : ancestor
+scope_closure }o--|| scope : descendant
+permission }o--|| scope_kind : lowest kind
+role }o--|| scope : campus
+role }o--|| role_template
+role_permission }o--|| role
+role_permission }o--|| permission
+permission_override }o--|| scope
+permission_override }o--|| role
+permission_override }o--|| permission
+role_allowance }o--|| role : role
+role_allowance }o--|| role : target
+grant }o--|| role
+grant }o--|| scope
+@enduml

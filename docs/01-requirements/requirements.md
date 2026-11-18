@@ -40,11 +40,11 @@ Priorities: **Must** (tier 1, core), **Should** (tier 2, standard activities and
 
 | ID | Requirement | Priority | Origin | Confirmed by | Use cases |
 | --- | --- | --- | --- | --- | --- |
-| RF-020 | Permissions are granted to roles and evaluated in a hierarchy of scopes: tenant, campus, category, course, **section**, activity, widget, user (the section level is new in Kampus, DEC-007) | Must | owner | Owner, 2026-11-17 | |
-| RF-024 | Roles, permission overrides, settings, visibility and availability rules can be set on a section and are inherited by its activities | Must | owner | Owner, 2026-11-17 | |
-| RF-021 | Administrators define roles, archetypes, the scopes where a role can be assigned, and overrides per scope | Must | baseline | | |
-| RF-022 | Every operation checks the permission of the acting user in the right scope | Must | baseline | | |
-| RF-023 | Users can see why they have or lack a permission (permission explanation) | Should | extra | | |
+| RF-020 | Permissions are granted to roles and evaluated in a hierarchy of scopes: tenant, campus, category, course, **section**, activity, widget, user (the section level is new in Kampus, DEC-007) | Must | owner | Owner, 2026-11-17 | UC-001 |
+| RF-024 | Roles, permission overrides, settings, visibility and availability rules can be set on a section and are inherited by its activities | Must | owner | Owner, 2026-11-17 | UC-002 |
+| RF-021 | Administrators define roles, archetypes, the scopes where a role can be assigned, and overrides per scope | Must | baseline | | UC-004 |
+| RF-022 | Every operation checks the permission of the acting user in the right scope | Must | baseline | | UC-003 |
+| RF-023 | Users can see why they have or lack a permission (permission explanation) | Should | extra | | UC-005 |
 
 ### Courses
 

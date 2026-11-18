@@ -1,1 +1,6 @@
 requirement,use_case,name,analysis,design,code,test
+RF-020,UC-001,grantRole,docs/02-analysis/use-cases/grantRole,docs/03-design/use-cases/grantRole,crates/kampus-access/src/grant.rs,crates/kampus-access/tests
+RF-024,UC-002,overridePermission,docs/02-analysis/use-cases/overridePermission,docs/03-design/use-cases/overridePermission,crates/kampus-access/src/override.rs,crates/kampus-access/tests
+RF-022,UC-003,checkPermission,docs/02-analysis/use-cases/checkPermission,docs/03-design/use-cases/checkPermission,crates/kampus-access/src/check.rs,crates/kampus-access/tests
+RF-021,UC-004,defineRole,docs/02-analysis/use-cases/defineRole,docs/03-design/use-cases/defineRole,crates/kampus-access/src/role.rs,crates/kampus-access/tests
+RF-023,UC-005,viewAsRole,docs/02-analysis/use-cases/viewAsRole,docs/03-design/use-cases/viewAsRole,crates/kampus-access/src/view_as.rs,crates/kampus-access/tests

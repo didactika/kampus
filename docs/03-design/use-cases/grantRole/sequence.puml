@@ -1,0 +1,24 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Manager or Teacher" as actor
+participant "kampus-api" as api
+participant "Grant service" as svc
+participant "Permission checker" as check
+database "access schema + outbox" as db
+
+actor -> api : POST /scopes/{id}/grants (Idempotency-Key)
+api -> svc : grant(context, scope, role, users, period)
+svc -> check : require access.grant.create in scope (RN-013)
+svc -> svc : allowance for role? assignable in scope kind?
+group one transaction
+  svc -> db : insert grants (unique for manual grants)
+  svc -> db : insert change records (RN-015)
+  svc -> db : insert access.grant_created into outbox
+end
+svc --> api : grants
+api --> actor : 201
+db -> db : after commit: dispatch event, refresh user cache
+@enduml

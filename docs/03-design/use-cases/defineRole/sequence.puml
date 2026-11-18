@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as actor
+participant "kampus-api" as api
+participant "Role service" as svc
+database "access schema + outbox" as db
+
+actor -> api : POST /campuses/{id}/roles (template, version)
+api -> svc : define_role
+svc -> db : copy template values, allowances, kinds; access.role_created
+actor -> api : POST /roles/{id}/reset-preview (version)
+api -> svc : diff(role, template version)
+svc --> actor : differences (RN-017)
+actor -> api : POST /roles/{id}/reset (If-Match)
+api -> svc : apply previewed differences
+svc -> db : update values; change records; access.role_updated
+svc --> actor : 200
+@enduml
