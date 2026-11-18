@@ -13,4 +13,4 @@ status: accepted
   - New template versions ship with releases and never change a campus silently.
   - "View as" uses only the chosen role, read permissions only, inside the scope and below; it ends with the session or on leaving the scope and is audited.
 - Consequences: Campuses keep their customisations across upgrades and adopt new defaults when they decide; viewing as can never be used to act in someone else's name.
-- Affected artifacts: `crates/kampus-access`, the role screens, the release notes.
+- Affected artifacts: `crates/access`, the role screens, the release notes.

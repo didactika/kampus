@@ -13,4 +13,4 @@ status: accepted
   - A grant is manual or owned by a module; a module owns its grants through its own link table (it is higher in the ranking) and is the only one that removes them.
   - Manual grants are unique per role, scope and person; module grants are unique through their link.
 - Consequences: Temporary roles end on time without anyone remembering; removing an enrolment never removes a role a person was given by hand; no polymorphic owner column.
-- Affected artifacts: `crates/kampus-access`, `crates/kampus-enrol`, `crates/kampus-users`.
+- Affected artifacts: `crates/access`, `crates/enrol`, `crates/users`.

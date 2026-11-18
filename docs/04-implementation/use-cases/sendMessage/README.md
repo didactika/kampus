@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/sendMessage/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Messaging service | service | `crates/kampus-notify/src/messaging.rs` | no (to build) |
+| Messaging service | service | `crates/notify/src/messaging.rs` | no (to build) |
 | `/api/v1/conversations` | API endpoints | `docs/03-design/api/notify.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-152 to RN-155 | `crates/kampus-notify/tests/` | planned |
+| Unit and integration tests of the module | RN-152 to RN-155 | `crates/notify/tests/` | planned |

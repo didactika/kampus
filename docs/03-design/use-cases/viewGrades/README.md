@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/viewGrades/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Grade read service | service | `crates/kampus-records/src/read.rs` |
+| Grade read service | service | `crates/records/src/read.rs` |
 | `/my-grades`, `/grader-report`, export | API endpoints | `docs/03-design/api/records.openapi.yaml` |
 
 ## Sequence

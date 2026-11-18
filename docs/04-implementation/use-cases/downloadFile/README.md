@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/downloadFile/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| File access service | service | `crates/kampus-files/src/access.rs` | no (to build) |
+| File access service | service | `crates/files/src/access.rs` | no (to build) |
 | `/api/v1/files/{file_id}/url` | API endpoint | `docs/03-design/api/files.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-128 to RN-135 | `crates/kampus-files/tests/` | planned |
+| Unit and integration tests of the module | RN-128 to RN-135 | `crates/files/tests/` | planned |

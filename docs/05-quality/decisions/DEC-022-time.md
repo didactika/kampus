@@ -15,4 +15,4 @@ status: accepted
   - Users and campuses have IANA time zones; recurring events follow RFC 5545 and are expanded when read.
   - The current time comes from a clock in the context.
 - Consequences: Deadlines are unambiguous across time zones and daylight saving; tests and jobs can fix the clock; no sentinel values in the schema.
-- Affected artifacts: `crates/kampus-common`, every schema, the API, the calendar.
+- Affected artifacts: `crates/common`, every schema, the API, the calendar.

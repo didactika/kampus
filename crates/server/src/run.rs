@@ -96,9 +96,11 @@ pub async fn serve(config: &Config) -> Result<()> {
             .with_source(error)
     })?;
     tracing::info!(role = %config.role, address = %config.http_address, version = PLATFORM_VERSION, "kampus started");
+    let ports = crate::ports::Ports::open(config).await?;
     let app = router(AppState {
         db: db.clone(),
         modules: MODULES,
+        ports,
     });
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())

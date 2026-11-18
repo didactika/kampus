@@ -17,7 +17,7 @@ Every piece of infrastructure is a **port** (a Rust trait in a foundation crate)
 | --- | --- |
 | PR-01 | A port declares its operations, its guarantees (atomicity, ordering, consistency, durability) and its **capabilities** (optional features such as JSON indexes or presigned uploads). Callers ask for a capability; they never test for an adapter. |
 | PR-02 | Each port has one conformance suite, written against the trait. Every adapter runs it in CI; an adapter that fails a test is not released. |
-| PR-03 | Adapters live in their own crates (`kampus-db-postgres`, `kampus-storage-opendal`, `kampus-cache-redis`, …). An architecture test fails the build when a module depends on an adapter. |
+| PR-03 | Adapters are sub-plugins of their port: each lives in `crates/<port>/adapters/<name>`, is named `<port>-<name>` (`kampus-cache-redis`) and registers itself by the URL schemes it serves (DEC-086). `kampus-server` depends on every adapter through a registry that `tools/repo-check --fix` writes; adapters published outside the repository are declared in `crates/server/adapters.toml`. The repository check fails when a module depends on an adapter or the registry is stale. |
 | PR-04 | Adapters are chosen by URL scheme in the deployment configuration and validated at start-up for the role being started (DEC-020); a missing capability that a module requires stops the start with a clear error. |
 | PR-05 | Every adapter reports health, latency and error metrics with the same names (DEC-019), so dashboards do not depend on the backend. |
 | PR-06 | Plugins (DEC-003) may add adapters; they pass the same suite and are loaded only when the operator configures them. |

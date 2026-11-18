@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/switchFeature/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Flag resolver | service | `crates/kampus-customise/src/flags.rs` |
+| Flag resolver | service | `crates/customise/src/flags.rs` |
 | `/api/v1/scopes/{scope_id}/flags` | API endpoints | `docs/03-design/api/customise.openapi.yaml` |
 
 ## Sequence

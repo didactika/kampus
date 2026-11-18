@@ -14,4 +14,4 @@ status: accepted
   - Themes are design tokens validated against a schema and WCAG 2.2 AA contrast, applied as CSS custom properties.
   - Unknown or disabled widgets are skipped, never break a page.
 - Consequences: Campuses and teachers rearrange pages and brand them without code; the web client (DEC-004) renders all of it from data.
-- Affected artifacts: `crates/kampus-customise`, the web client.
+- Affected artifacts: `crates/customise`, the web client.

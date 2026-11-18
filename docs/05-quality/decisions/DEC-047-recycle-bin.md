@@ -13,4 +13,4 @@ status: accepted
   - Owned data is deleted by cascade when the bin item expires (30 days by default); restoring puts it back in its original place when it still exists.
   - A purge that fails is a visible state of the bin item with its reason; teachers can retry or restore it.
 - Consequences: Mistakes can be undone; failures are never invisible.
-- Affected artifacts: `crates/kampus-activities`, `crates/kampus-courses`, the course editor.
+- Affected artifacts: `crates/activities`, `crates/courses`, the course editor.

@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/configureCourseProgress/README
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Course progress service | service | `crates/kampus-progress/src/course.rs` |
+| Course progress service | service | `crates/progress/src/course.rs` |
 | criteria and prerequisites endpoints | API endpoints | `docs/03-design/api/progress.openapi.yaml` |
 
 ## Sequence

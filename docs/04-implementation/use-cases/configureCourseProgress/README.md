@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/configureCourseProgress/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Course progress service | service | `crates/kampus-progress/src/course.rs` | no (to build) |
+| Course progress service | service | `crates/progress/src/course.rs` | no (to build) |
 | criteria and prerequisites endpoints | API endpoints | `docs/03-design/api/progress.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-120 to RN-122 | `crates/kampus-progress/tests/` | planned |
+| Unit and integration tests of the module | RN-120 to RN-122 | `crates/progress/tests/` | planned |

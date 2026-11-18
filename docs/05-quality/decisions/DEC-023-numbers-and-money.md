@@ -13,4 +13,4 @@ status: accepted
   - Rounding is explicit, named and applied only at the boundaries that need it.
   - Flags are booleans; enumerations are checked values or lookup tables.
 - Consequences: Totals are exact and reproducible; the API sends exact numbers as strings; aggregation rules can be tested against worked examples.
-- Affected artifacts: `crates/kampus-common`, `kampus-records`, payments, the API.
+- Affected artifacts: `crates/common`, `kampus-records`, payments, the API.

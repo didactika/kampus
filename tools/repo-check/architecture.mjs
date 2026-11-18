@@ -35,9 +35,10 @@
 /**
  * Architecture rules of the Rust workspace, checked against `docs/03-design/architecture.md`.
  *
- * - Every crate in `crates/` is a module of the module table, or an adapter `kampus-<port>-<name>` of a port in it.
+ * - Every crate in `crates/<folder>` is a module of the module table; every crate in
+ *   `crates/<port>/adapters/<name>` is an adapter of that port, named `<port>-<name>` (DEC-086).
  * - A module depends only on modules listed before it in the table (dependency rule 1).
- * - Only adapters of a port and `kampus-server` depend on an adapter (dependency rule 5).
+ * - Only `kampus-server` depends on adapters, which it registers (dependency rule 5).
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -74,24 +75,41 @@ function moduleDependencies(manifest) {
 export function checkArchitecture(root) {
   const architecture = fs.readFileSync(path.join(root, 'docs/03-design/architecture.md'), 'utf8');
   const order = [...architecture.matchAll(/^\| [^|]+ \| `(kampus-[a-z0-9-]+)` \|/gm)].map((m) => m[1]);
-  const portOf = (name) => order.find((module) => name.startsWith(`${module}-`) && !order.includes(name));
   const cratesDir = path.join(root, 'crates');
-  const crates = fs.existsSync(cratesDir)
-    ? fs.readdirSync(cratesDir).filter((d) => fs.existsSync(path.join(cratesDir, d, 'Cargo.toml')))
-    : [];
+  const read = (file) => fs.readFileSync(file, 'utf8');
+  const nameOf = (manifest, fallback) => manifest.match(/^name\s*=\s*"([^"]+)"/m)?.[1] ?? fallback;
+  const crates = [];
+  if (fs.existsSync(cratesDir)) {
+    for (const dir of fs.readdirSync(cratesDir)) {
+      const manifest = path.join(cratesDir, dir, 'Cargo.toml');
+      if (!fs.existsSync(manifest)) continue;
+      const text = read(manifest);
+      crates.push({ name: nameOf(text, dir), text, port: null });
+      const adapters = path.join(cratesDir, dir, 'adapters');
+      if (!fs.existsSync(adapters)) continue;
+      for (const adapter of fs.readdirSync(adapters)) {
+        const adapterManifest = path.join(adapters, adapter, 'Cargo.toml');
+        if (fs.existsSync(adapterManifest)) {
+          const adapterText = read(adapterManifest);
+          crates.push({ name: nameOf(adapterText, adapter), text: adapterText, port: nameOf(text, dir) });
+        }
+      }
+    }
+  }
+  /** Whether a crate name is an adapter of a port of the table, inside or outside the repository. */
+  const isAdapter = (name) => crates.some((c) => c.port && c.name === name) || order.some((m) => name.startsWith(`${m}-`) && !order.includes(name));
   const problems = [];
-  for (const dir of crates) {
-    const manifest = fs.readFileSync(path.join(cratesDir, dir, 'Cargo.toml'), 'utf8');
-    const name = manifest.match(/^name\s*=\s*"([^"]+)"/m)?.[1] ?? dir;
-    const port = portOf(name);
-    if (!order.includes(name) && !port) {
-      problems.push(`${name}: not in the module table of the architecture and not an adapter of a port`);
+  for (const { name, text, port } of crates) {
+    if (port) {
+      if (!order.includes(port)) problems.push(`${name}: adapter of ${port}, which is not in the module table`);
+      if (!name.startsWith(`${port}-`)) problems.push(`${name}: an adapter of ${port} is named ${port}-<name>`);
+    } else if (!order.includes(name)) {
+      problems.push(`${name}: not in the module table of the architecture`);
       continue;
     }
-    for (const dep of moduleDependencies(manifest)) {
-      const depPort = portOf(dep);
-      if (depPort) {
-        if (name !== 'kampus-server' && port !== depPort) problems.push(`${name}: depends on the adapter ${dep}; modules depend only on ports`);
+    for (const dep of moduleDependencies(text)) {
+      if (isAdapter(dep)) {
+        if (name !== 'kampus-server') problems.push(`${name}: depends on the adapter ${dep}; only kampus-server chooses adapters`);
       } else if (!order.includes(dep)) {
         problems.push(`${name}: depends on ${dep}, which is not in the module table`);
       } else if (!port && order.indexOf(dep) >= order.indexOf(name)) {

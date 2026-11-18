@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/chooseLanguage/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Language resolver and bundles | service | `crates/kampus-i18n/src/resolve.rs` | no (to build) |
+| Language resolver and bundles | service | `crates/i18n/src/resolve.rs` | no (to build) |
 | `/api/v1/me/language`, `/api/v1/languages/{code}/bundles/{module}` | API endpoints | `docs/03-design/api/i18n.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-189 to RN-192 | `crates/kampus-i18n/tests/` | planned |
+| Unit and integration tests of the module | RN-189 to RN-192 | `crates/i18n/tests/` | planned |

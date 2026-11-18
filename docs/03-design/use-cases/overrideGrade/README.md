@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/overrideGrade/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Grade service | service | `crates/kampus-records/src/grade.rs` |
+| Grade service | service | `crates/records/src/grade.rs` |
 | override and lock endpoints | API endpoints | `docs/03-design/api/records.openapi.yaml` |
 
 ## Sequence

@@ -19,8 +19,8 @@ Design: [README](../../../03-design/use-cases/signIn/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Sign-in pipeline | service | `crates/kampus-identity/src/sign_in.rs` | no (to build) |
-| OIDC client | adapter | `crates/kampus-identity/src/oidc.rs` | no (to build) |
+| Sign-in pipeline | service | `crates/identity/src/sign_in.rs` | no (to build) |
+| OIDC client | adapter | `crates/identity/src/oidc.rs` | no (to build) |
 | `/api/v1/auth/sign-in`, `/second-factor`, `/oidc/*`, `/recovery` | API endpoints | `docs/03-design/api/identity.openapi.yaml` | no (to build) |
 | `identity.session`, `identity.sign_in_attempt` | tables | `docs/03-design/data-model/identity.md` | no (to build) |
 
@@ -28,4 +28,4 @@ Design: [README](../../../03-design/use-cases/signIn/README.md)
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-024, RN-027 to RN-031 | `crates/kampus-identity/tests/` | planned |
+| Unit and integration tests of the module | RN-024, RN-027 to RN-031 | `crates/identity/tests/` | planned |

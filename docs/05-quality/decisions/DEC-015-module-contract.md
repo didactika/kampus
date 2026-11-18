@@ -14,4 +14,4 @@ status: accepted
   - Every module implements one `Module` trait from `kampus-common` that **declares** its permissions, settings, events, jobs, privacy data handlers, API routes, UI modules and help topics. `kampus-server` collects them at start-up; nothing is discovered by file names or naming conventions.
   - Plugins (DEC-003) declare the same contributions in their manifest.
 - Consequences: one place to read what a module adds to the platform; the permissions, settings and events references of the handbook (DEC-011) are generated from these declarations; an architecture test checks the dependency rules on every build.
-- Affected artifacts: `crates/kampus-common`, every module crate, `crates/kampus-server`, the plugin SDK.
+- Affected artifacts: `crates/common`, every module crate, `crates/server`, the plugin SDK.

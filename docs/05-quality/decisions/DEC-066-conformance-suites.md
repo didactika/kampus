@@ -14,4 +14,4 @@ status: accepted
   - A module that requires a capability declares it; start-up refuses a configuration that lacks it.
   - Adapters live in their own crates and report the same metrics.
 - Consequences: Adding a backend is bounded work with a clear finish line; modules stay free of backend details.
-- Affected artifacts: `crates/kampus-db`, `crates/kampus-storage`, `crates/kampus-cache`, the CI matrix, RNF-016 to RNF-019.
+- Affected artifacts: `crates/db`, `crates/storage`, `crates/cache`, the CI matrix, RNF-016 to RNF-019.

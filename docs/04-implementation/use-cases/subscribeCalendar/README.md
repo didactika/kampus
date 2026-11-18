@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/subscribeCalendar/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Subscription refresher | job | `crates/kampus-calendar/src/subscriptions.rs` | no (to build) |
+| Subscription refresher | job | `crates/calendar/src/subscriptions.rs` | no (to build) |
 | `/api/v1/calendar-subscriptions`, `/api/v1/calendar-feeds` | API endpoints | `docs/03-design/api/calendar.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-159 to RN-161 | `crates/kampus-calendar/tests/` | planned |
+| Unit and integration tests of the module | RN-159 to RN-161 | `crates/calendar/tests/` | planned |

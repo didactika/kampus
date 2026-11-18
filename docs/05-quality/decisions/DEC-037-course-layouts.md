@@ -13,4 +13,4 @@ status: accepted
   - Layouts never own sections or course modules; switching keeps all content and remembers each layout's settings for the course.
   - If a layout is disabled, its courses fall back to the campus default layout.
 - Consequences: Campuses can add presentations without risk to content; teachers can switch and switch back.
-- Affected artifacts: `crates/kampus-courses`, the plugin SDK, `web/`.
+- Affected artifacts: `crates/courses`, the plugin SDK, `web/`.

@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/createCourse/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Course service | service | `crates/kampus-courses/src/course.rs` |
+| Course service | service | `crates/courses/src/course.rs` |
 | `/api/v1/categories/{category_id}/courses`, `/api/v1/courses/{course_id}`, state | API endpoints | `docs/03-design/api/courses.openapi.yaml` |
 | `courses.course`, `courses.course_owner` | tables | `docs/03-design/data-model/courses.md` |
 

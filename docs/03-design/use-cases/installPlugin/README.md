@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/installPlugin/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Plugin installer | service | `crates/kampus-plugin-host/src/install.rs` |
+| Plugin installer | service | `crates/plugin-host/src/install.rs` |
 | `/api/v1/plugins` | API endpoints | `docs/03-design/api/plugins.openapi.yaml` |
 
 ## Sequence

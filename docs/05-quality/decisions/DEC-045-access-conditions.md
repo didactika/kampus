@@ -13,4 +13,4 @@ status: accepted
   - Deleting a target is refused while a condition uses it, unless the condition is removed or rewritten in the same operation.
   - A condition of an unknown or disabled kind closes the content and is reported; plugins add kinds with their own tables.
 - Consequences: Conditions never break silently; teachers see what depends on what.
-- Affected artifacts: `crates/kampus-activities`, condition plugins.
+- Affected artifacts: `crates/activities`, condition plugins.

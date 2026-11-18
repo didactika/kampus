@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/reviewAuditLog/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Audit query service | service | `crates/kampus-events/src/audit.rs` |
+| Audit query service | service | `crates/events/src/audit.rs` |
 | `/api/v1/audit` | API endpoints | `docs/03-design/api/events.openapi.yaml` |
 
 ## Sequence

@@ -34,7 +34,7 @@
 
 [workspace]
 resolver = "3"
-members = ["crates/*"]
+members = ["crates/*", "crates/*/adapters/*"]
 
 [workspace.package]
 version = "0.1.0"
@@ -45,10 +45,10 @@ repository = "https://github.com/didactika/kampus"
 publish = false
 
 [workspace.dependencies]
-kampus-common = { path = "crates/kampus-common" }
-kampus-db = { path = "crates/kampus-db" }
-kampus-storage = { path = "crates/kampus-storage" }
-kampus-cache = { path = "crates/kampus-cache" }
+kampus-common = { path = "crates/common" }
+kampus-db = { path = "crates/db" }
+kampus-storage = { path = "crates/storage" }
+kampus-cache = { path = "crates/cache" }
 async-trait = "0.1.92"
 bytes = "1.12.2"
 moka = { version = "0.12.16", features = ["future"] }

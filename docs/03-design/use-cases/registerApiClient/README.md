@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/registerApiClient/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Client registry and token service | service | `crates/kampus-api/src/clients.rs` |
+| Client registry and token service | service | `crates/api/src/clients.rs` |
 | `/api/v1/api-clients`, `/oauth/*` | API endpoints | `docs/03-design/api/integrations.openapi.yaml` |
 
 ## Sequence

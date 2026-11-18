@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/installPlugin/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Plugin installer | service | `crates/kampus-plugin-host/src/install.rs` | no (to build) |
+| Plugin installer | service | `crates/plugin-host/src/install.rs` | no (to build) |
 | `/api/v1/plugins` | API endpoints | `docs/03-design/api/plugins.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-203 to RN-207 | `crates/kampus-plugin-host/tests/` | planned |
+| Unit and integration tests of the module | RN-203 to RN-207 | `crates/plugin-host/tests/` | planned |

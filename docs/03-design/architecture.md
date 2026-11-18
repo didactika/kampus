@@ -58,7 +58,7 @@ The web client (`web/`, DEC-004) is a separate application that talks only to `k
 2. A module **never reads or writes another module's tables**. Foreign keys may point to a module lower in the ranking (DEC-014); all other access goes through that module's service API.
 3. Upward communication uses **events**. A module that needs to react to a change in a module above it (for example records reacting to an activity being deleted) listens to that module's event; it never calls up.
 4. Contributions to the platform (permissions, settings, events, jobs, privacy, routes, UI modules, help) are **declared** by each module and collected at start-up. No central module lists them by hand, and nothing is discovered by naming conventions.
-5. Adapters of infrastructure ports live in their own crates; modules depend only on the ports (RNF-019). An architecture test fails the build otherwise.
+5. Adapters of infrastructure ports are sub-crates of their port (`crates/<port>/adapters/<name>`), registered by `kampus-server` only; modules depend only on the ports (RNF-019, DEC-086). The repository check fails the build otherwise.
 
 ## Cross-cutting concerns
 

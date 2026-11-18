@@ -14,5 +14,5 @@ status: accepted
   - Jobs (deferred, long and scheduled work, mail and notifications) live in a **durable queue on the database**, claimed with `FOR UPDATE SKIP LOCKED`, with retries, a final failed state with its error, metrics and alerts. Only one scheduler is active, by database lease.
   - The queue is a port (DEC-009): Redis, Valkey or NATS adapters can replace the database queue when an installation needs it.
 - Consequences: no event or mail is lost when a request or a worker dies; no extra system in small installations; a failure always leaves a record. The outbox and queue tables are part of `kampus-events` and `kampus-tasks`, with their own conformance tests.
-- Affected artifacts: `crates/kampus-events`, `crates/kampus-tasks`, every listener and job, the operator guide.
+- Affected artifacts: `crates/events`, `crates/tasks`, every listener and job, the operator guide.
 - Refined by: DEC-055 (events and deliveries) and DEC-060 (jobs and schedules).

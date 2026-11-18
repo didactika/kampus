@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/overrideGrade/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Grade service | service | `crates/kampus-records/src/grade.rs` | no (to build) |
+| Grade service | service | `crates/records/src/grade.rs` | no (to build) |
 | override and lock endpoints | API endpoints | `docs/03-design/api/records.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-097, RN-098 | `crates/kampus-records/tests/` | planned |
+| Unit and integration tests of the module | RN-097, RN-098 | `crates/records/tests/` | planned |

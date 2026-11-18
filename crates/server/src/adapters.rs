@@ -32,12 +32,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The Kampus binary (DEC-020): one image whose process takes a role, validates the configuration that
-//! role reads, brings the database to the code's upgrade steps, and serves HTTP until it is told to stop.
+//! The adapters of every port in this build (DEC-086), written by `tools/repo-check --fix` from
+//! `crates/*/adapters/*` and `crates/server/adapters.toml`. Do not edit by hand.
 
-pub mod config;
-pub mod http;
-pub mod modules;
-pub mod run;
+/// The cache adapters of this build.
+pub const CACHE: &[kampus_cache::Adapter] = &[kampus_cache_moka::ADAPTER, kampus_cache_redis::ADAPTER];
 
-pub use config::{Config, Role};
+/// The storage adapters of this build.
+pub const STORAGE: &[kampus_storage::Adapter] = &[kampus_storage_opendal::ADAPTER];

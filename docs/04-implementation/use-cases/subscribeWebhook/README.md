@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/subscribeWebhook/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Webhook dispatcher | service | `crates/kampus-api/src/webhooks.rs` | no (to build) |
+| Webhook dispatcher | service | `crates/api/src/webhooks.rs` | no (to build) |
 | `/api/v1/api-clients/{client_id}/webhooks` | API endpoints | `docs/03-design/api/integrations.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-199 to RN-201 | `crates/kampus-api/tests/` | planned |
+| Unit and integration tests of the module | RN-199 to RN-201 | `crates/api/tests/` | planned |

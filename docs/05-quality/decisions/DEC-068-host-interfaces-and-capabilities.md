@@ -15,4 +15,4 @@ status: accepted
   - Every call has limits on fuel, memory and wall time; repeated failures disable the plugin.
   - Interfaces change additively within a major SDK version.
 - Consequences: A faulty or hostile plugin can only fail its own calls; plugins keep working across minor host releases (RNF-011).
-- Affected artifacts: `crates/kampus-plugin-host`, `kampus-sdk`, `@kampus/sdk`.
+- Affected artifacts: `crates/plugin-host`, `kampus-sdk`, `@kampus/sdk`.

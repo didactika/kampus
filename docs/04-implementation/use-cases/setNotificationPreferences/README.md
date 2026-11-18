@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/setNotificationPreferences/README.
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Preference resolver | service | `crates/kampus-notify/src/preferences.rs` | no (to build) |
+| Preference resolver | service | `crates/notify/src/preferences.rs` | no (to build) |
 | `/api/v1/notification-preferences` | API endpoint | `docs/03-design/api/notify.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-147 to RN-151 | `crates/kampus-notify/tests/` | planned |
+| Unit and integration tests of the module | RN-147 to RN-151 | `crates/notify/tests/` | planned |

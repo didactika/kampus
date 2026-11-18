@@ -14,4 +14,4 @@ status: accepted
   - When it runs, every module erases its personal data through its privacy handler; the account row stays with its id, its personal columns erased and a pseudonym.
   - Bulk operations are jobs that validate every row first and report per row.
 - Consequences: The right to erasure is real, records keep valid references, mistakes can be undone during the grace period, and audits can follow every transition.
-- Affected artifacts: `crates/kampus-identity`, `crates/kampus-privacy`, every module's privacy handler.
+- Affected artifacts: `crates/identity`, `crates/privacy`, every module's privacy handler.

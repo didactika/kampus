@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/editTheme/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Theme service and contrast checker | service | `crates/kampus-customise/src/theme.rs` | no (to build) |
+| Theme service and contrast checker | service | `crates/customise/src/theme.rs` | no (to build) |
 | `/api/v1/scopes/{scope_id}/theme` | API endpoint | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-213 to RN-217 | `crates/kampus-customise/tests/` | planned |
+| Unit and integration tests of the module | RN-213 to RN-217 | `crates/customise/tests/` | planned |

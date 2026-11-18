@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/processDeletionRequest/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Request coordinator and retention job | service | `crates/kampus-privacy/src/requests.rs` | no (to build) |
+| Request coordinator and retention job | service | `crates/privacy/src/requests.rs` | no (to build) |
 | `/api/v1/privacy/requests/{request_id}/approve` | API endpoint | `docs/03-design/api/privacy.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-180 to RN-185 | `crates/kampus-privacy/tests/` | planned |
+| Unit and integration tests of the module | RN-180 to RN-185 | `crates/privacy/tests/` | planned |

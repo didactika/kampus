@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/changeSetting/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Settings resolver | service | `crates/kampus-settings/src/resolve.rs` | no (to build) |
+| Settings resolver | service | `crates/settings/src/resolve.rs` | no (to build) |
 | `/api/v1/scopes/{scope_id}/settings` | API endpoints | `docs/03-design/api/settings.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-162 to RN-169 | `crates/kampus-settings/tests/` | planned |
+| Unit and integration tests of the module | RN-162 to RN-169 | `crates/settings/tests/` | planned |

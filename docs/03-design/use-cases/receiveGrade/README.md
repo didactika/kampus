@@ -19,8 +19,8 @@ Analysis: [README](../../../02-analysis/use-cases/receiveGrade/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Grade service | service | `crates/kampus-records/src/grade.rs` |
-| Recalculation job | job | `crates/kampus-records/src/jobs/recalculate.rs` |
+| Grade service | service | `crates/records/src/grade.rs` |
+| Recalculation job | job | `crates/records/src/jobs/recalculate.rs` |
 | `PUT /api/v1/records/{record_id}/grades` | API endpoint | `docs/03-design/api/records.openapi.yaml` |
 
 ## Sequence

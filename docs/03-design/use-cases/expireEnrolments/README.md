@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/expireEnrolments/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Expiry job | job | `crates/kampus-enrol/src/jobs/expire.rs` |
+| Expiry job | job | `crates/enrol/src/jobs/expire.rs` |
 | `enrol.expiry_outcome` | table | `docs/03-design/data-model/enrolment.md` |
 
 ## Sequence

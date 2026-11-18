@@ -13,4 +13,4 @@ status: accepted
   - Precedence: the person's exception wins setting by setting; among groups, the most generous value; otherwise the activity's value.
   - One resolver is used by activities, the calendar, the course page, notifications and the API; group deletion removes its exceptions by cascade.
 - Consequences: Extensions and special arrangements in any activity, with the same answer everywhere.
-- Affected artifacts: `crates/kampus-activities`, `crates/kampus-calendar`, every activity type with dates.
+- Affected artifacts: `crates/activities`, `crates/calendar`, every activity type with dates.

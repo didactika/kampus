@@ -13,4 +13,4 @@ status: accepted
   - The effective visibility is visible only if the node and every ancestor are visible now; it is computed with the scope closure and cached per subtree, invalidated by events.
   - People with `courses.hidden.view` in a scope see hidden content there, marked as hidden.
 - Consequences: Nested hide and show never lose anything; one click writes one row; schedules (visible from, until) work at every level.
-- Affected artifacts: `crates/kampus-courses`, `crates/kampus-activities`, the course editor.
+- Affected artifacts: `crates/courses`, `crates/activities`, the course editor.

@@ -125,7 +125,21 @@ pub struct Config {
     pub log_level: String,
     /// How log lines are written.
     pub log_format: LogFormat,
+    /// The file storage (`file:///path` or `s3://bucket/prefix`), for roles that handle files.
+    pub storage_url: Option<String>,
+    /// The options of the storage adapter, from `KAMPUS_STORAGE_<OPTION>` (`s3_endpoint` …).
+    pub storage_options: std::collections::BTreeMap<String, String>,
+    /// The shared cache (`redis://`, `valkey://`); without it the cache is in-process and one instance runs.
+    pub cache_url: Option<String>,
 }
+
+/// The options of the storage adapters that the configuration passes on.
+const STORAGE_OPTIONS: &[&str] = &[
+    "s3_endpoint",
+    "s3_region",
+    "s3_access_key_id",
+    "s3_secret_access_key",
+];
 
 /// The keys of the configuration, as written in the file; the variable of each is `KAMPUS_<KEY>`.
 const KEYS: &[&str] = &[
@@ -138,6 +152,12 @@ const KEYS: &[&str] = &[
     "upgrade_on_start",
     "log_level",
     "log_format",
+    "storage_url",
+    "cache_url",
+    "storage_s3_endpoint",
+    "storage_s3_region",
+    "storage_s3_access_key_id",
+    "storage_s3_secret_access_key",
 ];
 
 impl Config {
@@ -233,6 +253,16 @@ impl Config {
             }
         };
 
+        let storage_url = value("storage_url");
+        if matches!(role, Role::Server | Role::Worker | Role::All) && storage_url.is_none() {
+            fields.push(FieldError::new(variable("storage_url"), "required"));
+        }
+        let storage_options = STORAGE_OPTIONS
+            .iter()
+            .filter_map(|option| value(&format!("storage_{option}")).map(|v| ((*option).to_owned(), v)))
+            .collect();
+        let cache_url = value("cache_url");
+
         let log_level = value("log_level").unwrap_or_else(|| "info".into());
         let log_format = match value("log_format").as_deref() {
             None | Some("json") => LogFormat::Json,
@@ -254,6 +284,9 @@ impl Config {
                 upgrade_on_start,
                 log_level,
                 log_format,
+                storage_url,
+                storage_options,
+                cache_url,
             })
         } else {
             Err(Error::validation("server.config_invalid", fields).with_param("role", role.as_str()))
@@ -312,6 +345,7 @@ mod tests {
     const BASE: &[(&str, &str)] = &[
         ("KAMPUS_DATABASE_URL", "postgres://kampus@db/kampus"),
         ("KAMPUS_PUBLIC_URL", "https://campus.example"),
+        ("KAMPUS_STORAGE_URL", "file:///var/lib/kampus"),
     ];
 
     #[test]
@@ -349,32 +383,39 @@ mod tests {
                 ("KAMPUS_DATABASE_URL", "required"),
                 ("KAMPUS_DATABASE_PREFIX", "format"),
                 ("KAMPUS_DATABASE_POOL_SIZE", "range"),
+                ("KAMPUS_STORAGE_URL", "required"),
             ]
         );
     }
 
     #[test]
-    fn a_worker_does_not_need_the_public_address() {
+    fn a_scheduler_needs_neither_the_public_address_nor_the_storage() {
         let config = load(
             &[
-                ("KAMPUS_ROLE", "worker"),
+                ("KAMPUS_ROLE", "scheduler"),
                 ("KAMPUS_DATABASE_URL", "postgres://db/kampus"),
             ],
             None,
         )
         .unwrap();
-        assert_eq!(config.role, Role::Worker);
+        assert_eq!(config.role, Role::Scheduler);
         assert!(config.public_url.is_none());
+        assert!(config.storage_url.is_none());
     }
 
     #[test]
     fn variables_take_precedence_over_the_file() {
-        let file = "database_url = \"postgres://file/kampus\"\npublic_url = \"https://file.example\"\ndatabase_pool_size = 4\nupgrade_on_start = true\n";
+        let file = "database_url = \"postgres://file/kampus\"\npublic_url = \"https://file.example\"\ndatabase_pool_size = 4\nupgrade_on_start = true\nstorage_url = \"s3://kampus/files\"\nstorage_s3_endpoint = \"http://s3:8333\"\n";
         let config = load(&[("KAMPUS_PUBLIC_URL", "https://env.example")], Some(file)).unwrap();
         assert_eq!(config.database_url, "postgres://file/kampus");
         assert_eq!(config.public_url.as_deref(), Some("https://env.example"));
         assert_eq!(config.database_pool_size, 4);
         assert!(config.upgrade_on_start);
+        assert_eq!(config.storage_url.as_deref(), Some("s3://kampus/files"));
+        assert_eq!(
+            config.storage_options.get("s3_endpoint").map(String::as_str),
+            Some("http://s3:8333")
+        );
     }
 
     #[test]

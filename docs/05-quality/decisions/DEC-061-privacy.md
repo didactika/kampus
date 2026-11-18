@@ -15,4 +15,4 @@ status: accepted
   - Retention rules are per data category and campus, applied by jobs that record what they erased.
   - Policies are versioned; required ones are accepted again when they change.
 - Consequences: GDPR duties (RNF-002) are met by construction for every module and plugin.
-- Affected artifacts: `crates/kampus-privacy`, every module's privacy handler.
+- Affected artifacts: `crates/privacy`, every module's privacy handler.

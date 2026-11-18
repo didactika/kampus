@@ -15,4 +15,4 @@ status: accepted
   - **Backward compatibility.** Within a major version the API, the plugin SDK, event payloads (new versions with upcasters for listeners of the old one), settings keys and configuration variables only change additively. Anything removed is first deprecated, kept working, announced in the changelog and removed in the next major, with its upgrade step.
   - **Tested paths.** CI upgrades a database of every supported release to the current code and checks it against a fresh installation of the same version.
 - Consequences: Campuses can skip releases; integrations and plugins keep working across minor versions; every incompatible change comes with its way forward.
-- Affected artifacts: `crates/kampus-db`, `crates/kampus-server`, every module's migrations, CI, the operator guide.
+- Affected artifacts: `crates/db`, `crates/server`, every module's migrations, CI, the operator guide.

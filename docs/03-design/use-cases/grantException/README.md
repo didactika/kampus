@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/grantException/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Exception resolver | service | `crates/kampus-activities/src/exceptions.rs` |
+| Exception resolver | service | `crates/activities/src/exceptions.rs` |
 | `/api/v1/course-modules/{course_module_id}/exceptions`, effective values | API endpoints | `docs/03-design/api/activities.openapi.yaml` |
 
 ## Sequence

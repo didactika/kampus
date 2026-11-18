@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/overridePermission/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Override service | service | `crates/kampus-access/src/override.rs` |
+| Override service | service | `crates/access/src/override.rs` |
 | `PUT /api/v1/scopes/{scope_id}/overrides` | API endpoint | `docs/03-design/api/access.openapi.yaml` |
 | `access.permission_override` | table | `docs/03-design/data-model/access.md` |
 

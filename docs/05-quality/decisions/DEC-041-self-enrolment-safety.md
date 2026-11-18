@@ -13,4 +13,4 @@ status: accepted
   - Keys are stored hashed, compared in constant time, never hinted; attempts are throttled per person and per address; a group key places the person in that group.
   - Approval creates a request decided by people with `enrol.request.decide`; payment-gated methods enrol only after the payment port confirms.
 - Consequences: Capacities hold under load; keys resist guessing; paid and approved courses use the same model.
-- Affected artifacts: `crates/kampus-enrol`, the payment port, the course page.
+- Affected artifacts: `crates/enrol`, the payment port, the course page.

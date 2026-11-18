@@ -14,4 +14,4 @@ status: accepted
   - Methods are plugins with typed instance data; a validated settings document holds only what a method declares.
   - Other modules react to enrolment events; none reads enrolment tables.
 - Consequences: Removing one way of joining never removes a role given by another; one answer to "is this person in the course"; new methods (payments, external systems) plug in without new generic columns.
-- Affected artifacts: `crates/kampus-enrol`, `crates/kampus-access`, every module that filters by participation.
+- Affected artifacts: `crates/enrol`, `crates/access`, every module that filters by participation.

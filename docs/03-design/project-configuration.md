@@ -47,7 +47,7 @@ A file (`kampus.toml`) plus environment variables, which take precedence. Each r
 | `KAMPUS_DATABASE_POOL_SIZE` | all | no | Connections per process |
 | `KAMPUS_STORAGE_URL` | server, worker | yes | File storage: `file:///path` or `s3://bucket/prefix` |
 | `KAMPUS_STORAGE_S3_*` | server, worker | with S3 | Endpoint, region and credentials of S3-compatible storage |
-| `KAMPUS_CACHE_URL` | server, worker | no | Redis or Valkey; without it, in-process cache only (one instance) |
+| `KAMPUS_CACHE_URL` | server, worker | no | Redis or Valkey (`redis://`, `rediss://`, `valkey://`); without it, in-process cache only (one instance) |
 | `KAMPUS_SESSIONS_URL` | server | no | Sessions port; empty for the database, `redis://` for Redis or Valkey |
 | `KAMPUS_QUEUE_URL` | all | no | Task queue port; empty for the database |
 | `KAMPUS_SEARCH_URL` | server, worker | no | Search port; empty for PostgreSQL full-text search |

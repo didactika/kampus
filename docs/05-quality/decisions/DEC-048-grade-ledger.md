@@ -13,4 +13,4 @@ status: accepted
   - The current grade per record and person is an idempotent upsert; the same grade twice changes nothing and publishes one event.
   - Totals and formulas are derived by a job along the dependency graph, only for what changed; reads never recalculate.
 - Consequences: Full history for every grade; fast, side-effect-free reads; concurrent first grades never fail.
-- Affected artifacts: `crates/kampus-records`, every graded activity type.
+- Affected artifacts: `crates/records`, every graded activity type.

@@ -15,4 +15,4 @@ status: accepted
   - The port always quotes identifiers in the SQL it generates, so a table may keep a natural name that is a reserved word (`group`, `grant`, `order`).
   - Plugins get the same treatment, with their own module name; they never write physical names.
 - Consequences: natural table names without reserved-word conflicts in any dialect; several installations can share one database or one PostgreSQL cluster; every SQL statement goes through the port's name mapping, which the schema linter (DEC-014) checks.
-- Affected artifacts: `crates/kampus-db`, every module's migrations, the plugin SDK, the operator guide, DEC-014.
+- Affected artifacts: `crates/db`, every module's migrations, the plugin SDK, the operator guide, DEC-014.

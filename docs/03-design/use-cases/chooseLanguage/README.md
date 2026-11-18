@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/chooseLanguage/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Language resolver and bundles | service | `crates/kampus-i18n/src/resolve.rs` |
+| Language resolver and bundles | service | `crates/i18n/src/resolve.rs` |
 | `/api/v1/me/language`, `/api/v1/languages/{code}/bundles/{module}` | API endpoints | `docs/03-design/api/i18n.openapi.yaml` |
 
 ## Sequence

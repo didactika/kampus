@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/createRule/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Rule engine | service | `crates/kampus-customise/src/rules.rs` | no (to build) |
+| Rule engine | service | `crates/customise/src/rules.rs` | no (to build) |
 | `/api/v1/scopes/{scope_id}/rules` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-218 to RN-222 | `crates/kampus-customise/tests/` | planned |
+| Unit and integration tests of the module | RN-218 to RN-222 | `crates/customise/tests/` | planned |

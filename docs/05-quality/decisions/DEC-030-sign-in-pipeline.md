@@ -15,4 +15,4 @@ status: accepted
   - One-time tokens are random, hashed, expiring and single-use; provider secrets and TOTP secrets are encrypted at rest.
   - Throttling is on by default, per account and per address, and answers never reveal whether an account exists.
 - Consequences: No method is weaker than another; a database copy does not expose usable tokens or secrets; SAML and LDAP arrive later as new steps of the same pipeline.
-- Affected artifacts: `crates/kampus-identity`, the sign-in screens, the operator and administrator guides.
+- Affected artifacts: `crates/identity`, the sign-in screens, the operator and administrator guides.

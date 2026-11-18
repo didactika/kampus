@@ -12,4 +12,4 @@ status: accepted
   - Modules declare feature flags with defaults; a disabled feature hides its routes, UI modules and contributions in that scope and keeps its data.
   - Customisations are exported as versioned packages and imported after a preview of the differences, in one transaction recorded as one change.
 - Consequences: Features can be rolled out per campus, tenant or course (RF-118); campuses share configurations safely.
-- Affected artifacts: `crates/kampus-customise`, the web client.
+- Affected artifacts: `crates/customise`, the web client.

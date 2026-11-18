@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/setNotificationPreferences/REA
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Preference resolver | service | `crates/kampus-notify/src/preferences.rs` |
+| Preference resolver | service | `crates/notify/src/preferences.rs` |
 | `/api/v1/notification-preferences` | API endpoint | `docs/03-design/api/notify.openapi.yaml` |
 
 ## Sequence

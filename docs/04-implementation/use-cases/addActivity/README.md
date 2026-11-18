@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/addActivity/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Course module service | service | `crates/kampus-activities/src/module.rs` | no (to build) |
+| Course module service | service | `crates/activities/src/module.rs` | no (to build) |
 | `POST /api/v1/sections/{section_id}/course-modules` | API endpoint | `docs/03-design/api/activities.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-075 to RN-078 | `crates/kampus-activities/tests/` | planned |
+| Unit and integration tests of the module | RN-075 to RN-078 | `crates/activities/tests/` | planned |

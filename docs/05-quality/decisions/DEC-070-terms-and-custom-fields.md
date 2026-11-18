@@ -14,4 +14,4 @@ status: accepted
   - Values are typed columns checked against the field's type, owned through each module's link table like files.
   - Choices are rows with stable codes.
 - Consequences: Campuses use their own words in every language; custom data can be filtered, reported and exported reliably.
-- Affected artifacts: `crates/kampus-customise`, `crates/kampus-i18n`, every module that accepts custom fields.
+- Affected artifacts: `crates/customise`, `crates/i18n`, every module that accepts custom fields.

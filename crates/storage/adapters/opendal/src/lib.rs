@@ -202,3 +202,48 @@ fn failure(key: &StorageKey, error: opendal::Error) -> Error {
 fn unavailable(error: opendal::Error) -> Error {
     Error::unavailable("storage.unavailable").with_source(error)
 }
+
+/// The registration of this adapter (DEC-086): `file:///path` stores on the local disk; `s3://bucket/prefix`
+/// in an S3-compatible bucket, with the options `s3_endpoint`, `s3_region`, `s3_access_key_id` and
+/// `s3_secret_access_key`.
+pub const ADAPTER: kampus_storage::Adapter = kampus_storage::Adapter {
+    name: "opendal",
+    schemes: &["file", "s3"],
+    open: |settings| {
+        Box::pin(
+            async move { open(&settings).map(|s| std::sync::Arc::new(s) as std::sync::Arc<dyn Storage>) },
+        )
+    },
+};
+
+/// Builds the store a URL names.
+fn open(settings: &kampus_common::AdapterSettings) -> Result<OpendalStorage> {
+    let location = settings.location();
+    if settings.scheme()? == "file" {
+        return OpendalStorage::local(location);
+    }
+    let (bucket, root) = location.split_once('/').unwrap_or((location, ""));
+    let option = |name: &str| settings.option(name).map(str::to_owned);
+    let missing = |name: &str| {
+        kampus_common::FieldError::new(
+            format!("KAMPUS_STORAGE_{}", name.to_ascii_uppercase()),
+            "required",
+        )
+    };
+    let (Some(access_key_id), Some(secret_access_key)) =
+        (option("s3_access_key_id"), option("s3_secret_access_key"))
+    else {
+        return Err(Error::validation(
+            "storage.s3_credentials",
+            vec![missing("s3_access_key_id"), missing("s3_secret_access_key")],
+        ));
+    };
+    OpendalStorage::s3(&S3Config {
+        endpoint: option("s3_endpoint"),
+        region: option("s3_region").unwrap_or_else(|| "us-east-1".into()),
+        bucket: bucket.to_owned(),
+        root: format!("/{root}"),
+        access_key_id,
+        secret_access_key,
+    })
+}

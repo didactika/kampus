@@ -14,4 +14,4 @@ status: accepted
   - Notifications are created by listeners after commit; each recipient and channel is one job with retries.
   - Texts come from templates per scope and locale, using the campus terminology.
 - Consequences: Fast requests, no lost notifications, preferences that can be explained.
-- Affected artifacts: `crates/kampus-notify`.
+- Affected artifacts: `crates/notify`.

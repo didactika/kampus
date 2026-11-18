@@ -14,4 +14,4 @@ status: accepted
   - Memberships are manual or owned by a module (enrolment, a rule), and only their origin removes them.
   - Group names and codes are unique in the course; group sets contain each group once; joining keys are hashed.
 - Consequences: One section can work in teams while the rest of the course does not; automatic memberships never remove manual ones.
-- Affected artifacts: `crates/kampus-courses`, `crates/kampus-enrol`, `crates/kampus-settings`.
+- Affected artifacts: `crates/courses`, `crates/enrol`, `crates/settings`.

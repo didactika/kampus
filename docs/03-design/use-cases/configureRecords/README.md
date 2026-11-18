@@ -19,8 +19,8 @@ Analysis: [README](../../../02-analysis/use-cases/configureRecords/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Records structure service | service | `crates/kampus-records/src/structure.rs` |
-| Aggregation methods | service | `crates/kampus-records/src/aggregation.rs` |
+| Records structure service | service | `crates/records/src/structure.rs` |
+| Aggregation methods | service | `crates/records/src/aggregation.rs` |
 | `/api/v1/courses/{course_id}/records/*`, `/api/v1/records/{record_id}` | API endpoints | `docs/03-design/api/records.openapi.yaml` |
 
 ## Sequence

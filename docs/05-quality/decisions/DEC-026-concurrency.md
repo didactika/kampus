@@ -13,4 +13,4 @@ status: accepted
   - POST requests accept an Idempotency-Key; a repeated key returns the first result.
   - Limits and uniqueness are enforced by constraints or by a lock in the same transaction, never by reading first and inserting afterwards.
 - Consequences: No lost updates, no duplicates from retries or double clicks, and no limit that two requests can cross together; clients must handle precondition_failed, which the generated client does.
-- Affected artifacts: `crates/kampus-common`, `crates/kampus-api`, every module with limits or uniqueness rules, `web/`.
+- Affected artifacts: `crates/common`, `crates/api`, every module with limits or uniqueness rules, `web/`.

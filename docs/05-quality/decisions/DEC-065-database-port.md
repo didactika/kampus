@@ -15,4 +15,4 @@ status: accepted
   - Migrations are forward-only and tested from the previous release on every supported dialect.
   - The schema linter of DEC-014 runs on the neutral schema: foreign keys, types, natural keys, indexes.
 - Consequences: One schema per module, checked once and run everywhere; adding a database is an adapter plus a green suite.
-- Affected artifacts: `crates/kampus-db`, `crates/kampus-db-postgres`, every module's schema, RNF-016, RNF-021.
+- Affected artifacts: `crates/db`, `crates/db-postgres`, every module's schema, RNF-016, RNF-021.

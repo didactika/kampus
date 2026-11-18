@@ -15,4 +15,4 @@ status: accepted
   - Deployment configuration is a file plus `KAMPUS_*` environment variables, validated at start-up for the role being started.
   - Migrations follow expand and contract, so a minor upgrade rolls instance by instance.
 - Consequences: one artefact to build, sign and scan (RNF-014); Docker Compose for development and small installations, a Helm chart for clusters.
-- Affected artifacts: `crates/kampus-server`, `web/`, the Docker and Helm files, the operator guide.
+- Affected artifacts: `crates/server`, `web/`, the Docker and Helm files, the operator guide.

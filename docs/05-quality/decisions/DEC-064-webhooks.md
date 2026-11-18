@@ -14,4 +14,4 @@ status: accepted
   - URLs must be HTTPS and must not resolve to private or loopback addresses, checked again at delivery time.
   - Repeated failures disable the webhook and notify its owner.
 - Consequences: Reliable, verifiable notifications to external systems without new infrastructure.
-- Affected artifacts: `crates/kampus-api`, `crates/kampus-events`.
+- Affected artifacts: `crates/api`, `crates/events`.

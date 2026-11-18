@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/takeGuidedTour/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Tour runner and checklist | UI | `web/src/shell/tours/` | no (to build) |
-| Onboarding progress | service | `crates/kampus-users/src/onboarding.rs` | no (to build) |
+| Onboarding progress | service | `crates/users/src/onboarding.rs` | no (to build) |
 
 ## Tests
 

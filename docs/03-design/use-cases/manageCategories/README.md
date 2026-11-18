@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/manageCategories/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Category service | service | `crates/kampus-courses/src/category.rs` |
+| Category service | service | `crates/courses/src/category.rs` |
 | `/api/v1/campuses/{campus_id}/categories`, `/api/v1/categories/{category_id}`, move | API endpoints | `docs/03-design/api/courses.openapi.yaml` |
 | `courses.category` | table | `docs/03-design/data-model/courses.md` |
 

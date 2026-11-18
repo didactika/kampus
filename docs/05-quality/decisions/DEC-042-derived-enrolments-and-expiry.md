@@ -13,4 +13,4 @@ status: accepted
   - Linked enrolments are never a source for another link; a link that would create a cycle is refused.
   - When an enrolment ends, a scheduled job applies the instance's expiry rule (suspend, remove, keep without role) and records the outcome.
 - Consequences: Programmes stay in sync without manual work; links cannot loop; every expiry is visible and explainable.
-- Affected artifacts: `crates/kampus-enrol`, `crates/kampus-users` (system groups), `crates/kampus-tasks`.
+- Affected artifacts: `crates/enrol`, `crates/users` (system groups), `crates/tasks`.

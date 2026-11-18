@@ -19,7 +19,7 @@ Design: [README](../../../03-design/use-cases/overridePermission/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Override service | service | `crates/kampus-access/src/override.rs` | no (to build) |
+| Override service | service | `crates/access/src/override.rs` | no (to build) |
 | `PUT /api/v1/scopes/{scope_id}/overrides` | API endpoint | `docs/03-design/api/access.openapi.yaml` | no (to build) |
 | `access.permission_override` | table | `docs/03-design/data-model/access.md` | no (to build) |
 
@@ -27,4 +27,4 @@ Design: [README](../../../03-design/use-cases/overridePermission/README.md)
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-004, RN-005, RN-008, RN-012, RN-014, RN-015 | `crates/kampus-access/tests/` | planned |
+| Unit and integration tests of the module | RN-004, RN-005, RN-008, RN-012, RN-014, RN-015 | `crates/access/tests/` | planned |
