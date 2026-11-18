@@ -1,0 +1,34 @@
+openapi: 3.1.0
+info:
+  title: Kampus progress API (design fragment)
+  version: 0.1.0
+  description: >-
+    Progress rules, activity progress, progress exceptions, course criteria, prerequisites and course
+    progress. States are shown as the requester may see them (RN-115). Conventions of DEC-025 and DEC-026.
+paths:
+  /api/v1/course-modules/{course_module_id}/progress-rules:
+    get: { summary: Progress rules of a course module, responses: { '200': { description: Rules } } }
+    put: { summary: 'Replace the rules; a recalculation job is queued (RN-118)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
+  /api/v1/course-modules/{course_module_id}/progress:
+    get: { summary: States of the tracked population (RN-123), parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page of states } } }
+  /api/v1/course-modules/{course_module_id}/progress/me:
+    get: { summary: The caller's state, responses: { '200': { description: State } } }
+    put: { summary: Mark as done or not done when the rule is manual, responses: { '200': { description: Marked } } }
+  /api/v1/course-modules/{course_module_id}/progress/{account_id}/exception:
+    put: { summary: 'Set a state with a reason (RN-119)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Set } } }
+    delete: { summary: Remove the exception; the rules apply again, responses: { '204': { description: Removed } } }
+  /api/v1/courses/{course_id}/progress-criteria:
+    get: { summary: Course criteria, responses: { '200': { description: Criteria } } }
+    put: { summary: 'Replace the criteria (RN-120); re-evaluation queued', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
+  /api/v1/courses/{course_id}/prerequisites:
+    get: { summary: The prerequisite graph around a course, responses: { '200': { description: Graph } } }
+    put: { summary: 'Set prerequisites; a cycle is refused (RN-122)', responses: { '200': { description: Set }, '409': { description: Would create a cycle } } }
+  /api/v1/courses/{course_id}/progress:
+    get: { summary: Course progress of the tracked population, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
+  /api/v1/courses/{course_id}/progress/me:
+    get: { summary: The caller's course progress with each criterion, responses: { '200': { description: Progress } } }
+components:
+  parameters:
+    Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+    After: { name: after, in: query, schema: { type: string } }
+    IfMatch: { name: If-Match, in: header, required: true, schema: { type: string } }

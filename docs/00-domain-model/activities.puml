@@ -1,0 +1,57 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus activities
+
+class ActivityType <<plugin>> {
+  code
+  kind : activity | material
+  contract_version
+  features
+}
+class CourseModule {
+  title
+  sort_key
+  visibility
+  on_course_page
+  state : active | in_bin | failed_deletion
+}
+class AccessCondition {
+  kind
+  operator : all | any | not
+}
+class Exception {
+  opens_at
+  closes_at
+  due_at
+  cutoff_at
+  time_limit
+  attempts
+  reason
+}
+class RecycleBinItem {
+  deleted_at
+  expires_at
+  error
+}
+class Section <<courses>>
+class Account <<identity>>
+class Group <<courses>>
+
+CourseModule "*" --> "1" ActivityType
+CourseModule "*" --> "1" Section
+AccessCondition "*" --> "0..1" CourseModule : guards
+AccessCondition "*" --> "0..1" Section : guards
+AccessCondition "0..1" <-- "*" AccessCondition : children
+Exception "*" --> "1" CourseModule
+Exception "*" --> "0..1" Account : person
+Exception "*" --> "0..1" Group : or group
+RecycleBinItem "0..1" --> "1" CourseModule
+note right of Exception
+  Person xor group; unique per
+  course module and target.
+  Person wins setting by setting;
+  among groups, the most generous.
+end note
+@enduml

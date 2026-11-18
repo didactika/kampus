@@ -1,0 +1,16 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype polyline
+top to bottom direction
+
+class "System" as user <<actor>>
+class "trackActivityProgressScreen" as screen <<boundary>>
+class "trackActivityProgressController" as controller <<control>>
+class "Entity" as entity <<entity>>
+
+user --> screen : 1: acts
+screen --> controller : 2: requests
+controller --> entity : 3: reads and updates
+
+@enduml

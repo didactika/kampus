@@ -1,0 +1,18 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Teacher" as a
+participant "kampus-api" as api
+participant "Bin service and purge job" as svc
+database "activities schema + outbox" as db
+
+a -> api : Deletes the activity
+api -> svc : request
+svc -> db : Moves it to the bin in one transaction (RN-088)
+a -> api : Restores it from the bin
+api -> svc : request
+svc -> db : Puts it back in its section and position when they exist
+svc --> a : result
+@enduml

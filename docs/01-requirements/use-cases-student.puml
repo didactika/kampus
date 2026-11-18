@@ -1,0 +1,16 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+left to right direction
+
+actor "Student" as A_Student
+
+rectangle "Kampus" {
+  package "records" {
+    usecase "See grades" as UC_viewGrades
+  }
+}
+
+A_Student --> UC_viewGrades
+
+@enduml

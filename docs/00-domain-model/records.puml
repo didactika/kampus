@@ -1,0 +1,69 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus academic records
+
+class GradeRecord {
+  kind : activity | manual | category_total | course_total
+  grade_type : value | scale | text
+  min
+  max
+  pass_grade
+  weight
+  extra_credit
+  hidden_until
+  locked_at
+}
+class GradeCategory {
+  method
+  drop_lowest
+  keep_highest
+  exclude_empty
+}
+class GradeEntry <<immutable>> {
+  raw
+  feedback
+  source
+  actor
+  at
+}
+class Grade {
+  raw
+  final
+  overridden
+  excluded
+  hidden_until
+  locked_at
+}
+class Scale {
+  items
+  version
+}
+class LetterSet {
+  bands
+  version
+}
+class Formula {
+  expression
+}
+class CourseModule <<activities>>
+class Account <<identity>>
+
+GradeCategory "0..1" <-- "*" GradeCategory : parent
+GradeRecord "*" --> "0..1" GradeCategory : in
+GradeCategory "1" -- "1" GradeRecord : total
+GradeRecord "*" --> "0..1" CourseModule
+GradeRecord "*" --> "0..1" Scale
+GradeEntry "*" --> "1" GradeRecord
+GradeEntry "*" --> "1" Account
+Grade "*" --> "1" GradeRecord
+Grade "*" --> "1" Account
+Formula "1" --> "1" GradeRecord
+Formula "*" --> "*" GradeRecord : depends on
+note bottom of Grade
+  Derived from entries and aggregation;
+  unique per record and person;
+  read only through the visibility service.
+end note
+@enduml

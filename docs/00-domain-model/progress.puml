@@ -1,0 +1,49 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus progress
+
+class ProgressRule {
+  kind : manual | view | submit | grade | pass | type_rule
+  parameters
+}
+class ActivityProgress {
+  state
+  source : automatic | manual
+  at
+}
+class ProgressException {
+  state
+  reason
+  by
+  at
+}
+class CourseCriterion {
+  kind : activities | grade | date | duration | role_approval | other_course
+}
+class CourseProgress {
+  state
+  completed_at
+}
+class Prerequisite
+class CourseModule <<activities>>
+class Course <<courses>>
+class Account <<identity>>
+
+ProgressRule "*" --> "1" CourseModule
+ActivityProgress "*" --> "1" CourseModule
+ActivityProgress "*" --> "1" Account
+ProgressException "*" --> "1" CourseModule
+ProgressException "*" --> "1" Account
+CourseCriterion "*" --> "1" Course
+CourseProgress "*" --> "1" Course
+CourseProgress "*" --> "1" Account
+Prerequisite "*" --> "1" Course : course
+Prerequisite "*" --> "1" Course : requires
+note bottom of ActivityProgress
+  Re-evaluated by event listeners;
+  people's ticks and exceptions are
+  never overwritten.
+end note
+@enduml

@@ -1,0 +1,16 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "System" as a
+participant "kampus-api" as api
+participant "Progress evaluator" as svc
+database "progress schema + outbox" as db
+
+a -> api : A relevant event happens
+api -> svc : request
+svc -> db : The listener evaluates the course module's rules for that person (RN-116)
+svc -> db : Stores the new state, history and progress.activity_changed
+svc --> a : result
+@enduml

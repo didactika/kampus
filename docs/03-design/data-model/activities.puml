@@ -1,0 +1,108 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema activities (PostgreSQL)
+
+entity activity_type {
+  code
+  kind
+  contract_version
+  enabled
+  features
+}
+entity course_module {
+  id <<PK>>
+  scope_id <<FK>>
+  section_id <<FK>>
+  type_code <<FK>>
+  title
+  sort_key
+  visibility
+  visible_from
+  visible_until
+  on_course_page
+  state
+  version
+}
+entity module_setting {
+  course_module_id <<FK>>
+  values
+}
+entity condition {
+  id <<PK>>
+  course_module_id <<FK>>
+  section_id <<FK>>
+  parent_id <<FK>>
+  operator
+  kind
+  show_when_unmet
+}
+entity condition_date {
+  condition_id <<FK>>
+  from
+  until
+}
+entity condition_grade {
+  condition_id <<FK>>
+  record_id <<FK>>
+  min_percent
+  max_percent
+}
+entity condition_progress {
+  condition_id <<FK>>
+  course_module_id <<FK>>
+  required_state
+}
+entity condition_group {
+  condition_id <<FK>>
+  group_id <<FK>>
+  group_set_id <<FK>>
+}
+entity condition_profile {
+  condition_id <<FK>>
+  field_id <<FK>>
+  operator
+  value
+}
+entity exception {
+  id <<PK>>
+  course_module_id <<FK>>
+  account_id <<FK>>
+  group_id <<FK>>
+  opens_at
+  closes_at
+  due_at
+  cutoff_at
+  time_limit
+  attempts
+  reason
+  created_by
+  version
+}
+entity bin_item {
+  id <<PK>>
+  course_id
+  course_module_id <<FK>>
+  original_section_id
+  original_sort_key
+  deleted_by
+  deleted_at
+  expires_at
+  error
+}
+
+course_module }o--|| activity_type
+module_setting }o--|| course_module
+condition }o--|| course_module
+condition }o--o| condition : parent
+condition_date }o--|| condition
+condition_grade }o--|| condition
+condition_progress }o--|| condition
+condition_progress }o--|| course_module
+condition_group }o--|| condition
+condition_profile }o--|| condition
+exception }o--|| course_module
+bin_item }o--|| course_module
+@enduml

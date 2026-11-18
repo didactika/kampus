@@ -1,0 +1,18 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Teacher" as a
+participant "kampus-api" as api
+participant "Course module service" as svc
+database "activities schema + outbox" as db
+
+a -> api : Chooses copy or move and the target
+api -> svc : request
+svc -> db : Validates permissions in source and target
+a -> api : Confirms
+api -> svc : request
+svc -> db : Moves (one row) or copies in one transaction, through the type's copy operation (RN-090)
+svc --> a : result
+@enduml

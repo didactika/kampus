@@ -20,6 +20,22 @@ rectangle "Kampus" {
     usecase "Enrol people in a course" as UC_enrolPeople
     usecase "Manage an enrolment" as UC_manageEnrolment
   }
+  package "activities" {
+    usecase "Add an activity or material" as UC_addActivity
+    usecase "Restrict access to an activity or section" as UC_restrictAccess
+    usecase "Grant an exception" as UC_grantException
+    usecase "Copy or move an activity" as UC_copyActivity
+    usecase "Delete and restore an activity" as UC_deleteActivity
+  }
+  package "records" {
+    usecase "Configure the academic records of a course" as UC_configureRecords
+    usecase "Override or lock a grade" as UC_overrideGrade
+    usecase "See grades" as UC_viewGrades
+  }
+  package "progress" {
+    usecase "Configure course progress" as UC_configureCourseProgress
+    usecase "Set a progress exception" as UC_setProgressException
+  }
 }
 
 A_Teacher --> UC_grantRole
@@ -30,5 +46,15 @@ A_Teacher --> UC_manageGroups
 A_Teacher --> UC_chooseCourseLayout
 A_Teacher --> UC_enrolPeople
 A_Teacher --> UC_manageEnrolment
+A_Teacher --> UC_addActivity
+A_Teacher --> UC_restrictAccess
+A_Teacher --> UC_grantException
+A_Teacher --> UC_copyActivity
+A_Teacher --> UC_deleteActivity
+A_Teacher --> UC_configureRecords
+A_Teacher --> UC_overrideGrade
+A_Teacher --> UC_viewGrades
+A_Teacher --> UC_configureCourseProgress
+A_Teacher --> UC_setProgressException
 
 @enduml

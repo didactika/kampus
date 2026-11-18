@@ -1,0 +1,108 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema records (PostgreSQL)
+
+entity category {
+  id <<PK>>
+  course_id <<FK>>
+  parent_id <<FK>>
+  name
+  method
+  drop_lowest
+  keep_highest
+  exclude_empty
+  sort_key
+  version
+}
+entity record {
+  id <<PK>>
+  course_id <<FK>>
+  kind
+  course_module_id <<FK>>
+  item_number
+  category_id <<FK>>
+  grade_type
+  min
+  max
+  scale_id <<FK>>
+  pass_grade
+  weight
+  extra_credit
+  multiplier
+  offset
+  hidden_until
+  locked_at
+  calc_version
+  version
+}
+entity entry {
+  id <<PK>>
+  record_id <<FK>>
+  account_id <<FK>>
+  raw
+  text
+  feedback
+  source
+  actor_id
+  at
+}
+entity grade {
+  record_id <<FK>>
+  account_id <<FK>>
+  raw
+  final
+  overridden
+  excluded
+  hidden_until
+  locked_at
+  version
+}
+entity scale {
+  id <<PK>>
+  scope_id <<FK>>
+  code
+  version
+  items
+}
+entity letter_set {
+  id <<PK>>
+  scope_id <<FK>>
+  version
+}
+entity letter_band {
+  letter_set_id <<FK>>
+  min_percent
+  letter
+}
+entity formula {
+  record_id <<FK>>
+  expression
+}
+entity formula_dependency {
+  record_id <<FK>>
+  depends_on_id <<FK>>
+}
+entity recalculation {
+  id <<PK>>
+  course_id
+  record_ids
+  account_ids
+  state
+  queued_at
+  done_at
+  error
+}
+
+category }o--o| category : parent
+record }o--|| category
+record }o--|| scale
+entry }o--|| record
+grade }o--|| record
+letter_band }o--|| letter_set
+formula }o--|| record
+formula_dependency }o--|| formula
+formula_dependency }o--|| record
+@enduml

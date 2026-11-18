@@ -1,0 +1,18 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Teacher" as a
+participant "kampus-api" as api
+participant "Grade service" as svc
+database "records schema + outbox" as db
+
+a -> api : Sets a value and feedback in the grader report
+api -> svc : request
+svc -> db : Writes an entry with source teacher (RN-098)
+a -> api : Locks the record or the grade
+api -> svc : request
+svc -> db : Later activity grades are refused while locked
+svc --> a : result
+@enduml

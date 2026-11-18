@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Teacher" as a
+participant "kampus-api" as api
+participant "Records structure service" as svc
+database "records schema + outbox" as db
+
+a -> api : Adds categories and moves records into them
+api -> svc : request
+svc -> db : Validates the tree
+a -> api : Chooses methods, weights, drop lowest, scales and formulas
+api -> svc : request
+svc -> db : Validates per method (RN-100, RN-101) and formula dependencies (RN-107)
+a -> api : Saves
+api -> svc : request
+svc -> db : Saves with If-Match and queues recalculation
+svc --> a : result
+@enduml

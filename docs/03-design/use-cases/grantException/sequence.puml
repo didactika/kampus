@@ -1,0 +1,29 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Teacher" as t
+participant "kampus-api" as api
+participant "Exception service" as svc
+participant "Exception resolver" as res
+database "activities schema + outbox" as db
+
+t -> api : GET /course-modules/{id}/effective-values?account_id=
+api -> res : effective values for the person
+res -> db : course module values, person exception, exceptions of the person's groups
+res -> res : person wins per setting; else most generous group value (RN-086)
+res --> t : values with their origin
+t -> api : POST /course-modules/{id}/exceptions (person or group; values)
+api -> svc : set_exception
+group one transaction
+  svc -> db : insert (person xor group; unique per target) (RN-085)
+  svc -> db : activities.exception_changed into outbox
+end
+svc --> t : 201
+note right of db
+  The calendar, the course page,
+  notifications and the activity
+  all use the same resolver.
+end note
+@enduml
