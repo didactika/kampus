@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as a
+participant "kampus-api" as api
+participant "Package service" as svc
+database "customise schema + outbox" as db
+
+a -> api : Exports chosen kinds from a scope
+api -> svc : request
+svc -> db : Builds a versioned package with a checksum
+a -> api : Uploads it to the target and previews
+api -> svc : request
+svc -> db : Validates against the target's declarations and lists the differences (RN-221)
+a -> api : Applies
+api -> svc : request
+svc -> db : Applies everything in one transaction and records it
+svc --> a : result
+@enduml

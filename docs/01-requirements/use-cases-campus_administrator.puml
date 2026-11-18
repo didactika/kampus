@@ -27,6 +27,19 @@ rectangle "Kampus" {
   package "api" {
     usecase "Register an API client" as UC_registerApiClient
   }
+  package "plugins" {
+    usecase "Install a plugin" as UC_installPlugin
+    usecase "Upgrade, disable or remove a plugin" as UC_managePlugin
+  }
+  package "customise" {
+    usecase "Rename terms" as UC_renameTerms
+    usecase "Define a custom field" as UC_defineCustomField
+    usecase "Arrange a page and its menus" as UC_arrangeLayout
+    usecase "Edit the theme" as UC_editTheme
+    usecase "Create a rule" as UC_createRule
+    usecase "Switch a feature or module on or off" as UC_switchFeature
+    usecase "Export and import customisations" as UC_shareCustomisation
+  }
 }
 
 A_Campus_administrator --> UC_defineRole
@@ -36,5 +49,14 @@ A_Campus_administrator --> UC_monitorTasks
 A_Campus_administrator --> UC_processDeletionRequest
 A_Campus_administrator --> UC_manageLanguagePacks
 A_Campus_administrator --> UC_registerApiClient
+A_Campus_administrator --> UC_installPlugin
+A_Campus_administrator --> UC_managePlugin
+A_Campus_administrator --> UC_renameTerms
+A_Campus_administrator --> UC_defineCustomField
+A_Campus_administrator --> UC_arrangeLayout
+A_Campus_administrator --> UC_editTheme
+A_Campus_administrator --> UC_createRule
+A_Campus_administrator --> UC_switchFeature
+A_Campus_administrator --> UC_shareCustomisation
 
 @enduml

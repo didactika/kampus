@@ -1,0 +1,110 @@
+// Kampus plugin SDK 1.0: host interfaces and plugin worlds (design draft).
+package kampus:host@1.0.0;
+
+interface types {
+  type uuid = string;
+  record problem { code: string, detail: string, fields: list<tuple<string, string>> }
+  record context { account: option<uuid>, scope: uuid, language: string, time-zone: string, request-id: string }
+}
+
+interface context {
+  use types.{context};
+  current: func() -> context;
+}
+
+interface permissions {
+  use types.{uuid, problem};
+  check: func(permission: string, scope: uuid) -> bool;
+  require: func(permission: string, scope: uuid) -> result<_, problem>;
+}
+
+interface storage {
+  use types.{problem};
+  variant value { null, text(string), integer(s64), number(string), boolean(bool), timestamp(string), json(string) }
+  record row { columns: list<tuple<string, value>> }
+  enum op { eq, ne, lt, le, gt, ge, in-list, is-null }
+  record condition { column: string, op: op, values: list<value> }
+  query: func(table: string, filter: list<condition>, order: list<string>, limit: u32) -> result<list<row>, problem>;
+  insert: func(table: string, row: row) -> result<_, problem>;
+  update: func(table: string, filter: list<condition>, changes: row) -> result<u64, problem>;
+  delete: func(table: string, filter: list<condition>) -> result<u64, problem>;
+}
+
+interface events {
+  use types.{uuid, problem};
+  publish: func(event-type: string, object: uuid, payload: string) -> result<_, problem>;
+}
+
+interface jobs {
+  use types.{problem};
+  enqueue: func(job-type: string, payload: string) -> result<string, problem>;
+}
+
+interface strings {
+  message: func(key: string, args: list<tuple<string, string>>) -> string;
+  term: func(code: string, form: string) -> string;
+}
+
+interface settings {
+  get: func(key: string) -> option<string>;
+}
+
+interface http {
+  use types.{problem};
+  record response { status: u16, headers: list<tuple<string, string>>, body: list<u8> }
+  send: func(method: string, url: string, headers: list<tuple<string, string>>, body: list<u8>) -> result<response, problem>;
+}
+
+interface log {
+  enum level { debug, info, warn, error }
+  write: func(level: level, message: string, fields: list<tuple<string, string>>);
+}
+
+interface lifecycle {
+  use types.{problem};
+  install: func() -> result<_, problem>;
+  upgrade: func(from-version: string) -> result<_, problem>;
+  uninstall: func() -> result<_, problem>;
+}
+
+interface listener {
+  use types.{problem};
+  handle: func(event-type: string, event-id: string, payload: string) -> result<_, problem>;
+}
+
+interface activity {
+  use types.{uuid, problem};
+  settings-schema: func() -> string;
+  create: func(course-module: uuid, settings: string) -> result<_, problem>;
+  update: func(course-module: uuid, settings: string) -> result<_, problem>;
+  delete: func(course-module: uuid) -> result<_, problem>;
+  copy: func(source: uuid, target: uuid) -> result<_, problem>;
+  view: func(course-module: uuid) -> result<string, problem>;
+}
+
+world base-plugin {
+  import context;
+  import permissions;
+  import strings;
+  import settings;
+  import log;
+  export lifecycle;
+}
+
+world activity-plugin {
+  include base-plugin;
+  import storage;
+  import events;
+  import jobs;
+  export activity;
+  export listener;
+}
+
+world local-plugin {
+  include base-plugin;
+  import storage;
+  import events;
+  import jobs;
+  import http;
+  export listener;
+}

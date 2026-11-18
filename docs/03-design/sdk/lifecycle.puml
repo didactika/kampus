@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+hide empty description
+title Plugin lifecycle
+
+[*] --> Uploaded
+Uploaded --> Rejected : signature, digest or SDK range invalid (RN-203)
+Uploaded --> AwaitingGrant : manifest valid
+AwaitingGrant --> Migrating : capabilities granted (RN-205)
+Migrating --> Installed : migrations applied (RN-207)
+Migrating --> AwaitingGrant : migration failed, nothing changed
+Installed --> Enabled : enable
+Enabled --> Disabled : disable or repeated failures (RN-208, RN-209)
+Disabled --> Enabled : enable
+Enabled --> Upgrading : new version
+Upgrading --> Enabled : migrated
+Upgrading --> Enabled : failed, previous version kept
+Disabled --> Removed : remove after confirmation (RN-210)
+Rejected --> [*]
+Removed --> [*]
+@enduml

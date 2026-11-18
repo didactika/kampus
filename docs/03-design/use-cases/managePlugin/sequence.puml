@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as a
+participant "kampus-api" as api
+participant "Plugin lifecycle service" as svc
+database "plugins schema + outbox" as db
+
+a -> api : Uploads a new version
+api -> svc : request
+svc -> db : Validates it as an install; asks for new capabilities if any (RN-205)
+a -> api : Disables the plugin
+api -> svc : request
+svc -> db : Stops its routes, listeners, jobs and UI modules at once; pauses deliveries (RN-209)
+a -> api : Removes it and confirms
+api -> svc : request
+svc -> db : Runs the privacy handler, deletes its schema and files; referencing content shows as unavailable (RN-210)
+svc --> a : result
+@enduml

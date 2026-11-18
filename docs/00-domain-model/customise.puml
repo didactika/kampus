@@ -1,0 +1,84 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus customisation
+
+class "Term" as Term {
+  code
+  module
+  forms
+}
+class "Term override" as Termoverride {
+  scope
+  language
+  forms
+}
+class "Custom field" as Customfield {
+  entity kind
+  scope
+  code
+  type
+  validation
+  visibility
+  required
+  sort key
+}
+class "Custom field value" as Customfieldvalue {
+  entity id
+  value
+}
+class "Layout" as Layout {
+  page kind
+  scope
+  version
+}
+class "Widget placement" as Widgetplacement {
+  region
+  widget
+  settings
+  sort key
+  visibility
+}
+class "Navigation menu" as Navigationmenu {
+  scope
+  menu kind
+  items
+}
+class "Theme" as Theme {
+  scope
+  tokens
+  parent
+  version
+}
+class "Rule" as Rule {
+  scope
+  trigger
+  conditions
+  actions
+  enabled
+  owner
+}
+class "Rule run" as Rulerun {
+  event
+  outcome
+  at
+}
+class "Feature flag" as Featureflag {
+  code
+  module
+  default
+  scope values
+}
+class "Customisation package" as Customisationpackage {
+  kinds
+  contents
+  version
+  checksum
+}
+
+Termoverride "*" --> "1" Term
+Customfieldvalue "*" --> "1" Customfield
+Widgetplacement "*" --> "1" Layout
+Rulerun "*" --> "1" Rule
+@enduml

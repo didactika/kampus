@@ -42,6 +42,10 @@ rectangle "Kampus" {
   package "settings" {
     usecase "Change a setting" as UC_changeSetting
   }
+  package "customise" {
+    usecase "Arrange a page and its menus" as UC_arrangeLayout
+    usecase "Create a rule" as UC_createRule
+  }
 }
 
 A_Teacher --> UC_grantRole
@@ -64,5 +68,7 @@ A_Teacher --> UC_configureCourseProgress
 A_Teacher --> UC_setProgressException
 A_Teacher --> UC_reviewAuditLog
 A_Teacher --> UC_changeSetting
+A_Teacher --> UC_arrangeLayout
+A_Teacher --> UC_createRule
 
 @enduml

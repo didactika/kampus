@@ -11,3 +11,4 @@ status: accepted
 - Decision: Two levels. First-party core modules are native crates. Installable plugins are WebAssembly components (Component Model, WIT interfaces) run with Wasmtime, with capability-based access to the host API (data of their own tables, permissions, events, files, strings, templates).
 - Consequences: Plugins are sandboxed and portable across versions of the host API; the WIT interfaces become the plugin SDK and the target of `moodle2kampus`.
 - Affected artifacts: plugin SDK, `crates/plugin-host`, `tools/moodle2kampus/`.
+- Refined by: DEC-067 (manifest and lifecycle), DEC-068 (host interfaces and capabilities) and DEC-069 (plugin data); contract in the [plugin SDK](../../03-design/sdk/README.md).

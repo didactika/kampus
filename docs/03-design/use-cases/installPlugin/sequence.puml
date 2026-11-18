@@ -1,0 +1,22 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Campus administrator" as a
+participant "kampus-api" as api
+participant "Plugin installer" as svc
+database "plugins schema + outbox" as db
+
+a -> api : Uploads a package
+api -> svc : request
+svc -> db : Verifies signature, digest and SDK range; validates the manifest (RN-203, RN-204)
+a -> api : Reviews the requested capabilities and grants them
+api -> svc : request
+svc -> db : Records the grants (RN-205)
+svc -> db : Applies the migrations, one transaction per step (RN-207)
+a -> api : Enables it
+api -> svc : request
+svc -> db : Registers its contributions; routes, listeners, jobs and UI modules become live
+svc --> a : result
+@enduml

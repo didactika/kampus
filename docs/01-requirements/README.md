@@ -64,6 +64,16 @@ sourceOfTruth: model
 | UC-046 | [Install language packs and customise messages](./use-cases/manageLanguagePacks/README.md) | Campus administrator | i18n | RF-091 | [card](../02-analysis/use-cases/manageLanguagePacks/README.md) | [card](../03-design/use-cases/manageLanguagePacks/README.md) | [card](../04-implementation/use-cases/manageLanguagePacks/README.md) | accepted |
 | UC-047 | [Register an API client](./use-cases/registerApiClient/README.md) | Integrator, Campus administrator | api | RF-103 | [card](../02-analysis/use-cases/registerApiClient/README.md) | [card](../03-design/use-cases/registerApiClient/README.md) | [card](../04-implementation/use-cases/registerApiClient/README.md) | accepted |
 | UC-048 | [Subscribe a webhook](./use-cases/subscribeWebhook/README.md) | Integrator | api | RF-104 | [card](../02-analysis/use-cases/subscribeWebhook/README.md) | [card](../03-design/use-cases/subscribeWebhook/README.md) | [card](../04-implementation/use-cases/subscribeWebhook/README.md) | accepted |
+| UC-049 | [Install a plugin](./use-cases/installPlugin/README.md) | Campus administrator | plugins | RF-100 | [card](../02-analysis/use-cases/installPlugin/README.md) | [card](../03-design/use-cases/installPlugin/README.md) | [card](../04-implementation/use-cases/installPlugin/README.md) | accepted |
+| UC-050 | [Upgrade, disable or remove a plugin](./use-cases/managePlugin/README.md) | Campus administrator | plugins | RF-100 | [card](../02-analysis/use-cases/managePlugin/README.md) | [card](../03-design/use-cases/managePlugin/README.md) | [card](../04-implementation/use-cases/managePlugin/README.md) | accepted |
+| UC-051 | [Build and package a plugin](./use-cases/buildPlugin/README.md) | Plugin developer | plugins | RF-102 | [card](../02-analysis/use-cases/buildPlugin/README.md) | [card](../03-design/use-cases/buildPlugin/README.md) | [card](../04-implementation/use-cases/buildPlugin/README.md) | accepted |
+| UC-052 | [Rename terms](./use-cases/renameTerms/README.md) | Campus administrator, Manager | customise | RF-006 | [card](../02-analysis/use-cases/renameTerms/README.md) | [card](../03-design/use-cases/renameTerms/README.md) | [card](../04-implementation/use-cases/renameTerms/README.md) | accepted |
+| UC-053 | [Define a custom field](./use-cases/defineCustomField/README.md) | Campus administrator, Manager | customise | RF-006 | [card](../02-analysis/use-cases/defineCustomField/README.md) | [card](../03-design/use-cases/defineCustomField/README.md) | [card](../04-implementation/use-cases/defineCustomField/README.md) | accepted |
+| UC-054 | [Arrange a page and its menus](./use-cases/arrangeLayout/README.md) | Campus administrator, Teacher | customise | RF-006 | [card](../02-analysis/use-cases/arrangeLayout/README.md) | [card](../03-design/use-cases/arrangeLayout/README.md) | [card](../04-implementation/use-cases/arrangeLayout/README.md) | accepted |
+| UC-055 | [Edit the theme](./use-cases/editTheme/README.md) | Campus administrator | customise | RF-115 | [card](../02-analysis/use-cases/editTheme/README.md) | [card](../03-design/use-cases/editTheme/README.md) | [card](../04-implementation/use-cases/editTheme/README.md) | accepted |
+| UC-056 | [Create a rule](./use-cases/createRule/README.md) | Campus administrator, Teacher | customise | RF-006 | [card](../02-analysis/use-cases/createRule/README.md) | [card](../03-design/use-cases/createRule/README.md) | [card](../04-implementation/use-cases/createRule/README.md) | accepted |
+| UC-057 | [Switch a feature or module on or off](./use-cases/switchFeature/README.md) | Campus administrator, Manager | customise | RF-118 | [card](../02-analysis/use-cases/switchFeature/README.md) | [card](../03-design/use-cases/switchFeature/README.md) | [card](../04-implementation/use-cases/switchFeature/README.md) | accepted |
+| UC-058 | [Export and import customisations](./use-cases/shareCustomisation/README.md) | Campus administrator | customise | RF-004 | [card](../02-analysis/use-cases/shareCustomisation/README.md) | [card](../03-design/use-cases/shareCustomisation/README.md) | [card](../04-implementation/use-cases/shareCustomisation/README.md) | accepted |
 
 ### Use-case diagram
 
@@ -90,6 +100,10 @@ sourceOfTruth: model
 #### Manager
 
 ![Manager](./use-cases-manager.svg)
+
+#### Plugin developer
+
+![Plugin developer](./use-cases-plugin_developer.svg)
 
 #### Student
 

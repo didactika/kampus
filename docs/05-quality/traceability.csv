@@ -47,3 +47,13 @@ RF-091,UC-045,chooseLanguage,docs/02-analysis/use-cases/chooseLanguage,docs/03-d
 RF-091,UC-046,manageLanguagePacks,docs/02-analysis/use-cases/manageLanguagePacks,docs/03-design/use-cases/manageLanguagePacks,crates/kampus-i18n/src/packs.rs,crates/kampus-i18n/tests
 RF-103,UC-047,registerApiClient,docs/02-analysis/use-cases/registerApiClient,docs/03-design/use-cases/registerApiClient,crates/kampus-api/src/clients.rs,crates/kampus-api/tests
 RF-104,UC-048,subscribeWebhook,docs/02-analysis/use-cases/subscribeWebhook,docs/03-design/use-cases/subscribeWebhook,crates/kampus-api/src/webhooks.rs,crates/kampus-api/tests
+RF-100,UC-049,installPlugin,docs/02-analysis/use-cases/installPlugin,docs/03-design/use-cases/installPlugin,crates/kampus-plugin-host/src/install.rs,crates/kampus-plugin-host/tests
+RF-100,UC-050,managePlugin,docs/02-analysis/use-cases/managePlugin,docs/03-design/use-cases/managePlugin,crates/kampus-plugin-host/src/lifecycle.rs,crates/kampus-plugin-host/tests
+RF-102,UC-051,buildPlugin,docs/02-analysis/use-cases/buildPlugin,docs/03-design/use-cases/buildPlugin,crates/kampus-plugin-host/src/harness.rs,crates/kampus-plugin-host/tests
+RF-006,UC-052,renameTerms,docs/02-analysis/use-cases/renameTerms,docs/03-design/use-cases/renameTerms,crates/kampus-customise/src/terms.rs,crates/kampus-customise/tests
+RF-006,UC-053,defineCustomField,docs/02-analysis/use-cases/defineCustomField,docs/03-design/use-cases/defineCustomField,crates/kampus-customise/src/fields.rs,crates/kampus-customise/tests
+RF-006,UC-054,arrangeLayout,docs/02-analysis/use-cases/arrangeLayout,docs/03-design/use-cases/arrangeLayout,crates/kampus-customise/src/layout.rs,crates/kampus-customise/tests
+RF-115,UC-055,editTheme,docs/02-analysis/use-cases/editTheme,docs/03-design/use-cases/editTheme,crates/kampus-customise/src/theme.rs,crates/kampus-customise/tests
+RF-006,UC-056,createRule,docs/02-analysis/use-cases/createRule,docs/03-design/use-cases/createRule,crates/kampus-customise/src/rules.rs,crates/kampus-customise/tests
+RF-118,UC-057,switchFeature,docs/02-analysis/use-cases/switchFeature,docs/03-design/use-cases/switchFeature,crates/kampus-customise/src/flags.rs,crates/kampus-customise/tests
+RF-004,UC-058,shareCustomisation,docs/02-analysis/use-cases/shareCustomisation,docs/03-design/use-cases/shareCustomisation,crates/kampus-customise/src/packages.rs,crates/kampus-customise/tests
