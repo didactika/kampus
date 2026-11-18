@@ -37,7 +37,7 @@
  *
  * Every crate says what it is in `[package.metadata.kampus] kind`: `foundation`, `port`, `adapter`,
  * `module` or `server`. Module crates follow one layout, so every declaration has one place, and the
- * server's module registry (`crates/server/src/registry.rs` and the `# modules:start/end` block of its
+ * server's module registry (`crates/server/src/wiring/registry.rs` and the `# modules:start/end` block of its
  * manifest) is written from the module crates, in the order of the module table of the architecture,
  * followed by the modules declared in `crates/server/modules.toml`.
  */
@@ -51,11 +51,6 @@ const END = '# modules:end';
 /** The kinds a crate may be. */
 const KINDS = ['foundation', 'port', 'adapter', 'module', 'server'];
 
-/** What may sit at the root of a module crate. */
-const CRATE_ROOT = ['Cargo.toml', 'README.md', 'src', 'tests', 'web', 'lang'];
-
-/** What may sit in `src/` of a module crate: two files and the folders of the layout. */
-const SRC_FILES = ['lib.rs', 'module.rs'];
 const SRC_FOLDERS = [
   'db',
   'permissions',
@@ -71,6 +66,25 @@ const SRC_FOLDERS = [
   'privacy',
 ];
 
+/**
+ * The layout of each kind of crate: what may sit at its root besides `Cargo.toml`, `README.md`, `src` and
+ * `tests`; the only files at the top of `src/`; the folders allowed there (`null`: any, named by concern);
+ * the folders it must have; and the declarations it must make. Every folder under `src/` has a `mod.rs`.
+ */
+const LAYOUTS = {
+  foundation: { root: [], files: ['lib.rs'], folders: null, required: [], declarations: [] },
+  port: { root: ['adapters'], files: ['lib.rs'], folders: null, required: ['port', 'registry', 'conformance'], declarations: [] },
+  adapter: {
+    root: [],
+    files: ['lib.rs'],
+    folders: null,
+    required: ['store'],
+    declarations: [['src/lib.rs', /pub const ADAPTER: /, 'declares `pub const ADAPTER`']],
+  },
+  server: { root: ['adapters.toml', 'modules.toml'], files: ['lib.rs', 'main.rs'], folders: null, required: ['commands', 'config', 'http', 'wiring'], declarations: [] },
+  module: { root: ['web', 'lang', 'assets'], files: ['lib.rs', 'module.rs'], folders: null, required: ['db', 'permissions'], declarations: null },
+};
+
 /** Files a module must have, and what each must declare. */
 const REQUIRED = [
   ['src/module.rs', /pub const MODULE: Module = Module \{/, 'declares `pub const MODULE: Module`'],
@@ -79,6 +93,9 @@ const REQUIRED = [
   ['src/permissions/mod.rs', /pub const PERMISSIONS: &\[PermissionDeclaration\]/, 'declares `PERMISSIONS`'],
   ['src/permissions/templates.rs', /pub const TEMPLATES: &\[RoleTemplateDeclaration\]/, 'declares `TEMPLATES`'],
 ];
+
+LAYOUTS.module.folders = SRC_FOLDERS;
+LAYOUTS.module.declarations = REQUIRED;
 
 /** The name and kind of a manifest. */
 function describe(file) {
@@ -131,28 +148,46 @@ export function listModules(root) {
 function checkLayout(root) {
   const problems = [];
   for (const c of crates(root)) {
-    if (!KINDS.includes(c.kind)) {
+    const layout = LAYOUTS[c.kind];
+    if (!layout) {
       problems.push(`${c.dir}/Cargo.toml: [package.metadata.kampus] kind must be one of ${KINDS.join(', ')}`);
       continue;
     }
-    if (c.kind !== 'module') continue;
     const base = path.join(root, c.dir);
+    const where = `the ${c.kind} layout (DEC-087)`;
     for (const entry of fs.readdirSync(base)) {
-      if (!CRATE_ROOT.includes(entry)) problems.push(`${c.dir}/${entry}: not part of the module layout (DEC-087)`);
-    }
-    for (const entry of fs.readdirSync(path.join(base, 'src'))) {
-      const folder = fs.statSync(path.join(base, 'src', entry)).isDirectory();
-      if (folder ? !SRC_FOLDERS.includes(entry) : !SRC_FILES.includes(entry)) {
-        problems.push(`${c.dir}/src/${entry}: not part of the module layout (DEC-087)`);
+      if (!['Cargo.toml', 'README.md', 'src', 'tests', ...layout.root].includes(entry)) {
+        problems.push(`${c.dir}/${entry}: not part of ${where}`);
       }
     }
-    for (const [file, pattern, what] of REQUIRED) {
+    const src = path.join(base, 'src');
+    for (const entry of fs.readdirSync(src)) {
+      const folder = fs.statSync(path.join(src, entry)).isDirectory();
+      const allowed = folder ? !layout.folders || layout.folders.includes(entry) : layout.files.includes(entry);
+      if (!allowed) problems.push(`${c.dir}/src/${entry}: not part of ${where}`);
+    }
+    for (const folder of layout.required) {
+      if (!fs.existsSync(path.join(src, folder))) problems.push(`${c.dir}/src/${folder}: missing from ${where}`);
+    }
+    for (const folder of walkFolders(src)) {
+      const name = path.basename(folder);
+      if (!/^[a-z][a-z0-9_]*$/.test(name)) problems.push(`${path.relative(root, folder)}: folders are snake case`);
+      if (!fs.existsSync(path.join(folder, 'mod.rs'))) problems.push(`${path.relative(root, folder)}: a folder needs its mod.rs`);
+    }
+    for (const [file, pattern, what] of layout.declarations) {
       const full = path.join(base, file);
       if (!fs.existsSync(full)) problems.push(`${c.dir}/${file}: missing (DEC-087)`);
       else if (!pattern.test(fs.readFileSync(full, 'utf8'))) problems.push(`${c.dir}/${file}: ${what}`);
     }
   }
   return problems;
+}
+
+/** Every folder under a directory, deepest last. */
+function walkFolders(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true })
+    .filter((e) => e.isDirectory())
+    .flatMap((e) => [path.join(dir, e.name), ...walkFolders(path.join(dir, e.name))]);
 }
 
 /** The registry of the server. */
@@ -187,14 +222,14 @@ export function checkModules(root, { fix, author, since }) {
     }
   }
 
-  const source = path.join(root, 'crates', 'server', 'src', 'registry.rs');
+  const source = path.join(root, 'crates', 'server', 'src', 'wiring', 'registry.rs');
   const existing = fs.existsSync(source) ? fs.readFileSync(source, 'utf8') : null;
   const top = existing?.match(/^(?:\/\/.*\n)+\n/)?.[0]
     ?? header('slash', { pkg: 'kampus-server', author, since, year: new Date().getFullYear().toString() });
   const expected = top + rustBody(modules);
   if (existing !== expected) {
     if (fix) fs.writeFileSync(source, expected);
-    else problems.push('crates/server/src/registry.rs: the module registry is out of date (run tools/repo-check with --fix)');
+    else problems.push('crates/server/src/wiring/registry.rs: the module registry is out of date (run tools/repo-check with --fix)');
   }
   return { problems, summary: `${modules.length} module(s) registered in the standard layout` };
 }

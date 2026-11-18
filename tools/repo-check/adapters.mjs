@@ -35,7 +35,7 @@
 /**
  * The adapter registry of the server (DEC-086). Every adapter in `crates/<port>/adapters/<name>`, and every
  * external adapter declared in `crates/server/adapters.toml`, becomes a dependency of `kampus-server` and an
- * entry of `crates/server/src/adapters.rs`. With `--fix` both are written; otherwise a stale registry is a
+ * entry of `crates/server/src/wiring/adapters.rs`. With `--fix` both are written; otherwise a stale registry is a
  * problem, so an adapter dropped into its folder is never forgotten.
  */
 import fs from 'node:fs';
@@ -95,7 +95,7 @@ function cargoBlock(adapters) {
 }
 
 /**
- * Builds the body of `crates/server/src/adapters.rs`.
+ * Builds the body of `crates/server/src/wiring/adapters.rs`.
  *
  * @param {{port: string, crate: string}[]} adapters The adapters.
  * @returns {string} The Rust source after the header.
@@ -138,14 +138,14 @@ export function checkAdapters(root, { fix, author, since }) {
     }
   }
 
-  const source = path.join(root, 'crates', 'server', 'src', 'adapters.rs');
+  const source = path.join(root, 'crates', 'server', 'src', 'wiring', 'adapters.rs');
   const existing = fs.existsSync(source) ? fs.readFileSync(source, 'utf8') : null;
   const top = existing?.match(/^(?:\/\/.*\n)+\n/)?.[0]
     ?? header('slash', { pkg: 'kampus-server', author, since, year: new Date().getFullYear().toString() });
   const expected = top + rustBody(adapters);
   if (existing !== expected) {
     if (fix) fs.writeFileSync(source, expected);
-    else problems.push('crates/server/src/adapters.rs: the adapter registry is out of date (run tools/repo-check with --fix)');
+    else problems.push('crates/server/src/wiring/adapters.rs: the adapter registry is out of date (run tools/repo-check with --fix)');
   }
   return { problems, summary: `${adapters.length} adapter(s) registered` };
 }

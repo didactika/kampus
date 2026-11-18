@@ -42,8 +42,8 @@ use kampus_cache::{Cache, Layered};
 use kampus_common::{AdapterSettings, Result};
 use kampus_storage::Storage;
 
-use crate::adapters;
 use crate::config::Config;
+use crate::wiring::adapters;
 
 /// How long a value read from the shared cache stays in the in-process one.
 const LOCAL_TTL: Duration = Duration::from_secs(30);

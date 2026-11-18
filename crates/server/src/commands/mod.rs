@@ -40,7 +40,7 @@ use tokio::net::TcpListener;
 
 use crate::config::{Config, LogFormat};
 use crate::http::{AppState, router};
-use crate::modules::SCHEMAS;
+use crate::wiring::modules::SCHEMAS;
 
 /// Starts logging as the configuration asks: JSON lines by default, with the request id in each span.
 pub fn init_logging(config: &Config) {
@@ -89,7 +89,7 @@ pub async fn serve(config: &Config) -> Result<()> {
             return Err(not_current(&plan));
         }
     }
-    crate::modules::sync_declarations(&db).await?;
+    crate::wiring::modules::sync_declarations(&db).await?;
 
     let listener = TcpListener::bind(config.http_address).await.map_err(|error| {
         Error::unavailable("server.bind")
@@ -97,7 +97,7 @@ pub async fn serve(config: &Config) -> Result<()> {
             .with_source(error)
     })?;
     tracing::info!(role = %config.role, address = %config.http_address, version = PLATFORM_VERSION, "kampus started");
-    let ports = crate::ports::Ports::open(config).await?;
+    let ports = crate::wiring::ports::Ports::open(config).await?;
     let app = router(AppState {
         db: db.clone(),
         modules: SCHEMAS.as_slice(),
