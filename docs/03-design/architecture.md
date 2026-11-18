@@ -118,7 +118,7 @@ Every user-facing string is an ICU message of its module, resolved by `kampus-i1
 | RNF-001 security | Permission checks inside services (DEC-017), server-side sessions (DEC-031), signed URLs (DEC-053), sandboxed plugins (DEC-068), webhook address checks (DEC-064) |
 | RNF-002 privacy | Privacy handlers declared by every module (DEC-061), tombstones (RN-034), retention per data category |
 | RNF-003 accessibility | Design system and accessible tokens (DEC-075, RN-217), accessibility scans per page |
-| RNF-004 performance | Permission filtering in the query (RN-020), two-level cache with invalidation by event, indexes from queries (DEC-014 rule 8), load test in T-C.14 |
+| RNF-004 performance | Permission filtering in the query (RN-020), two-level cache with invalidation by event, indexes from queries (DEC-014 rule 8), a load test before the first release |
 | RNF-005 scalability | Stateless roles, state in the ports |
 | RNF-006 availability | Expand-and-contract migrations (DEC-080), rolling upgrades |
 | RNF-007 maintainability | Dependency rules enforced by the build and by the schema check (DEC-079) |
