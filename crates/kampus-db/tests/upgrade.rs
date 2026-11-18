@@ -42,34 +42,47 @@
 )]
 
 use kampus_common::ErrorKind;
+use kampus_db::schema::Change;
 use kampus_db::{Database, ModuleSteps, Prefix, Problem, Step, Upgrader};
 
 /// The first step of a sample module.
 const FIRST: Step = Step {
     sequence: 1,
     name: "create note",
-    postgres: "create table {schema}.note (id uuid primary key);",
+    changes: &[Change::Postgres {
+        sql: "create table {schema}.note (id uuid primary key);",
+        reason: "a sample module of the tests",
+    }],
 };
 
 /// The second step of a sample module.
 const SECOND: Step = Step {
     sequence: 2,
     name: "add note text",
-    postgres: "alter table {schema}.note add column body text;",
+    changes: &[Change::Postgres {
+        sql: "alter table {schema}.note add column body text;",
+        reason: "a sample module of the tests",
+    }],
 };
 
 /// The third step of a sample module, referencing another module's schema.
 const THIRD: Step = Step {
     sequence: 3,
     name: "add note author",
-    postgres: "alter table {schema}.note add column author_id uuid references {schema:people}.person (id);",
+    changes: &[Change::Postgres {
+        sql: "alter table {schema}.note add column author_id uuid references {schema:people}.person (id);",
+        reason: "a sample module of the tests",
+    }],
 };
 
 /// The first step as it would look if someone edited it after release.
 const FIRST_EDITED: Step = Step {
     sequence: 1,
     name: "create note",
-    postgres: "create table {schema}.note (id uuid);",
+    changes: &[Change::Postgres {
+        sql: "create table {schema}.note (id uuid);",
+        reason: "a sample module of the tests",
+    }],
 };
 
 /// A module the sample module depends on.
@@ -78,7 +91,10 @@ const PEOPLE: ModuleSteps = ModuleSteps {
     steps: &[Step {
         sequence: 1,
         name: "create person",
-        postgres: "create table {schema}.person (id uuid primary key);",
+        changes: &[Change::Postgres {
+            sql: "create table {schema}.person (id uuid primary key);",
+            reason: "a sample module of the tests",
+        }],
     }],
 };
 

@@ -42,15 +42,17 @@ use kampus_common::{Error, Result};
 use sha2::{Digest, Sha256};
 use sqlx::Row;
 
+use crate::schema::Change;
 use crate::{Database, MODULE, ModuleSteps, Step};
 
 /// The steps of this crate: the record of the installation, next to the ledger.
-const DB_STEPS: ModuleSteps = ModuleSteps {
+pub const OWN_STEPS: ModuleSteps = ModuleSteps {
     module: MODULE,
     steps: &[Step {
         sequence: 1,
         name: "installation record",
-        postgres: "create table {schema}.installation (
+        changes: &[Change::Postgres {
+            sql: "create table {schema}.installation (
             singleton boolean primary key default true check (singleton),
             prefix text not null,
             installed_version text not null,
@@ -58,6 +60,8 @@ const DB_STEPS: ModuleSteps = ModuleSteps {
             upgraded_version text not null,
             upgraded_at timestamptz not null default now()
         );",
+            reason: "kept as first written: changing its text would change the checksum of a step already applied",
+        }],
     }],
 };
 
@@ -177,7 +181,7 @@ impl<'a> Upgrader<'a> {
     /// Prepares the upgrade with the steps of every module, given in dependency order.
     #[must_use]
     pub fn new(db: &'a Database, modules: &[ModuleSteps], release: &'a str) -> Self {
-        let mut all = vec![DB_STEPS];
+        let mut all = vec![OWN_STEPS];
         all.extend(modules.iter().copied().filter(|m| m.module != MODULE));
         Self {
             db,

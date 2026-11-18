@@ -44,6 +44,65 @@ use crate::Prefix;
 /// A transaction: every service operation is one (DEC-016).
 pub type Transaction = sqlx::Transaction<'static, sqlx::Postgres>;
 
+/// The optional features of a database adapter; modules ask for these, never for the dialect (DEC-066).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(
+    clippy::struct_excessive_bools,
+    reason = "each flag is an independent capability"
+)]
+pub struct Capabilities {
+    /// Row locks that skip locked rows (`FOR UPDATE SKIP LOCKED`), for job queues.
+    pub skip_locked: bool,
+    /// Inserts that resolve conflicts on a key (`ON CONFLICT`).
+    pub upsert: bool,
+    /// Locks held by a session or a transaction that are not rows (advisory locks).
+    pub advisory_locks: bool,
+    /// One schema per module; without it, tables carry the module in their name (DEC-039).
+    pub schemas: bool,
+}
+
+/// Turns a database failure into the error model (DEC-018): violated keys and references are conflicts,
+/// violated checks and missing values are validation errors naming the constraint or column, and
+/// serialisation failures and deadlocks are unavailable, to be retried.
+#[must_use]
+pub fn classify(error: sqlx::Error) -> Error {
+    let details = error.as_database_error().map(|db| {
+        let code = db.code().map_or_else(String::new, std::borrow::Cow::into_owned);
+        let constraint = db.constraint().unwrap_or_default().to_owned();
+        let column = db
+            .try_downcast_ref::<sqlx::postgres::PgDatabaseError>()
+            .and_then(|pg| pg.column())
+            .unwrap_or_default()
+            .to_owned();
+        (code, constraint, column)
+    });
+    let Some((code, constraint, column)) = details else {
+        return Error::unavailable("db.query").with_source(error);
+    };
+    match code.as_str() {
+        "23505" => Error::conflict("db.unique_violation")
+            .with_param("constraint", constraint)
+            .with_source(error),
+        "23503" => Error::conflict("db.foreign_key_violation")
+            .with_param("constraint", constraint)
+            .with_source(error),
+        "23514" => Error::validation(
+            "db.check_violation",
+            vec![kampus_common::FieldError::new(constraint, "check")],
+        )
+        .with_source(error),
+        "23502" => Error::validation(
+            "db.not_null_violation",
+            vec![kampus_common::FieldError::new(column, "required")],
+        )
+        .with_source(error),
+        "40001" | "40P01" => Error::unavailable("db.retry").with_source(error),
+        _ => Error::unavailable("db.query")
+            .with_param("sqlstate", code)
+            .with_source(error),
+    }
+}
+
 /// The database of one installation.
 #[derive(Debug, Clone)]
 pub struct Database {
@@ -85,6 +144,17 @@ impl Database {
     #[must_use]
     pub const fn prefix(&self) -> &Prefix {
         &self.prefix
+    }
+
+    /// The optional features of this database: PostgreSQL has them all.
+    #[must_use]
+    pub const fn capabilities(&self) -> Capabilities {
+        Capabilities {
+            skip_locked: true,
+            upsert: true,
+            advisory_locks: true,
+            schemas: true,
+        }
     }
 
     /// Starts a transaction.

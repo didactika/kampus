@@ -85,16 +85,18 @@ Forward-only steps per module, each in one transaction, following **expand and c
 
 ## Linter rules
 
+The linter (`kampus_db::lint`) replays the declared steps of every module in dependency order; a test of `kampus-server` runs it on every build. SQL outside the neutral schema (`Change::Postgres`) must give its reason (DEC-065).
+
 | Rule | Fails when |
 | --- | --- |
 | L-01 | a column named `*_id` or typed as a reference has no foreign key |
-| L-02 | a foreign key has no index starting with its columns |
-| L-03 | a table has no `UNIQUE` constraint besides the primary key and is not a pure association |
+| L-02 | a foreign key has no index starting with its columns (the port creates that index itself, so a declared schema always satisfies it) |
+| L-03 | a table has no `UNIQUE` constraint besides the primary key, is not a pure association and gives no reason for it |
 | L-04 | an instant is stored as an integer or text, or a flag as an integer |
 | L-05 | a `jsonb` column has no declared schema |
 | L-06 | a foreign key points to a later module (DM-05) |
 | L-07 | a name breaks the conventions above or uses an unquoted reserved word |
-| L-08 | a migration drops or renames something still read by the previous release |
+| L-08 | a step drops a column a supported release still reads, or adds a required column without a default |
 
 ## Anti-patterns and the Kampus fix
 

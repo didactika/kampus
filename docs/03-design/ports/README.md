@@ -26,7 +26,7 @@ Every piece of infrastructure is a **port** (a Rust trait in a foundation crate)
 
 | Aspect | Contract |
 | --- | --- |
-| Schema | Written once per module in a **neutral schema format** (tables, columns with portable types, keys, foreign keys, checks, indexes) and turned into migrations per dialect. Physical names get the installation prefix (DEC-039). |
+| Schema | Written once per module in the **neutral schema format** of `kampus_db::schema` (`Table`, `Column`, `Type`, `ForeignKey`, `Check`, `Index`, and the changes of each step) (tables, columns with portable types, keys, foreign keys, checks, indexes) and turned into migrations per dialect. Physical names get the installation prefix (DEC-039). |
 | Portable types | `uuid`, `text`, `varchar(n)`, `integer`, `bigint`, `numeric(p,s)`, `boolean`, `date`, `timestamptz`, `interval`, `bytea`, `json`, `text[]`; each dialect maps them (for example `text[]` to a JSON array where arrays do not exist). No other type is allowed in a module schema. |
 | Queries | A typed, dialect-neutral query builder; raw SQL only inside a dialect adapter, with a written reason, and covered by the conformance suite. |
 | Transactions | One transaction per service operation, with the outbox in it (DEC-016); isolation `READ COMMITTED` plus explicit row locks; `SKIP LOCKED`, upsert and advisory locks are capabilities with fallbacks. |
