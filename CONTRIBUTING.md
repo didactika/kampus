@@ -48,6 +48,10 @@ docker compose -f tools/docs-check/compose.yaml run --rm repo
 
 The same gates run in CI on every pull request (`.github/workflows/ci.yml`).
 
+## Modules
+
+Every module crate follows the [module layout](docs/03-design/module-layout.md) (DEC-087): `src/lib.rs` and `src/module.rs` with the `MODULE` descriptor at the top of `src/`, and everything else in its folder (`db/`, `permissions/`, `model/`, `service/`, `ports/`, `support/`, `jobs/`…). After adding a module, run `docker compose -f tools/docs-check/compose.yaml run --rm repo --fix --author "Your Name <you@example.org>"`: it registers the module in `kampus-server` in dependency order. A module published outside the repository is declared in `crates/server/modules.toml`.
+
 ## Adapters
 
 An adapter of an infrastructure port lives in `crates/<port>/adapters/<name>`, is named `kampus-<port>-<name>`, exposes `ADAPTER` with the URL schemes it serves, and passes the port's conformance suite. After adding one, run `docker compose -f tools/docs-check/compose.yaml run --rm repo --fix --author "Your Name <you@example.org>"`: it registers the adapter in `kampus-server`. An adapter published outside the repository is declared in `crates/server/adapters.toml`:

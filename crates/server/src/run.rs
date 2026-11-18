@@ -40,7 +40,7 @@ use tokio::net::TcpListener;
 
 use crate::config::{Config, LogFormat};
 use crate::http::{AppState, router};
-use crate::modules::MODULES;
+use crate::modules::SCHEMAS;
 
 /// Starts logging as the configuration asks: JSON lines by default, with the request id in each span.
 pub fn init_logging(config: &Config) {
@@ -75,7 +75,7 @@ async fn connect(config: &Config) -> Result<Database> {
 /// database or the listener cannot be reached.
 pub async fn serve(config: &Config) -> Result<()> {
     let db = connect(config).await?;
-    let upgrader = Upgrader::new(&db, MODULES, PLATFORM_VERSION);
+    let upgrader = Upgrader::new(&db, &SCHEMAS, PLATFORM_VERSION);
     let plan = upgrader.plan().await?;
     if !plan.is_current() {
         if config.upgrade_on_start && plan.problems.is_empty() {
@@ -100,7 +100,7 @@ pub async fn serve(config: &Config) -> Result<()> {
     let ports = crate::ports::Ports::open(config).await?;
     let app = router(AppState {
         db: db.clone(),
-        modules: MODULES,
+        modules: SCHEMAS.as_slice(),
         ports,
     });
     axum::serve(listener, app)
@@ -119,7 +119,7 @@ pub async fn serve(config: &Config) -> Result<()> {
 /// A `conflict` error when a problem stops the upgrade, and an `unavailable` error when a step fails.
 pub async fn upgrade(config: &Config, new_installation: bool) -> Result<Vec<String>> {
     let db = connect(config).await?;
-    let report = Upgrader::new(&db, MODULES, PLATFORM_VERSION)
+    let report = Upgrader::new(&db, &SCHEMAS, PLATFORM_VERSION)
         .apply(new_installation)
         .await?;
     db.close().await;
@@ -133,7 +133,7 @@ pub async fn upgrade(config: &Config, new_installation: bool) -> Result<Vec<Stri
 /// An `unavailable` error when the database cannot be read.
 pub async fn check(config: &Config) -> Result<UpgradePlan> {
     let db = connect(config).await?;
-    let plan = Upgrader::new(&db, MODULES, PLATFORM_VERSION).plan().await;
+    let plan = Upgrader::new(&db, &SCHEMAS, PLATFORM_VERSION).plan().await;
     db.close().await;
     plan
 }

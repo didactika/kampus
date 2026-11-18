@@ -47,7 +47,7 @@ use http_body_util::BodyExt;
 use kampus_common::PLATFORM_VERSION;
 use kampus_db::{Database, Prefix, Upgrader};
 use kampus_server::http::{AppState, router};
-use kampus_server::modules::MODULES;
+use kampus_server::modules::SCHEMAS;
 use kampus_server::ports::Ports;
 use tower::ServiceExt;
 
@@ -73,7 +73,7 @@ async fn call(
     let ports = Ports::for_tests(files.path().to_str().unwrap()).await.unwrap();
     let response = router(AppState {
         db: db.clone(),
-        modules: MODULES,
+        modules: SCHEMAS.as_slice(),
         ports,
     })
     .oneshot(request.body(Body::empty()).unwrap())
@@ -101,7 +101,7 @@ async fn readiness_waits_for_the_upgrade() {
     assert_eq!(status, StatusCode::SERVICE_UNAVAILABLE);
     assert_eq!(body["status"], "not_ready");
 
-    Upgrader::new(&db, MODULES, PLATFORM_VERSION)
+    Upgrader::new(&db, &SCHEMAS, PLATFORM_VERSION)
         .apply(true)
         .await
         .unwrap();

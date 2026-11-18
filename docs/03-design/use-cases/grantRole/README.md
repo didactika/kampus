@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/grantRole/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Grant service | service | `crates/access/src/grant.rs` |
+| Grant service | service | `crates/access/src/service/grant.rs` |
 | `POST /api/v1/scopes/{scope_id}/grants` | API endpoint | `docs/03-design/api/access.openapi.yaml` |
 | `access.grant` | table | `docs/03-design/data-model/access.md` |
 

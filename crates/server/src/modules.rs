@@ -32,41 +32,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The composition of modules: the upgrade steps of every module, in the order of the module table of the
-//! architecture. `kampus-db` adds its own steps first.
+//! The composition of modules: the server reads the descriptor of every module of the build (DEC-087)
+//! from the generated registry, in the order of the module table of the architecture. `kampus-db` adds
+//! its own steps first.
+
+use std::sync::LazyLock;
 
 use kampus_db::ModuleSteps;
 
+use crate::registry::MODULES;
+
 /// The upgrade steps of every module of this build, in dependency order.
-pub const MODULES: &[ModuleSteps] = &[kampus_access::schema::STEPS, kampus_identity::schema::STEPS];
+pub static SCHEMAS: LazyLock<Vec<ModuleSteps>> =
+    LazyLock::new(|| MODULES.iter().map(|m| m.schema()).collect());
 
 /// Brings what the modules of this build declare into the database at start-up (DEC-015): permissions
-/// and role templates. Each module gives values to the templates it knows; the values are merged.
+/// and role templates, with the values of every module for each template merged.
 ///
 /// # Errors
 ///
 /// The errors of [`kampus_access::Access::sync`].
 pub async fn sync_declarations(db: &kampus_db::Database) -> kampus_common::Result<()> {
-    let access = kampus_access::Access::new(db.clone(), std::sync::Arc::new(kampus_common::SystemClock));
-    let templates: Vec<kampus_access::RoleTemplateDeclaration> = [
-        kampus_access::declarations::TEMPLATES,
-        kampus_identity::declarations::TEMPLATES,
-    ]
-    .concat();
-    access
-        .sync(
-            &[
-                (
-                    kampus_access::schema::MODULE,
-                    kampus_access::declarations::PERMISSIONS,
-                ),
-                (
-                    kampus_identity::MODULE,
-                    kampus_identity::declarations::PERMISSIONS,
-                ),
-            ],
-            &templates,
-        )
+    kampus_access::Access::new(db.clone(), std::sync::Arc::new(kampus_common::SystemClock))
+        .sync_modules(MODULES)
         .await
 }
 
@@ -75,12 +63,12 @@ pub const OLDEST_SUPPORTED: &str = "0.1.0";
 
 #[cfg(test)]
 mod tests {
-    use super::{MODULES, OLDEST_SUPPORTED};
+    use super::{OLDEST_SUPPORTED, SCHEMAS};
 
     #[test]
     fn the_schema_of_every_module_passes_the_linter() {
         let mut modules = vec![kampus_db::OWN_STEPS];
-        modules.extend_from_slice(MODULES);
+        modules.extend_from_slice(&SCHEMAS);
         let findings = kampus_db::lint::lint(&modules, OLDEST_SUPPORTED);
         assert!(
             findings.is_empty(),

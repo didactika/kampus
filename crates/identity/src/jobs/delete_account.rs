@@ -39,7 +39,7 @@
 use kampus_common::Result;
 use sqlx::PgConnection;
 
-use crate::secret::random_hex;
+use crate::support::secret::random_hex;
 use crate::{AccountId, AccountStatus, Identity, sql};
 
 /// How many accounts one run deletes, so a run stays short.

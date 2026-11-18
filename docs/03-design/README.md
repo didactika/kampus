@@ -45,6 +45,10 @@ Shell, UI module contract, extension points, design system, data and quality: [w
 
 Plugin types and their worlds, host interfaces, manifest and lifecycle: [plugin SDK](./sdk/README.md), with the WIT packages in [kampus.wit](./sdk/kampus.wit) (DEC-003, DEC-067 to DEC-069).
 
+## Module layout
+
+The descriptor every module exposes and the folders every module crate follows: [module layout](./module-layout.md) (DEC-015, DEC-087).
+
 ## Infrastructure ports
 
 ![Infrastructure ports](./ports/ports.svg)

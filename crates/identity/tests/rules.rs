@@ -45,17 +45,17 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use kampus_access::{Access, Actor, PrincipalId, RoleId, RoleTemplateDeclaration, ScopeId, ScopeKind};
+use kampus_access::{Access, Actor, PrincipalId, RoleId, ScopeId, ScopeKind};
 use kampus_common::{ErrorKind, FixedClock, Result, Timestamp};
 use kampus_db::{Database, Prefix, Upgrader};
-use kampus_identity::account::SignUp;
-use kampus_identity::api_token::{TokenRequest, TokenScope};
-use kampus_identity::declarations::{ACCOUNT_READ, TOKEN_MANAGE_OWN};
-use kampus_identity::oidc::{OidcOutcome, ProviderConfig};
-use kampus_identity::second_factor::Proof;
-use kampus_identity::session::Client;
-use kampus_identity::sign_in::{Credential, SignIn, SignInOutcome};
-use kampus_identity::totp;
+use kampus_identity::permissions::{ACCOUNT_READ, TOKEN_MANAGE_OWN};
+use kampus_identity::service::account::SignUp;
+use kampus_identity::service::api_token::{TokenRequest, TokenScope};
+use kampus_identity::service::oidc::{OidcOutcome, ProviderConfig};
+use kampus_identity::service::second_factor::Proof;
+use kampus_identity::service::session::Client;
+use kampus_identity::service::sign_in::{Credential, SignIn, SignInOutcome};
+use kampus_identity::support::totp;
 use kampus_identity::{
     AccountId, AccountKind, AccountStatus, CampusPolicy, FactorKind, FixedPolicies, Identity, LinkingPolicy,
     MemoryCourier, MfaLevel, Notice, PasswordCost, ProviderId, SecretKey, Session,
@@ -120,7 +120,7 @@ async fn world_with(policy: CampusPolicy) -> World {
     let db = Database::connect(&url, prefix, 4).await.unwrap();
     Upgrader::new(
         &db,
-        &[kampus_access::schema::STEPS, kampus_identity::schema::STEPS],
+        &[kampus_access::MODULE.schema(), kampus_identity::MODULE.schema()],
         "0.1.0",
     )
     .apply(true)
@@ -130,19 +130,8 @@ async fn world_with(policy: CampusPolicy) -> World {
         Timestamp::parse_rfc3339("2026-11-18T10:00:00Z").unwrap(),
     ));
     let access = Access::new(db.clone(), clock.clone());
-    let templates: Vec<RoleTemplateDeclaration> = [
-        kampus_access::declarations::TEMPLATES,
-        kampus_identity::declarations::TEMPLATES,
-    ]
-    .concat();
     access
-        .sync(
-            &[
-                ("access", kampus_access::declarations::PERMISSIONS),
-                ("identity", kampus_identity::declarations::PERMISSIONS),
-            ],
-            &templates,
-        )
+        .sync_modules(&[&kampus_access::MODULE, &kampus_identity::MODULE])
         .await
         .unwrap();
     let platform = access.create_platform().await.unwrap();

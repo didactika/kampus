@@ -40,6 +40,7 @@ pub mod config;
 pub mod http;
 pub mod modules;
 pub mod ports;
+pub mod registry;
 pub mod run;
 
 pub use config::{Config, Role};

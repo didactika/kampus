@@ -19,7 +19,7 @@ Design: [README](../../../03-design/use-cases/grantRole/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Grant service | service | `crates/access/src/grant.rs` | no (to build) |
+| Grant service | service | `crates/access/src/service/grant.rs` | no (to build) |
 | `POST /api/v1/scopes/{scope_id}/grants` | API endpoint | `docs/03-design/api/access.openapi.yaml` | no (to build) |
 | `access.grant` | table | `docs/03-design/data-model/access.md` | no (to build) |
 

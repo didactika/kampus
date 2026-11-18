@@ -45,6 +45,9 @@ publish.workspace = true
 [features]
 conformance = []
 
+[package.metadata.kampus]
+kind = "port"
+
 [dependencies]
 kampus-common.workspace = true
 async-trait.workspace = true

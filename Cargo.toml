@@ -47,10 +47,10 @@ publish = false
 [workspace.dependencies]
 kampus-common = { path = "crates/common" }
 kampus-db = { path = "crates/db" }
+kampus-module = { path = "crates/module" }
 kampus-storage = { path = "crates/storage" }
 kampus-cache = { path = "crates/cache" }
 kampus-access = { path = "crates/access" }
-kampus-identity = { path = "crates/identity" }
 argon2 = { version = "0.6.0", default-features = false, features = ["alloc"] }
 async-trait = "0.1.92"
 bytes = "1.12.2"

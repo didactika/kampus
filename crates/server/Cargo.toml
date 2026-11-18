@@ -42,7 +42,14 @@ license.workspace = true
 repository.workspace = true
 publish.workspace = true
 
+[package.metadata.kampus]
+kind = "server"
+
 [dependencies]
+# modules:start
+kampus-access = { path = "../access" }
+kampus-identity = { path = "../identity" }
+# modules:end
 # adapters:start
 kampus-cache-moka = { path = "../cache/adapters/moka" }
 kampus-cache-redis = { path = "../cache/adapters/redis" }
@@ -50,8 +57,7 @@ kampus-storage-opendal = { path = "../storage/adapters/opendal" }
 # adapters:end
 kampus-common.workspace = true
 kampus-db.workspace = true
-kampus-access.workspace = true
-kampus-identity.workspace = true
+kampus-module.workspace = true
 kampus-cache.workspace = true
 kampus-storage.workspace = true
 axum.workspace = true

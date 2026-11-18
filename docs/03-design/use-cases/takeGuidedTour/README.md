@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/takeGuidedTour/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Tour runner and checklist | UI | `web/src/shell/tours/` |
-| Onboarding progress | service | `crates/users/src/onboarding.rs` |
+| Onboarding progress | service | `crates/users/src/service/onboarding.rs` |
 
 ## Sequence
 

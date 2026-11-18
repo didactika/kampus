@@ -39,24 +39,14 @@
 //! Every account is a principal of access with the same id; identity keeps the principal active only
 //! while the account is (RN-010), so access never reads identity.
 
-pub mod account;
-pub mod api_token;
-pub mod courier;
-pub mod declarations;
+pub mod db;
 pub mod jobs;
-pub mod lifecycle;
 pub mod model;
-pub mod oidc;
-pub mod one_time;
-pub mod password;
-pub mod policy;
-pub mod recovery;
-pub mod schema;
-pub mod second_factor;
-pub mod secret;
-pub mod session;
-pub mod sign_in;
-pub mod totp;
+pub mod module;
+pub mod permissions;
+pub mod ports;
+pub mod service;
+pub mod support;
 
 use std::sync::Arc;
 
@@ -64,16 +54,14 @@ use kampus_access::Access;
 use kampus_common::{Clock, Timestamp};
 use kampus_db::Database;
 
-pub use courier::{Courier, MemoryCourier, Message, Notice};
 pub use model::{
     Account, AccountId, AccountKind, AccountStatus, FactorId, FactorKind, LinkingPolicy, MfaLevel,
     ProviderId, SecondFactor, Session, SessionId, SessionSummary, TokenId,
 };
-pub use policy::{CampusPolicy, FixedPolicies, Policies, Throttle};
-pub use secret::{PasswordCost, PasswordHasher, SecretKey};
-
-/// The module name, as owner of the grants it gives (RN-016).
-pub const MODULE: &str = "identity";
+pub use module::MODULE;
+pub use ports::courier::{Courier, MemoryCourier, Message, Notice};
+pub use ports::policy::{CampusPolicy, FixedPolicies, Policies, Throttle};
+pub use support::secret::{PasswordCost, PasswordHasher, SecretKey};
 
 /// The identity service.
 #[derive(Clone)]
@@ -133,7 +121,7 @@ impl Identity {
 
     /// The quoted name of a table of this module.
     fn table(&self, name: &str) -> String {
-        format!("{}.\"{name}\"", self.db.prefix().schema(schema::MODULE))
+        format!("{}.\"{name}\"", self.db.prefix().schema(module::NAME))
     }
 
     /// The current instant.

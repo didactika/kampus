@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/editProfile/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Profile service | service | `crates/users/src/profile.rs` |
+| Profile service | service | `crates/users/src/service/profile.rs` |
 | `/api/v1/me/profile`, `/api/v1/accounts/{account_id}/profile` | API endpoints | `docs/03-design/api/identity.openapi.yaml` |
 | `users.profile`, `users.account_field, customise.field_value` | tables | `docs/03-design/data-model/identity.md` |
 

@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/manageAccountLifecycle/README.
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Account lifecycle service | service | `crates/identity/src/lifecycle.rs` |
+| Account lifecycle service | service | `crates/identity/src/service/lifecycle.rs` |
 | Deletion job | job | `crates/identity/src/jobs/delete_account.rs` |
 | `/api/v1/accounts/{account_id}/transitions`, bulk | API endpoints | `docs/03-design/api/identity.openapi.yaml` |
 | `identity.account`, `identity.account_transition` | tables | `docs/03-design/data-model/identity.md` |
