@@ -2,7 +2,7 @@
 id: UC-009
 name: manageAccountLifecycle
 title: Manage the lifecycle of accounts
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

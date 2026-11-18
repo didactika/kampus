@@ -4,7 +4,7 @@ name: setUpSecondFactor
 title: Set up a second factor
 actor: Authenticated user
 package: identity
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-012

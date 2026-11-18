@@ -1,6 +1,6 @@
 ---
 id: DEC-031
-status: proposed
+status: accepted
 ---
 
 # DEC-031 Server-side sessions checked on every request, central revocation, scoped API tokens

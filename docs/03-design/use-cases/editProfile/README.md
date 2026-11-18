@@ -2,7 +2,7 @@
 id: UC-010
 name: editProfile
 title: Edit a profile
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

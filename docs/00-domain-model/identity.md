@@ -1,6 +1,6 @@
 ---
 id: DOM-IDENTITY
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

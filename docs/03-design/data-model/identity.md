@@ -1,6 +1,6 @@
 ---
 id: DATA-IDENTITY
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

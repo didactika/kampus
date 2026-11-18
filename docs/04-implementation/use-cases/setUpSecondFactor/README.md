@@ -2,7 +2,7 @@
 id: UC-008
 name: setUpSecondFactor
 title: Set up a second factor
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

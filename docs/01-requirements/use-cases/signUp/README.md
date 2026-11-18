@@ -4,7 +4,7 @@ name: signUp
 title: Sign up and confirm an account
 actor: Visitor
 package: identity
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-010

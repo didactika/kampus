@@ -4,7 +4,7 @@ name: editProfile
 title: Edit a profile
 actor: Authenticated user,Manager
 package: users
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-014

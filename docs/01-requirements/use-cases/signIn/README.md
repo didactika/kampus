@@ -4,7 +4,7 @@ name: signIn
 title: Sign in, or recover access
 actor: Visitor
 package: identity
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-011

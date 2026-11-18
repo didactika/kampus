@@ -4,7 +4,7 @@ name: manageAccountLifecycle
 title: Manage the lifecycle of accounts
 actor: Manager
 package: identity
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 requirement: RF-013

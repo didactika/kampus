@@ -1,6 +1,6 @@
 ---
 id: DEC-033
-status: proposed
+status: accepted
 ---
 
 # DEC-033 Account lifecycle as a state machine; deletion erases and keeps a tombstone

@@ -2,7 +2,7 @@
 id: UC-006
 name: signUp
 title: Sign up and confirm an account
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

@@ -2,7 +2,7 @@
 id: UC-007
 name: signIn
 title: Sign in, or recover access
-status: proposed
+status: accepted
 origin: requirements
 sourceOfTruth: model
 ---

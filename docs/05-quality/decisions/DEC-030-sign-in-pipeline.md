@@ -1,6 +1,6 @@
 ---
 id: DEC-030
-status: proposed
+status: accepted
 ---
 
 # DEC-030 One sign-in pipeline, safe linking of external identities, secrets never stored in clear

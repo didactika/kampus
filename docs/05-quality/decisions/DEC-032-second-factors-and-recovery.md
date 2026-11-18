@@ -1,6 +1,6 @@
 ---
 id: DEC-032
-status: proposed
+status: accepted
 ---
 
 # DEC-032 Second factors in the pipeline, and recovery that asks for them
