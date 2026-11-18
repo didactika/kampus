@@ -7,6 +7,7 @@ actor "Authenticated user" as A_Authenticated_user
 actor "Campus administrator" as A_Campus_administrator
 actor "Course creator" as A_Course_creator
 actor "Manager" as A_Manager
+actor "Student" as A_Student
 actor "System" as A_System
 actor "Teacher" as A_Teacher
 actor "Visitor" as A_Visitor
@@ -42,6 +43,24 @@ rectangle "Kampus" {
     usecase "Link a system group or a course" as UC_linkEnrolmentSource
     usecase "Expire enrolments" as UC_expireEnrolments
   }
+  package "activities" {
+    usecase "Add an activity or material" as UC_addActivity
+    usecase "Restrict access to an activity or section" as UC_restrictAccess
+    usecase "Grant an exception" as UC_grantException
+    usecase "Copy or move an activity" as UC_copyActivity
+    usecase "Delete and restore an activity" as UC_deleteActivity
+  }
+  package "records" {
+    usecase "Receive a grade from an activity" as UC_receiveGrade
+    usecase "Configure the academic records of a course" as UC_configureRecords
+    usecase "Override or lock a grade" as UC_overrideGrade
+    usecase "See grades" as UC_viewGrades
+  }
+  package "progress" {
+    usecase "Track activity progress" as UC_trackActivityProgress
+    usecase "Configure course progress" as UC_configureCourseProgress
+    usecase "Set a progress exception" as UC_setProgressException
+  }
 }
 
 A_Manager --> UC_grantRole
@@ -71,5 +90,18 @@ A_Teacher --> UC_manageEnrolment
 A_Manager --> UC_manageEnrolment
 A_Manager --> UC_linkEnrolmentSource
 A_System --> UC_expireEnrolments
+A_Teacher --> UC_addActivity
+A_Teacher --> UC_restrictAccess
+A_Teacher --> UC_grantException
+A_Teacher --> UC_copyActivity
+A_Teacher --> UC_deleteActivity
+A_System --> UC_receiveGrade
+A_Teacher --> UC_configureRecords
+A_Teacher --> UC_overrideGrade
+A_Student --> UC_viewGrades
+A_Teacher --> UC_viewGrades
+A_System --> UC_trackActivityProgress
+A_Teacher --> UC_configureCourseProgress
+A_Teacher --> UC_setProgressException
 
 @enduml

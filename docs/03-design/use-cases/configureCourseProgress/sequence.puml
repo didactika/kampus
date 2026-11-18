@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Teacher" as a
+participant "kampus-api" as api
+participant "Course progress service" as svc
+database "progress schema + outbox" as db
+
+a -> api : Chooses criteria (activities, grade, date, duration, approval, other course)
+api -> svc : request
+svc -> db : Validates each typed criterion (RN-120)
+a -> api : Sets prerequisites
+api -> svc : request
+svc -> db : Refuses cycles and shows the graph (RN-122)
+a -> api : Saves
+api -> svc : request
+svc -> db : Queues the re-evaluation of course progress (RN-121)
+svc --> a : result
+@enduml

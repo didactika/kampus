@@ -68,20 +68,20 @@ Priorities: **Must** (tier 1, core), **Should** (tier 2, standard activities and
 
 | ID | Requirement | Priority | Origin | Confirmed by | Use cases |
 | --- | --- | --- | --- | --- | --- |
-| RF-050 | Activities and resources are plugins registered in an activity framework with common settings (visibility, availability, progress, grading, groups) | Must | baseline | | |
-| RF-051 | Availability conditions restrict access to activities and sections (dates, grades, progress, groups, profile fields) | Must | baseline | | |
+| RF-050 | Activities and resources are plugins registered in an activity framework with common settings (visibility, availability, progress, grading, groups) | Must | baseline | | UC-021, UC-025 |
+| RF-051 | Availability conditions restrict access to activities and sections (dates, grades, progress, groups, profile fields) | Must | baseline | | UC-022 |
 | RF-052 | The standard activities exist: page, URL, file, folder, label, assignment, forum, quiz with question bank, survey, choice | Should | baseline | | |
-| RF-053 | Activity types support backup, restore and course reset | Should | baseline | | |
-| RF-054 | **Exceptions**: every activity with dates, attempts, time limits or submissions accepts exceptions per user and per group (other dates, more attempts, more time), through one model, screen and API in the activity framework. (HL-002) | Must | owner | Owner, 2026-11-17 | |
+| RF-053 | Activity types support backup, restore and course reset | Should | baseline | | UC-024 |
+| RF-054 | **Exceptions**: every activity with dates, attempts, time limits or submissions accepts exceptions per user and per group (other dates, more attempts, more time), through one model, screen and API in the activity framework. (HL-002) | Must | owner | Owner, 2026-11-17 | UC-023 |
 
 ### Grades and progress
 
 | ID | Requirement | Priority | Origin | Confirmed by | Use cases |
 | --- | --- | --- | --- | --- | --- |
-| RF-060 | Academic records per course hold grade records, categories and aggregation rules | Must | baseline | | |
-| RF-061 | Activities send grades to the academic records; teachers can override and lock them | Must | baseline | | |
-| RF-062 | Learners see their grades and feedback; teachers see and export the grader report | Must | baseline | | |
-| RF-063 | Activity and course progress are tracked with configurable criteria | Must | baseline | | |
+| RF-060 | Academic records per course hold grade records, categories and aggregation rules | Must | baseline | | UC-027 |
+| RF-061 | Activities send grades to the academic records; teachers can override and lock them | Must | baseline | | UC-026, UC-028 |
+| RF-062 | Learners see their grades and feedback; teachers see and export the grader report | Must | baseline | | UC-029 |
+| RF-063 | Activity and course progress are tracked with configurable criteria | Must | baseline | | UC-030, UC-031, UC-032 |
 | RF-064 | Achievements and skills recognise what learners accomplish | Should | baseline | | |
 
 ### Communication and calendar

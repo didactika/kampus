@@ -1,0 +1,18 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Teacher" as a
+participant "kampus-api" as api
+participant "Course module service" as svc
+database "activities schema + outbox" as db
+
+a -> api : Chooses a type and a position
+api -> svc : request
+svc -> db : Shows the type's settings form with inherited defaults (RN-078)
+a -> api : Fills settings and saves
+api -> svc : request
+svc -> db : Creates the course module, its scope and the type data in one transaction (RN-077)
+svc --> a : result
+@enduml

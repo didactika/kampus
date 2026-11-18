@@ -1,0 +1,21 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+participant "Activity type (plugin)" as act
+participant "Grade service" as svc
+database "records schema + outbox" as db
+participant "Recalculation job" as job
+
+act -> svc : upsert_grade(record, person, raw, feedback, source)
+group one transaction
+  svc -> db : record or grade locked? overridden? (RN-098)
+  svc -> db : INSERT ... ON CONFLICT (record, person) DO UPDATE\nonly when the value changes (RN-096)
+  svc -> db : entry (source, actor, at) (RN-097)
+  svc -> db : records.grade_changed and a recalculation into outbox
+end
+svc --> act : stored (or unchanged)
+job -> db : affected totals along the dependency graph,\nonly for this person (RN-099)
+job -> db : category totals, course total, formulas; records.total_changed
+@enduml

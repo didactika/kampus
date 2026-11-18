@@ -17,8 +17,8 @@ Module `kampus-courses` (level 3, [architecture](../03-design/architecture.md#mo
 | --- | --- | --- | --- |
 | Course category | 1 | A node of the catalogue tree that holds courses and subcategories | scope, parent, code, name, description, sort key, visibility |
 | Course | 1 | The unit of teaching, in one category | scope, category, short name, full name, code, layout, start, end, lifecycle state, visibility, owners |
-| Section | 1 | A part of a course with a stable identity, nested to any depth, ordered explicitly within its parent | scope, course, parent section, title, summary, sort key, visibility, availability |
-| Visibility | 2 | The setting of one node: `shown`, `hidden`, or shown in a window (from, until); the **effective** visibility is computed from the node and its ancestors | mode, from, until |
+| Section | 1 | A part of a course with a stable identity, nested to any depth, ordered explicitly within its parent | scope, course, parent section, title, summary, sort key, visibility and its window (whether it is shown); who can open it is decided by access conditions on the section ([activities](./activities.md), RN-083) |
+| Visibility | 2 | Whether a node is shown: `shown`, `hidden`, or shown in a window (from, until); the **effective** visibility is computed from the node and its ancestors. Visibility is not availability: who can open a shown node is decided by access conditions (DEC-045) | mode, from, until |
 | Course layout | 2 | A plugin that presents a course and declares its typed settings (topics, weekly, single activity, social, and others) | code, settings |
 | Course owner | 2 | A person who owns a course (its creator by default), recorded as data | course, account, since |
 | Group | 1 | A set of enrolled people inside a course, or inside one section of it | course, section (optional), name, code, description, visibility, joining key (hashed) |

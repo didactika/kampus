@@ -12,9 +12,17 @@ rectangle "Kampus" {
   package "enrolment" {
     usecase "Expire enrolments" as UC_expireEnrolments
   }
+  package "records" {
+    usecase "Receive a grade from an activity" as UC_receiveGrade
+  }
+  package "progress" {
+    usecase "Track activity progress" as UC_trackActivityProgress
+  }
 }
 
 A_System --> UC_checkPermission
 A_System --> UC_expireEnrolments
+A_System --> UC_receiveGrade
+A_System --> UC_trackActivityProgress
 
 @enduml

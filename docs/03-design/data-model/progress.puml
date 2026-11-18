@@ -1,0 +1,99 @@
+@startuml
+!theme plain
+hide empty members
+hide circle
+skinparam linetype ortho
+title Schema progress (PostgreSQL)
+
+entity rule {
+  id <<PK>>
+  course_module_id <<FK>>
+  kind
+  type_rule_code
+  parameters
+}
+entity activity_state {
+  course_module_id <<FK>>
+  account_id <<FK>>
+  state
+  source
+  at
+  version
+}
+entity activity_exception {
+  course_module_id <<FK>>
+  account_id <<FK>>
+  state
+  reason
+  by
+  at
+}
+entity activity_history {
+  id <<PK>>
+  course_module_id
+  account_id
+  from_state
+  to_state
+  cause
+  at
+}
+entity criterion {
+  id <<PK>>
+  course_id <<FK>>
+  kind
+  aggregation
+}
+entity criterion_activity {
+  criterion_id <<FK>>
+  course_module_id <<FK>>
+  required_state
+}
+entity criterion_grade {
+  criterion_id <<FK>>
+  record_id <<FK>>
+  min_percent
+}
+entity criterion_date {
+  criterion_id <<FK>>
+  on_or_after
+}
+entity criterion_duration {
+  criterion_id <<FK>>
+  enrolled_for
+}
+entity criterion_role_approval {
+  criterion_id <<FK>>
+  role_id <<FK>>
+}
+entity criterion_course {
+  criterion_id <<FK>>
+  course_id <<FK>>
+}
+entity prerequisite {
+  course_id <<FK>>
+  requires_course_id <<FK>>
+}
+entity course_state {
+  course_id <<FK>>
+  account_id <<FK>>
+  state
+  completed_at
+  revoked_at
+  version
+}
+entity course_history {
+  id <<PK>>
+  course_id
+  account_id
+  event
+  at
+  cause
+}
+
+criterion_activity }o--|| criterion
+criterion_grade }o--|| criterion
+criterion_date }o--|| criterion
+criterion_duration }o--|| criterion
+criterion_role_approval }o--|| criterion
+criterion_course }o--|| criterion
+@enduml

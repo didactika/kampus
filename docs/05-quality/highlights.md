@@ -55,3 +55,9 @@ What makes Kampus stand out. This register is the source for the release notes, 
 | HL-033 | Enrolment | Capacities hold under any load; self-enrolment keys are hashed, never hinted, and throttled | DEC-041 | planned | Fair places in every course, and keys nobody can guess. |
 | HL-034 | Enrolment | Courses linked to programmes (system groups) or to other courses stay in sync, without loops | DEC-042 | planned | Enrol a whole programme once; every course follows. |
 | HL-035 | Enrolment | Each way of joining owns the roles it gives, so removing one never removes another | DEC-040 | planned | No more surprises when someone leaves one of several courses or groups. |
+| HL-036 | Activities | Exceptions (dates, attempts, time) for any activity, with the same answer in the activity, the calendar and notifications | DEC-046 | planned | Extensions and special arrangements for any activity. |
+| HL-037 | Activities | Access conditions that never break silently: what they depend on cannot disappear unnoticed | DEC-045 | planned | Learning paths that keep working when the course changes. |
+| HL-038 | Activities | A recycle bin for activities and sections, with restore and visible failures | DEC-047 | planned | Undo a deletion, even weeks later. |
+| HL-039 | Records | Full history of every grade, and totals that never leak hidden grades | DEC-048, DEC-049 | planned | Every grade explained, and hidden grades stay hidden everywhere. |
+| HL-040 | Records | Aggregation methods with worked examples, and calculation behaviour versioned per course | DEC-050 | planned | Totals teachers can predict, unchanged by upgrades. |
+| HL-041 | Progress | Progress always current, revocable when criteria change, and never erasing what teachers decided | DEC-051 | planned | Progress you can trust, and explain. |
