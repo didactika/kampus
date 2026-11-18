@@ -13,4 +13,4 @@ status: accepted
   - The service returns what the requester may see; a teacher view is explicit and needs a permission.
   - Progress rules, achievements, integrations and exports use the same service.
 - Consequences: Hidden grades never leak, whoever asks.
-- Affected artifacts: `crates/kampus-records`, `crates/kampus-progress`, achievements, the API.
+- Affected artifacts: `crates/records`, `crates/progress`, achievements, the API.

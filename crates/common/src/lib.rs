@@ -40,12 +40,14 @@
 
 extern crate self as kampus_common;
 
+pub mod adapter;
 pub mod clock;
 pub mod error;
 pub mod id;
 pub mod page;
 pub mod request;
 
+pub use adapter::AdapterSettings;
 pub use clock::{Clock, FixedClock, SystemClock, Timestamp};
 pub use error::{Error, ErrorKind, FieldError, Result};
 pub use page::{Cursor, Page, PageRequest};

@@ -19,7 +19,7 @@ Design: [README](../../../03-design/use-cases/createCourse/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Course service | service | `crates/kampus-courses/src/course.rs` | no (to build) |
+| Course service | service | `crates/courses/src/course.rs` | no (to build) |
 | `/api/v1/categories/{category_id}/courses`, `/api/v1/courses/{course_id}`, state | API endpoints | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
 | `courses.course`, `courses.course_owner` | tables | `docs/03-design/data-model/courses.md` | no (to build) |
 
@@ -27,4 +27,4 @@ Design: [README](../../../03-design/use-cases/createCourse/README.md)
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-041, RN-042, RN-049 to RN-051 | `crates/kampus-courses/tests/` | planned |
+| Unit and integration tests of the module | RN-041, RN-042, RN-049 to RN-051 | `crates/courses/tests/` | planned |

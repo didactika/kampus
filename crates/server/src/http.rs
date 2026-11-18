@@ -56,6 +56,8 @@ pub struct AppState {
     pub db: Database,
     /// The upgrade steps of this build, to tell whether the database is current.
     pub modules: &'static [ModuleSteps],
+    /// The other ports of the process.
+    pub ports: crate::ports::Ports,
 }
 
 /// Builds the router of a process.
@@ -90,7 +92,8 @@ async fn live() -> Response {
     axum::Json(json!({ "status": "live", "version": PLATFORM_VERSION })).into_response()
 }
 
-/// The process can serve: the database answers and its upgrade steps match this build.
+/// The process can serve: the database answers and its upgrade steps match this build, and the storage and
+/// the cache answer.
 async fn ready(State(state): State<AppState>) -> Response {
     let mut reasons = Vec::new();
     match state.db.ping().await {
@@ -109,6 +112,14 @@ async fn ready(State(state): State<AppState>) -> Response {
             }
             Err(error) => reasons.push(error.to_string()),
         },
+    }
+    if let Some(storage) = &state.ports.storage
+        && let Err(error) = storage.check().await
+    {
+        reasons.push(format!("storage: {error}"));
+    }
+    if let Err(error) = state.ports.cache.check().await {
+        reasons.push(format!("cache: {error}"));
     }
     if reasons.is_empty() {
         axum::Json(json!({ "status": "ready", "version": PLATFORM_VERSION })).into_response()

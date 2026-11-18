@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/renameTerms/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Term resolver | service | `crates/kampus-customise/src/terms.rs` | no (to build) |
+| Term resolver | service | `crates/customise/src/terms.rs` | no (to build) |
 | `/api/v1/scopes/{scope_id}/terms` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-212 to RN-222 | `crates/kampus-customise/tests/` | planned |
+| Unit and integration tests of the module | RN-212 to RN-222 | `crates/customise/tests/` | planned |

@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/grantException/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Exception resolver | service | `crates/kampus-activities/src/exceptions.rs` | no (to build) |
+| Exception resolver | service | `crates/activities/src/exceptions.rs` | no (to build) |
 | `/api/v1/course-modules/{course_module_id}/exceptions`, effective values | API endpoints | `docs/03-design/api/activities.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-084 to RN-087 | `crates/kampus-activities/tests/` | planned |
+| Unit and integration tests of the module | RN-084 to RN-087 | `crates/activities/tests/` | planned |

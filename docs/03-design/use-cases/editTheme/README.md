@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/editTheme/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Theme service and contrast checker | service | `crates/kampus-customise/src/theme.rs` |
+| Theme service and contrast checker | service | `crates/customise/src/theme.rs` |
 | `/api/v1/scopes/{scope_id}/theme` | API endpoint | `docs/03-design/api/customise.openapi.yaml` |
 
 ## Sequence

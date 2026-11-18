@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/manageLanguagePacks/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Pack installer and customisations | service | `crates/kampus-i18n/src/packs.rs` | no (to build) |
+| Pack installer and customisations | service | `crates/i18n/src/packs.rs` | no (to build) |
 | `/api/v1/language-packs`, `/api/v1/scopes/{scope_id}/messages` | API endpoints | `docs/03-design/api/i18n.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-187 to RN-194 | `crates/kampus-i18n/tests/` | planned |
+| Unit and integration tests of the module | RN-187 to RN-194 | `crates/i18n/tests/` | planned |

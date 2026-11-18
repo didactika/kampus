@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/uploadFile/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Upload pipeline | service | `crates/kampus-files/src/upload.rs` | no (to build) |
+| Upload pipeline | service | `crates/files/src/upload.rs` | no (to build) |
 | `/api/v1/uploads` | API endpoints | `docs/03-design/api/files.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-126 to RN-134 | `crates/kampus-files/tests/` | planned |
+| Unit and integration tests of the module | RN-126 to RN-134 | `crates/files/tests/` | planned |

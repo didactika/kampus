@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/downloadFile/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| File access service | service | `crates/kampus-files/src/access.rs` |
+| File access service | service | `crates/files/src/access.rs` |
 | `/api/v1/files/{file_id}/url` | API endpoint | `docs/03-design/api/files.openapi.yaml` |
 
 ## Sequence

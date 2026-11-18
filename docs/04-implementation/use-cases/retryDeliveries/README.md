@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/retryDeliveries/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Dispatcher and delivery store | service | `crates/kampus-events/src/dispatch.rs` | no (to build) |
+| Dispatcher and delivery store | service | `crates/events/src/dispatch.rs` | no (to build) |
 | `/api/v1/deliveries` | API endpoints | `docs/03-design/api/events.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-137 to RN-142 | `crates/kampus-events/tests/` | planned |
+| Unit and integration tests of the module | RN-137 to RN-142 | `crates/events/tests/` | planned |

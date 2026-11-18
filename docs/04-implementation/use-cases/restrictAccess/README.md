@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/restrictAccess/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Condition service and evaluators | service | `crates/kampus-activities/src/conditions.rs` | no (to build) |
+| Condition service and evaluators | service | `crates/activities/src/conditions.rs` | no (to build) |
 | `/api/v1/course-modules/{course_module_id}/conditions` | API endpoint | `docs/03-design/api/activities.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-080 to RN-083 | `crates/kampus-activities/tests/` | planned |
+| Unit and integration tests of the module | RN-080 to RN-083 | `crates/activities/tests/` | planned |

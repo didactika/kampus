@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/setProgressException/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Progress exception service | service | `crates/kampus-progress/src/exception.rs` | no (to build) |
+| Progress exception service | service | `crates/progress/src/exception.rs` | no (to build) |
 | exception endpoint | API endpoint | `docs/03-design/api/progress.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-118, RN-119 | `crates/kampus-progress/tests/` | planned |
+| Unit and integration tests of the module | RN-118, RN-119 | `crates/progress/tests/` | planned |

@@ -16,7 +16,7 @@ Version 0.1.0 is in progress on the `release/0.1.0` branch: the specification of
 | --- | --- |
 | [`docs/`](docs/README.md) | The specification: requirements, domain model, design, decisions and highlights |
 | [`tools/docs-check/`](tools/docs-check/) | Documentation checks run in CI and locally with Docker |
-| `crates/` | Rust workspace, one crate per module |
+| `crates/` | Rust workspace: one folder per module (`crates/<module>`), and the adapters of each infrastructure port inside it (`crates/<port>/adapters/<name>`) |
 | [`CHANGELOG.md`](CHANGELOG.md) | Changes of every version and the upgrade steps |
 | [`tools/repo-check/`](tools/repo-check/) | File headers, version and changelog, and the dependency rules of the crates |
 | [`tools/dev/`](tools/dev/) | Toolbox image for local development and CI parity |

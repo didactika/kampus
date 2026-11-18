@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/exportMyData/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Request coordinator | service | `crates/kampus-privacy/src/requests.rs` |
+| Request coordinator | service | `crates/privacy/src/requests.rs` |
 | `/api/v1/privacy/requests` | API endpoints | `docs/03-design/api/privacy.openapi.yaml` |
 
 ## Sequence

@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/defineCustomField/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Custom field service | service | `crates/kampus-customise/src/fields.rs` | no (to build) |
+| Custom field service | service | `crates/customise/src/fields.rs` | no (to build) |
 | `/api/v1/scopes/{scope_id}/fields` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-213 to RN-215 | `crates/kampus-customise/tests/` | planned |
+| Unit and integration tests of the module | RN-213 to RN-215 | `crates/customise/tests/` | planned |

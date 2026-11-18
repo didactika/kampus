@@ -15,4 +15,4 @@ status: accepted
   - A schedule tick is unique per schedule and instant, inserted with `ON CONFLICT DO NOTHING`; any number of schedulers may run.
   - Long jobs report progress and honour cancellation between steps; payloads hold identifiers, not personal data.
 - Consequences: No stuck locks, no double runs, no silent failures; the scheduler role scales like the others (DEC-020).
-- Affected artifacts: `crates/kampus-tasks`, the task queue port.
+- Affected artifacts: `crates/tasks`, the task queue port.

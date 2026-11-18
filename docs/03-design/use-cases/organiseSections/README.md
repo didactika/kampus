@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/organiseSections/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Section service | service | `crates/kampus-courses/src/section.rs` |
+| Section service | service | `crates/courses/src/section.rs` |
 | `/api/v1/courses/{course_id}/sections`, `/api/v1/sections/{section_id}`, move | API endpoints | `docs/03-design/api/courses.openapi.yaml` |
 | `courses.section` | table | `docs/03-design/data-model/courses.md` |
 

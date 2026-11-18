@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/setProgressException/README.md
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Progress exception service | service | `crates/kampus-progress/src/exception.rs` |
+| Progress exception service | service | `crates/progress/src/exception.rs` |
 | exception endpoint | API endpoint | `docs/03-design/api/progress.openapi.yaml` |
 
 ## Sequence

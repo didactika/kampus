@@ -13,4 +13,4 @@ status: accepted
   - Each method ships worked examples that are run as tests.
   - Calculation behaviour is versioned per course; changing it is an explicit, recorded action.
 - Consequences: Teachers can predict every total; upgrades never change grades silently.
-- Affected artifacts: `crates/kampus-records`, the handbook.
+- Affected artifacts: `crates/records`, the handbook.

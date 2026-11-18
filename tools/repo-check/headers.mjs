@@ -97,11 +97,18 @@ export function styleOf(file) {
  *
  * @param {string} file Path relative to the repository root.
  * @param {string} project The package of files at the root (`kampus`, `kampus-docs`).
- * @returns {string} The crate, the component or the project.
+ * @param {string} root Repository root, to find the manifest of the crate a file belongs to.
+ * @returns {string} The crate (from its nearest `Cargo.toml`), the component or the project.
  */
-export function packageOf(file, project = 'kampus') {
+export function packageOf(file, project = 'kampus', root = '.') {
   const parts = file.split('/');
-  if (parts[0] === 'crates' && parts.length > 2) return parts[1];
+  if (parts[0] === 'crates') {
+    for (let depth = parts.length - 1; depth >= 2; depth -= 1) {
+      const manifest = path.join(root, ...parts.slice(0, depth), 'Cargo.toml');
+      const name = fs.existsSync(manifest) ? fs.readFileSync(manifest, 'utf8').match(/^name\s*=\s*"([^"]+)"/m)?.[1] : null;
+      if (name) return name;
+    }
+  }
   if (['tools', 'web', 'handbook'].includes(parts[0]) && parts.length > 2) return `${parts[0]}/${parts[1]}`;
   return project;
 }
@@ -233,7 +240,7 @@ export function checkHeaders(root, files, { fix, author, since, project = 'kampu
       body = body.slice(4);
     }
     const old = stripOldHeader(body);
-    const fields = { pkg: packageOf(file, project), author, since: old.since ?? since, year: new Date().getFullYear().toString() };
+    const fields = { pkg: packageOf(file, project, root), author, since: old.since ?? since, year: new Date().getFullYear().toString() };
     fs.writeFileSync(full, lead + header(style, fields) + old.rest);
     fixed += 1;
   }

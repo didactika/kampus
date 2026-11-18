@@ -35,5 +35,5 @@ status: accepted
   - The design of each module lists the anti-patterns it avoids, and its data model is checked against these rules before any code.
   - A schema linter runs in CI. It rejects reference columns without a foreign key, integer timestamps, integer flags, missing indexes on foreign keys, and tables without a natural key.
   - The importer (RF-111) must clean data that the source platform allowed to become inconsistent (orphans, duplicates). It reports what it repaired.
-- Affected artifacts: RNF-021, the data model conventions, the definition of done, `crates/kampus-db`.
+- Affected artifacts: RNF-021, the data model conventions, the definition of done, `crates/db`.
 - Refined by: DEC-065 (database port), DEC-079 (ownership, supertypes and checked dependencies) and DEC-080 (migrations); rules in the [data model conventions](../../03-design/data-model/conventions.md).

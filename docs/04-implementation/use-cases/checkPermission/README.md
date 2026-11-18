@@ -19,12 +19,12 @@ Design: [README](../../../03-design/use-cases/checkPermission/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Permission checker | service | `crates/kampus-access/src/check.rs` | no (to build) |
-| Per-user access cache | cache | `crates/kampus-access/src/cache.rs` | no (to build) |
+| Permission checker | service | `crates/access/src/check.rs` | no (to build) |
+| Per-user access cache | cache | `crates/access/src/cache.rs` | no (to build) |
 | `POST /api/v1/scopes/{scope_id}/checks` | API endpoint | `docs/03-design/api/access.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-003 to RN-011, RN-019, RN-021 | `crates/kampus-access/tests/` | planned |
+| Unit and integration tests of the module | RN-003 to RN-011, RN-019, RN-021 | `crates/access/tests/` | planned |

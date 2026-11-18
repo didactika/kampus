@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/viewCalendar/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Calendar view service | service | `crates/kampus-calendar/src/view.rs` | no (to build) |
+| Calendar view service | service | `crates/calendar/src/view.rs` | no (to build) |
 | `/api/v1/calendar` | API endpoints | `docs/03-design/api/calendar.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-156 to RN-160 | `crates/kampus-calendar/tests/` | planned |
+| Unit and integration tests of the module | RN-156 to RN-160 | `crates/calendar/tests/` | planned |

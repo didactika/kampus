@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/managePlugin/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Plugin lifecycle service | service | `crates/kampus-plugin-host/src/lifecycle.rs` |
+| Plugin lifecycle service | service | `crates/plugin-host/src/lifecycle.rs` |
 | `/api/v1/plugins/{plugin_id}` | API endpoints | `docs/03-design/api/plugins.openapi.yaml` |
 
 ## Sequence

@@ -15,4 +15,4 @@ status: accepted
   - Jobs and listeners run with the context of the actor that caused them, or with an explicit system actor that is recorded.
   - Sessions are secure, HTTP-only cookies; API tokens are scoped, expire and are stored hashed; secrets come from a cryptographically secure generator.
 - Consequences: one rule for the web client, the API and plugins; permission explanations (RF-023) and "view as" (HL-014) use the same check; services need the context as an argument, which tests build with helpers.
-- Affected artifacts: `crates/kampus-common` (context), `crates/kampus-access`, every service operation, `crates/kampus-api`, the plugin SDK.
+- Affected artifacts: `crates/common` (context), `crates/access`, every service operation, `crates/api`, the plugin SDK.

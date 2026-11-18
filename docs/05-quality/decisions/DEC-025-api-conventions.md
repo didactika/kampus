@@ -15,4 +15,4 @@ status: accepted
   - Additive changes only within a major version; deprecations with Deprecation and Sunset headers kept for at least two minor releases; breaking changes in a new major version served beside the old one.
   - Rate limits answer 429 with Retry-After; webhooks are signed and carry an event id.
 - Consequences: One shape for every module; the web client's API client is generated; integrators can rely on a version for years; pagination stays fast on large tables.
-- Affected artifacts: `crates/kampus-api`, every module's routes, `web/`, the integrator guide.
+- Affected artifacts: `crates/api`, every module's routes, `web/`, the integrator guide.

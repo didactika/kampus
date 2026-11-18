@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/managePlugin/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Plugin lifecycle service | service | `crates/kampus-plugin-host/src/lifecycle.rs` | no (to build) |
+| Plugin lifecycle service | service | `crates/plugin-host/src/lifecycle.rs` | no (to build) |
 | `/api/v1/plugins/{plugin_id}` | API endpoints | `docs/03-design/api/plugins.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-205 to RN-211 | `crates/kampus-plugin-host/tests/` | planned |
+| Unit and integration tests of the module | RN-205 to RN-211 | `crates/plugin-host/tests/` | planned |

@@ -14,4 +14,4 @@ status: accepted
   - States are an enumeration; how a state is shown is decided at read time through the grade visibility service.
   - Course completion is revoked when a criterion stops being met, unless the course makes it final; both are recorded.
 - Consequences: Progress is always current and explainable; nothing a person decided is lost.
-- Affected artifacts: `crates/kampus-progress`, `crates/kampus-records`.
+- Affected artifacts: `crates/progress`, `crates/records`.

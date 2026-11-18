@@ -14,4 +14,4 @@ status: accepted
   - Locks stop overrides below a level; deployment configuration can fix a value, which is then read-only.
   - Sensitive values are encrypted and never returned; every change is recorded and published for cache invalidation.
 - Consequences: Every value is valid and explainable; the customisation framework (DEC-008) builds on the same resolution.
-- Affected artifacts: `crates/kampus-settings`, every module's declarations.
+- Affected artifacts: `crates/settings`, every module's declarations.

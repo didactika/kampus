@@ -19,7 +19,7 @@ Design: [README](../../../03-design/use-cases/setUpSecondFactor/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Second-factor service | service | `crates/kampus-identity/src/second_factor.rs` | no (to build) |
+| Second-factor service | service | `crates/identity/src/second_factor.rs` | no (to build) |
 | `/api/v1/me/second-factors` | API endpoints | `docs/03-design/api/identity.openapi.yaml` | no (to build) |
 | `identity.second_factor`, `identity.passkey`, `identity.recovery_code` | tables | `docs/03-design/data-model/identity.md` | no (to build) |
 
@@ -27,4 +27,4 @@ Design: [README](../../../03-design/use-cases/setUpSecondFactor/README.md)
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-029, RN-032 | `crates/kampus-identity/tests/` | planned |
+| Unit and integration tests of the module | RN-029, RN-032 | `crates/identity/tests/` | planned |

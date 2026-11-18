@@ -14,4 +14,4 @@ status: accepted
   - Deletion is per member; a job purges messages deleted by every member or older than the retention policy.
   - Bodies are sanitised rich text; attachments use the conversation's file area.
 - Consequences: No duplicate conversations; deleted content really goes away.
-- Affected artifacts: `crates/kampus-notify`.
+- Affected artifacts: `crates/notify`.

@@ -32,5 +32,5 @@ status: accepted
   - CI grows by one job per supported backend.
   - The data model stays portable: no database-specific types except behind the port. JSON and full-text search use the port's capabilities, with a fallback where a dialect lacks them.
   - The first release ships PostgreSQL, local and S3 storage, and moka with Redis. The other adapters come in later releases.
-- Affected artifacts: DEC-001, `crates/kampus-db`, `crates/kampus-storage`, `crates/kampus-cache`, RNF-016 to RNF-019.
+- Affected artifacts: DEC-001, `crates/db`, `crates/storage`, `crates/cache`, RNF-016 to RNF-019.
 - Refined by: DEC-065 (database port) and DEC-066 (conformance suites and capabilities); port contracts in [infrastructure ports](../../03-design/ports/README.md).

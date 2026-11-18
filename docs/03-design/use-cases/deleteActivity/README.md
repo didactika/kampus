@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/deleteActivity/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Bin service and purge job | service | `crates/kampus-activities/src/bin.rs` |
+| Bin service and purge job | service | `crates/activities/src/bin.rs` |
 | `/api/v1/courses/{course_id}/bin`, restore, retry | API endpoints | `docs/03-design/api/activities.openapi.yaml` |
 
 ## Sequence

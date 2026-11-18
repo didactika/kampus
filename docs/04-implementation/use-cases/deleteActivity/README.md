@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/deleteActivity/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Bin service and purge job | service | `crates/kampus-activities/src/bin.rs` | no (to build) |
+| Bin service and purge job | service | `crates/activities/src/bin.rs` | no (to build) |
 | `/api/v1/courses/{course_id}/bin`, restore, retry | API endpoints | `docs/03-design/api/activities.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-088, RN-089 | `crates/kampus-activities/tests/` | planned |
+| Unit and integration tests of the module | RN-088, RN-089 | `crates/activities/tests/` | planned |

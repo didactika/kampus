@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/selfEnrol/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Self-enrolment service | service | `crates/kampus-enrol/src/self_enrol.rs` |
+| Self-enrolment service | service | `crates/enrol/src/self_enrol.rs` |
 | `POST /api/v1/enrolment-instances/{instance_id}/self` | API endpoint | `docs/03-design/api/enrolment.openapi.yaml` |
 | `enrol.self_key`, `enrol.request`, `enrol.self_attempt` | tables | `docs/03-design/data-model/enrolment.md` |
 

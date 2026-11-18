@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/chooseCourseLayout/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Layout registry | service | `crates/kampus-courses/src/layout.rs` |
+| Layout registry | service | `crates/courses/src/layout.rs` |
 | `PUT /api/v1/courses/{course_id}/layout` | API endpoint | `docs/03-design/api/courses.openapi.yaml` |
 | `courses.course_layout_setting` | table | `docs/03-design/data-model/courses.md` |
 

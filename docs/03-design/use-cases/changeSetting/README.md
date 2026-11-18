@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/changeSetting/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Settings resolver | service | `crates/kampus-settings/src/resolve.rs` |
+| Settings resolver | service | `crates/settings/src/resolve.rs` |
 | `/api/v1/scopes/{scope_id}/settings` | API endpoints | `docs/03-design/api/settings.openapi.yaml` |
 
 ## Sequence

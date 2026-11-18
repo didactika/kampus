@@ -19,7 +19,7 @@ Design: [README](../../../03-design/use-cases/defineRole/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Role service | service | `crates/kampus-access/src/role.rs` | no (to build) |
+| Role service | service | `crates/access/src/role.rs` | no (to build) |
 | `/api/v1/campuses/{campus_id}/roles`, `/api/v1/roles/{role_id}`, reset preview and reset | API endpoints | `docs/03-design/api/access.openapi.yaml` | no (to build) |
 | `access.role`, `access.role_permission`, `access.role_allowance` | tables | `docs/03-design/data-model/access.md` | no (to build) |
 
@@ -27,4 +27,4 @@ Design: [README](../../../03-design/use-cases/defineRole/README.md)
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-008, RN-015, RN-017 | `crates/kampus-access/tests/` | planned |
+| Unit and integration tests of the module | RN-008, RN-015, RN-017 | `crates/access/tests/` | planned |

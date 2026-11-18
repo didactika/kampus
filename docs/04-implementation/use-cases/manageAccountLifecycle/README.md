@@ -19,8 +19,8 @@ Design: [README](../../../03-design/use-cases/manageAccountLifecycle/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Account lifecycle service | service | `crates/kampus-identity/src/lifecycle.rs` | no (to build) |
-| Deletion job | job | `crates/kampus-identity/src/jobs/delete_account.rs` | no (to build) |
+| Account lifecycle service | service | `crates/identity/src/lifecycle.rs` | no (to build) |
+| Deletion job | job | `crates/identity/src/jobs/delete_account.rs` | no (to build) |
 | `/api/v1/accounts/{account_id}/transitions`, bulk | API endpoints | `docs/03-design/api/identity.openapi.yaml` | no (to build) |
 | `identity.account`, `identity.account_transition` | tables | `docs/03-design/data-model/identity.md` | no (to build) |
 
@@ -28,4 +28,4 @@ Design: [README](../../../03-design/use-cases/manageAccountLifecycle/README.md)
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-023, RN-031, RN-034, RN-035, RN-038 | `crates/kampus-identity/tests/` | planned |
+| Unit and integration tests of the module | RN-023, RN-031, RN-034, RN-035, RN-038 | `crates/identity/tests/` | planned |

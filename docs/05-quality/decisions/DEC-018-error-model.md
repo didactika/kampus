@@ -13,4 +13,4 @@ status: accepted
   - The API maps them to HTTP statuses and RFC 9457 problem details. Internal errors expose only the request id, never a stack trace or data.
   - Validation errors list every failing field at once.
 - Consequences: clients and plugins handle errors by kind and code; messages are translated like any other string (RNF-010); logs keep the full cause with the request id.
-- Affected artifacts: `crates/kampus-common`, `crates/kampus-api`, the OpenAPI document, the web client.
+- Affected artifacts: `crates/common`, `crates/api`, the OpenAPI document, the web client.

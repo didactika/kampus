@@ -13,4 +13,4 @@ status: accepted
   - A rule combines them; it runs after commit as a job with the permissions of its owner.
   - Chains are limited in depth and a rule cannot trigger itself; every run is recorded with its outcome.
 - Consequences: Common workflows (enrol on completion, notify on a late submission, add to a group) need no code and are auditable.
-- Affected artifacts: `crates/kampus-customise`, every module that declares triggers, conditions or actions.
+- Affected artifacts: `crates/customise`, every module that declares triggers, conditions or actions.

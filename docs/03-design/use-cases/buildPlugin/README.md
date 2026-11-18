@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/buildPlugin/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| SDK and test harness | tool | `crates/kampus-sdk`, `crates/kampus-plugin-host/src/harness.rs` |
+| SDK and test harness | tool | `crates/sdk`, `crates/plugin-host/src/harness.rs` |
 | WIT packages | contract | `docs/03-design/sdk/kampus.wit` |
 
 ## Sequence

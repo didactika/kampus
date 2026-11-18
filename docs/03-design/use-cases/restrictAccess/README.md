@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/restrictAccess/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Condition service and evaluators | service | `crates/kampus-activities/src/conditions.rs` |
+| Condition service and evaluators | service | `crates/activities/src/conditions.rs` |
 | `/api/v1/course-modules/{course_module_id}/conditions` | API endpoint | `docs/03-design/api/activities.openapi.yaml` |
 
 ## Sequence

@@ -14,4 +14,4 @@ status: accepted
   - The host drives install, grant, migrate, enable, upgrade, disable and remove; a failed step leaves the previous state.
   - Removing runs the privacy handler and shows content that referenced the plugin as unavailable.
 - Consequences: Installing a plugin is a reviewed, reversible operation; the handbook references include plugin contributions.
-- Affected artifacts: `crates/kampus-plugin-host`, the plugin SDK, `kampus plugin` commands.
+- Affected artifacts: `crates/plugin-host`, the plugin SDK, `kampus plugin` commands.

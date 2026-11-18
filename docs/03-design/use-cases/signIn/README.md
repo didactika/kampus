@@ -19,8 +19,8 @@ Analysis: [README](../../../02-analysis/use-cases/signIn/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Sign-in pipeline | service | `crates/kampus-identity/src/sign_in.rs` |
-| OIDC client | adapter | `crates/kampus-identity/src/oidc.rs` |
+| Sign-in pipeline | service | `crates/identity/src/sign_in.rs` |
+| OIDC client | adapter | `crates/identity/src/oidc.rs` |
 | `/api/v1/auth/sign-in`, `/second-factor`, `/oidc/*`, `/recovery` | API endpoints | `docs/03-design/api/identity.openapi.yaml` |
 | `identity.session`, `identity.sign_in_attempt` | tables | `docs/03-design/data-model/identity.md` |
 

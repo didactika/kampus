@@ -14,4 +14,4 @@ status: accepted
   - Migrations are forward-only, one transaction per step, with checksums.
   - The plugin reaches its tables only through the `storage` interface with structured filters.
 - Consequences: Plugin data is relational and portable like the core's, and removing a plugin removes exactly its schema.
-- Affected artifacts: `crates/kampus-plugin-host`, `crates/kampus-db`.
+- Affected artifacts: `crates/plugin-host`, `crates/db`.

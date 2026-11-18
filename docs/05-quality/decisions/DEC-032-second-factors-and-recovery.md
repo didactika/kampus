@@ -13,4 +13,4 @@ status: accepted
   - A second factor is required when the person enabled it, when a role requires it in a scope where it is granted, or when the campus requires it, for every client including the API sessions of the web client.
   - Recovery: email token, then a second factor or a recovery code, then the new credential; all sessions are revoked and the person signs in normally afterwards.
 - Consequences: Controlling someone's email is not enough to take over an account protected by a second factor; roles with risky permissions can require second factors where they matter.
-- Affected artifacts: `crates/kampus-identity`, the security screens, the handbook.
+- Affected artifacts: `crates/identity`, the security screens, the handbook.

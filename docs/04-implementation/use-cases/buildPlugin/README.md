@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/buildPlugin/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| SDK and test harness | tool | `crates/kampus-sdk`, `crates/kampus-plugin-host/src/harness.rs` | no (to build) |
+| SDK and test harness | tool | `crates/sdk`, `crates/plugin-host/src/harness.rs` | no (to build) |
 | WIT packages | contract | `docs/03-design/sdk/kampus.wit` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-203 to RN-211 | `crates/kampus-plugin-host/tests/` | planned |
+| Unit and integration tests of the module | RN-203 to RN-211 | `crates/plugin-host/tests/` | planned |

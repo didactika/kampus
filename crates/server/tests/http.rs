@@ -48,6 +48,7 @@ use kampus_common::PLATFORM_VERSION;
 use kampus_db::{Database, Prefix, Upgrader};
 use kampus_server::http::{AppState, router};
 use kampus_server::modules::MODULES;
+use kampus_server::ports::Ports;
 use tower::ServiceExt;
 
 /// Connects to a fresh installation with a prefix of its own.
@@ -68,9 +69,12 @@ async fn call(
     if let Some(id) = request_id {
         request = request.header("x-request-id", id);
     }
+    let files = tempfile::tempdir().unwrap();
+    let ports = Ports::for_tests(files.path().to_str().unwrap()).await.unwrap();
     let response = router(AppState {
         db: db.clone(),
         modules: MODULES,
+        ports,
     })
     .oneshot(request.body(Body::empty()).unwrap())
     .await

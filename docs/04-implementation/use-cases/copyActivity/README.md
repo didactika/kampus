@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/copyActivity/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Course module service | service | `crates/kampus-activities/src/module.rs` | no (to build) |
+| Course module service | service | `crates/activities/src/module.rs` | no (to build) |
 | `/api/v1/course-modules/{course_module_id}/copy`, `/move` | API endpoints | `docs/03-design/api/activities.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-076, RN-077, RN-090 | `crates/kampus-activities/tests/` | planned |
+| Unit and integration tests of the module | RN-076, RN-077, RN-090 | `crates/activities/tests/` | planned |

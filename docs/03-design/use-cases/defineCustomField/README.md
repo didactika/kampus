@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/defineCustomField/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Custom field service | service | `crates/kampus-customise/src/fields.rs` |
+| Custom field service | service | `crates/customise/src/fields.rs` |
 | `/api/v1/scopes/{scope_id}/fields` | API endpoints | `docs/03-design/api/customise.openapi.yaml` |
 
 ## Sequence

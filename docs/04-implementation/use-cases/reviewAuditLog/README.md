@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/reviewAuditLog/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Audit query service | service | `crates/kampus-events/src/audit.rs` | no (to build) |
+| Audit query service | service | `crates/events/src/audit.rs` | no (to build) |
 | `/api/v1/audit` | API endpoints | `docs/03-design/api/events.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-143 to RN-146 | `crates/kampus-events/tests/` | planned |
+| Unit and integration tests of the module | RN-143 to RN-146 | `crates/events/tests/` | planned |

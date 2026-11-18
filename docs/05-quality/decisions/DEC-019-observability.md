@@ -13,4 +13,4 @@ status: accepted
   - Health and readiness endpoints per role; metrics for requests, jobs (queued, running, failed), outbox lag, cache hit rates and database pools.
   - The **audit log** is append-only, written from domain events, with its own retention policy per campus, and never mixed with operational logs.
 - Consequences: any backend that speaks OpenTelemetry works; the reference deployment ships dashboards and alerts; audit queries never scan operational logs.
-- Affected artifacts: `crates/kampus-server`, `crates/kampus-events`, the operator guide, the deployment.
+- Affected artifacts: `crates/server`, `crates/events`, the operator guide, the deployment.

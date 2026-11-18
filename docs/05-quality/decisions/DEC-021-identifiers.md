@@ -14,4 +14,4 @@ status: accepted
   - External identifiers live in external references (system, id), never in the record's own columns.
   - Rust uses one identifier type per entity.
 - Consequences: No enumeration through URLs, no collisions when importing or merging, and identifiers that cannot be mixed up at compile time; UUID columns are larger than integers, which the time ordering of version 7 keeps cheap to index.
-- Affected artifacts: `crates/kampus-common`, every schema, the API, the importer.
+- Affected artifacts: `crates/common`, every schema, the API, the importer.

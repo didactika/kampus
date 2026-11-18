@@ -19,7 +19,7 @@ Design: [README](../../../03-design/use-cases/chooseCourseLayout/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Layout registry | service | `crates/kampus-courses/src/layout.rs` | no (to build) |
+| Layout registry | service | `crates/courses/src/layout.rs` | no (to build) |
 | `PUT /api/v1/courses/{course_id}/layout` | API endpoint | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
 | `courses.course_layout_setting` | table | `docs/03-design/data-model/courses.md` | no (to build) |
 
@@ -27,4 +27,4 @@ Design: [README](../../../03-design/use-cases/chooseCourseLayout/README.md)
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-052 | `crates/kampus-courses/tests/` | planned |
+| Unit and integration tests of the module | RN-052 | `crates/courses/tests/` | planned |

@@ -19,7 +19,7 @@ Design: [README](../../../03-design/use-cases/editProfile/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Profile service | service | `crates/kampus-users/src/profile.rs` | no (to build) |
+| Profile service | service | `crates/users/src/profile.rs` | no (to build) |
 | `/api/v1/me/profile`, `/api/v1/accounts/{account_id}/profile` | API endpoints | `docs/03-design/api/identity.openapi.yaml` | no (to build) |
 | `users.profile`, `users.account_field, customise.field_value` | tables | `docs/03-design/data-model/identity.md` | no (to build) |
 
@@ -27,4 +27,4 @@ Design: [README](../../../03-design/use-cases/editProfile/README.md)
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-032, RN-036 | `crates/kampus-users/tests/` | planned |
+| Unit and integration tests of the module | RN-032, RN-036 | `crates/users/tests/` | planned |

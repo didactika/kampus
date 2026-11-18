@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/trackActivityProgress/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Progress evaluator | service | `crates/kampus-progress/src/activity.rs` | no (to build) |
+| Progress evaluator | service | `crates/progress/src/activity.rs` | no (to build) |
 | progress endpoints | API endpoints | `docs/03-design/api/progress.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-115, RN-116, RN-123 | `crates/kampus-progress/tests/` | planned |
+| Unit and integration tests of the module | RN-115, RN-116, RN-123 | `crates/progress/tests/` | planned |

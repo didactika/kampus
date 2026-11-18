@@ -15,4 +15,4 @@ status: accepted
   - Guests never get write or risky permissions; suspended and deleted accounts fail every check; frozen scopes allow only reads.
   - Every decision can be explained with the grants, values and scopes that produced it.
 - Consequences: One rule that people can learn and that the explanation shows; administrators act within audited permissions; lock-out is impossible by construction.
-- Affected artifacts: `crates/kampus-access`, the permissions screens, the handbook.
+- Affected artifacts: `crates/access`, the permissions screens, the handbook.

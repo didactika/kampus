@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/viewGrades/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Grade read service | service | `crates/kampus-records/src/read.rs` | no (to build) |
+| Grade read service | service | `crates/records/src/read.rs` | no (to build) |
 | `/my-grades`, `/grader-report`, export | API endpoints | `docs/03-design/api/records.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-103 to RN-105, RN-109 | `crates/kampus-records/tests/` | planned |
+| Unit and integration tests of the module | RN-103 to RN-105, RN-109 | `crates/records/tests/` | planned |

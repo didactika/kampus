@@ -14,4 +14,4 @@ status: accepted
   - Sensitive operations need a strong authentication at most 15 minutes old (step-up).
   - API tokens are scoped to permissions and scopes, expire (at most one year), are shown once, stored hashed and identified by a prefix.
 - Consequences: A suspended person loses access immediately everywhere; integrations hold only what they need, for a limited time; one cache lookup per request.
-- Affected artifacts: `crates/kampus-identity`, `crates/kampus-api`, the integrator guide.
+- Affected artifacts: `crates/identity`, `crates/api`, the integrator guide.

@@ -14,4 +14,4 @@ status: accepted
   - Rolling back a release means running the previous release on the expanded schema.
   - The linter refuses a migration that drops or renames something the previous release reads.
 - Consequences: Rolling upgrades and rollbacks without data loss; DEC-014 rule 10 reads "versioned and forward-only, following expand and contract".
-- Affected artifacts: `crates/kampus-db`, every module's migrations, the operator guide.
+- Affected artifacts: `crates/db`, every module's migrations, the operator guide.

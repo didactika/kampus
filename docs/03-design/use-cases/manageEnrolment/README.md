@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/manageEnrolment/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Enrolment service | service | `crates/kampus-enrol/src/enrolment.rs` |
+| Enrolment service | service | `crates/enrol/src/enrolment.rs` |
 | `/api/v1/enrolments/{enrolment_id}` | API endpoint | `docs/03-design/api/enrolment.openapi.yaml` |
 | `enrol.enrolment` | table | `docs/03-design/data-model/enrolment.md` |
 

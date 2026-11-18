@@ -19,7 +19,7 @@ Design: [README](../../../03-design/use-cases/enrolPeople/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Enrolment service | service | `crates/kampus-enrol/src/enrolment.rs` | no (to build) |
+| Enrolment service | service | `crates/enrol/src/enrolment.rs` | no (to build) |
 | `POST /api/v1/enrolment-instances/{instance_id}/enrolments` | API endpoint | `docs/03-design/api/enrolment.openapi.yaml` | no (to build) |
 | `enrol.enrolment`, `enrol.enrolment_grant` | tables | `docs/03-design/data-model/enrolment.md` | no (to build) |
 
@@ -27,4 +27,4 @@ Design: [README](../../../03-design/use-cases/enrolPeople/README.md)
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-061 to RN-063, RN-073 | `crates/kampus-enrol/tests/` | planned |
+| Unit and integration tests of the module | RN-061 to RN-063, RN-073 | `crates/enrol/tests/` | planned |

@@ -14,4 +14,4 @@ status: accepted
   - The quota of the owning scope is checked when the session opens and updated in the attaching transaction.
   - A file is usable once its scan finishes clean; conversions run as jobs and keep the original.
 - Consequences: The same limits for every client; quota errors are explicit and early.
-- Affected artifacts: `crates/kampus-files`, `crates/kampus-web`.
+- Affected artifacts: `crates/files`, `crates/web`.

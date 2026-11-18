@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/viewCalendar/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Calendar view service | service | `crates/kampus-calendar/src/view.rs` |
+| Calendar view service | service | `crates/calendar/src/view.rs` |
 | `/api/v1/calendar` | API endpoints | `docs/03-design/api/calendar.openapi.yaml` |
 
 ## Sequence

@@ -13,4 +13,4 @@ status: accepted
   - While the person is not an active participant, their records and progress are hidden from course views and reports, and shown again when they return.
   - They are deleted only by course deletion, retention rules or a privacy request.
 - Consequences: Re-enrolling never loses work; teachers can still see former participants where a permission allows; retention policies decide what is kept and for how long.
-- Affected artifacts: `crates/kampus-records`, `crates/kampus-progress`, `crates/kampus-enrol`, retention settings.
+- Affected artifacts: `crates/records`, `crates/progress`, `crates/enrol`, retention settings.

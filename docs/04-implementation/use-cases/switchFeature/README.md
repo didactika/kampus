@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/switchFeature/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Flag resolver | service | `crates/kampus-customise/src/flags.rs` | no (to build) |
+| Flag resolver | service | `crates/customise/src/flags.rs` | no (to build) |
 | `/api/v1/scopes/{scope_id}/flags` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-213 to RN-220 | `crates/kampus-customise/tests/` | planned |
+| Unit and integration tests of the module | RN-213 to RN-220 | `crates/customise/tests/` | planned |

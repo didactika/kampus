@@ -13,4 +13,4 @@ status: accepted
   - Order within a parent is a fractional sort key: inserting or moving writes only the moved row; a rare job rebalances the keys of one parent.
   - Order is local to each parent; there is no global order and no limit per parent.
 - Consequences: Moves are cheap and safe under concurrency; links and highlights survive any reorganisation; the API addresses everything by id.
-- Affected artifacts: `crates/kampus-courses`, `crates/kampus-activities`, the course editor.
+- Affected artifacts: `crates/courses`, `crates/activities`, the course editor.

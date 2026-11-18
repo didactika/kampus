@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/registerApiClient/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Client registry and token service | service | `crates/kampus-api/src/clients.rs` | no (to build) |
+| Client registry and token service | service | `crates/api/src/clients.rs` | no (to build) |
 | `/api/v1/api-clients`, `/oauth/*` | API endpoints | `docs/03-design/api/integrations.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-195 to RN-198 | `crates/kampus-api/tests/` | planned |
+| Unit and integration tests of the module | RN-195 to RN-198 | `crates/api/tests/` | planned |

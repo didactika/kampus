@@ -15,4 +15,4 @@ status: accepted
   - Audited types write an append-only audit entry in the same transaction; visibility follows the object's permissions.
   - Retention is a per-campus policy; personal fields are declared per type for the privacy handlers.
 - Consequences: Listeners can trust payloads; failures are visible and retryable; the audit log answers who did what without noise.
-- Affected artifacts: `crates/kampus-events`.
+- Affected artifacts: `crates/events`.

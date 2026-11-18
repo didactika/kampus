@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/shareCustomisation/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Package service | service | `crates/kampus-customise/src/packages.rs` | no (to build) |
+| Package service | service | `crates/customise/src/packages.rs` | no (to build) |
 | `/api/v1/scopes/{scope_id}/customisation-packages`, `/customisation-imports` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-221 to RN-222 | `crates/kampus-customise/tests/` | planned |
+| Unit and integration tests of the module | RN-221 to RN-222 | `crates/customise/tests/` | planned |

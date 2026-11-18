@@ -13,4 +13,4 @@ status: accepted
   - The platform calls the contract inside its own transaction; the type owns a schema whose rows reference `course_module` with cascade.
   - The contract is versioned; a type declares the version it implements, and the host keeps older versions working within a major version (RNF-011).
 - Consequences: One behaviour for all types; failures never leave half-created activities; plugins survive upgrades.
-- Affected artifacts: `crates/kampus-activities`, the plugin SDK, every activity type.
+- Affected artifacts: `crates/activities`, the plugin SDK, every activity type.

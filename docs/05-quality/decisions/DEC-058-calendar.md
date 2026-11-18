@@ -14,4 +14,4 @@ status: accepted
   - Subscriptions are refreshed by a job that matches entries by UID and sequence and records every change.
   - Personal feeds use scoped, revocable tokens stored hashed.
 - Consequences: Dates are the same in the activity, the calendar and notifications; series are edited once.
-- Affected artifacts: `crates/kampus-calendar`.
+- Affected artifacts: `crates/calendar`.

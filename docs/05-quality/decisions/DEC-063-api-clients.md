@@ -15,4 +15,4 @@ status: accepted
   - Rate limits per token and address on the cache port, answered with `429` and `Retry-After`.
   - Versions are paths; deprecations announce `Deprecation` and `Sunset` headers.
 - Consequences: The document always matches the code; integrations get least privilege; one integration cannot exhaust the campus.
-- Affected artifacts: `crates/kampus-api`, every module's routes, the integrator guide.
+- Affected artifacts: `crates/api`, every module's routes, the integrator guide.

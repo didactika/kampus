@@ -13,4 +13,4 @@ status: accepted
   - Prerequisites form a graph validated on save; cycles are refused and the graph is shown to the teacher.
   - The tracked population is the same for every rule: active participants with `progress.tracked`.
 - Consequences: Criteria that cannot be met are impossible to configure; every rule counts the same people.
-- Affected artifacts: `crates/kampus-progress`.
+- Affected artifacts: `crates/progress`.

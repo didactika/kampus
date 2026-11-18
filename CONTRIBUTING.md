@@ -48,6 +48,17 @@ docker compose -f tools/docs-check/compose.yaml run --rm repo
 
 The same gates run in CI on every pull request (`.github/workflows/ci.yml`).
 
+## Adapters
+
+An adapter of an infrastructure port lives in `crates/<port>/adapters/<name>`, is named `kampus-<port>-<name>`, exposes `ADAPTER` with the URL schemes it serves, and passes the port's conformance suite. After adding one, run `docker compose -f tools/docs-check/compose.yaml run --rm repo --fix --author "Your Name <you@example.org>"`: it registers the adapter in `kampus-server`. An adapter published outside the repository is declared in `crates/server/adapters.toml`:
+
+```toml
+[[adapter]]
+port = "cache"
+crate = "kampus-cache-memcached"
+source = 'git = "https://example.org/kampus-cache-memcached.git", tag = "v1.0.0"'
+```
+
 ## Source files
 
 - Every file outside `docs/` starts with the standard header of DEC-083, in the comment syntax of its type: the KAMPUS banner, the notice of the GNU Affero General Public License (DEC-085), and `@package`, `@copyright`, `@author` (name and address), `@license` and `@since`. `docker compose -f tools/docs-check/compose.yaml run --rm repo --fix --author "Your Name <you@example.org>"` adds missing headers and rewrites outdated ones, keeping their `@since`. In Rust:

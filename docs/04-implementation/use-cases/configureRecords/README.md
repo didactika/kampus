@@ -19,12 +19,12 @@ Design: [README](../../../03-design/use-cases/configureRecords/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Records structure service | service | `crates/kampus-records/src/structure.rs` | no (to build) |
-| Aggregation methods | service | `crates/kampus-records/src/aggregation.rs` | no (to build) |
+| Records structure service | service | `crates/records/src/structure.rs` | no (to build) |
+| Aggregation methods | service | `crates/records/src/aggregation.rs` | no (to build) |
 | `/api/v1/courses/{course_id}/records/*`, `/api/v1/records/{record_id}` | API endpoints | `docs/03-design/api/records.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-100, RN-101, RN-106 to RN-108 | `crates/kampus-records/tests/` | planned |
+| Unit and integration tests of the module | RN-100, RN-101, RN-106 to RN-108 | `crates/records/tests/` | planned |

@@ -15,4 +15,4 @@ status: accepted
   - Content is served through signed URLs valid for minutes, for one file; active content from a separate origin.
   - Unreferenced blobs go to a trash and are deleted by a job after retention.
 - Consequences: No orphaned files, no polymorphic owner, one permission rule; storage backends can be swapped by a verified copy job.
-- Affected artifacts: `crates/kampus-files`.
+- Affected artifacts: `crates/files`.

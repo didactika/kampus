@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/arrangeLayout/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Layout and menu service | service | `crates/kampus-customise/src/layout.rs` | no (to build) |
+| Layout and menu service | service | `crates/customise/src/layout.rs` | no (to build) |
 | `/api/v1/scopes/{scope_id}/layouts`, `/menus` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-213 to RN-222 | `crates/kampus-customise/tests/` | planned |
+| Unit and integration tests of the module | RN-213 to RN-222 | `crates/customise/tests/` | planned |

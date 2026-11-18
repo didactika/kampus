@@ -19,11 +19,11 @@ Design: [README](../../../03-design/use-cases/expireEnrolments/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Expiry job | job | `crates/kampus-enrol/src/jobs/expire.rs` | no (to build) |
+| Expiry job | job | `crates/enrol/src/jobs/expire.rs` | no (to build) |
 | `enrol.expiry_outcome` | table | `docs/03-design/data-model/enrolment.md` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-068, RN-069 | `crates/kampus-enrol/tests/` | planned |
+| Unit and integration tests of the module | RN-068, RN-069 | `crates/enrol/tests/` | planned |

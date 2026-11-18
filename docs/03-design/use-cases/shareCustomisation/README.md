@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/shareCustomisation/README.md)
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Package service | service | `crates/kampus-customise/src/packages.rs` |
+| Package service | service | `crates/customise/src/packages.rs` |
 | `/api/v1/scopes/{scope_id}/customisation-packages`, `/customisation-imports` | API endpoints | `docs/03-design/api/customise.openapi.yaml` |
 
 ## Sequence

@@ -19,7 +19,7 @@ Analysis: [README](../../../02-analysis/use-cases/trackActivityProgress/README.m
 
 | Design element | Kind | Code target |
 | --- | --- | --- |
-| Progress evaluator | service | `crates/kampus-progress/src/activity.rs` |
+| Progress evaluator | service | `crates/progress/src/activity.rs` |
 | progress endpoints | API endpoints | `docs/03-design/api/progress.openapi.yaml` |
 
 ## Sequence

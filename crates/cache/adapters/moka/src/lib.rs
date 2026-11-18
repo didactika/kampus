@@ -162,3 +162,19 @@ impl Cache for MokaCache {
         Ok(())
     }
 }
+
+/// The registration of this adapter (DEC-086): `memory://` gives an in-process cache, the local level of
+/// every installation; the option `max_entries` bounds it (100 000 by default).
+pub const ADAPTER: kampus_cache::Adapter = kampus_cache::Adapter {
+    name: "moka",
+    schemes: &["memory"],
+    open: |settings| {
+        Box::pin(async move {
+            let max_entries = settings
+                .option("max_entries")
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(100_000);
+            Ok(std::sync::Arc::new(MokaCache::new(max_entries)) as std::sync::Arc<dyn Cache>)
+        })
+    },
+};

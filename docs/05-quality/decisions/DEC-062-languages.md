@@ -14,4 +14,4 @@ status: accepted
   - The language is resolved from the course (forced), the person, the visitor's browser and the campus; fallbacks follow the language's parent chain and missing strings are counted.
   - Formatting uses CLDR for the resolved locale; right-to-left languages switch the client's direction.
 - Consequences: Correct plurals and genders in every language; terminology (DEC-012) applies on top of every message.
-- Affected artifacts: `crates/kampus-i18n`, the web client, every module's messages.
+- Affected artifacts: `crates/i18n`, the web client, every module's messages.

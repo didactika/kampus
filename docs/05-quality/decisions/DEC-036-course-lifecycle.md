@@ -14,4 +14,4 @@ status: accepted
   - Course owners are data; deletion needs `courses.course.delete`, which owners hold through the owner role.
   - Deleted sections go to a recycle bin until it expires.
 - Consequences: Closing a term is one action that keeps everything readable; deletions are complete and recoverable during the grace period.
-- Affected artifacts: `crates/kampus-courses`, every module with course data, the operator guide.
+- Affected artifacts: `crates/courses`, every module with course data, the operator guide.

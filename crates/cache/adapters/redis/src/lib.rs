@@ -174,3 +174,15 @@ impl Cache for RedisCache {
 fn unavailable(error: redis::RedisError) -> Error {
     Error::unavailable("cache.unavailable").with_source(error)
 }
+
+/// The registration of this adapter (DEC-086): `redis://`, `rediss://` and `valkey://` URLs.
+pub const ADAPTER: kampus_cache::Adapter = kampus_cache::Adapter {
+    name: "redis",
+    schemes: &["redis", "rediss", "valkey"],
+    open: |settings| {
+        Box::pin(async move {
+            let cache = RedisCache::connect(&settings.url, &settings.prefix).await?;
+            Ok(std::sync::Arc::new(cache) as std::sync::Arc<dyn Cache>)
+        })
+    },
+};

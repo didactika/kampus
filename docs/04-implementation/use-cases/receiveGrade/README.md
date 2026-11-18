@@ -19,12 +19,12 @@ Design: [README](../../../03-design/use-cases/receiveGrade/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Grade service | service | `crates/kampus-records/src/grade.rs` | no (to build) |
-| Recalculation job | job | `crates/kampus-records/src/jobs/recalculate.rs` | no (to build) |
+| Grade service | service | `crates/records/src/grade.rs` | no (to build) |
+| Recalculation job | job | `crates/records/src/jobs/recalculate.rs` | no (to build) |
 | `PUT /api/v1/records/{record_id}/grades` | API endpoint | `docs/03-design/api/records.openapi.yaml` | no (to build) |
 
 ## Tests
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-096 to RN-099 | `crates/kampus-records/tests/` | planned |
+| Unit and integration tests of the module | RN-096 to RN-099 | `crates/records/tests/` | planned |

@@ -19,7 +19,7 @@ Design: [README](../../../03-design/use-cases/manageGroups/README.md)
 
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
-| Group service | service | `crates/kampus-courses/src/group.rs` | no (to build) |
+| Group service | service | `crates/courses/src/group.rs` | no (to build) |
 | `/api/v1/courses/{course_id}/groups`, `/api/v1/groups/{group_id}/members`, group sets | API endpoints | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
 | `courses.group`, `courses.group_member`, `courses.group_set` | tables | `docs/03-design/data-model/courses.md` | no (to build) |
 
@@ -27,4 +27,4 @@ Design: [README](../../../03-design/use-cases/manageGroups/README.md)
 
 | Test | Covers | Location | Result |
 | --- | --- | --- | --- |
-| Unit and integration tests of the module | RN-041, RN-053 to RN-058 | `crates/kampus-courses/tests/` | planned |
+| Unit and integration tests of the module | RN-041, RN-053 to RN-058 | `crates/courses/tests/` | planned |
