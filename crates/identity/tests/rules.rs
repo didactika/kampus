@@ -1,0 +1,896 @@
+// ------------------------------------------------------------------------------
+//
+//     _  __    _    __  __ ____  _   _ ____
+//    | |/ /   / \  |  \/  |  _ \| | | / ___|
+//    | ' /   / _ \ | |\/| | |_) | | | \___ \
+//    | . \  / ___ \| |  | |  __/| |_| |___) |
+//    |_|\_\/_/   \_\_|  |_|_|    \___/|____/
+//
+//    Knowledge Academic Modular Platform for Universal Study
+//
+// ------------------------------------------------------------------------------
+//
+// This file is part of Kampus - https://github.com/didactika/kampus
+//
+// Kampus is free software: you can redistribute it and/or modify it under the terms of the
+// GNU Affero General Public License as published by the Free Software Foundation, either
+// version 3 of the License, or (at your option) any later version.
+//
+// Kampus is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+// even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License along with Kampus.
+// If not, see <https://www.gnu.org/licenses/>.
+//
+// @package   kampus-identity
+// @copyright 2026 Didactika
+// @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
+// @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
+// @since     0.1.0
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// ------------------------------------------------------------------------------
+
+//! One test per business rule of identity built so far (RN-022 to RN-027, RN-031 to RN-035, RN-039),
+//! against PostgreSQL, on a campus with its default roles, an administrator and a manager.
+
+#![allow(
+    clippy::unwrap_used,
+    clippy::expect_used,
+    reason = "a failing setup must stop the test"
+)]
+#![allow(clippy::too_many_lines, reason = "each rule reads as one story")]
+
+use std::collections::BTreeMap;
+use std::sync::Arc;
+
+use kampus_access::{Access, Actor, PrincipalId, RoleId, RoleTemplateDeclaration, ScopeId, ScopeKind};
+use kampus_common::{ErrorKind, FixedClock, Result, Timestamp};
+use kampus_db::{Database, Prefix, Upgrader};
+use kampus_identity::account::SignUp;
+use kampus_identity::api_token::{TokenRequest, TokenScope};
+use kampus_identity::declarations::{ACCOUNT_READ, TOKEN_MANAGE_OWN};
+use kampus_identity::session::Client;
+use kampus_identity::sign_in::{Credential, SignIn, SignInOutcome};
+use kampus_identity::{
+    AccountId, AccountKind, AccountStatus, CampusPolicy, FixedPolicies, Identity, MemoryCourier, Notice,
+    PasswordCost, Session,
+};
+use sqlx::Row;
+
+/// A password that passes the default policy.
+const PASSWORD: &str = "a long and quiet river";
+
+/// A campus with its roles and people.
+struct World {
+    /// The service.
+    identity: Identity,
+    /// Access, on the same database.
+    access: Access,
+    /// The clock of both services.
+    clock: Arc<FixedClock>,
+    /// The messages identity sent.
+    courier: Arc<MemoryCourier>,
+    /// The database.
+    db: Database,
+    /// The campus.
+    campus: ScopeId,
+    /// Another campus.
+    other_campus: ScopeId,
+    /// The default roles of the campus.
+    roles: BTreeMap<&'static str, RoleId>,
+    /// The campus administrator, a principal set up by hand.
+    admin: Actor,
+    /// The administrator of the other campus.
+    other_admin: Actor,
+    /// A manager with an account.
+    manager: AccountId,
+}
+
+/// The policy of the tests: self sign-up open, otherwise the defaults.
+fn policy() -> CampusPolicy {
+    CampusPolicy {
+        self_sign_up: true,
+        ..CampusPolicy::default()
+    }
+}
+
+/// The error kind and code of a result.
+fn error<T: std::fmt::Debug>(result: Result<T>) -> (ErrorKind, String) {
+    let error = result.expect_err("the operation fails");
+    (error.kind(), error.code().to_owned())
+}
+
+/// Builds the world in an installation of its own prefix.
+async fn world() -> World {
+    world_with(policy()).await
+}
+
+/// Builds the world with a policy.
+async fn world_with(policy: CampusPolicy) -> World {
+    let url = std::env::var("KAMPUS_TEST_DATABASE_URL").expect("KAMPUS_TEST_DATABASE_URL is set");
+    let simple = uuid::Uuid::now_v7().simple().to_string();
+    let prefix: Prefix = format!("i{}_", &simple[simple.len() - 6..]).parse().unwrap();
+    let db = Database::connect(&url, prefix, 4).await.unwrap();
+    Upgrader::new(
+        &db,
+        &[kampus_access::schema::STEPS, kampus_identity::schema::STEPS],
+        "0.1.0",
+    )
+    .apply(true)
+    .await
+    .unwrap();
+    let clock = Arc::new(FixedClock::new(
+        Timestamp::parse_rfc3339("2026-11-18T10:00:00Z").unwrap(),
+    ));
+    let access = Access::new(db.clone(), clock.clone());
+    let templates: Vec<RoleTemplateDeclaration> = [
+        kampus_access::declarations::TEMPLATES,
+        kampus_identity::declarations::TEMPLATES,
+    ]
+    .concat();
+    access
+        .sync(
+            &[
+                ("access", kampus_access::declarations::PERMISSIONS),
+                ("identity", kampus_identity::declarations::PERMISSIONS),
+            ],
+            &templates,
+        )
+        .await
+        .unwrap();
+    let platform = access.create_platform().await.unwrap();
+    let campus = access.create_scope(platform, ScopeKind::Campus).await.unwrap();
+    let other_campus = access.create_scope(platform, ScopeKind::Campus).await.unwrap();
+    let roles = access.install_campus_roles(campus).await.unwrap();
+    let other_roles = access.install_campus_roles(other_campus).await.unwrap();
+    let administrator = |campus: ScopeId, role: RoleId| {
+        let access = access.clone();
+        async move {
+            let admin = PrincipalId::generate();
+            access.create_principal(admin, campus).await.unwrap();
+            access
+                .grant_for_module("setup", role, campus, admin, None)
+                .await
+                .unwrap();
+            Actor::Principal(admin)
+        }
+    };
+    let admin = administrator(campus, roles["campus_administrator"]).await;
+    let other_admin = administrator(other_campus, other_roles["campus_administrator"]).await;
+    let courier = Arc::new(MemoryCourier::default());
+    let identity = Identity::new(
+        db.clone(),
+        access.clone(),
+        clock.clone(),
+        Arc::new(FixedPolicies(policy)),
+        courier.clone(),
+    )
+    .with_password_cost(PasswordCost {
+        memory_kib: 64,
+        iterations: 1,
+        parallelism: 1,
+    });
+    let mut world = World {
+        identity,
+        access,
+        clock,
+        courier,
+        db,
+        campus,
+        other_campus,
+        roles,
+        admin,
+        other_admin,
+        manager: AccountId::generate(),
+    };
+    world.manager = world.person("manager@example.org").await;
+    world
+        .access
+        .grant(&world.admin, world.roles["manager"], campus, world.manager, None)
+        .await
+        .unwrap();
+    world
+}
+
+impl World {
+    /// Invites a person to the campus and accepts the invitation with [`PASSWORD`].
+    async fn person(&self, email: &str) -> AccountId {
+        let id = self
+            .identity
+            .invite(&self.admin, self.campus, email, None)
+            .await
+            .unwrap();
+        self.identity
+            .accept_invitation(&self.token_sent_to(email), PASSWORD)
+            .await
+            .unwrap();
+        id
+    }
+
+    /// The token of the last link sent to an email.
+    fn token_sent_to(&self, email: &str) -> String {
+        match self.courier.last_to(email).map(|m| m.notice) {
+            Some(Notice::ConfirmEmail { token } | Notice::Invitation { token }) => token,
+            other => panic!("no link was sent to {email}: {other:?}"),
+        }
+    }
+
+    /// Signs in with a password, expecting a session.
+    async fn session(&self, name: &str) -> (Session, String) {
+        match self.sign_in(name, PASSWORD, None).await.unwrap() {
+            SignInOutcome::SignedIn(new) => (new.session, new.token),
+            SignInOutcome::SecondFactorRequired { .. } => panic!("no second factor was expected"),
+        }
+    }
+
+    /// Signs in with a password from an address.
+    async fn sign_in(&self, name: &str, password: &str, address: Option<&str>) -> Result<SignInOutcome> {
+        self.identity
+            .sign_in(
+                self.campus,
+                SignIn {
+                    name: name.to_owned(),
+                    credential: Credential::Password(password.to_owned()),
+                    client: Client {
+                        name: Some("tests".to_owned()),
+                        address: address.map(str::to_owned),
+                    },
+                },
+            )
+            .await
+    }
+
+    /// Moves the clock forward.
+    fn advance(&self, by: time::Duration) {
+        let now = self.identity_now();
+        self.clock.set(Timestamp::from_offset_date_time(now + by));
+    }
+
+    /// The instant of the clock.
+    fn identity_now(&self) -> time::OffsetDateTime {
+        use kampus_common::Clock;
+        self.clock.now().as_offset_date_time()
+    }
+
+    /// The account as an administrator reads it.
+    async fn account(&self, id: AccountId) -> kampus_identity::Account {
+        self.identity.account(&self.admin, id).await.unwrap()
+    }
+
+    /// The quoted name of a table of identity.
+    fn table(&self, name: &str) -> String {
+        format!("{}.\"{name}\"", self.db.prefix().schema("identity"))
+    }
+
+    /// Counts the rows of a table of identity for an account.
+    async fn count(&self, table: &str, account: AccountId) -> i64 {
+        sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+            "select count(*) from {} where account_id = $1",
+            self.table(table)
+        )))
+        .bind(account.as_uuid())
+        .fetch_one(self.db.pool())
+        .await
+        .unwrap()
+    }
+}
+
+#[tokio::test]
+async fn rn_022_usernames_and_emails_are_unique_in_a_campus() {
+    let w = world().await;
+    w.identity
+        .invite(&w.admin, w.campus, "Ana@Example.org", Some("Ana"))
+        .await
+        .unwrap();
+    assert_eq!(
+        error(
+            w.identity
+                .invite(&w.admin, w.campus, "ana@example.ORG", None)
+                .await
+        ),
+        (ErrorKind::Conflict, "identity.account_exists".to_owned())
+    );
+    assert_eq!(
+        error(
+            w.identity
+                .invite(&w.admin, w.campus, "other@example.org", Some("ANA"))
+                .await
+        ),
+        (ErrorKind::Conflict, "identity.account_exists".to_owned())
+    );
+    let id = w
+        .identity
+        .invite(&w.other_admin, w.other_campus, "ana@example.org", Some("ana"))
+        .await
+        .unwrap();
+    let account = w.identity.account(&w.other_admin, id).await.unwrap();
+    assert_eq!(account.email.as_deref(), Some("ana@example.org"));
+    assert_eq!(account.username.as_deref(), Some("ana"));
+}
+
+#[tokio::test]
+async fn rn_023_the_lifecycle_is_a_recorded_state_machine() {
+    let w = world().await;
+    let ana = w.person("ana@example.org").await;
+    let account = w.account(ana).await;
+    assert_eq!(account.status, AccountStatus::Active);
+    assert!(account.email_verified_at.is_some());
+    let ana_actor = Actor::Principal(ana);
+    assert!(
+        w.access
+            .check(&ana_actor, TOKEN_MANAGE_OWN, w.campus)
+            .await
+            .unwrap()
+            .allowed
+    );
+
+    assert_eq!(
+        error(w.identity.suspend(&ana_actor, w.manager, "no reason", None).await).0,
+        ErrorKind::PermissionDenied
+    );
+    let manager = Actor::Principal(w.manager);
+    assert_eq!(
+        error(
+            w.identity
+                .suspend(&manager, ana, "late", Some(account.version - 1))
+                .await
+        )
+        .0,
+        ErrorKind::PreconditionFailed
+    );
+    w.identity
+        .suspend(&manager, ana, "unpaid fees", Some(account.version))
+        .await
+        .unwrap();
+    let suspended = w.account(ana).await;
+    assert_eq!(suspended.status, AccountStatus::Suspended);
+    assert_eq!(suspended.status_reason.as_deref(), Some("unpaid fees"));
+    assert!(
+        !w.access
+            .check(&ana_actor, TOKEN_MANAGE_OWN, w.campus)
+            .await
+            .unwrap()
+            .allowed
+    );
+    assert_eq!(
+        error(w.identity.suspend(&manager, ana, "again", None).await),
+        (ErrorKind::Conflict, "identity.transition_not_allowed".to_owned())
+    );
+    assert_eq!(
+        error(w.identity.suspend(&manager, w.manager, "myself", None).await),
+        (ErrorKind::Conflict, "identity.own_account".to_owned())
+    );
+    w.identity.reactivate(&manager, ana, "paid", None).await.unwrap();
+    assert!(
+        w.access
+            .check(&ana_actor, TOKEN_MANAGE_OWN, w.campus)
+            .await
+            .unwrap()
+            .allowed
+    );
+
+    let history: Vec<(Option<String>, String, Option<String>)> = sqlx::query(sqlx::AssertSqlSafe(format!(
+        "select from_status, to_status, reason from {} where account_id = $1 order by at, id",
+        w.table("account_transition")
+    )))
+    .bind(ana.as_uuid())
+    .fetch_all(w.db.pool())
+    .await
+    .unwrap()
+    .iter()
+    .map(|r| (r.get(0), r.get(1), r.get(2)))
+    .collect();
+    let steps: Vec<(Option<&str>, &str)> = history
+        .iter()
+        .map(|(from, to, _)| (from.as_deref(), to.as_str()))
+        .collect();
+    assert_eq!(
+        steps,
+        vec![
+            (None, "invited"),
+            (Some("invited"), "active"),
+            (Some("active"), "suspended"),
+            (Some("suspended"), "active"),
+        ]
+    );
+    assert_eq!(history[2].2.as_deref(), Some("unpaid fees"));
+}
+
+#[tokio::test]
+async fn rn_024_every_sign_in_runs_the_same_pipeline() {
+    let w = world().await;
+    let ana = w.person("ana@example.org").await;
+    let (session, _) = w.session("ANA@example.org ").await;
+    assert_eq!(session.account, ana);
+    assert!(w.account(ana).await.last_sign_in_at.is_some());
+    let failed = (ErrorKind::Unauthenticated, "identity.sign_in_failed".to_owned());
+    assert_eq!(
+        error(w.sign_in("ana@example.org", "a wrong password", None).await),
+        failed
+    );
+
+    w.identity
+        .suspend(&Actor::Principal(w.manager), ana, "paused", None)
+        .await
+        .unwrap();
+    assert_eq!(error(w.sign_in("ana@example.org", PASSWORD, None).await), failed);
+
+    let service = w
+        .identity
+        .create_service_account(&w.admin, w.campus, "grades-sync")
+        .await
+        .unwrap();
+    assert_eq!(w.account(service).await.kind, AccountKind::Service);
+    assert_eq!(error(w.sign_in("grades-sync", PASSWORD, None).await), failed);
+
+    let strict = world_with(CampusPolicy {
+        second_factor_required: true,
+        ..policy()
+    })
+    .await;
+    strict.person("bea@example.org").await;
+    match strict.sign_in("bea@example.org", PASSWORD, None).await.unwrap() {
+        SignInOutcome::SecondFactorRequired { challenge } => assert_eq!(challenge.len(), 43),
+        SignInOutcome::SignedIn(_) => panic!("the campus requires a second factor"),
+    }
+}
+
+#[tokio::test]
+async fn rn_025_passwords_follow_the_policy_and_are_hashed() {
+    let w = world().await;
+    w.identity
+        .invite(&w.admin, w.campus, "carla.ruiz@example.org", Some("carla"))
+        .await
+        .unwrap();
+    let token = w.token_sent_to("carla.ruiz@example.org");
+    let rejected = w.identity.accept_invitation(&token, "short").await.unwrap_err();
+    assert_eq!(rejected.code(), "identity.password_rejected");
+    assert!(rejected.fields().iter().any(|f| f.rule == "min_length"));
+    let rejected = w
+        .identity
+        .accept_invitation(&token, "my name is carla.ruiz indeed")
+        .await
+        .unwrap_err();
+    assert!(rejected.fields().iter().any(|f| f.rule == "contains_name"));
+    let carla = w.identity.accept_invitation(&token, PASSWORD).await.unwrap();
+
+    let (hash, params): (String, String) = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "select hash, algorithm_params from {} where account_id = $1",
+        w.table("password")
+    )))
+    .bind(carla.as_uuid())
+    .fetch_one(w.db.pool())
+    .await
+    .unwrap();
+    assert!(hash.starts_with("$argon2id$v=19$m=64,t=1,p=1$"));
+    assert!(!hash.contains(PASSWORD));
+    assert_eq!(params, "m=64,t=1,p=1");
+    assert!(
+        w.courier
+            .sent()
+            .iter()
+            .all(|m| !format!("{:?}", m.notice).contains(PASSWORD)),
+        "a password is never sent"
+    );
+}
+
+#[tokio::test]
+async fn rn_026_one_time_tokens_are_hashed_expire_and_work_once() {
+    let w = world().await;
+    w.identity
+        .sign_up(
+            w.campus,
+            SignUp {
+                email: "dani@example.org".to_owned(),
+                accepted_terms: true,
+            },
+        )
+        .await
+        .unwrap();
+    let first = w.token_sent_to("dani@example.org");
+    let stored: Vec<Vec<u8>> = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+        "select hash from {}",
+        w.table("one_time_token")
+    )))
+    .fetch_all(w.db.pool())
+    .await
+    .unwrap();
+    assert!(
+        stored
+            .iter()
+            .all(|h| h.len() == 32 && h.as_slice() != first.as_bytes())
+    );
+
+    w.advance(time::Duration::hours(25));
+    let invalid = (ErrorKind::Validation, "identity.token_invalid".to_owned());
+    assert_eq!(error(w.identity.confirm(&first, PASSWORD).await), invalid);
+
+    w.identity
+        .sign_up(
+            w.campus,
+            SignUp {
+                email: "dani@example.org".to_owned(),
+                accepted_terms: true,
+            },
+        )
+        .await
+        .unwrap();
+    let second = w.token_sent_to("dani@example.org");
+    assert_ne!(first, second);
+    let dani = w.identity.confirm(&second, PASSWORD).await.unwrap();
+    assert_eq!(w.account(dani).await.status, AccountStatus::Active);
+    assert_eq!(error(w.identity.confirm(&second, PASSWORD).await), invalid);
+}
+
+#[tokio::test]
+async fn rn_027_answers_never_reveal_accounts_and_sign_in_is_throttled() {
+    let w = world().await;
+    let request = || SignUp {
+        email: "eva@example.org".to_owned(),
+        accepted_terms: true,
+    };
+    w.identity.sign_up(w.campus, request()).await.unwrap();
+    let eva = w
+        .identity
+        .confirm(&w.token_sent_to("eva@example.org"), PASSWORD)
+        .await
+        .unwrap();
+    w.identity.sign_up(w.campus, request()).await.unwrap();
+    assert_eq!(
+        w.courier.last_to("eva@example.org").map(|m| m.notice),
+        Some(Notice::AlreadyRegistered)
+    );
+    assert_eq!(
+        error(w.sign_in("nobody@example.org", PASSWORD, None).await),
+        error(w.sign_in("eva@example.org", "a wrong password", None).await)
+    );
+
+    let throttle = CampusPolicy::default().throttle;
+    for name in ["eva@example.org", "nobody@example.org"] {
+        for _ in 1..throttle.slow_after {
+            assert_eq!(
+                error(w.sign_in(name, "a wrong password", None).await).0,
+                ErrorKind::Unauthenticated
+            );
+        }
+        let throttled = w.sign_in(name, PASSWORD, None).await.unwrap_err();
+        assert_eq!(throttled.kind(), ErrorKind::RateLimited, "{name}");
+        assert!(throttled.params().iter().any(|(k, _)| k == "retry_after"));
+    }
+    let mut failures = throttle.slow_after;
+    while failures < throttle.lock_after {
+        match w.sign_in("eva@example.org", "a wrong password", None).await {
+            Err(e) if e.kind() == ErrorKind::RateLimited => {
+                let (_, seconds) = e.params().iter().find(|(k, _)| k == "retry_after").unwrap();
+                w.advance(time::Duration::seconds(seconds.parse().unwrap()));
+            }
+            Err(_) => failures += 1,
+            Ok(_) => panic!("a wrong password never signs in"),
+        }
+    }
+    w.advance(time::Duration::minutes(5));
+    assert_eq!(
+        error(w.sign_in("eva@example.org", PASSWORD, None).await).0,
+        ErrorKind::RateLimited,
+        "locked for a while after too many failures"
+    );
+    w.advance(throttle.lock_for);
+    let (session, _) = w.session("eva@example.org").await;
+    assert_eq!(session.account, eva);
+    assert_eq!(
+        error(w.sign_in("eva@example.org", "a wrong password", None).await).0,
+        ErrorKind::Unauthenticated,
+        "a success starts the count again"
+    );
+
+    let address = Some("203.0.113.7");
+    for i in 0..throttle.address_lock_after {
+        drop(
+            w.sign_in(&format!("guess{i}@example.org"), "a wrong password", address)
+                .await,
+        );
+    }
+    assert_eq!(
+        error(w.sign_in("eva@example.org", PASSWORD, address).await).0,
+        ErrorKind::RateLimited,
+        "an address with too many failures is locked for every name"
+    );
+}
+
+#[tokio::test]
+async fn rn_031_sessions_are_checked_on_every_request_and_revoked_centrally() {
+    let w = world().await;
+    let ana = w.person("ana@example.org").await;
+    let (session, token) = w.session("ana@example.org").await;
+    assert_eq!(w.identity.authenticate(&token).await.unwrap().id, session.id);
+    let (_, other_token) = w.session("ana@example.org").await;
+    assert_eq!(w.identity.sessions(&session).await.unwrap().len(), 2);
+    let api = w
+        .identity
+        .create_own_token(
+            &session,
+            TokenRequest {
+                name: "calendar".to_owned(),
+                scopes: vec![TokenScope {
+                    permission: TOKEN_MANAGE_OWN.to_owned(),
+                    scope: w.campus,
+                }],
+                expires_at: None,
+            },
+        )
+        .await
+        .unwrap();
+
+    w.identity
+        .suspend(&Actor::Principal(w.manager), ana, "investigation", None)
+        .await
+        .unwrap();
+    let invalid = (ErrorKind::Unauthenticated, "identity.session_invalid".to_owned());
+    assert_eq!(error(w.identity.authenticate(&token).await), invalid);
+    assert_eq!(error(w.identity.authenticate(&other_token).await), invalid);
+    assert_eq!(w.count("session", ana).await, 0);
+    assert_eq!(
+        error(w.identity.authenticate_token(&api.token).await).0,
+        ErrorKind::Unauthenticated
+    );
+
+    w.identity
+        .reactivate(&Actor::Principal(w.manager), ana, "cleared", None)
+        .await
+        .unwrap();
+    let (session, token) = w.session("ana@example.org").await;
+    w.identity
+        .change_password(&session, PASSWORD, "an even longer and quieter river")
+        .await
+        .unwrap();
+    assert_eq!(error(w.identity.authenticate(&token).await), invalid);
+    assert_eq!(
+        w.courier.last_to("ana@example.org").map(|m| m.notice),
+        Some(Notice::PasswordChanged)
+    );
+
+    let (_, token) = match w
+        .sign_in("ana@example.org", "an even longer and quieter river", None)
+        .await
+        .unwrap()
+    {
+        SignInOutcome::SignedIn(new) => (new.session, new.token),
+        SignInOutcome::SecondFactorRequired { .. } => unreachable!(),
+    };
+    w.advance(time::Duration::hours(9));
+    assert_eq!(
+        error(w.identity.authenticate(&token).await),
+        invalid,
+        "idle too long"
+    );
+    w.identity.sign_out("not a token").await.unwrap();
+}
+
+#[tokio::test]
+async fn rn_032_sensitive_operations_need_a_recent_strong_authentication() {
+    let w = world().await;
+    w.person("ana@example.org").await;
+    let (session, token) = w.session("ana@example.org").await;
+    w.advance(time::Duration::minutes(16));
+    let session = w.identity.authenticate(&token).await.unwrap_or(session);
+    assert_eq!(
+        error(
+            w.identity
+                .change_password(&session, PASSWORD, "a brand new long river")
+                .await
+        ),
+        (
+            ErrorKind::PermissionDenied,
+            "identity.step_up_required".to_owned()
+        )
+    );
+    assert_eq!(
+        error(w.identity.step_up(&session, "a wrong password").await).0,
+        ErrorKind::Unauthenticated
+    );
+    let session = w.identity.step_up(&session, PASSWORD).await.unwrap();
+    w.identity
+        .change_password(&session, PASSWORD, "a brand new long river")
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+async fn rn_033_api_tokens_are_scoped_expiring_and_hashed() {
+    let w = world().await;
+    let ana = w.person("ana@example.org").await;
+    let (session, _) = w.session("ana@example.org").await;
+    let request = |permission: &str, expires_at: Option<Timestamp>| TokenRequest {
+        name: "calendar".to_owned(),
+        scopes: vec![TokenScope {
+            permission: permission.to_owned(),
+            scope: w.campus,
+        }],
+        expires_at,
+    };
+    let not_held = w
+        .identity
+        .create_own_token(&session, request(ACCOUNT_READ, None))
+        .await
+        .unwrap_err();
+    assert!(not_held.fields().iter().any(|f| f.rule == "not_held"));
+    let too_long = Timestamp::from_offset_date_time(w.identity_now() + time::Duration::days(400));
+    let out_of_range = w
+        .identity
+        .create_own_token(&session, request(TOKEN_MANAGE_OWN, Some(too_long)))
+        .await
+        .unwrap_err();
+    assert!(out_of_range.fields().iter().any(|f| f.field == "expires_at"));
+
+    let token = w
+        .identity
+        .create_own_token(&session, request(TOKEN_MANAGE_OWN, None))
+        .await
+        .unwrap();
+    assert!(token.token.starts_with(&format!("kmp_{}_", token.prefix)));
+    assert_eq!(
+        token.expires_at.as_offset_date_time() - w.identity_now(),
+        time::Duration::days(90)
+    );
+    let stored: Vec<u8> = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+        "select hash from {} where id = $1",
+        w.table("api_token")
+    )))
+    .bind(token.id.as_uuid())
+    .fetch_one(w.db.pool())
+    .await
+    .unwrap();
+    assert_ne!(stored.as_slice(), token.token.as_bytes());
+
+    let auth = w.identity.authenticate_token(&token.token).await.unwrap();
+    assert_eq!(auth.account, ana);
+    assert!(
+        w.identity
+            .token_may(&auth, TOKEN_MANAGE_OWN, w.campus)
+            .await
+            .unwrap()
+    );
+    assert!(!w.identity.token_may(&auth, ACCOUNT_READ, w.campus).await.unwrap());
+    let listed = w.identity.tokens(&session).await.unwrap();
+    assert_eq!(listed.len(), 1);
+    assert_eq!(listed[0].prefix, token.prefix);
+
+    let forged = format!("kmp_{}_{}", token.prefix, "x".repeat(43));
+    assert_eq!(
+        error(w.identity.authenticate_token(&forged).await).0,
+        ErrorKind::Unauthenticated
+    );
+    w.identity.revoke_own_token(&session, token.id).await.unwrap();
+    assert_eq!(
+        error(w.identity.authenticate_token(&token.token).await).0,
+        ErrorKind::Unauthenticated
+    );
+
+    let short = w
+        .identity
+        .create_own_token(
+            &session,
+            request(
+                TOKEN_MANAGE_OWN,
+                Some(Timestamp::from_offset_date_time(
+                    w.identity_now() + time::Duration::days(1),
+                )),
+            ),
+        )
+        .await
+        .unwrap();
+    w.advance(time::Duration::days(2));
+    assert_eq!(
+        error(w.identity.authenticate_token(&short.token).await).0,
+        ErrorKind::Unauthenticated
+    );
+}
+
+#[tokio::test]
+async fn rn_034_deletion_erases_personal_data_and_leaves_a_tombstone() {
+    let w = world().await;
+    let ana = w.person("ana@example.org").await;
+    w.session("ana@example.org").await;
+    w.identity
+        .schedule_deletion(&w.admin, ana, "asked by the person", None)
+        .await
+        .unwrap();
+    w.advance(time::Duration::days(15));
+    assert_eq!(w.identity.run_due_deletions().await.unwrap(), 1);
+    let tombstone = w.account(ana).await;
+    assert_eq!(tombstone.status, AccountStatus::Deleted);
+    assert_eq!((tombstone.username, tombstone.email), (None, None));
+    assert!(tombstone.pseudonym.is_some_and(|p| p.starts_with("deleted-")));
+    for table in ["password", "session", "sign_in_attempt", "one_time_token"] {
+        assert_eq!(w.count(table, ana).await, 0, "{table}");
+    }
+    assert_eq!(
+        error(w.sign_in("ana@example.org", PASSWORD, None).await).0,
+        ErrorKind::Unauthenticated
+    );
+    let again = w.person("ana@example.org").await;
+    assert_ne!(
+        again, ana,
+        "the email is free for a new account; the tombstone keeps its id"
+    );
+}
+
+#[tokio::test]
+async fn rn_035_deletion_waits_for_the_grace_period_and_can_be_cancelled() {
+    let w = world().await;
+    let ana = w.person("ana@example.org").await;
+    w.identity
+        .schedule_deletion(&w.admin, ana, "asked by the person", None)
+        .await
+        .unwrap();
+    let scheduled = w.account(ana).await;
+    assert_eq!(scheduled.status, AccountStatus::Suspended);
+    assert!(scheduled.deletion_due_at.is_some());
+    assert_eq!(
+        error(w.sign_in("ana@example.org", PASSWORD, None).await).0,
+        ErrorKind::Unauthenticated
+    );
+    w.advance(time::Duration::days(13));
+    assert_eq!(w.identity.run_due_deletions().await.unwrap(), 0);
+    w.identity.cancel_deletion(&w.admin, ana, None).await.unwrap();
+    w.advance(time::Duration::days(2));
+    assert_eq!(w.identity.run_due_deletions().await.unwrap(), 0);
+    assert_eq!(w.account(ana).await.status, AccountStatus::Suspended);
+    w.identity
+        .reactivate(&w.admin, ana, "changed their mind", None)
+        .await
+        .unwrap();
+    w.session("ana@example.org").await;
+}
+
+#[tokio::test]
+async fn rn_039_service_accounts_authenticate_only_with_api_tokens() {
+    let w = world().await;
+    let service = w
+        .identity
+        .create_service_account(&w.admin, w.campus, "Grades-Sync")
+        .await
+        .unwrap();
+    assert_eq!(w.count("password", service).await, 0);
+    assert_eq!(
+        error(w.sign_in("grades-sync", PASSWORD, None).await).0,
+        ErrorKind::Unauthenticated
+    );
+    w.access
+        .grant(&w.admin, w.roles["manager"], w.campus, service, None)
+        .await
+        .unwrap();
+    let request = TokenRequest {
+        name: "grades".to_owned(),
+        scopes: vec![TokenScope {
+            permission: ACCOUNT_READ.to_owned(),
+            scope: w.campus,
+        }],
+        expires_at: None,
+    };
+    let manager = Actor::Principal(w.manager);
+    assert_eq!(
+        error(
+            w.identity
+                .create_token_for(&manager, service, request.clone())
+                .await
+        )
+        .0,
+        ErrorKind::PermissionDenied
+    );
+    let token = w
+        .identity
+        .create_token_for(&w.admin, service, request)
+        .await
+        .unwrap();
+    let auth = w.identity.authenticate_token(&token.token).await.unwrap();
+    assert_eq!(auth.account, service);
+    assert!(w.identity.token_may(&auth, ACCOUNT_READ, w.campus).await.unwrap());
+    w.identity.revoke_token(&w.admin, token.id).await.unwrap();
+    assert_eq!(
+        error(w.identity.authenticate_token(&token.token).await).0,
+        ErrorKind::Unauthenticated
+    );
+}

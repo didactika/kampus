@@ -87,6 +87,51 @@ impl Access {
             .await
     }
 
+    /// Grants a role on behalf of a module inside the caller's transaction, so the grant comes and goes
+    /// with the change that causes it.
+    ///
+    /// # Errors
+    ///
+    /// As [`Access::grant_for_module`].
+    pub async fn grant_for_module_in(
+        &self,
+        conn: &mut PgConnection,
+        module: &str,
+        role: RoleId,
+        scope: ScopeId,
+        to: PrincipalId,
+        until: Option<Timestamp>,
+    ) -> Result<GrantId> {
+        self.insert_grant_in(conn, Origin::Module(module), role, scope, to, until)
+            .await
+    }
+
+    /// The role of a campus made from a template, the oldest when there are several.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` when the campus has no role from that template.
+    pub async fn campus_role_in(
+        &self,
+        conn: &mut PgConnection,
+        campus: ScopeId,
+        template: &str,
+    ) -> Result<RoleId> {
+        sqlx::query_scalar(sql(format!(
+            "select r.id from {} r join {} t on t.id = r.template_id where r.campus_id = $1 and t.code = $2
+             order by r.created_at, r.id limit 1",
+            self.table("role"),
+            self.table("role_template")
+        )))
+        .bind(campus.as_uuid())
+        .bind(template)
+        .fetch_optional(conn)
+        .await
+        .map_err(kampus_db::classify)?
+        .map(RoleId::from_uuid)
+        .ok_or_else(|| Error::not_found("access.role_not_found").with_param("template", template))
+    }
+
     /// Inserts a grant after its checks.
     async fn insert_grant(
         &self,
@@ -97,11 +142,28 @@ impl Access {
         until: Option<Timestamp>,
     ) -> Result<GrantId> {
         let mut tx = self.db.begin().await?;
-        let path = self.path(&mut tx, scope).await?;
+        let id = self
+            .insert_grant_in(&mut tx, origin, role, scope, to, until)
+            .await?;
+        tx.commit().await.map_err(kampus_db::classify)?;
+        Ok(id)
+    }
+
+    /// Inserts a grant after its checks, inside the caller's transaction.
+    async fn insert_grant_in(
+        &self,
+        tx: &mut PgConnection,
+        origin: Origin<'_>,
+        role: RoleId,
+        scope: ScopeId,
+        to: PrincipalId,
+        until: Option<Timestamp>,
+    ) -> Result<GrantId> {
+        let path = self.path(&mut *tx, scope).await?;
         let kind = path[0].kind;
         let (origin_text, module, by) = match origin {
             Origin::Manual(actor) => {
-                self.require_with_allowance(&mut tx, actor, GRANT_CREATE, scope, role, AllowanceKind::Grant)
+                self.require_with_allowance(&mut *tx, actor, GRANT_CREATE, scope, role, AllowanceKind::Grant)
                     .await?;
                 ("manual", None, principal(actor))
             }
@@ -123,7 +185,7 @@ impl Access {
             )
             .with_param("kind", kind.as_str()));
         }
-        let role_campus = self.role_campus(&mut tx, role).await?;
+        let role_campus = self.role_campus(&mut *tx, role).await?;
         if !path.iter().any(|s| s.id == role_campus) {
             return Err(Error::validation(
                 "access.role_of_another_campus",
@@ -151,9 +213,8 @@ impl Access {
         .map_err(kampus_db::classify)?;
         let after =
             json!({ "role": role, "scope": scope, "principal": to, "origin": origin_text, "module": module });
-        self.record(&mut tx, by, "grant", &id.to_string(), None, Some(after))
+        self.record(&mut *tx, by, "grant", &id.to_string(), None, Some(after))
             .await?;
-        tx.commit().await.map_err(kampus_db::classify)?;
         Ok(id)
     }
 

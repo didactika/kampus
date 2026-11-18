@@ -38,20 +38,34 @@
 use kampus_db::ModuleSteps;
 
 /// The upgrade steps of every module of this build, in dependency order.
-pub const MODULES: &[ModuleSteps] = &[kampus_access::schema::STEPS];
+pub const MODULES: &[ModuleSteps] = &[kampus_access::schema::STEPS, kampus_identity::schema::STEPS];
 
 /// Brings what the modules of this build declare into the database at start-up (DEC-015): permissions
-/// and role templates.
+/// and role templates. Each module gives values to the templates it knows; the values are merged.
 ///
 /// # Errors
 ///
 /// The errors of [`kampus_access::Access::sync`].
 pub async fn sync_declarations(db: &kampus_db::Database) -> kampus_common::Result<()> {
     let access = kampus_access::Access::new(db.clone(), std::sync::Arc::new(kampus_common::SystemClock));
+    let templates: Vec<kampus_access::RoleTemplateDeclaration> = [
+        kampus_access::declarations::TEMPLATES,
+        kampus_identity::declarations::TEMPLATES,
+    ]
+    .concat();
     access
         .sync(
-            &[("access", kampus_access::declarations::PERMISSIONS)],
-            kampus_access::declarations::TEMPLATES,
+            &[
+                (
+                    kampus_access::schema::MODULE,
+                    kampus_access::declarations::PERMISSIONS,
+                ),
+                (
+                    kampus_identity::MODULE,
+                    kampus_identity::declarations::PERMISSIONS,
+                ),
+            ],
+            &templates,
         )
         .await
 }

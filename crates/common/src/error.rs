@@ -48,6 +48,8 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 pub enum ErrorKind {
     /// The object does not exist, or the caller may not know it exists.
     NotFound,
+    /// The caller did not prove who it is: no session, an expired one, or wrong credentials.
+    Unauthenticated,
     /// The caller may not do this.
     PermissionDenied,
     /// The request is invalid; the error lists every failing field.
@@ -70,6 +72,7 @@ impl ErrorKind {
     pub const fn http_status(self) -> u16 {
         match self {
             Self::NotFound => 404,
+            Self::Unauthenticated => 401,
             Self::PermissionDenied => 403,
             Self::Validation => 422,
             Self::Conflict => 409,
@@ -85,6 +88,7 @@ impl ErrorKind {
     pub const fn as_str(self) -> &'static str {
         match self {
             Self::NotFound => "not_found",
+            Self::Unauthenticated => "unauthenticated",
             Self::PermissionDenied => "permission_denied",
             Self::Validation => "validation",
             Self::Conflict => "conflict",
@@ -151,6 +155,11 @@ impl Error {
     /// Creates a `not_found` error.
     pub fn not_found(code: impl Into<String>) -> Self {
         Self::new(ErrorKind::NotFound, code)
+    }
+
+    /// Creates an `unauthenticated` error.
+    pub fn unauthenticated(code: impl Into<String>) -> Self {
+        Self::new(ErrorKind::Unauthenticated, code)
     }
 
     /// Creates a `permission_denied` error.
