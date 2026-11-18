@@ -1,0 +1,79 @@
+@startuml
+!theme plain
+hide empty members
+skinparam linetype ortho
+title Kampus access: scopes, roles, permissions
+
+class Scope {
+  kind : ScopeKind
+  frozen : boolean
+}
+enum ScopeKind {
+  platform
+  tenant
+  campus
+  category
+  course
+  section
+  activity
+  widget
+  user
+}
+class Permission {
+  code
+  kind : read | write
+  risks : set
+  lowest_kind : ScopeKind
+}
+class Role {
+  name
+  short_name
+}
+class RoleTemplate {
+  code
+  version
+}
+class Grant {
+  origin : manual | module
+  valid_from
+  valid_until
+}
+class RolePermission {
+  value : allow | deny | forbid
+}
+class PermissionOverride {
+  value : allow | deny | forbid
+}
+class RoleAllowance {
+  kind : grant | override | view_as | view
+}
+class ViewAsSession {
+  started
+  ended
+}
+class User
+
+Scope "0..1" <-- "*" Scope : parent
+Scope --> ScopeKind
+Role "*" --> "1" Scope : campus
+Role "*" --> "1" RoleTemplate : created from
+Grant "*" --> "1" Role
+Grant "*" --> "1" Scope
+Grant "*" --> "1" User
+RolePermission "*" --> "1" Role
+RolePermission "*" --> "1" Permission
+PermissionOverride "*" --> "1" Scope
+PermissionOverride "*" --> "1" Role
+PermissionOverride "*" --> "1" Permission
+RoleAllowance "*" --> "1" Role : role
+RoleAllowance "*" --> "1" Role : target
+ViewAsSession "*" --> "1" User
+ViewAsSession "*" --> "1" Scope
+ViewAsSession "*" --> "1" Role
+note right of Scope
+  Each scoped entity (campus, category,
+  course, section, activity, widget, user)
+  references its scope; the scope never
+  points back (no polymorphic reference).
+end note
+@enduml

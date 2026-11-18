@@ -1,0 +1,23 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+participant "Any service operation" as op
+participant "Permission checker" as check
+participant "Access cache" as cache
+database "access schema" as db
+
+op -> check : can(context, permission, scope)
+check -> check : declared permission? active account?\nguest limit? frozen scope? (RN-021, RN-010, RN-009, RN-011)
+check -> cache : grants of actor on scope path
+alt not cached
+  cache -> db : grants JOIN scope_closure (active now)
+  cache -> db : role values and overrides on the path
+  db --> cache : rows
+end
+cache --> check : grants and values
+check -> check : per role: first value bottom-up (RN-004)
+check -> check : any forbid -> deny; any allow -> allow (RN-005, RN-006)
+check --> op : decision [+ explanation (RN-019)]
+@enduml

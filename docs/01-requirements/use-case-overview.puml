@@ -1,0 +1,30 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+left to right direction
+
+actor "Campus administrator" as A_Campus_administrator
+actor "Manager" as A_Manager
+actor "System" as A_System
+actor "Teacher" as A_Teacher
+
+rectangle "Kampus" {
+  package "access" {
+    usecase "Grant a role in a scope" as UC_grantRole
+    usecase "Override permissions in a scope" as UC_overridePermission
+    usecase "Check a permission, with its explanation" as UC_checkPermission
+    usecase "Define a role from a template" as UC_defineRole
+    usecase "View a scope as another role" as UC_viewAsRole
+  }
+}
+
+A_Manager --> UC_grantRole
+A_Teacher --> UC_grantRole
+A_Manager --> UC_overridePermission
+A_Teacher --> UC_overridePermission
+A_System --> UC_checkPermission
+A_Campus_administrator --> UC_defineRole
+A_Teacher --> UC_viewAsRole
+A_Manager --> UC_viewAsRole
+
+@enduml
