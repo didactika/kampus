@@ -1,0 +1,28 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Teacher" as t
+participant "kampus-api" as api
+participant "Section service" as svc
+participant "Access service" as acc
+database "courses + access schemas, outbox" as db
+
+t -> api : POST /sections/{id}/move (parent, after, before, If-Match)
+api -> svc : move(context, section, target)
+svc -> acc : require courses.section.manage
+svc -> svc : same course? no cycle?
+group one transaction
+  svc -> db : version matches? else precondition_failed
+  svc -> db : sort_key between the two neighbours (only this row)
+  svc -> acc : re-parent the scope: update closure of the subtree
+  svc -> db : courses.section_moved into outbox
+end
+svc --> t : 200
+note right of db
+  Grants, overrides, groups and links attached
+  to the section and its subtree follow it:
+  everything references ids, never positions.
+end note
+@enduml

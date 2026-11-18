@@ -17,6 +17,10 @@ rectangle "Kampus" {
   package "users" {
     usecase "Edit a profile" as UC_editProfile
   }
+  package "courses" {
+    usecase "Manage course categories" as UC_manageCategories
+    usecase "Create and configure a course" as UC_createCourse
+  }
 }
 
 A_Manager --> UC_grantRole
@@ -24,5 +28,7 @@ A_Manager --> UC_overridePermission
 A_Manager --> UC_viewAsRole
 A_Manager --> UC_manageAccountLifecycle
 A_Manager --> UC_editProfile
+A_Manager --> UC_manageCategories
+A_Manager --> UC_createCourse
 
 @enduml

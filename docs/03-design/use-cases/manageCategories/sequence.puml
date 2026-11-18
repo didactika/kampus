@@ -1,0 +1,17 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Manager" as a
+participant "kampus-api" as api
+participant "Service" as svc
+database "courses schema + outbox" as db
+
+a -> api : POST /categories/{id}/move (parent, after, before)
+api -> svc : category service: permission, no cycle, unique code
+group one transaction
+  svc -> db : category: parent and sort key; scope closure; event
+end
+svc --> a : result
+@enduml

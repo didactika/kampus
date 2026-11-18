@@ -9,3 +9,8 @@ RF-011,UC-007,signIn,docs/02-analysis/use-cases/signIn,docs/03-design/use-cases/
 RF-012,UC-008,setUpSecondFactor,docs/02-analysis/use-cases/setUpSecondFactor,docs/03-design/use-cases/setUpSecondFactor,crates/kampus-identity/src/second_factor.rs,crates/kampus-identity/tests
 RF-013,UC-009,manageAccountLifecycle,docs/02-analysis/use-cases/manageAccountLifecycle,docs/03-design/use-cases/manageAccountLifecycle,crates/kampus-identity/src/lifecycle.rs,crates/kampus-identity/tests
 RF-014,UC-010,editProfile,docs/02-analysis/use-cases/editProfile,docs/03-design/use-cases/editProfile,crates/kampus-users/src/profile.rs,crates/kampus-users/tests
+RF-030,UC-011,manageCategories,docs/02-analysis/use-cases/manageCategories,docs/03-design/use-cases/manageCategories,crates/kampus-courses/src/category.rs,crates/kampus-courses/tests
+RF-031,UC-012,createCourse,docs/02-analysis/use-cases/createCourse,docs/03-design/use-cases/createCourse,crates/kampus-courses/src/course.rs,crates/kampus-courses/tests
+RF-032,UC-013,organiseSections,docs/02-analysis/use-cases/organiseSections,docs/03-design/use-cases/organiseSections,crates/kampus-courses/src/section.rs,crates/kampus-courses/tests
+RF-033,UC-014,manageGroups,docs/02-analysis/use-cases/manageGroups,docs/03-design/use-cases/manageGroups,crates/kampus-courses/src/group.rs,crates/kampus-courses/tests
+RF-034,UC-015,chooseCourseLayout,docs/02-analysis/use-cases/chooseCourseLayout,docs/03-design/use-cases/chooseCourseLayout,crates/kampus-courses/src/layout.rs,crates/kampus-courses/tests

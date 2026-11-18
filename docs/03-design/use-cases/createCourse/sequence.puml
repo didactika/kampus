@@ -1,0 +1,23 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Course creator" as c
+participant "kampus-api" as api
+participant "Course service" as svc
+participant "Access service" as acc
+database "courses + access schemas, outbox" as db
+
+c -> api : POST /categories/{id}/courses (template, names, dates; Idempotency-Key)
+api -> svc : create_course(context, category, input)
+svc -> acc : require courses.course.create in the category
+svc -> svc : names unique? end after start? (RN-041, RN-042)
+group one transaction
+  svc -> acc : create the course scope under the category scope
+  svc -> db : course (draft), sections from the template, owner
+  svc -> acc : grants from the template (owner role to the creator)
+  svc -> db : courses.course_created into outbox
+end
+svc --> c : 201 course
+@enduml

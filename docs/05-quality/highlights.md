@@ -47,3 +47,7 @@ What makes Kampus stand out. This register is the source for the release notes, 
 | HL-025 | Identity | Suspending an account or changing its password ends every session and token at once | DEC-031 | planned | Access ends the moment you decide. |
 | HL-026 | Privacy | Deleting a person erases their personal data after a grace period, while records keep a consistent anonymous reference | DEC-033 | planned | The right to be forgotten, without breaking anyone's grades. |
 | HL-027 | Integration | API tokens are scoped, expire, are shown once and stored hashed | DEC-031 | planned | Integrations with exactly the access they need, for as long as they need it. |
+| HL-028 | Courses | Hide or schedule any category, course or section; showing it again restores exactly what each part had | DEC-034 | planned | Hide a whole category or section and bring it back exactly as it was. |
+| HL-029 | Courses | Sections nest to any depth and keep their identity when moved; links, permissions and groups follow them | DEC-035 | planned | Reorganise a course freely: links and settings follow each section. |
+| HL-030 | Courses | Archiving a course freezes it read-only; deletion is a job with a grace period that removes everything it owns | DEC-036 | planned | Close a term in one click and keep it as a record. |
+| HL-031 | Courses | Groups for one section, and group mode per course, section or activity | DEC-038 | planned | Teams where you need them, and only there. |

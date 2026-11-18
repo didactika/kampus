@@ -1,0 +1,17 @@
+@startuml
+!theme plain
+skinparam linetype polyline
+skinparam responseMessageBelowArrow true
+
+actor "Teacher" as a
+participant "kampus-api" as api
+participant "Service" as svc
+database "courses schema + outbox" as db
+
+a -> api : PUT /courses/{id}/layout (layout, settings, If-Match)
+api -> svc : layout registry: enabled? settings valid for its schema?
+group one transaction
+  svc -> db : course layout and layout settings; event
+end
+svc --> a : result
+@enduml
