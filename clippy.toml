@@ -35,4 +35,4 @@
 allow-unwrap-in-tests = true
 allow-expect-in-tests = true
 
-doc-valid-idents = ["OpenDAL", "PostgreSQL", "OpenAPI", "OpenTelemetry", "WebAssembly", "SeaweedFS", "Valkey", ".."]
+doc-valid-idents = ["OpenID", "OpenDAL", "PostgreSQL", "OpenAPI", "OpenTelemetry", "WebAssembly", "SeaweedFS", "Valkey", ".."]

@@ -33,8 +33,8 @@
 // ------------------------------------------------------------------------------
 
 //! Identity of Kampus (DEC-030 to DEC-033): accounts of a campus and their lifecycle, passwords, one-time
-//! tokens, the sign-in pipeline with throttling, second factors and recovery, server-side sessions with
-//! step-up, and API tokens.
+//! tokens, the sign-in pipeline with throttling, OpenID Connect providers, second factors and recovery,
+//! server-side sessions with step-up, and API tokens.
 //!
 //! Every account is a principal of access with the same id; identity keeps the principal active only
 //! while the account is (RN-010), so access never reads identity.
@@ -46,6 +46,7 @@ pub mod declarations;
 pub mod jobs;
 pub mod lifecycle;
 pub mod model;
+pub mod oidc;
 pub mod one_time;
 pub mod password;
 pub mod policy;
@@ -65,8 +66,8 @@ use kampus_db::Database;
 
 pub use courier::{Courier, MemoryCourier, Message, Notice};
 pub use model::{
-    Account, AccountId, AccountKind, AccountStatus, FactorId, FactorKind, MfaLevel, SecondFactor, Session,
-    SessionId, SessionSummary, TokenId,
+    Account, AccountId, AccountKind, AccountStatus, FactorId, FactorKind, LinkingPolicy, MfaLevel,
+    ProviderId, SecondFactor, Session, SessionId, SessionSummary, TokenId,
 };
 pub use policy::{CampusPolicy, FixedPolicies, Policies, Throttle};
 pub use secret::{PasswordCost, PasswordHasher, SecretKey};

@@ -78,6 +78,8 @@ pub enum Notice {
     SecondFactorAdded,
     /// A second factor was removed.
     SecondFactorRemoved,
+    /// An identity provider account was linked, a new way to sign in.
+    IdentityLinked,
 }
 
 impl Notice {
@@ -95,6 +97,7 @@ impl Notice {
             Self::RecoveryUsed => "recovery_used",
             Self::SecondFactorAdded => "second_factor_added",
             Self::SecondFactorRemoved => "second_factor_removed",
+            Self::IdentityLinked => "identity_linked",
         }
     }
 }

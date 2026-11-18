@@ -89,7 +89,7 @@ pub enum SignInOutcome {
 
 /// The outcome of an attempt, as recorded.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Outcome {
+pub(crate) enum Outcome {
     /// Signed in.
     Success,
     /// The credential, the account or its status failed.
@@ -158,22 +158,38 @@ impl Identity {
             return Err(failed());
         };
 
-        if self.second_factor_needed(&account, &policy).await? {
+        self.conclude(&account, &policy, &request.client, &hash).await
+    }
+
+    /// The last steps of every method, once the credential passed: the second factor when required
+    /// (RN-029), otherwise the session.
+    pub(crate) async fn conclude(
+        &self,
+        account: &Account,
+        policy: &CampusPolicy,
+        client: &Client,
+        hash: &[u8],
+    ) -> Result<SignInOutcome> {
+        let address = client.address.as_deref();
+        if self.second_factor_needed(account, policy).await? {
             let mut tx = self.db.begin().await?;
             let challenge = self
                 .issue_in(&mut tx, account.id, Purpose::SecondFactor, SECOND_FACTOR_LIFETIME)
                 .await?;
             let methods = self.factor_kinds_in(&mut tx, account.id).await?;
             tx.commit().await.map_err(kampus_db::classify)?;
-            self.record_attempt(campus, id, &hash, address, Outcome::SecondFactorRequired)
-                .await?;
+            self.record_attempt(
+                account.campus,
+                Some(account.id),
+                hash,
+                address,
+                Outcome::SecondFactorRequired,
+            )
+            .await?;
             return Ok(SignInOutcome::SecondFactorRequired { challenge, methods });
         }
-
-        let session = self
-            .open(&account, MfaLevel::None, &request.client, &policy)
-            .await?;
-        self.record_attempt(campus, id, &hash, address, Outcome::Success)
+        let session = self.open(account, MfaLevel::None, client, policy).await?;
+        self.record_attempt(account.campus, Some(account.id), hash, address, Outcome::Success)
             .await?;
         Ok(SignInOutcome::SignedIn(session))
     }
@@ -300,7 +316,7 @@ impl Identity {
     }
 
     /// Records an attempt, for throttling and the account's security log.
-    async fn record_attempt(
+    pub(crate) async fn record_attempt(
         &self,
         campus: ScopeId,
         account: Option<crate::AccountId>,

@@ -107,7 +107,7 @@ jobs:
       - run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
 
   test:
-    name: Tests against PostgreSQL, S3 and Valkey
+    name: Tests against PostgreSQL, S3, Valkey and an OpenID provider
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
@@ -137,6 +137,7 @@ jobs:
       KAMPUS_TEST_DATABASE_URL: postgres://kampus:kampus@127.0.0.1:5432/kampus
       KAMPUS_TEST_S3_ENDPOINT: http://127.0.0.1:8333
       KAMPUS_TEST_CACHE_URL: redis://127.0.0.1:6379
+      KAMPUS_TEST_OIDC_URL: http://127.0.0.1:8080
     steps:
       - uses: actions/checkout@v5
       - name: Install the pinned toolchain
@@ -153,6 +154,10 @@ jobs:
           docker run -d --name s3 -p 8333:8333 chrislusf/seaweedfs:3.97 server -s3 -dir=/data -master.volumeSizeLimitMB=64
           for attempt in $(seq 1 60); do curl -fs -o /dev/null http://127.0.0.1:8333/ && break; sleep 2; done
           curl -fsS -X PUT http://127.0.0.1:8333/kampus-test
+      - name: Start an OpenID provider for the tests
+        run: |
+          docker run -d --name oidc -p 8080:8080 -e JSON_CONFIG_PATH=/config/oidc.json -v "$PWD/tools/dev/oidc/config.json:/config/oidc.json:ro" ghcr.io/navikt/mock-oauth2-server:2.1.10
+          for attempt in $(seq 1 60); do curl -fs -o /dev/null http://127.0.0.1:8080/verified/.well-known/openid-configuration && break; sleep 2; done
       - run: cargo test --workspace --all-features --locked
 
   supply-chain:

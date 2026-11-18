@@ -1,0 +1,47 @@
+{
+  "interactiveLogin": false,
+  "tokenCallbacks": [
+    {
+      "issuerId": "verified",
+      "requestMappings": [
+        {
+          "requestParam": "grant_type",
+          "match": "authorization_code",
+          "claims": {
+            "sub": "ana-subject",
+            "email": "ana@example.org",
+            "email_verified": true
+          }
+        }
+      ]
+    },
+    {
+      "issuerId": "unverified",
+      "requestMappings": [
+        {
+          "requestParam": "grant_type",
+          "match": "authorization_code",
+          "claims": {
+            "sub": "mallory-subject",
+            "email": "ana@example.org",
+            "email_verified": false
+          }
+        }
+      ]
+    },
+    {
+      "issuerId": "stranger",
+      "requestMappings": [
+        {
+          "requestParam": "grant_type",
+          "match": "authorization_code",
+          "claims": {
+            "sub": "stranger-subject",
+            "email": "stranger@example.org",
+            "email_verified": true
+          }
+        }
+      ]
+    }
+  ]
+}
