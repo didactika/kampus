@@ -50,7 +50,43 @@ The same gates run in CI on every pull request (`.github/workflows/ci.yml`).
 
 ## Source files
 
-- Every file outside `docs/` starts with the standard header of DEC-083, in the comment syntax of its type: the project, the copyright and licence, then `@package`, `@author` and `@since`. `docker compose -f tools/docs-check/compose.yaml run --rm repo --fix --author "<your name>"` adds the missing ones.
+- Every file outside `docs/` starts with the standard header of DEC-083, in the comment syntax of its type: the KAMPUS banner, the notice of the GNU Affero General Public License (DEC-085), and `@package`, `@copyright`, `@author` (name and address), `@license` and `@since`. `docker compose -f tools/docs-check/compose.yaml run --rm repo --fix --author "Your Name <you@example.org>"` adds missing headers and rewrites outdated ones, keeping their `@since`. In Rust:
+
+  ```rust
+  // ------------------------------------------------------------------------------
+  //
+  //    *   *    *    *   *  ****   *   *   ****
+  //    *  *    * *   ** **  *   *  *   *  *
+  //    ***    *****  * * *  ****   *   *   ***
+  //    *  *   *   *  *   *  *      *   *      *
+  //    *   *  *   *  *   *  *       ***   ****
+  //
+  //    Knowledge Academic Modular Platform for Universal Study
+  //
+  // ------------------------------------------------------------------------------
+  //
+  // This file is part of Kampus - https://github.com/didactika/kampus
+  //
+  // Kampus is free software: you can redistribute it and/or modify it under the terms of the
+  // GNU Affero General Public License as published by the Free Software Foundation, either
+  // version 3 of the License, or (at your option) any later version.
+  //
+  // Kampus is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+  // even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  // GNU Affero General Public License for more details.
+  //
+  // You should have received a copy of the GNU Affero General Public License along with Kampus.
+  // If not, see <https://www.gnu.org/licenses/>.
+  //
+  // @package   kampus-courses
+  // @copyright 2026 Didactika
+  // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
+  // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
+  // @since     0.1.0
+  //
+  // SPDX-License-Identifier: AGPL-3.0-or-later
+  // ------------------------------------------------------------------------------
+  ```
 - Every item has a documentation comment above it, public or private (`//!` and `///` in Rust, TSDoc in TypeScript and Svelte): what it is for, not how it works. Comments inside bodies only for what the code cannot say.
 
 ## Versions, changelog and releases
