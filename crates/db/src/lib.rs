@@ -47,7 +47,11 @@ mod upgrade;
 
 pub use connection::Prefix;
 pub use connection::{Capabilities, Database, Transaction, classify};
-pub use upgrade::{ModuleSteps, OWN_STEPS, Problem, Step, UpgradePlan, UpgradeReport, Upgrader};
+pub use upgrade::{
+    Action, ActionContext, ActionFuture, ComponentChange, ComponentRecord, DowngradeReport,
+    InstalledComponent, ModuleSteps, OWN_STEPS, PendingStep, Problem, Run, Step, UpgradePlan, UpgradeReport,
+    Upgrader,
+};
 
 /// The logical name of the schema this crate owns: the ledger of applied steps and the installation.
 pub const MODULE: &str = "db";

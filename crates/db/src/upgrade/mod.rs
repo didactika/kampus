@@ -32,11 +32,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Upgrades: the ordered, immutable steps of each module and the runner that applies
-//! them from any supported release.
+//! Upgrades: the ordered, immutable steps of each module, the runner that applies them from any supported
+//! release, the registry of components with the history of runs, and the way back.
 
+mod registry;
+mod reverse;
 mod runner;
 mod step;
 
-pub use runner::{OWN_STEPS, Problem, UpgradePlan, UpgradeReport, Upgrader};
-pub use step::{ModuleSteps, Step};
+pub use registry::{ComponentChange, ComponentRecord, InstalledComponent, Run};
+pub use runner::{DowngradeReport, OWN_STEPS, PendingStep, Problem, UpgradePlan, UpgradeReport, Upgrader};
+pub use step::{Action, ActionContext, ActionFuture, ModuleSteps, Step};

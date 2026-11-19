@@ -46,11 +46,13 @@ publish.workspace = true
 kind = "foundation"
 
 [dependencies]
+semver.workspace = true
 kampus-common.workspace = true
 sha2.workspace = true
 sqlx.workspace = true
 time.workspace = true
 tracing.workspace = true
+uuid.workspace = true
 
 [dev-dependencies]
 tokio.workspace = true

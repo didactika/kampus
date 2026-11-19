@@ -32,7 +32,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The commands of the binary: serve a role, upgrade the installation, or check it.
+//! The commands of the binary: serve a role, upgrade, check or downgrade the installation, and look at
+//! its components and their history.
+
+pub mod cli;
+pub mod status;
 
 use kampus_common::{Error, PLATFORM_VERSION, Result};
 use kampus_db::{Database, UpgradePlan, Upgrader};
@@ -40,6 +44,7 @@ use tokio::net::TcpListener;
 
 use crate::config::{Config, LogFormat};
 use crate::http::{AppState, router};
+use crate::wiring::components;
 use crate::wiring::modules::SCHEMAS;
 
 /// Starts logging as the configuration asks: JSON lines by default, with the request id in each span.
@@ -64,6 +69,19 @@ async fn connect(config: &Config) -> Result<Database> {
     .await
 }
 
+/// The upgrader of this build, once its components pass their checks.
+fn upgrader(db: &Database) -> Result<Upgrader<'_>> {
+    let blocking: Vec<String> = components::problems(PLATFORM_VERSION)
+        .iter()
+        .filter(|p| p.blocking)
+        .map(ToString::to_string)
+        .collect();
+    if !blocking.is_empty() {
+        return Err(Error::conflict("server.components_invalid").with_param("problems", blocking.join("; ")));
+    }
+    Ok(Upgrader::new(db, &SCHEMAS, PLATFORM_VERSION).with_components(components::records()))
+}
+
 /// Serves a role until the process receives a stop signal.
 ///
 /// The database must match this build; when it does not, pending steps are applied if the configuration
@@ -75,7 +93,7 @@ async fn connect(config: &Config) -> Result<Database> {
 /// database or the listener cannot be reached.
 pub async fn serve(config: &Config) -> Result<()> {
     let db = connect(config).await?;
-    let upgrader = Upgrader::new(&db, &SCHEMAS, PLATFORM_VERSION);
+    let upgrader = upgrader(&db)?;
     let plan = upgrader.plan().await?;
     if !plan.is_current() {
         if config.upgrade_on_start && plan.problems.is_empty() {
@@ -119,9 +137,7 @@ pub async fn serve(config: &Config) -> Result<()> {
 /// A `conflict` error when a problem stops the upgrade, and an `unavailable` error when a step fails.
 pub async fn upgrade(config: &Config, new_installation: bool) -> Result<Vec<String>> {
     let db = connect(config).await?;
-    let report = Upgrader::new(&db, &SCHEMAS, PLATFORM_VERSION)
-        .apply(new_installation)
-        .await?;
+    let report = upgrader(&db)?.apply(new_installation).await?;
     db.close().await;
     Ok(report.applied.iter().map(ToString::to_string).collect())
 }
@@ -133,7 +149,7 @@ pub async fn upgrade(config: &Config, new_installation: bool) -> Result<Vec<Stri
 /// An `unavailable` error when the database cannot be read.
 pub async fn check(config: &Config) -> Result<UpgradePlan> {
     let db = connect(config).await?;
-    let plan = Upgrader::new(&db, &SCHEMAS, PLATFORM_VERSION).plan().await;
+    let plan = upgrader(&db)?.plan().await;
     db.close().await;
     plan
 }
@@ -143,13 +159,59 @@ fn not_current(plan: &UpgradePlan) -> Error {
     let mut reasons: Vec<String> = plan.problems.iter().map(ToString::to_string).collect();
     if !plan.installed {
         reasons.push("the installation does not exist: run `kampus-server upgrade`".to_owned());
-    } else if !plan.pending.is_empty() {
+    } else if !plan.pending.is_empty() || !plan.changes.is_empty() {
         reasons.push(format!(
-            "{} pending upgrade step(s): run `kampus-server upgrade`",
-            plan.pending.len()
+            "{} pending upgrade step(s) and {} component version(s) to register: run `kampus-server upgrade`",
+            plan.pending.len(),
+            plan.changes.len()
         ));
     }
     Error::conflict("server.schema_not_current").with_param("reasons", reasons.join("; "))
+}
+
+/// Takes the installation back to this build's release and component versions.
+///
+/// # Errors
+///
+/// A `conflict` error when a step left no way to undo it or the build has problems, `unavailable` when
+/// undoing fails.
+pub async fn downgrade(config: &Config) -> Result<kampus_db::DowngradeReport> {
+    let db = connect(config).await?;
+    let report = upgrader(&db)?.downgrade().await;
+    db.close().await;
+    report
+}
+
+/// Removes a component that is installed but no longer in this build, unless a component of the build
+/// requires it.
+///
+/// # Errors
+///
+/// A `conflict` error when a component of the build requires it or it is still in the build,
+/// `not_found` when it is not installed.
+pub async fn uninstall(config: &Config, component: &str) -> Result<kampus_db::ComponentChange> {
+    let needed_by: Vec<String> = components::build()
+        .iter()
+        .filter(|c| c.manifest.requires.iter().any(|r| r.component == component))
+        .map(components::BuildComponent::name)
+        .collect();
+    if !needed_by.is_empty() {
+        return Err(Error::conflict("server.component_required")
+            .with_param("component", component)
+            .with_param("required_by", needed_by.join(", ")));
+    }
+    let db = connect(config).await?;
+    let change = Upgrader::new(&db, &SCHEMAS, PLATFORM_VERSION)
+        .with_components(components::records())
+        .uninstall(component)
+        .await;
+    db.close().await;
+    change
+}
+
+/// The connection of the commands that only read.
+pub(crate) async fn read_only(config: &Config) -> Result<Database> {
+    connect(config).await
 }
 
 /// Waits for Ctrl+C or, on Unix, SIGTERM, so in-flight requests finish before the process exits.

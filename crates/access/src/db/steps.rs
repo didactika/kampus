@@ -62,6 +62,8 @@ pub const STEPS: &[Step] = &[
     Step {
         sequence: 1,
         name: "scopes, permissions, roles and grants",
+        revert: &[],
+        action: None,
         changes: &[
             Change::CreateTable(Table {
                 name: "scope",
@@ -343,6 +345,8 @@ pub const STEPS: &[Step] = &[
     Step {
         sequence: 2,
         name: "roles that require a second factor",
+        revert: &[],
+        action: None,
         changes: &[Change::AddColumn {
             table: "role",
             column: Column::new("second_factor_required", Type::Boolean).default(ColumnDefault::Bool(false)),

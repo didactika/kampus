@@ -58,6 +58,8 @@ const PROBE: ModuleSteps = ModuleSteps {
         Step {
             sequence: 1,
             name: "tables",
+            revert: &[],
+            action: None,
             changes: &[
                 Change::CreateTable(Table {
                     name: "parent",
@@ -135,6 +137,8 @@ const PROBE: ModuleSteps = ModuleSteps {
         Step {
             sequence: 2,
             name: "expand",
+            revert: &[],
+            action: None,
             changes: &[
                 Change::AddColumn {
                     table: "sample",

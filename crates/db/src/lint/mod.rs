@@ -313,6 +313,8 @@ mod tests {
         steps: &[Step {
             sequence: 1,
             name: "people",
+            revert: &[],
+            action: None,
             changes: &[
                 Change::CreateTable(Table {
                     name: "person",
@@ -360,6 +362,8 @@ mod tests {
         steps: &[Step {
             sequence: 1,
             name: "notes",
+            revert: &[],
+            action: None,
             changes: &[
                 Change::CreateTable(Table {
                     name: "Note",

@@ -46,7 +46,9 @@ publish.workspace = true
 kind = "foundation"
 
 [dependencies]
+kampus-macros.workspace = true
 base64.workspace = true
+semver.workspace = true
 serde.workspace = true
 time.workspace = true
 uuid.workspace = true

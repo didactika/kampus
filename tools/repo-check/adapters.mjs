@@ -78,7 +78,7 @@ export function listAdapters(root) {
   if (fs.existsSync(external)) {
     for (const block of fs.readFileSync(external, 'utf8').split(/^\[\[adapter\]\]\s*$/m).slice(1)) {
       const value = (key) => block.match(new RegExp(`^${key}\\s*=\\s*["']([^\\n]*)["']\\s*$`, 'm'))?.[1];
-      if (value('port') && value('crate') && value('source')) adapters.push({ port: value('port'), crate: value('crate'), source: value('source') });
+      if (value('port') && value('crate') && value('source')) adapters.push({ port: value('port'), crate: value('crate'), source: value('source'), external: true });
     }
   }
   return adapters.sort((a, b) => `${a.port}/${a.crate}`.localeCompare(`${b.port}/${b.crate}`));
@@ -110,6 +110,8 @@ function rustBody(adapters) {
     const entries = adapters.filter((a) => a.port === port).map((a) => `${a.crate.replace(/-/g, '_')}::ADAPTER`);
     lines.push('', `/// The ${port} adapters of this build.`, `pub const ${port.toUpperCase()}: &[kampus_${port}::Adapter] = &[${entries.join(', ')}];`);
   }
+  const external = adapters.filter((a) => a.external).map((a) => JSON.stringify(a.crate));
+  lines.push('', '/// The packages of the adapters that come from outside the repository.', `pub const EXTERNAL: &[&str] = &[${external.join(', ')}];`);
   return `${lines.join('\n')}\n`;
 }
 

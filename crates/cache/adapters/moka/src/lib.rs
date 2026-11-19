@@ -44,6 +44,10 @@ pub use store::MokaCache;
 /// The registration of this adapter: `memory://` gives an in-process cache, the local level of
 /// every installation; the option `max_entries` bounds it (100 000 by default).
 pub const ADAPTER: kampus_cache::Adapter = kampus_cache::Adapter {
+    manifest: kampus_common::manifest! {
+        maturity: kampus_common::component::Maturity::Alpha,
+        kampus: Some(">=0.1.0, <0.2.0"),
+    },
     name: "moka",
     schemes: &["memory"],
     open: |settings| {

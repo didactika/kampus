@@ -40,3 +40,6 @@ pub const CACHE: &[kampus_cache::Adapter] = &[kampus_cache_moka::ADAPTER, kampus
 
 /// The storage adapters of this build.
 pub const STORAGE: &[kampus_storage::Adapter] = &[kampus_storage_opendal::ADAPTER];
+
+/// The packages of the adapters that come from outside the repository.
+pub const EXTERNAL: &[&str] = &[];

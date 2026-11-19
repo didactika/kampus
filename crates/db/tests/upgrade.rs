@@ -49,6 +49,8 @@ use kampus_db::{Database, ModuleSteps, Prefix, Problem, Step, Upgrader};
 const FIRST: Step = Step {
     sequence: 1,
     name: "create note",
+    revert: &[],
+    action: None,
     changes: &[Change::Postgres {
         sql: "create table {schema}.note (id uuid primary key);",
         reason: "a sample module of the tests",
@@ -59,6 +61,8 @@ const FIRST: Step = Step {
 const SECOND: Step = Step {
     sequence: 2,
     name: "add note text",
+    revert: &[],
+    action: None,
     changes: &[Change::Postgres {
         sql: "alter table {schema}.note add column body text;",
         reason: "a sample module of the tests",
@@ -69,6 +73,8 @@ const SECOND: Step = Step {
 const THIRD: Step = Step {
     sequence: 3,
     name: "add note author",
+    revert: &[],
+    action: None,
     changes: &[Change::Postgres {
         sql: "alter table {schema}.note add column author_id uuid references {schema:people}.person (id);",
         reason: "a sample module of the tests",
@@ -79,6 +85,8 @@ const THIRD: Step = Step {
 const FIRST_EDITED: Step = Step {
     sequence: 1,
     name: "create note",
+    revert: &[],
+    action: None,
     changes: &[Change::Postgres {
         sql: "create table {schema}.note (id uuid);",
         reason: "a sample module of the tests",
@@ -91,6 +99,8 @@ const PEOPLE: ModuleSteps = ModuleSteps {
     steps: &[Step {
         sequence: 1,
         name: "create person",
+        revert: &[],
+        action: None,
         changes: &[Change::Postgres {
             sql: "create table {schema}.person (id uuid primary key);",
             reason: "a sample module of the tests",
@@ -137,11 +147,11 @@ async fn a_fresh_installation_applies_every_step_once() {
     let upgrader = Upgrader::new(&db, &[PEOPLE, NOTES_V3], "0.1.0");
     let plan = upgrader.plan().await.unwrap();
     assert!(!plan.installed);
-    assert_eq!(plan.pending.len(), 5);
+    assert_eq!(plan.pending.len(), 6);
 
     let report = upgrader.apply(true).await.unwrap();
     assert!(report.installed);
-    assert_eq!(report.applied.len(), 5);
+    assert_eq!(report.applied.len(), 6);
     assert!(upgrader.plan().await.unwrap().is_current());
 
     let again = upgrader.apply(false).await.unwrap();
@@ -267,7 +277,7 @@ async fn concurrent_upgrades_apply_each_step_once() {
         async { Upgrader::new(&db, &[PEOPLE, NOTES_V3], "0.1.0").apply(true).await },
     );
     let total = a.unwrap().applied.len() + b.unwrap().applied.len();
-    assert_eq!(total, 5);
+    assert_eq!(total, 6);
     let rows: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
         "select count(*) from {}.migration",
         db.prefix().schema("db")
@@ -275,7 +285,7 @@ async fn concurrent_upgrades_apply_each_step_once() {
     .fetch_one(db.pool())
     .await
     .unwrap();
-    assert_eq!(rows, 5);
+    assert_eq!(rows, 6);
     drop_installation(&db).await;
 }
 

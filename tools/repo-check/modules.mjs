@@ -75,7 +75,7 @@ const LAYOUTS = {
   foundation: { root: [], files: ['lib.rs'], folders: null, required: [], declarations: [] },
   port: { root: ['adapters'], files: ['lib.rs'], folders: null, required: ['port', 'registry', 'conformance'], declarations: [] },
   adapter: {
-    root: [],
+    root: ['assets'],
     files: ['lib.rs'],
     folders: null,
     required: ['store'],
@@ -115,11 +115,13 @@ function crates(root) {
     const manifest = path.join(dir, name, 'Cargo.toml');
     if (!fs.existsSync(manifest)) continue;
     found.push({ ...describe(manifest), dir: path.join('crates', name) });
-    const adapters = path.join(dir, name, 'adapters');
-    if (!fs.existsSync(adapters)) continue;
-    for (const adapter of fs.readdirSync(adapters)) {
-      const inner = path.join(adapters, adapter, 'Cargo.toml');
-      if (fs.existsSync(inner)) found.push({ ...describe(inner), dir: path.join('crates', name, 'adapters', adapter) });
+    for (const group of fs.readdirSync(path.join(dir, name), { withFileTypes: true })) {
+      if (!group.isDirectory() || ['src', 'tests', 'web', 'lang', 'assets'].includes(group.name)) continue;
+      for (const child of fs.readdirSync(path.join(dir, name, group.name))) {
+        const inner = path.join(dir, name, group.name, child, 'Cargo.toml');
+        if (!fs.existsSync(inner)) continue;
+        found.push({ ...describe(inner), dir: path.join('crates', name, group.name, child), owner: name, group: group.name, folder: child });
+      }
     }
   }
   return found;
@@ -138,7 +140,7 @@ export function listModules(root) {
   if (fs.existsSync(external)) {
     for (const block of fs.readFileSync(external, 'utf8').split(/^\[\[module\]\]\s*$/m).slice(1)) {
       const value = (key) => block.match(new RegExp(`^${key}\\s*=\\s*["']([^\\n]*)["']\\s*$`, 'm'))?.[1];
-      if (value('crate') && value('source')) declared.push({ crate: value('crate'), source: value('source') });
+      if (value('crate') && value('source')) declared.push({ crate: value('crate'), source: value('source'), external: true });
     }
   }
   return [...local, ...declared];
@@ -155,12 +157,24 @@ function checkLayout(root) {
     }
     const base = path.join(root, c.dir);
     const where = `the ${c.kind} layout`;
+    const hosts = crates(root).filter((o) => o.owner === path.basename(c.dir) && !c.owner).map((o) => o.group);
+    if (c.owner) {
+      const type = c.group === 'adapters' ? c.owner : c.group;
+      const expected = `kampus-${type}-${c.folder.replace(/_/g, '-')}`;
+      if (c.name !== expected) problems.push(`${c.dir}: a component of type ${type} in this folder is the package ${expected}, not ${c.name}`);
+      if (c.group === 'adapters' && c.kind !== 'adapter') problems.push(`${c.dir}: crates in adapters/ are of kind adapter`);
+      if (c.group !== 'adapters' && c.kind !== 'module') problems.push(`${c.dir}: plugins are of kind module`);
+    }
     for (const entry of fs.readdirSync(base)) {
-      if (!['Cargo.toml', 'README.md', 'src', 'tests', ...layout.root].includes(entry)) {
+      if (!['Cargo.toml', 'README.md', 'src', 'tests', ...layout.root, ...hosts].includes(entry)) {
         problems.push(`${c.dir}/${entry}: not part of ${where}`);
       }
     }
     const src = path.join(base, 'src');
+    if (!fs.existsSync(src)) {
+      problems.push(`${c.dir}/src: missing`);
+      continue;
+    }
     for (const entry of fs.readdirSync(src)) {
       const folder = fs.statSync(path.join(src, entry)).isDirectory();
       const allowed = folder ? !layout.folders || layout.folders.includes(entry) : layout.files.includes(entry);
@@ -199,6 +213,9 @@ function rustBody(modules) {
     '',
     '/// Every module of this build.',
     `pub const MODULES: &[&kampus_module::Module] = &[${entries.join(', ')}];`,
+    '',
+    '/// The packages of the modules that come from outside the repository.',
+    `pub const EXTERNAL: &[&str] = &[${modules.filter((m) => m.external).map((m) => JSON.stringify(m.crate)).join(', ')}];`,
     '',
   ].join('\n');
 }
