@@ -107,6 +107,16 @@ source = 'git = "https://example.org/kampus-cache-memcached.git", tag = "v1.0.0"
 ## Versions, changelog and releases
 
 - Kampus has one semantic version, in `[workspace.package]` of `Cargo.toml` (DEC-081). On `release/X.Y.Z` it equals `X.Y.Z`.
+- `version.toml`, at the root, describes the release; the core reads it when it is built, and `tools/repo-check` checks it against the workspace:
+
+| Key | Meaning |
+| --- | --- |
+| `name` | The product, `Kampus` |
+| `version` | The release, semantic; equal to `[workspace.package] version` of `Cargo.toml` and to the branch `release/X.Y.Z` |
+| `maturity` | `alpha`, `beta`, `rc` or `stable` |
+| `date` | The date of the release, or of the start of its development, `YYYY-MM-DD` |
+| `upgrade_from` | The oldest release an installation can be upgraded from in one run; columns may be dropped only when it no longer reads them |
+
 - Every pull request that changes anything outside `docs/` adds its entry under `## [Unreleased]` in `CHANGELOG.md`, in one of the groups Added, Changed, Deprecated, Removed, Fixed, Security or **Upgrade** (every action an operator must take).
 - Upgrades must work from any supported release straight to the new one (DEC-082): migrations are forward-only and never edited once released, interfaces change additively within a major version, and whatever is removed is deprecated first.
 - Releasing `X.Y.Z`: move the `Unreleased` entries into `## [X.Y.Z] - <date>`, merge `release/X.Y.Z` into `main`, tag `vX.Y.Z`, cut `support/X.Y` for its patch releases and open `release/<next>`.

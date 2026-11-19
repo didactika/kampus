@@ -1778,6 +1778,9 @@ dependencies = [
 [[package]]
 name = "kampus-macros"
 version = "0.1.0"
+dependencies = [
+ "toml",
+]
 
 [[package]]
 name = "kampus-module"

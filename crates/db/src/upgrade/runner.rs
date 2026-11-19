@@ -79,6 +79,21 @@ pub const OWN_STEPS: ModuleSteps = ModuleSteps {
             action: None,
             changes: registry::TABLES,
         },
+        Step {
+            sequence: 3,
+            name: "the platform as a component",
+            revert: &[Change::Postgres {
+                sql: "alter table {schema}.component drop constraint component_kind_check;
+alter table {schema}.component add constraint component_kind_check check (kind in ('module', 'plugin', 'adapter'));",
+                reason: "the neutral schema has no change of a check",
+            }],
+            action: None,
+            changes: &[Change::Postgres {
+                sql: "alter table {schema}.component drop constraint component_kind_check;
+alter table {schema}.component add constraint component_kind_check check (kind in ('platform', 'module', 'plugin', 'adapter'));",
+                reason: "the neutral schema has no change of a check",
+            }],
+        },
     ],
 };
 
@@ -120,6 +135,13 @@ pub enum Problem {
         /// The installed version.
         version: String,
     },
+    /// The installation is on a release older than the oldest this build upgrades from.
+    TooOld {
+        /// The release recorded in the database.
+        recorded: String,
+        /// The oldest release this build upgrades from.
+        oldest: String,
+    },
     /// There is no installation with this prefix, but other installations share the database.
     OtherInstallations {
         /// The ledger schemas of the other installations.
@@ -152,6 +174,10 @@ impl fmt::Display for Problem {
             Self::MissingComponent { component, version } => write!(
                 f,
                 "{component} {version} is installed but not in this build: add it back, or run `kampus-server uninstall {component}`"
+            ),
+            Self::TooOld { recorded, oldest } => write!(
+                f,
+                "the installation is on release {recorded}; this build upgrades from {oldest} on: upgrade to {oldest} first"
             ),
             Self::OtherInstallations { schemas } => write!(
                 f,
@@ -231,6 +257,8 @@ pub struct Upgrader<'a> {
     pub(super) components: Vec<ComponentRecord>,
     /// The release of this code, recorded in the installation.
     pub(super) release: &'a str,
+    /// The oldest release this code upgrades from.
+    pub(super) oldest: Option<&'a str>,
 }
 
 impl<'a> Upgrader<'a> {
@@ -244,7 +272,15 @@ impl<'a> Upgrader<'a> {
             modules: all,
             components: Vec::new(),
             release,
+            oldest: None,
         }
+    }
+
+    /// Refuses installations on a release older than `oldest`, which this code cannot upgrade in one run.
+    #[must_use]
+    pub const fn upgrading_from(mut self, oldest: &'a str) -> Self {
+        self.oldest = Some(oldest);
+        self
     }
 
     /// Registers the components of the build, so their versions are checked and recorded.
@@ -292,12 +328,17 @@ impl<'a> Upgrader<'a> {
                     row.get("checksum"),
                 ));
             }
-            if let Some(recorded) = self
-                .recorded_release(&mut conn)
-                .await?
-                .filter(|recorded| newer(recorded, self.release))
-            {
+            let recorded = self.recorded_release(&mut conn).await?;
+            if let Some(recorded) = recorded.clone().filter(|recorded| newer(recorded, self.release)) {
                 problems.push(Problem::NewerRelease { recorded });
+            }
+            if let (Some(recorded), Some(oldest)) = (recorded, self.oldest)
+                && newer(oldest, &recorded)
+            {
+                problems.push(Problem::TooOld {
+                    recorded,
+                    oldest: oldest.to_owned(),
+                });
             }
         } else {
             let schemas: Vec<String> = sqlx::query_scalar(

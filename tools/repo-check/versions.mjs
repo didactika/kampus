@@ -81,6 +81,18 @@ export function checkVersions(root, { branch, changed }) {
   if (version && !SEMVER.test(version)) problems.push(`Cargo.toml: workspace version ${version} is not semantic`);
   const release = branch?.match(/^release\/(\d+\.\d+\.\d+)$/)?.[1];
   if (version && release && version !== release) problems.push(`Cargo.toml: workspace version ${version} differs from the branch release/${release}`);
+  const platformFile = path.join(root, 'version.toml');
+  if (!fs.existsSync(platformFile)) {
+    problems.push('version.toml: missing; it holds the version of the platform');
+  } else {
+    const platform = fs.readFileSync(platformFile, 'utf8');
+    const value = (key) => platform.match(new RegExp(`^${key}\\s*=\\s*"([^"]*)"`, 'm'))?.[1];
+    if (value('version') !== version) problems.push(`version.toml: platform.version ${value('version')} differs from the workspace version ${version}`);
+    const from = value('upgrade_from');
+    if (!from || !SEMVER.test(from)) problems.push('version.toml: platform.upgrade_from is not a semantic version');
+    else if (version && SEMVER.test(version) && compare(from, version) > 0) problems.push(`version.toml: platform.upgrade_from ${from} is newer than ${version}`);
+    if (!['alpha', 'beta', 'rc', 'stable'].includes(value('maturity'))) problems.push('version.toml: platform.maturity is not alpha, beta, rc or stable');
+  }
 
   const file = path.join(root, 'CHANGELOG.md');
   if (!fs.existsSync(file)) {

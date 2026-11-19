@@ -59,7 +59,7 @@ pub async fn sync_declarations(db: &kampus_db::Database) -> kampus_common::Resul
 }
 
 /// The oldest release still supported: columns may be dropped only when it no longer reads them.
-pub const OLDEST_SUPPORTED: &str = "0.1.0";
+pub const OLDEST_SUPPORTED: &str = kampus_common::PLATFORM.upgrade_from;
 
 #[cfg(test)]
 mod tests {

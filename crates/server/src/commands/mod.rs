@@ -79,7 +79,9 @@ fn upgrader(db: &Database) -> Result<Upgrader<'_>> {
     if !blocking.is_empty() {
         return Err(Error::conflict("server.components_invalid").with_param("problems", blocking.join("; ")));
     }
-    Ok(Upgrader::new(db, &SCHEMAS, PLATFORM_VERSION).with_components(components::records()))
+    Ok(Upgrader::new(db, &SCHEMAS, PLATFORM_VERSION)
+        .upgrading_from(kampus_common::PLATFORM.upgrade_from)
+        .with_components(components::records()))
 }
 
 /// Serves a role until the process receives a stop signal.

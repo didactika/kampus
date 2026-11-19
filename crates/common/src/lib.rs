@@ -46,6 +46,7 @@ pub mod component;
 pub mod error;
 pub mod id;
 pub mod page;
+pub mod platform;
 pub mod request;
 
 pub use adapter::AdapterSettings;
@@ -55,8 +56,10 @@ pub use kampus_macros::manifest;
 pub use page::{Cursor, Page, PageRequest};
 pub use request::RequestId;
 
-/// The version of the Kampus platform this build belongs to.
-pub const PLATFORM_VERSION: &str = env!("CARGO_PKG_VERSION");
+pub use platform::PLATFORM;
+
+/// The version of the Kampus platform this build belongs to, from `version.toml`.
+pub const PLATFORM_VERSION: &str = PLATFORM.version;
 
 /// Re-exports used by the macros of this crate, so that crates using them need no extra dependency.
 #[doc(hidden)]
