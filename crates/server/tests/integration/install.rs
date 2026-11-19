@@ -136,7 +136,16 @@ async fn install_creates_the_installation_once_and_its_administrator_signs_in() 
         .unwrap();
     assert!(matches!(outcome, SignInOutcome::SignedIn(_)));
     for module in [
-        "enrol", "courses", "users", "identity", "access", "tasks", "events", "db",
+        "enrol",
+        "courses",
+        "customise",
+        "users",
+        "identity",
+        "settings",
+        "access",
+        "tasks",
+        "events",
+        "db",
     ] {
         sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
             "drop schema if exists {} cascade",
@@ -181,7 +190,16 @@ async fn an_installation_created_by_an_upgrade_gets_its_first_campus_from_instal
         .unwrap();
     assert_eq!(campuses.len(), 1);
     for module in [
-        "enrol", "courses", "users", "identity", "access", "tasks", "events", "db",
+        "enrol",
+        "courses",
+        "customise",
+        "users",
+        "identity",
+        "settings",
+        "access",
+        "tasks",
+        "events",
+        "db",
     ] {
         sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
             "drop schema if exists {} cascade",

@@ -131,6 +131,7 @@ async fn world() -> World {
         &kampus_access::MODULE,
         &kampus_identity::MODULE,
         &kampus_settings::MODULE,
+        &kampus_customise::MODULE,
         &kampus_courses::MODULE,
     ];
     let schemas: Vec<_> = modules.iter().map(|m| m.schema()).collect();
@@ -146,6 +147,8 @@ async fn world() -> World {
         .sync_declarations(&modules)
         .await
         .unwrap();
+    let customise = kampus_customise::Customise::new(db.clone(), access.clone());
+    customise.sync_declarations(&modules).await.unwrap();
     let platform = access.create_platform().await.unwrap();
     let campus = access.create_scope(platform, ScopeKind::Campus).await.unwrap();
     let roles = access.install_campus_roles(campus).await.unwrap();
@@ -167,7 +170,8 @@ async fn world() -> World {
         .install_administrator(campus, "admin@example.org", "admin", PASSWORD)
         .await
         .unwrap();
-    let courses = Courses::new(db.clone(), access.clone(), clock, Arc::new(CampusMembers));
+    let courses = Courses::new(db.clone(), access.clone(), clock, Arc::new(CampusMembers))
+        .with_customise(customise.clone());
     World {
         courses,
         access,
@@ -208,7 +212,15 @@ impl World {
 
     /// Drops the installation.
     async fn drop(self) {
-        for module in ["courses", "settings", "identity", "access", "events", "db"] {
+        for module in [
+            "courses",
+            "customise",
+            "settings",
+            "identity",
+            "access",
+            "events",
+            "db",
+        ] {
             sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
                 "drop schema if exists {} cascade",
                 self.db.prefix().schema(module)
@@ -923,5 +935,111 @@ async fn the_group_mode_of_a_section_comes_from_its_course_unless_it_sets_its_ow
         .unwrap();
     assert_eq!(c.group_mode(labs.scope).await.unwrap(), GroupMode::Separate);
     assert_eq!(c.group_mode(physics.scope).await.unwrap(), GroupMode::Visible);
+    w.drop().await;
+}
+
+#[tokio::test]
+async fn a_course_keeps_values_of_the_custom_fields_that_apply_to_it() {
+    let w = world().await;
+    let c = &w.courses;
+    let customise = kampus_customise::Customise::new(w.db.clone(), w.access.clone());
+    let science = c
+        .create_category(&w.admin, w.campus, None, category("Science"), Place::Last)
+        .await
+        .unwrap();
+    let physics = c
+        .create_course(&w.admin, science.id, course("PHY101"), Place::Last)
+        .await
+        .unwrap();
+    customise
+        .create_field(
+            &w.admin,
+            "courses.course",
+            science.scope,
+            kampus_customise::FieldSpec {
+                code: "credits".to_owned(),
+                name: "Credits".to_owned(),
+                field_type: kampus_customise::FieldType::Integer,
+                required: false,
+                visibility: kampus_customise::FieldVisibility::Public,
+                max_length: None,
+                choices: Vec::new(),
+            },
+        )
+        .await
+        .unwrap();
+    let fields = c.course_fields(&w.admin, physics.id).await.unwrap();
+    assert_eq!(fields.len(), 1);
+    assert_eq!(fields[0].value, serde_json::Value::Null);
+    let set = c
+        .set_course_field(&w.admin, physics.id, "credits", &serde_json::json!(6))
+        .await
+        .unwrap();
+    assert_eq!(set.value, serde_json::json!(6));
+    c.set_course_field(&w.admin, physics.id, "credits", &serde_json::json!(8))
+        .await
+        .unwrap();
+    assert_eq!(
+        c.course_fields(&w.admin, physics.id).await.unwrap()[0].value,
+        serde_json::json!(8)
+    );
+    assert_eq!(
+        error(
+            c.set_course_field(&w.admin, physics.id, "credits", &serde_json::json!("many"))
+                .await
+        )
+        .0,
+        ErrorKind::Validation
+    );
+    assert_eq!(
+        error(
+            c.set_course_field(&w.admin, physics.id, "nothing", &serde_json::json!(1))
+                .await
+        )
+        .1,
+        "courses.field_not_found"
+    );
+    c.set_course_field(&w.admin, physics.id, "credits", &serde_json::Value::Null)
+        .await
+        .unwrap();
+    assert_eq!(
+        c.course_fields(&w.admin, physics.id).await.unwrap()[0].value,
+        serde_json::Value::Null
+    );
+    w.drop().await;
+}
+
+#[tokio::test]
+async fn groups_cannot_be_created_where_the_feature_is_off() {
+    let w = world().await;
+    let c = &w.courses;
+    let customise = kampus_customise::Customise::new(w.db.clone(), w.access.clone());
+    let science = c
+        .create_category(&w.admin, w.campus, None, category("Science"), Place::Last)
+        .await
+        .unwrap();
+    let physics = c
+        .create_course(&w.admin, science.id, course("PHY101"), Place::Last)
+        .await
+        .unwrap();
+    customise
+        .set_flag(&w.admin, "courses.groups", science.scope, false, false)
+        .await
+        .unwrap();
+    assert_eq!(
+        error(
+            c.create_group(&w.admin, physics.id, group("Red", GroupVisibility::Everyone))
+                .await
+        )
+        .1,
+        "customise.feature_off"
+    );
+    customise
+        .set_flag(&w.admin, "courses.groups", physics.scope, true, false)
+        .await
+        .unwrap();
+    c.create_group(&w.admin, physics.id, group("Red", GroupVisibility::Everyone))
+        .await
+        .unwrap();
     w.drop().await;
 }

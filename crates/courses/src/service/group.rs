@@ -119,11 +119,14 @@ impl Courses {
     /// # Errors
     ///
     /// `permission_denied` without the permission, `validation` for invalid fields or a section of another
-    /// course, `conflict` for a name or code in use in the course.
+    /// course, `conflict` for a name or code in use in the course, or (`customise.feature_off`) where groups
+    /// are turned off.
     pub async fn create_group(&self, actor: &Actor, course: CourseId, fields: GroupFields) -> Result<Group> {
         let fields = checked(fields)?;
         let course = self.course(course).await?;
         self.access.require(actor, GROUPS_MANAGE, course.scope).await?;
+        self.require_feature(crate::settings::customise::GROUPS_FEATURE, course.scope)
+            .await?;
         let row = sqlx::query(sql(format!(
             "insert into {} (id, course_id, section_id, name, code, description, visibility)
              values ($1, $2, $3, $4, $5, $6, $7) returning {COLUMNS}",

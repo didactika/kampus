@@ -37,6 +37,7 @@
 
 mod categories;
 mod courses;
+mod fields;
 mod groups;
 mod sections;
 
@@ -57,6 +58,7 @@ pub fn routes(context: &ServiceContext) -> Router {
     Router::new()
         .merge(categories::routes())
         .merge(courses::routes())
+        .merge(fields::routes())
         .merge(sections::routes())
         .merge(groups::routes())
         .with_state(shared)

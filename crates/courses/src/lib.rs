@@ -79,6 +79,8 @@ pub struct Courses {
     clock: Arc<dyn Clock>,
     /// Who takes part in each course.
     participants: Arc<dyn Participants>,
+    /// Customisation, for custom fields and features; without it every feature is on.
+    customise: Option<kampus_customise::Customise>,
 }
 
 impl std::fmt::Debug for Courses {
@@ -103,6 +105,25 @@ impl Courses {
             access,
             clock,
             participants,
+            customise: None,
+        }
+    }
+
+    /// The service with customisation, which gives courses custom fields and lets scopes turn features
+    /// off.
+    #[must_use]
+    pub fn with_customise(self, customise: kampus_customise::Customise) -> Self {
+        Self {
+            customise: Some(customise),
+            ..self
+        }
+    }
+
+    /// Fails unless a feature of this module is on in a scope.
+    async fn require_feature(&self, code: &str, scope: kampus_access::ScopeId) -> kampus_common::Result<()> {
+        match &self.customise {
+            Some(customise) => customise.require_flag(code, scope).await,
+            None => Ok(()),
         }
     }
 

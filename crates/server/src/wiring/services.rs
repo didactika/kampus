@@ -40,6 +40,7 @@ use std::sync::Arc;
 use kampus_access::Access;
 use kampus_common::{Clock, SystemClock};
 use kampus_courses::Courses;
+use kampus_customise::Customise;
 use kampus_db::Database;
 use kampus_enrol::{Enrol, Participation};
 use kampus_events::Events;
@@ -100,6 +101,7 @@ impl Services {
     pub fn build(parts: Parts) -> Self {
         let access = Access::new(parts.db.clone(), parts.clock.clone());
         let settings = Settings::new(parts.db.clone(), access.clone());
+        let customise = Customise::new(parts.db.clone(), access.clone());
         let identity = Identity::new(
             parts.db.clone(),
             access.clone(),
@@ -122,7 +124,8 @@ impl Services {
             access.clone(),
             parts.clock.clone(),
             Arc::new(Participation::new(parts.db.clone())),
-        );
+        )
+        .with_customise(customise.clone());
         let hasher = PasswordHasher::new(parts.password_cost.unwrap_or_default());
         let tasks = Tasks::new(parts.db.clone());
         let events = Events::new(parts.db.clone());
@@ -144,6 +147,7 @@ impl Services {
             .with(tasks)
             .with(events)
             .with(settings)
+            .with(customise)
             .with(HttpSettings {
                 api_url: format!(
                     "{}{}",

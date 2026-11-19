@@ -83,6 +83,17 @@ const fn own(
     }
 }
 
+/// A foreign key to a table of customisation, which takes the row with it.
+const fn customise(columns: &'static [&'static str], table: &'static str) -> ForeignKey {
+    ForeignKey {
+        columns,
+        module: Some("customise"),
+        table,
+        references: &["id"],
+        on_delete: OnDelete::Cascade,
+    }
+}
+
 /// The columns of an own visibility.
 const VISIBILITY: [Column; 3] = [
     Column::new("visibility", Type::Text).default(ColumnDefault::Text("shown")),
@@ -326,4 +337,25 @@ alter table {schema}.\"group_member\" add constraint \"group_member_origin_check
             reason: "the neutral schema has no collation, no condition between two columns and no pattern; sort keys compare byte by byte",
         },
     ],
+}, Step {
+    sequence: 2,
+    name: "custom fields of courses",
+    revert: &[],
+    action: None,
+    changes: &[Change::CreateTable(Table {
+        name: "course_field",
+        columns: &[
+            Column::new("course_id", Type::Uuid),
+            Column::new("field_id", Type::Uuid),
+            Column::new("field_value_id", Type::Uuid),
+        ],
+        primary_key: &["course_id", "field_id"],
+        unique: &[&["field_value_id"]],
+        foreign_keys: &[
+            own(&["course_id"], "course", &["id"], OnDelete::Cascade),
+            customise(&["field_id"], "field"),
+            customise(&["field_value_id"], "field_value"),
+        ],
+        ..Table::EMPTY
+    })],
 }];

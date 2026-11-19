@@ -35,6 +35,8 @@
 //! The settings courses declares: the group mode, resolved through course, section and activity, so a
 //! section can work in groups while the rest of the course does not.
 
+pub mod customise;
+
 use kampus_access::ScopeId;
 use kampus_common::Result;
 use kampus_module::{ScopeKind, SettingDeclaration, ValueKind};
