@@ -39,6 +39,7 @@
 //! Every account is a principal of access with the same id; identity keeps the principal active only
 //! while the account is, so access never reads identity.
 
+pub mod commands;
 pub mod db;
 pub mod jobs;
 pub mod model;

@@ -24,6 +24,7 @@ pub const MODULE: Module = Module {
     permissions: crate::permissions::PERMISSIONS,
     templates: crate::permissions::TEMPLATES,
     plugin_types: &[],
+    commands: crate::commands::COMMANDS,
 };
 ```
 
@@ -31,6 +32,7 @@ pub const MODULE: Module = Module {
 | --- | --- | --- |
 | `name` | `src/module.rs` | Names the module's database schema and owns its grants |
 | `manifest` | `version.toml`, `Cargo.toml` and `assets/icon.svg`, read by `manifest!()` | Checks it and records the version (see [the version file](#the-version-file)) |
+| `commands` | `src/commands/mod.rs` | Offers them as `kampus-server <module> <command>` (see [commands](#commands-of-a-component)) |
 | `plugin_types` | `src/module.rs` | Accepts plugins named `<type>_<name>` in `crates/<module>/<type>/<name>` |
 | `steps` | `src/db/steps.rs` | Applies the pending upgrade steps (DEC-082) |
 | `permissions` | `src/permissions/mod.rs` | Synchronises them at start-up and retires those no module declares (RN-021) |
@@ -50,6 +52,7 @@ pub const MODULE: Module = Module {
 | `src/ports/` | Traits that other modules implement for this one (`Courier`, `Policies`) | when it has any |
 | `src/support/` | Internal helpers that are not part of the API (hashing, encodings) | when it has any |
 | `src/jobs/` | One file per job | when it has any |
+| `src/commands/` | Its commands on the command line, `kampus-server <module> <command>` | when it has any |
 | `src/events/` | One file per event it publishes | from the events module (T-C.06) |
 | `src/observers/` | One file per event of another module it handles | from the events module (T-C.06) |
 | `src/settings/` | The settings it declares | from the settings module (T-C.06) |
@@ -61,6 +64,34 @@ pub const MODULE: Module = Module {
 | `README.md` | Optional notes for developers | no |
 
 Nothing else may sit at the top of the crate or of `src/`; `tools/repo-check` reports any other file or folder, a missing descriptor, and a registry out of date.
+
+## Commands of a component
+
+A module offers commands on the command line in `src/commands/mod.rs`, listed in the `commands` field of its descriptor. The server reads them from the registry, so every module, inside the repository or not, gets its commands without any change to the server:
+
+```text
+kampus-server identity --help          lists the commands of identity
+kampus-server identity purge           runs one
+kampus-server access grant <user> [until]
+```
+
+```rust
+pub const COMMANDS: &[Command] = &[Command {
+    name: "purge",
+    summary: "Remove expired one-time tokens and sessions",
+    arguments: &[],
+    run: purge,
+}];
+
+fn purge<'c>(context: &'c CommandContext, _arguments: &'c [String]) -> CommandFuture<'c> {
+    Box::pin(async move {
+        let purged = identity(context)?.purge().await?;
+        Ok(vec![format!("{} session(s) removed", purged.sessions)])
+    })
+}
+```
+
+A command receives the database of the installation and its secret key in a `CommandContext`, gets its arguments already counted against its declaration, and returns the lines it reports. Names are in kebab case; a wrong number of arguments answers with the usage line.
 
 ## Tests
 

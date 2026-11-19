@@ -34,6 +34,10 @@
 
 //! The descriptor of a module: what it adds to the platform, as the server reads it.
 
+mod command;
+
+pub use command::{Argument, Command, CommandContext, CommandFuture};
+
 use kampus_db::{ModuleSteps, Step};
 
 use crate::permission::{PermissionDeclaration, RoleTemplateDeclaration};
@@ -58,6 +62,8 @@ pub struct Module {
     /// The plugin types it defines: their plugins are named `<type>_<name>` and live in
     /// `crates/<this module>/<type>/<name>`.
     pub plugin_types: &'static [&'static str],
+    /// The commands it offers on the command line, from `src/commands/mod.rs`.
+    pub commands: &'static [Command],
 }
 
 impl Module {

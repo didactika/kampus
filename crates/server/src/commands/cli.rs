@@ -43,7 +43,11 @@ use crate::Config;
 
 /// Kampus: the modular learning platform.
 #[derive(Debug, Parser)]
-#[command(name = "kampus-server", version)]
+#[command(
+    name = "kampus-server",
+    version,
+    after_help = "Each component adds its own commands: kampus-server <component> --help lists them."
+)]
 pub struct Cli {
     /// What to do; `serve` when omitted.
     #[command(subcommand)]
@@ -88,6 +92,9 @@ enum Command {
         #[arg(long)]
         yes: bool,
     },
+    /// A component and one of its commands: `kampus-server identity purge`.
+    #[command(external_subcommand)]
+    Component(Vec<String>),
     /// Remove a component that is no longer in the build: its tables and its data.
     Uninstall {
         /// The component (`activity_attendance`).
@@ -183,6 +190,7 @@ async fn install(interactive: bool) -> kampus_common::Result<()> {
 async fn execute(command: Command, config: &Config) -> kampus_common::Result<()> {
     match command {
         Command::Serve => super::serve(config).await,
+        Command::Component(arguments) => component(config, &arguments).await,
         Command::Install { .. } => Ok(()),
         Command::Upgrade { new_installation } => {
             let applied = super::upgrade(config, new_installation).await?;
@@ -283,6 +291,54 @@ async fn check(config: &Config) -> kampus_common::Result<()> {
     } else {
         Err(kampus_common::Error::conflict("server.schema_not_current"))
     }
+}
+
+/// Runs a command of a component, or lists its commands.
+async fn component(config: &Config, arguments: &[String]) -> kampus_common::Result<()> {
+    let Some((name, rest)) = arguments.split_first() else {
+        return Ok(());
+    };
+    let Some(module) = crate::wiring::registry::MODULES.iter().find(|m| m.name == name) else {
+        return Err(
+            kampus_common::Error::not_found("server.unknown_command").with_param("command", name.as_str())
+        );
+    };
+    let Some((command_name, given)) = rest
+        .split_first()
+        .filter(|(c, _)| !matches!(c.as_str(), "--help" | "-h" | "help"))
+    else {
+        print(&format!(
+            "{name} {}: {}",
+            module.manifest.version, module.manifest.summary
+        ));
+        if module.commands.is_empty() {
+            print("  No commands.");
+        }
+        for command in module.commands {
+            print(&format!("  {:<40} {}", command.usage(name), command.summary));
+        }
+        return Ok(());
+    };
+    let Some(command) = module.commands.iter().find(|c| c.name == command_name) else {
+        return Err(kampus_common::Error::not_found("server.unknown_command")
+            .with_param("command", format!("{name} {command_name}"))
+            .with_param("help", format!("kampus-server {name} --help")));
+    };
+    command.check(name, given)?;
+    let db = super::connect(config).await?;
+    let context = kampus_module::CommandContext {
+        db: db.clone(),
+        secret_key: config
+            .secret_key
+            .as_ref()
+            .map(kampus_identity::SecretKey::to_base64),
+    };
+    let lines = (command.run)(&context, given).await;
+    db.close().await;
+    for line in lines? {
+        print(&line);
+    }
+    Ok(())
 }
 
 /// Prints the components as a table.
