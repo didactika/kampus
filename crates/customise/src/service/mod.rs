@@ -38,16 +38,38 @@
 pub mod declarations;
 pub mod field;
 pub mod flag;
+pub mod layout;
+pub mod menu;
 pub mod term;
+pub mod theme;
 
 use std::collections::BTreeMap;
 
 use kampus_access::{Actor, ScopeId};
-use kampus_common::Result;
+use kampus_common::{Error, Result};
 use serde_json::{Value, json};
-use sqlx::PgConnection;
+use sqlx::{PgConnection, Row};
 
 use crate::{Customise, Origin, sql};
+
+/// Refuses to set in a scope what a scope above it locks.
+pub(crate) fn refuse_below_lock(current: Origin, scope: ScopeId) -> Result<()> {
+    match current {
+        Origin::Scope {
+            scope: at,
+            locked: true,
+        } if at != scope => Err(Error::conflict("customise.locked_above")),
+        _ => Ok(()),
+    }
+}
+
+/// Whether a text is a code: lowercase letters, digits, `_` and `.`.
+pub(crate) fn is_code(text: &str) -> bool {
+    !text.is_empty()
+        && text
+            .bytes()
+            .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'_' || b == b'.')
+}
 
 /// A value set in a scope of a path: how far up it is, the scope, the value and whether it locks.
 pub(crate) type SetIn<T> = (i32, ScopeId, T, bool);
@@ -85,6 +107,80 @@ impl Customise {
             .iter()
             .map(|s| (s.id.as_uuid(), s.depth))
             .collect())
+    }
+
+    /// The row of a table, keyed by a column and a scope, that applies in a scope: the one of the highest
+    /// scope that locks it, or else of the nearest; with where it came from.
+    pub(crate) async fn nearest(
+        &self,
+        conn: &mut PgConnection,
+        (table, column): (&str, &str),
+        key: &str,
+        scope: ScopeId,
+    ) -> Result<Option<(uuid::Uuid, Origin)>> {
+        let depths = self.depths(conn, scope).await?;
+        let ids: Vec<uuid::Uuid> = depths.keys().copied().collect();
+        let rows = sqlx::query(sql(format!(
+            "select id, scope_id, locked from {} where {column} = $1 and scope_id = any($2)",
+            self.table(table)
+        )))
+        .bind(key)
+        .bind(&ids)
+        .fetch_all(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
+        let set: Vec<SetIn<uuid::Uuid>> = rows
+            .iter()
+            .map(|r| {
+                let at: uuid::Uuid = r.get("scope_id");
+                (
+                    depths.get(&at).copied().unwrap_or(i32::MAX),
+                    ScopeId::from_uuid(at),
+                    r.get("id"),
+                    r.get("locked"),
+                )
+            })
+            .collect();
+        Ok(choose(set))
+    }
+
+    /// Removes the row a scope set in a table keyed by a column, and records it when there was one.
+    pub(crate) async fn remove_in_scope(
+        &self,
+        actor: &Actor,
+        (table, column): (&str, &str),
+        key: &str,
+        scope: ScopeId,
+    ) -> Result<()> {
+        let mut tx = self.db.begin().await?;
+        let removed = sqlx::query(sql(format!(
+            "delete from {} where {column} = $1 and scope_id = $2",
+            self.table(table)
+        )))
+        .bind(key)
+        .bind(scope.as_uuid())
+        .execute(&mut *tx)
+        .await
+        .map_err(kampus_db::classify)?
+        .rows_affected();
+        if removed > 0 {
+            self.record_in(&mut tx, table, key, scope, principal(actor), (None, None))
+                .await?;
+        }
+        tx.commit().await.map_err(kampus_db::classify)
+    }
+
+    /// Whether an actor holds a permission in a scope; everyone when no permission is given.
+    pub(crate) async fn holds(
+        &self,
+        actor: &Actor,
+        permission: Option<&str>,
+        scope: ScopeId,
+    ) -> Result<bool> {
+        match permission {
+            Some(permission) => Ok(self.access.check(actor, permission, scope).await?.allowed),
+            None => Ok(true),
+        }
     }
 
     /// Records a change of a customisation and publishes it, in the transaction of the change.

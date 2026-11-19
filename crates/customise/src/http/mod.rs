@@ -32,7 +32,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The HTTP routes of customisation: the words of a scope, its feature flags and its custom fields.
+//! The HTTP routes of customisation: the words of a scope, its feature flags and its custom fields here,
+//! and its layouts, menus and theme in [`pages`].
+
+mod pages;
 
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -65,6 +68,7 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/scopes/{scope}/flags/{code}", get(flag).put(set_flag))
         .route("/scopes/{scope}/fields", get(fields).post(create_field))
         .route("/fields/{id}", get(field).delete(delete_field))
+        .merge(pages::routes())
         .with_state(shared)
 }
 

@@ -39,7 +39,6 @@ use kampus_common::{Error, FieldError, Result};
 use kampus_module::Module;
 use serde_json::json;
 
-use super::kind_json;
 use crate::{Settings, sql};
 
 impl Settings {
@@ -75,7 +74,7 @@ impl Settings {
                 .bind(setting.key)
                 .bind(module.name)
                 .bind(setting.summary)
-                .bind(kind_json(setting.kind))
+                .bind(setting.kind.stored())
                 .bind(&default)
                 .bind(json!(levels))
                 .bind(setting.permission)

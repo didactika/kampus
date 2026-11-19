@@ -50,6 +50,12 @@ pub const FIELD_MANAGE: &str = "customise.field.manage";
 pub const FIELD_VIEW: &str = "customise.field.view";
 /// Change the values of custom fields.
 pub const FIELD_EDIT: &str = "customise.field.edit";
+/// Arrange the widgets of the pages of a scope.
+pub const LAYOUT_MANAGE: &str = "customise.layout.manage";
+/// Change the navigation menus of a scope.
+pub const MENU_MANAGE: &str = "customise.menu.manage";
+/// Change the theme of a scope.
+pub const THEME_MANAGE: &str = "customise.theme.manage";
 
 /// The permissions of this module.
 pub const PERMISSIONS: &[PermissionDeclaration] = &[
@@ -82,5 +88,23 @@ pub const PERMISSIONS: &[PermissionDeclaration] = &[
         kind: PermissionKind::Write,
         risks: &[],
         lowest_kind: ScopeKind::Activity,
+    },
+    PermissionDeclaration {
+        code: LAYOUT_MANAGE,
+        kind: PermissionKind::Write,
+        risks: &[Risk::Configuration],
+        lowest_kind: ScopeKind::Course,
+    },
+    PermissionDeclaration {
+        code: MENU_MANAGE,
+        kind: PermissionKind::Write,
+        risks: &[Risk::Configuration],
+        lowest_kind: ScopeKind::Course,
+    },
+    PermissionDeclaration {
+        code: THEME_MANAGE,
+        kind: PermissionKind::Write,
+        risks: &[Risk::Configuration],
+        lowest_kind: ScopeKind::Course,
     },
 ];

@@ -48,7 +48,10 @@ pub use descriptor::{
     JobFuture, JobRun, ListenerDeclaration, Module, PreferenceDeclaration, ScheduleDeclaration,
     SettingDeclaration, ValueKind,
 };
-pub use descriptor::{FieldKindDeclaration, FlagDeclaration, TermDeclaration, TermForms};
+pub use descriptor::{
+    FieldKindDeclaration, FlagDeclaration, MenuKindDeclaration, PageKindDeclaration, TermDeclaration,
+    TermForms, WidgetDeclaration, WidgetSetting,
+};
 pub use permission::{
     PermissionDeclaration, PermissionKind, Risk, RoleTemplateDeclaration, ScopeKind, Value,
 };

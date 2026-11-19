@@ -132,3 +132,88 @@ async fn a_campus_renames_terms_adds_course_fields_and_turns_groups_off() {
     assert_eq!(group.status, StatusCode::CONFLICT, "{}", group.body);
     assert_eq!(group.code(), "customise.feature_off");
 }
+
+#[tokio::test]
+async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
+    let site = site().await;
+    let admin = site.session("admin").await;
+    let (_, course) = site.course(&admin).await;
+    let read = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/courses/{course}"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    let scope = read.body["scope"].as_str().unwrap().to_owned();
+    let layout = site
+        .call(
+            Method::PUT,
+            &format!("/api/v1/scopes/{scope}/layouts/courses.course"),
+            Some(&admin),
+            &[],
+            Some(json!({ "placements": [
+                { "region": "main", "widget": "courses.outline" },
+                { "region": "side", "widget": "customise.text", "settings": { "heading": "Office hours" } }
+            ] })),
+        )
+        .await;
+    assert_eq!(layout.status, StatusCode::OK, "{}", layout.body);
+    assert_eq!(layout.body["placements"][0]["settings"]["collapsed"], false);
+    assert_eq!(layout.body["placements"][1]["settings"]["text"], "");
+
+    let campus = site.campus.to_string();
+    let menu = site
+        .call(
+            Method::PUT,
+            &format!("/api/v1/scopes/{campus}/menus/customise.main"),
+            Some(&admin),
+            &[],
+            Some(json!({ "items": [{ "label": "Courses", "target": "/courses" }] })),
+        )
+        .await;
+    assert_eq!(menu.status, StatusCode::OK, "{}", menu.body);
+
+    let theme = site
+        .call(
+            Method::PUT,
+            &format!("/api/v1/scopes/{campus}/theme"),
+            Some(&admin),
+            &[],
+            Some(json!({ "tokens": { "primary": "#0f766e" } })),
+        )
+        .await;
+    assert_eq!(theme.status, StatusCode::OK, "{}", theme.body);
+    let css = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/scopes/{scope}/theme.css"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    assert!(
+        css.body.as_str().unwrap().contains("--kampus-primary: #0f766e;"),
+        "{}",
+        css.body
+    );
+    let refused = site
+        .call(
+            Method::PUT,
+            &format!("/api/v1/scopes/{campus}/theme"),
+            Some(&admin),
+            &[],
+            Some(json!({ "tokens": { "primary": "#0f766e", "on_primary": "#134e4a" } })),
+        )
+        .await;
+    assert_eq!(
+        refused.status,
+        StatusCode::UNPROCESSABLE_ENTITY,
+        "{}",
+        refused.body
+    );
+    assert_eq!(refused.code(), "customise.theme_contrast");
+}

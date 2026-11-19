@@ -61,9 +61,30 @@ entity field_value_choice {
   field_value_id <<FK>>
   choice_id <<FK>>
 }
+entity page_kind {
+  code <<PK>>
+  module
+  summary
+  regions
+  retired_at
+}
+entity widget {
+  code <<PK>>
+  module
+  summary
+  page_kinds
+  settings
+  retired_at
+}
+entity menu_kind {
+  code <<PK>>
+  module
+  summary
+  retired_at
+}
 entity layout {
   id <<PK>>
-  page_kind
+  page_kind_code <<FK>>
   scope_id <<FK>>
   locked
   version
@@ -72,15 +93,16 @@ entity placement {
   id <<PK>>
   layout_id <<FK>>
   region
-  widget
+  widget_code <<FK>>
   settings
-  sort_key
-  visibility
+  permission
+  position
 }
 entity menu {
   id <<PK>>
-  menu_kind
+  menu_kind_code <<FK>>
   scope_id <<FK>>
+  locked
   version
 }
 entity menu_item {
@@ -90,13 +112,13 @@ entity menu_item {
   label
   target
   permission
-  sort_key
+  position
 }
 entity theme {
   id <<PK>>
   scope_id <<FK>>
-  parent_id <<FK>>
   tokens
+  locked
   version
 }
 entity rule {
@@ -151,8 +173,10 @@ field_value }o--|| field_choice
 field_value_choice }o--|| field_value
 field_value_choice }o--|| field_choice
 placement }o--|| layout
+placement }o--|| widget
+layout }o--|| page_kind
+menu }o--|| menu_kind
 menu_item }o--|| menu
 menu_item }o--o| menu_item : parent
-theme }o--o| theme : parent
 rule_run }o--|| rule
 @enduml

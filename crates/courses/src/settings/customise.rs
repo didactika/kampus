@@ -33,12 +33,18 @@
 // ------------------------------------------------------------------------------
 
 //! What courses offers to customisation: the words of its domain in English and Spanish, the groups
-//! feature, and custom fields on courses.
+//! feature, custom fields on courses, and the page of a course with its widgets.
 
-use kampus_module::{FieldKindDeclaration, FlagDeclaration, TermDeclaration, TermForms};
+use kampus_module::{
+    FieldKindDeclaration, FlagDeclaration, PageKindDeclaration, TermDeclaration, TermForms, ValueKind,
+    WidgetDeclaration, WidgetSetting,
+};
 
 /// The kind of entity of the custom fields of a course.
 pub const COURSE_KIND: &str = "courses.course";
+
+/// The page kind of a course.
+pub const COURSE_PAGE: &str = "courses.course";
 
 /// The feature of groups and group sets.
 pub const GROUPS_FEATURE: &str = "courses.groups";
@@ -104,3 +110,29 @@ pub const FIELD_KINDS: &[FieldKindDeclaration] = &[FieldKindDeclaration {
     code: COURSE_KIND,
     summary: "Courses",
 }];
+
+/// The page of a course, with its regions.
+pub const PAGE_KINDS: &[PageKindDeclaration] = &[PageKindDeclaration {
+    code: COURSE_PAGE,
+    summary: "The page of a course",
+    regions: &["top", "main", "side"],
+}];
+
+/// The widgets of this module.
+pub const WIDGETS: &[WidgetDeclaration] = &[
+    WidgetDeclaration {
+        code: "courses.outline",
+        summary: "The sections of the course the reader sees",
+        page_kinds: &[COURSE_PAGE],
+        settings: &[WidgetSetting {
+            key: "collapsed",
+            kind: ValueKind::Boolean { default: false },
+        }],
+    },
+    WidgetDeclaration {
+        code: "courses.summary",
+        summary: "The summary and dates of the course",
+        page_kinds: &[COURSE_PAGE],
+        settings: &[],
+    },
+];

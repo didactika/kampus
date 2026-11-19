@@ -33,16 +33,19 @@
 // ------------------------------------------------------------------------------
 
 //! What modules declare for customisation: their terms, their feature flags and the kinds of entity that
-//! accept custom fields; what no module declares any more is retired, and the customisations stay.
+//! accept custom fields, the page kinds, widgets and kinds of menu; what no module declares any more is
+//! retired, and the customisations stay.
 
 use kampus_common::Result;
 use kampus_module::Module;
-use serde_json::json;
+use serde_json::{Value, json};
+use sqlx::PgConnection;
 
 use crate::{Customise, sql};
 
 impl Customise {
-    /// Brings the terms, flags and field kinds the modules of the build declare into the database.
+    /// Brings what the modules of the build declare for customisation into the database: terms, flags,
+    /// field kinds, page kinds, widgets and kinds of menu.
     ///
     /// # Errors
     ///
@@ -111,6 +114,77 @@ impl Customise {
             .await
             .map_err(kampus_db::classify)?;
         }
+        self.sync_pages_in(&mut tx, modules).await?;
         tx.commit().await.map_err(kampus_db::classify)
+    }
+
+    /// Brings the page kinds, widgets and kinds of menu the modules declare into the database.
+    async fn sync_pages_in(&self, conn: &mut PgConnection, modules: &[&Module]) -> Result<()> {
+        let (mut pages, mut widgets, mut menus) = (Vec::new(), Vec::new(), Vec::new());
+        for module in modules {
+            for page in module.page_kinds {
+                pages.push(page.code.to_owned());
+                sqlx::query(sql(format!(
+                    "insert into {} (code, module, summary, regions) values ($1, $2, $3, $4)
+                     on conflict (code) do update set module = excluded.module, summary = excluded.summary,
+                     regions = excluded.regions, retired_at = null",
+                    self.table("page_kind")
+                )))
+                .bind(page.code)
+                .bind(module.name)
+                .bind(page.summary)
+                .bind(json!(page.regions))
+                .execute(&mut *conn)
+                .await
+                .map_err(kampus_db::classify)?;
+            }
+            for widget in module.widgets {
+                widgets.push(widget.code.to_owned());
+                let settings: Vec<Value> = widget
+                    .settings
+                    .iter()
+                    .map(|s| json!({ "key": s.key, "kind": s.kind.stored(), "default": s.kind.default_value() }))
+                    .collect();
+                sqlx::query(sql(format!(
+                    "insert into {} (code, module, summary, page_kinds, settings) values ($1, $2, $3, $4, $5)
+                     on conflict (code) do update set module = excluded.module, summary = excluded.summary,
+                     page_kinds = excluded.page_kinds, settings = excluded.settings, retired_at = null",
+                    self.table("widget")
+                )))
+                .bind(widget.code)
+                .bind(module.name)
+                .bind(widget.summary)
+                .bind(json!(widget.page_kinds))
+                .bind(json!(settings))
+                .execute(&mut *conn)
+                .await
+                .map_err(kampus_db::classify)?;
+            }
+            for menu in module.menu_kinds {
+                menus.push(menu.code.to_owned());
+                sqlx::query(sql(format!(
+                    "insert into {} (code, module, summary) values ($1, $2, $3)
+                     on conflict (code) do update set module = excluded.module, summary = excluded.summary, retired_at = null",
+                    self.table("menu_kind")
+                )))
+                .bind(menu.code)
+                .bind(module.name)
+                .bind(menu.summary)
+                .execute(&mut *conn)
+                .await
+                .map_err(kampus_db::classify)?;
+            }
+        }
+        for (table, codes) in [("page_kind", &pages), ("widget", &widgets), ("menu_kind", &menus)] {
+            sqlx::query(sql(format!(
+                "update {} set retired_at = now() where not (code = any($1)) and retired_at is null",
+                self.table(table)
+            )))
+            .bind(codes)
+            .execute(&mut *conn)
+            .await
+            .map_err(kampus_db::classify)?;
+        }
+        Ok(())
     }
 }

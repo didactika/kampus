@@ -20,14 +20,19 @@ paths:
     patch: { summary: Change a field; changing the type is refused when values exist, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed }, '409': { description: Values exist } } }
     delete: { summary: Delete a field and its values after confirmation, responses: { '204': { description: Deleted } } }
   /api/v1/scopes/{scope_id}/layouts/{page_kind}:
-    get: { summary: Resolved layout with regions and placements, responses: { '200': { description: Layout } } }
-    put: { summary: 'Replace the layout (RN-216)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced }, '422': { description: Unknown region or widget } } }
+    get: { summary: 'Resolved layout with its regions, the placements the caller sees with their settings and defaults, and origin', responses: { '200': { description: Layout }, '404': { description: Unknown page kind } } }
+    put: { summary: 'Replace the placements, locked or not (RN-216)', responses: { '200': { description: The layout as it now resolves }, '409': { description: Locked above }, '422': { description: 'Unknown region or widget, a widget not offered for the page kind, or a setting it does not declare' } } }
+    delete: { summary: 'Remove the layout of the scope; the one above applies again', responses: { '200': { description: The layout as it now resolves } } }
   /api/v1/scopes/{scope_id}/menus/{menu_kind}:
-    get: { summary: Resolved menu filtered by the caller's permissions, responses: { '200': { description: Menu } } }
-    put: { summary: Replace the menu, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
+    get: { summary: "Resolved menu with the items the caller's permissions show, and origin", responses: { '200': { description: Menu }, '404': { description: Unknown kind of menu } } }
+    put: { summary: 'Replace the items, nested at most 3 deep and 100 in all, locked or not', responses: { '200': { description: The menu as it now resolves }, '409': { description: Locked above }, '422': { description: 'Empty label, a target that is neither a path nor a web address, too many or too deep' } } }
+    delete: { summary: 'Remove the menu of the scope; the one above applies again', responses: { '200': { description: The menu as it now resolves } } }
   /api/v1/scopes/{scope_id}/theme:
-    get: { summary: Resolved design tokens, responses: { '200': { description: Tokens } } }
-    put: { summary: 'Replace the tokens; contrast checked (RN-217)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced }, '422': { description: Fails contrast or schema } } }
+    get: { summary: Every design token with its value and origin, responses: { '200': { description: Theme } } }
+    put: { summary: 'Set the tokens of the scope, locked or not; kinds and WCAG 2.2 AA contrast checked (RN-217)', responses: { '200': { description: The theme as it now resolves }, '409': { description: Locked above }, '422': { description: 'An unknown token or value (customise.theme_invalid), or contrast too low (customise.theme_contrast)' } } }
+    delete: { summary: 'Remove the tokens of the scope', responses: { '200': { description: The theme as it now resolves } } }
+  /api/v1/scopes/{scope_id}/theme.css:
+    get: { summary: 'The theme as CSS custom properties (--kampus-<token>) on :root', responses: { '200': { description: 'text/css' } } }
   /api/v1/scopes/{scope_id}/rules:
     get: { summary: Rules of a scope, responses: { '200': { description: Rules } } }
     post: { summary: 'Create a rule from declared triggers, conditions and actions (RN-218)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created } } }
