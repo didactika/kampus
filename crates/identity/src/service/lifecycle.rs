@@ -46,6 +46,9 @@ use crate::service::account::{NewAccount, normalise_email, normalise_username};
 use crate::service::one_time::Purpose;
 use crate::{Account, AccountId, AccountKind, AccountStatus, Identity, Message, Notice, later, sql};
 
+/// The template of the role the first administrator of a campus holds.
+const ADMINISTRATOR_TEMPLATE: &str = "campus_administrator";
+
 /// The principal behind an actor, if it is one.
 pub(crate) const fn principal(actor: &Actor) -> Option<AccountId> {
     match actor {
@@ -188,6 +191,61 @@ impl Identity {
     pub async fn accept_invitation(&self, token: &str, password: &str) -> Result<AccountId> {
         self.activate_with(Purpose::Invitation, AccountStatus::Invited, token, password)
             .await
+    }
+
+    /// Creates the first administrator of a campus when it is installed: an active person with the
+    /// password given and the campus administrator role. Refused once the campus has any account, so it
+    /// never gives anyone power over an existing campus.
+    ///
+    /// # Errors
+    ///
+    /// `conflict` (`identity.campus_has_accounts`) when the campus has accounts, `validation` for an
+    /// invalid email, username or password.
+    pub async fn install_administrator(
+        &self,
+        campus: ScopeId,
+        email: &str,
+        username: &str,
+        password: &str,
+    ) -> Result<AccountId> {
+        let email = normalise_email(email)?;
+        let username = normalise_username(username)?;
+        let policy = self.policies.policy(campus).await?;
+        let mut tx = self.db.begin().await?;
+        let existing: bool = sqlx::query_scalar(sql(format!(
+            "select exists (select 1 from {} where campus_id = $1)",
+            self.table("account")
+        )))
+        .bind(campus.as_uuid())
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(kampus_db::classify)?;
+        if existing {
+            return Err(Error::conflict("identity.campus_has_accounts"));
+        }
+        let account = self
+            .insert_account_in(
+                &mut tx,
+                NewAccount {
+                    campus,
+                    kind: AccountKind::Person,
+                    username: &username,
+                    email: Some(&email),
+                    status: AccountStatus::Active,
+                    actor: None,
+                },
+            )
+            .await?;
+        self.set_password_in(&mut tx, &account, &policy, password).await?;
+        let role = self
+            .access
+            .campus_role_in(&mut tx, campus, ADMINISTRATOR_TEMPLATE)
+            .await?;
+        self.access
+            .grant_for_module_in(&mut tx, crate::module::NAME, role, campus, account.id, None)
+            .await?;
+        tx.commit().await.map_err(kampus_db::classify)?;
+        Ok(account.id)
     }
 
     /// Creates a service account: active at once, without password or second factor; it acts

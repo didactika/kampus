@@ -32,16 +32,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The deployment configuration: a file plus `KAMPUS_*` environment variables, which take
+//! The configuration of a process: `config.toml` plus `KAMPUS_*` environment variables, which take
 //! precedence. Each role validates only what it reads, and every problem is reported at once.
 
-use std::collections::HashMap;
+pub mod file;
+
+use std::collections::BTreeMap;
 use std::fmt;
 use std::net::SocketAddr;
 use std::str::FromStr;
 
 use kampus_common::{Error, FieldError, Result};
 use kampus_db::Prefix;
+use kampus_identity::SecretKey;
+
+use self::file::Values;
 
 /// The role a process takes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -104,13 +109,25 @@ pub enum LogFormat {
     Text,
 }
 
+/// How the installation serves campuses.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Tenancy {
+    /// One campus, at the site's address.
+    Single,
+    /// One campus per domain under a base domain (`campus-a.example.org`).
+    Multi {
+        /// The domain under which each campus has its own.
+        base_domain: String,
+    },
+}
+
 /// The validated configuration of a process.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Config {
     /// The role of the process.
     pub role: Role,
-    /// The public address of the campus, used in links and mail; set for roles that serve the API.
-    pub public_url: Option<String>,
+    /// The public address of the site, used in links and mail; set for roles that serve the API.
+    pub site_url: Option<String>,
     /// The address the HTTP listener binds to.
     pub http_address: SocketAddr,
     /// The connection to the database.
@@ -127,10 +144,14 @@ pub struct Config {
     pub log_format: LogFormat,
     /// The file storage (`file:///path` or `s3://bucket/prefix`), for roles that handle files.
     pub storage_url: Option<String>,
-    /// The options of the storage adapter, from `KAMPUS_STORAGE_<OPTION>` (`s3_endpoint` …).
-    pub storage_options: std::collections::BTreeMap<String, String>,
+    /// The options of the storage adapter (`s3_endpoint` …).
+    pub storage_options: BTreeMap<String, String>,
     /// The shared cache (`redis://`, `valkey://`); without it the cache is in-process and one instance runs.
     pub cache_url: Option<String>,
+    /// The key that seals secrets, for roles that run the services.
+    pub secret_key: Option<SecretKey>,
+    /// How campuses are served.
+    pub tenancy: Tenancy,
 }
 
 /// The options of the storage adapters that the configuration passes on.
@@ -141,46 +162,178 @@ const STORAGE_OPTIONS: &[&str] = &[
     "s3_secret_access_key",
 ];
 
-/// The keys of the configuration, as written in the file; the variable of each is `KAMPUS_<KEY>`.
-const KEYS: &[&str] = &[
-    "role",
-    "public_url",
-    "http_address",
-    "database_url",
-    "database_prefix",
-    "database_pool_size",
-    "upgrade_on_start",
-    "log_level",
-    "log_format",
-    "storage_url",
-    "cache_url",
-    "storage_s3_endpoint",
-    "storage_s3_region",
-    "storage_s3_access_key_id",
-    "storage_s3_secret_access_key",
-];
+/// Reads values by key, from the environment first, and gathers every problem.
+struct Reader<'a, F> {
+    /// Looks a variable up.
+    env: F,
+    /// The values of the file.
+    file: &'a Values,
+    /// The problems found so far.
+    fields: Vec<FieldError>,
+}
+
+impl<F: Fn(&str) -> Option<String>> Reader<'_, F> {
+    /// The value of a key.
+    fn value(&self, path: &str) -> Option<String> {
+        (self.env)(&file::variable(path)).or_else(|| self.file.get(path).map(str::to_owned))
+    }
+
+    /// Records a problem with a key.
+    fn fail(&mut self, path: &str, rule: &str) {
+        self.fields.push(FieldError::new(file::variable(path), rule));
+    }
+
+    /// The `[server]` section and the site's address.
+    fn server(&mut self) -> (Role, Option<String>, SocketAddr, bool) {
+        let role = match self.value("server.role") {
+            None => Role::All,
+            Some(text) => text.parse().unwrap_or_else(|()| {
+                self.fail("server.role", "one_of");
+                Role::All
+            }),
+        };
+        let site_url = self.value("site.url");
+        match &site_url {
+            None if role.serves_api() => self.fail("site.url", "required"),
+            Some(url) if !(url.starts_with("https://") || url.starts_with("http://")) => {
+                self.fail("site.url", "url");
+            }
+            _ => {}
+        }
+        let http_address = self
+            .value("server.http_address")
+            .unwrap_or_else(|| "0.0.0.0:8080".into())
+            .parse()
+            .unwrap_or_else(|_| {
+                self.fail("server.http_address", "socket_address");
+                SocketAddr::from(([0, 0, 0, 0], 8080))
+            });
+        let upgrade_on_start = match self.value("server.upgrade_on_start").as_deref() {
+            None | Some("false") => false,
+            Some("true") => true,
+            Some(_) => {
+                self.fail("server.upgrade_on_start", "boolean");
+                false
+            }
+        };
+        (role, site_url, http_address, upgrade_on_start)
+    }
+
+    /// The `[database]` section.
+    fn database(&mut self) -> (String, Prefix, u32) {
+        let url = self.value("database.url").unwrap_or_default();
+        if url.is_empty() {
+            self.fail("database.url", "required");
+        } else if !(url.starts_with("postgres://") || url.starts_with("postgresql://")) {
+            self.fail("database.url", "scheme");
+        }
+        let prefix = self
+            .value("database.prefix")
+            .unwrap_or_else(|| Prefix::DEFAULT.into())
+            .parse()
+            .unwrap_or_else(|_| {
+                self.fail("database.prefix", "format");
+                Prefix::default()
+            });
+        let pool_size = match self.value("database.pool_size").map(|text| text.parse::<u32>()) {
+            None => 10,
+            Some(Ok(size)) if (1..=1000).contains(&size) => size,
+            Some(_) => {
+                self.fail("database.pool_size", "range");
+                10
+            }
+        };
+        (url, prefix, pool_size)
+    }
+
+    /// The `[storage]` and `[cache]` sections.
+    fn storage(&mut self, runs_services: bool) -> (Option<String>, BTreeMap<String, String>, Option<String>) {
+        let url = self.value("storage.url");
+        if runs_services && url.is_none() {
+            self.fail("storage.url", "required");
+        }
+        let options = STORAGE_OPTIONS
+            .iter()
+            .filter_map(|option| {
+                self.value(&format!("storage.{option}"))
+                    .map(|v| ((*option).to_owned(), v))
+            })
+            .collect();
+        (url, options, self.value("cache.url"))
+    }
+
+    /// The `[security]` and `[tenancy]` sections.
+    fn security(&mut self, runs_services: bool) -> (Option<SecretKey>, Tenancy) {
+        let secret_key = match self.value("security.secret_key") {
+            None => {
+                if runs_services {
+                    self.fail("security.secret_key", "required");
+                }
+                None
+            }
+            Some(text) => SecretKey::from_base64(&text).map_or_else(
+                |_| {
+                    self.fail("security.secret_key", "base64_32_bytes");
+                    None
+                },
+                Some,
+            ),
+        };
+        let tenancy = match (
+            self.value("tenancy.mode").as_deref(),
+            self.value("tenancy.base_domain"),
+        ) {
+            (None | Some("single"), _) => Tenancy::Single,
+            (Some("multi"), Some(base_domain)) if base_domain.contains('.') => Tenancy::Multi { base_domain },
+            (Some("multi"), _) => {
+                self.fail("tenancy.base_domain", "required");
+                Tenancy::Single
+            }
+            (Some(_), _) => {
+                self.fail("tenancy.mode", "one_of");
+                Tenancy::Single
+            }
+        };
+        (secret_key, tenancy)
+    }
+
+    /// The `[log]` section.
+    fn log(&mut self) -> (String, LogFormat) {
+        let level = self.value("log.level").unwrap_or_else(|| "info".into());
+        let format = match self.value("log.format").as_deref() {
+            None | Some("json") => LogFormat::Json,
+            Some("text") => LogFormat::Text,
+            Some(_) => {
+                self.fail("log.format", "one_of");
+                LogFormat::Json
+            }
+        };
+        (level, format)
+    }
+}
 
 impl Config {
-    /// Reads the configuration from the environment and the file it names (`KAMPUS_CONFIG_FILE`, or
-    /// `kampus.toml` when it exists).
+    /// Reads the configuration from the environment and the configuration file (`KAMPUS_CONFIG_FILE`, or
+    /// `config.toml` when it exists).
     ///
     /// # Errors
     ///
     /// A `validation` error listing every missing or invalid value.
     pub fn from_environment() -> Result<Self> {
-        let path = std::env::var("KAMPUS_CONFIG_FILE").ok();
-        let file = match &path {
-            Some(path) => Some(std::fs::read_to_string(path).map_err(|error| {
-                Error::validation(
+        let path = file::path();
+        let text = match std::fs::read_to_string(&path) {
+            Ok(text) => Some(text),
+            Err(_) if !path.exists() => None,
+            Err(error) => {
+                return Err(Error::validation(
                     "server.config_file",
-                    vec![FieldError::new("KAMPUS_CONFIG_FILE", "readable")],
+                    vec![FieldError::new(file::FILE_VARIABLE, "readable")],
                 )
-                .with_param("path", path.as_str())
-                .with_source(error)
-            })?),
-            None => std::fs::read_to_string("kampus.toml").ok(),
+                .with_param("path", path.display().to_string())
+                .with_source(error));
+            }
         };
-        Self::load(|name| std::env::var(name).ok(), file.as_deref())
+        Self::load(|name| std::env::var(name).ok(), text.as_deref())
     }
 
     /// Builds the configuration from a variable lookup and the text of the file, if any.
@@ -188,140 +341,39 @@ impl Config {
     /// # Errors
     ///
     /// A `validation` error listing every missing or invalid value, named by its variable.
-    pub fn load(env: impl Fn(&str) -> Option<String>, file: Option<&str>) -> Result<Self> {
-        let mut fields = Vec::new();
-        let from_file = parse_file(file, &mut fields);
-        let value = |key: &str| env(&variable(key)).or_else(|| from_file.get(key).cloned());
-
-        let role = match value("role") {
-            None => Role::All,
-            Some(text) => text.parse().unwrap_or_else(|()| {
-                fields.push(FieldError::new(variable("role"), "one_of"));
-                Role::All
-            }),
+    pub fn load(env: impl Fn(&str) -> Option<String>, text: Option<&str>) -> Result<Self> {
+        let (values, fields) = text.map_or_else(|| (Values::default(), Vec::new()), Values::parse);
+        let mut reader = Reader {
+            env,
+            file: &values,
+            fields,
         };
-
-        let public_url = value("public_url");
-        if role.serves_api() {
-            match &public_url {
-                None => fields.push(FieldError::new(variable("public_url"), "required")),
-                Some(url) if !(url.starts_with("https://") || url.starts_with("http://")) => {
-                    fields.push(FieldError::new(variable("public_url"), "url"));
-                }
-                Some(_) => {}
-            }
+        let (role, site_url, http_address, upgrade_on_start) = reader.server();
+        let runs_services = matches!(role, Role::Server | Role::Worker | Role::All);
+        let (database_url, database_prefix, database_pool_size) = reader.database();
+        let (storage_url, storage_options, cache_url) = reader.storage(runs_services);
+        let (secret_key, tenancy) = reader.security(runs_services);
+        let (log_level, log_format) = reader.log();
+        if !reader.fields.is_empty() {
+            return Err(
+                Error::validation("server.config_invalid", reader.fields).with_param("role", role.as_str())
+            );
         }
-
-        let http_address = value("http_address")
-            .unwrap_or_else(|| "0.0.0.0:8080".into())
-            .parse()
-            .unwrap_or_else(|_| {
-                fields.push(FieldError::new(variable("http_address"), "socket_address"));
-                SocketAddr::from(([0, 0, 0, 0], 8080))
-            });
-
-        let database_url = value("database_url").unwrap_or_default();
-        if database_url.is_empty() {
-            fields.push(FieldError::new(variable("database_url"), "required"));
-        } else if !(database_url.starts_with("postgres://") || database_url.starts_with("postgresql://")) {
-            fields.push(FieldError::new(variable("database_url"), "scheme"));
-        }
-
-        let database_prefix = value("database_prefix")
-            .unwrap_or_else(|| Prefix::DEFAULT.into())
-            .parse()
-            .unwrap_or_else(|_| {
-                fields.push(FieldError::new(variable("database_prefix"), "format"));
-                Prefix::default()
-            });
-
-        let database_pool_size = match value("database_pool_size").map(|text| text.parse::<u32>()) {
-            None => 10,
-            Some(Ok(size)) if (1..=1000).contains(&size) => size,
-            Some(_) => {
-                fields.push(FieldError::new(variable("database_pool_size"), "range"));
-                10
-            }
-        };
-
-        let upgrade_on_start = match value("upgrade_on_start").as_deref() {
-            None | Some("false") => false,
-            Some("true") => true,
-            Some(_) => {
-                fields.push(FieldError::new(variable("upgrade_on_start"), "boolean"));
-                false
-            }
-        };
-
-        let storage_url = value("storage_url");
-        if matches!(role, Role::Server | Role::Worker | Role::All) && storage_url.is_none() {
-            fields.push(FieldError::new(variable("storage_url"), "required"));
-        }
-        let storage_options = STORAGE_OPTIONS
-            .iter()
-            .filter_map(|option| value(&format!("storage_{option}")).map(|v| ((*option).to_owned(), v)))
-            .collect();
-        let cache_url = value("cache_url");
-
-        let log_level = value("log_level").unwrap_or_else(|| "info".into());
-        let log_format = match value("log_format").as_deref() {
-            None | Some("json") => LogFormat::Json,
-            Some("text") => LogFormat::Text,
-            Some(_) => {
-                fields.push(FieldError::new(variable("log_format"), "one_of"));
-                LogFormat::Json
-            }
-        };
-
-        if fields.is_empty() {
-            Ok(Self {
-                role,
-                public_url,
-                http_address,
-                database_url,
-                database_prefix,
-                database_pool_size,
-                upgrade_on_start,
-                log_level,
-                log_format,
-                storage_url,
-                storage_options,
-                cache_url,
-            })
-        } else {
-            Err(Error::validation("server.config_invalid", fields).with_param("role", role.as_str()))
-        }
+        Ok(Self {
+            role,
+            site_url,
+            http_address,
+            database_url,
+            database_prefix,
+            database_pool_size,
+            upgrade_on_start,
+            log_level,
+            log_format,
+            storage_url,
+            storage_options,
+            cache_url,
+            secret_key,
+            tenancy,
+        })
     }
-}
-
-/// The environment variable of a configuration key.
-fn variable(key: &str) -> String {
-    format!("KAMPUS_{}", key.to_ascii_uppercase())
-}
-
-/// Reads the configuration file: a flat table of the known keys with string, integer or boolean values.
-fn parse_file(file: Option<&str>, fields: &mut Vec<FieldError>) -> HashMap<String, String> {
-    let Some(text) = file else { return HashMap::new() };
-    let Ok(table) = text.parse::<toml::Table>() else {
-        fields.push(FieldError::new("KAMPUS_CONFIG_FILE", "toml"));
-        return HashMap::new();
-    };
-    let mut values = HashMap::new();
-    for (key, value) in table {
-        if !KEYS.contains(&key.as_str()) {
-            fields.push(FieldError::new(format!("KAMPUS_CONFIG_FILE.{key}"), "unknown"));
-            continue;
-        }
-        let text = match value {
-            toml::Value::String(text) => text,
-            toml::Value::Integer(number) => number.to_string(),
-            toml::Value::Boolean(flag) => flag.to_string(),
-            _ => {
-                fields.push(FieldError::new(format!("KAMPUS_CONFIG_FILE.{key}"), "scalar"));
-                continue;
-            }
-        };
-        values.insert(key, text);
-    }
-    values
 }

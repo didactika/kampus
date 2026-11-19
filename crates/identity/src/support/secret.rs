@@ -251,6 +251,14 @@ const SEALED_V1: u8 = 1;
 #[derive(Clone)]
 pub struct SecretKey([u8; 32]);
 
+impl PartialEq for SecretKey {
+    fn eq(&self, other: &Self) -> bool {
+        same(&self.0, &other.0)
+    }
+}
+
+impl Eq for SecretKey {}
+
 impl std::fmt::Debug for SecretKey {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str("SecretKey(..)")
