@@ -37,6 +37,7 @@
 
 /// Every module of this build.
 pub const MODULES: &[&kampus_module::Module] = &[
+    &kampus_events::MODULE,
     &kampus_tasks::MODULE,
     &kampus_access::MODULE,
     &kampus_identity::MODULE,

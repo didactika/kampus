@@ -47,6 +47,7 @@ kind = "server"
 
 [dependencies]
 # modules:start
+kampus-events = { path = "../events" }
 kampus-tasks = { path = "../tasks" }
 kampus-access = { path = "../access" }
 kampus-identity = { path = "../identity" }

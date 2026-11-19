@@ -42,6 +42,7 @@ use kampus_common::{Clock, SystemClock};
 use kampus_courses::Courses;
 use kampus_db::Database;
 use kampus_enrol::{Enrol, Participation};
+use kampus_events::Events;
 use kampus_identity::http::HttpSettings;
 use kampus_identity::{Courier, FixedPolicies, Identity, PasswordCost, PasswordHasher, SecretKey};
 use kampus_module::ServiceContext;
@@ -122,6 +123,7 @@ impl Services {
         );
         let hasher = PasswordHasher::new(parts.password_cost.unwrap_or_default());
         let tasks = Tasks::new(parts.db.clone());
+        let events = Events::new(parts.db.clone());
         let enrol = Enrol::new(
             parts.db,
             access.clone(),
@@ -138,6 +140,7 @@ impl Services {
             .with(courses)
             .with(enrol)
             .with(tasks)
+            .with(events)
             .with(HttpSettings {
                 api_url: format!(
                     "{}{}",

@@ -80,6 +80,29 @@ impl Enrol {
         Ok(total)
     }
 
+    /// Brings in step every instance that follows a system group, when its members changed.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn sync_group(&self, group: kampus_users::GroupId) -> Result<Synced> {
+        let ids: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+            "select instance_id from {} where system_group_id = $1 order by instance_id",
+            self.table("linked_group")
+        )))
+        .bind(group.as_uuid())
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        let mut total = Synced::default();
+        for id in ids {
+            let synced = self.sync(InstanceId::from_uuid(id)).await?;
+            total.added += synced.added;
+            total.removed += synced.removed;
+        }
+        Ok(total)
+    }
+
     /// Syncs one instance.
     async fn sync(&self, id: InstanceId) -> Result<Synced> {
         let instance = self.instance(id).await?;

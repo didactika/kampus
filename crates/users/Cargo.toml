@@ -52,6 +52,7 @@ kampus-module.workspace = true
 axum.workspace = true
 kampus-access.workspace = true
 kampus-identity = { path = "../identity" }
+kampus-events = { path = "../events" }
 jiff.workspace = true
 serde.workspace = true
 serde_json.workspace = true

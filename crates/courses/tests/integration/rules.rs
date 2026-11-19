@@ -127,6 +127,7 @@ async fn world() -> World {
     let prefix: Prefix = format!("c{}_", &simple[simple.len() - 6..]).parse().unwrap();
     let db = Database::connect(&url, prefix, 4).await.unwrap();
     let modules = [
+        &kampus_events::MODULE,
         &kampus_access::MODULE,
         &kampus_identity::MODULE,
         &kampus_courses::MODULE,
@@ -136,6 +137,10 @@ async fn world() -> World {
     let clock = Arc::new(SystemClock);
     let access = Access::new(db.clone(), clock.clone());
     access.sync_modules(&modules).await.unwrap();
+    kampus_events::Events::new(db.clone())
+        .sync_declarations(&modules)
+        .await
+        .unwrap();
     let platform = access.create_platform().await.unwrap();
     let campus = access.create_scope(platform, ScopeKind::Campus).await.unwrap();
     let roles = access.install_campus_roles(campus).await.unwrap();
@@ -198,7 +203,7 @@ impl World {
 
     /// Drops the installation.
     async fn drop(self) {
-        for module in ["courses", "identity", "access", "db"] {
+        for module in ["courses", "identity", "access", "events", "db"] {
             sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
                 "drop schema if exists {} cascade",
                 self.db.prefix().schema(module)

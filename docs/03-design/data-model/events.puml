@@ -17,9 +17,9 @@ entity event {
   id <<PK>>
   type_code <<FK>>
   type_version
-  scope_id
-  actor_id
-  object_id
+  scope
+  actor
+  object
   payload
   occurred_at
   request_id
@@ -48,9 +48,9 @@ entity audit_entry {
   id <<PK>>
   event_id <<FK>>
   campus_id
-  scope_id
-  actor_id
-  object_id
+  scope
+  actor
+  object
   summary
   at
 }
