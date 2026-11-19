@@ -34,7 +34,8 @@
 
 //! The upgrade steps of the `customise` schema, in the neutral schema: terms and their overrides, feature
 //! flags and their values, custom fields with their choices and typed values, the record of changes, and
-//! layouts with their placements, menus with their items, themes, and rules with their runs.
+//! layouts with their placements, menus with their items, themes, rules with their runs, and imports of
+//! packages.
 
 use kampus_db::Step;
 use kampus_db::schema::{Change, Check, Column, ColumnDefault, ForeignKey, Index, OnDelete, Table, Type};
@@ -449,4 +450,30 @@ alter table {schema}.\"field_value\" add constraint \"field_value_at_most_one_ch
             ..Table::EMPTY
         }),
     ],
+}, Step {
+    sequence: 4,
+    name: "imports of packages",
+    revert: &[],
+    action: None,
+    changes: &[Change::CreateTable(Table {
+        name: "package_import",
+        columns: &[
+            Column::new("id", Type::Uuid),
+            Column::new("scope_id", Type::Uuid),
+            Column::new("actor", Type::Uuid).nullable(),
+            Column::new("checksum", Type::Text),
+            Column::new("package", Type::Json("customise.package")),
+            Column::new("differences", Type::Json("customise.package_differences")),
+            Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+            Column::new("applied_at", Type::Timestamptz).nullable(),
+        ],
+        primary_key: &["id"],
+        foreign_keys: &[SCOPE],
+        indexes: &[Index {
+            columns: &["scope_id", "created_at"],
+            unique: false,
+        }],
+        without_natural_key: Some("one import of a package, which may be read again into the same scope"),
+        ..Table::EMPTY
+    })],
 }];

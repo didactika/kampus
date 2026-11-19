@@ -66,7 +66,7 @@ const MAX_RUNS: i64 = 50;
 const COLUMNS: &str = "id, scope_id, owner, name, trigger, conditions, actions, enabled, version";
 
 /// A rule from its row.
-fn rule(row: &PgRow) -> Rule {
+pub(super) fn rule(row: &PgRow) -> Rule {
     Rule {
         id: RuleId::from_uuid(row.get("id")),
         scope: ScopeId::from_uuid(row.get("scope_id")),
@@ -346,7 +346,12 @@ impl Customise {
     }
 
     /// Checks a rule an actor writes in a scope; returns its owner.
-    async fn checked_rule(&self, actor: &Actor, scope: ScopeId, spec: &RuleSpec) -> Result<uuid::Uuid> {
+    pub(super) async fn checked_rule(
+        &self,
+        actor: &Actor,
+        scope: ScopeId,
+        spec: &RuleSpec,
+    ) -> Result<uuid::Uuid> {
         self.access.require(actor, RULE_MANAGE, scope).await?;
         let owner = principal(actor).ok_or_else(|| Error::permission_denied("customise.rule_owner"))?;
         let mut problems = Vec::new();

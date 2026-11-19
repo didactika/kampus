@@ -40,6 +40,7 @@
     reason = "a failing test stops on the first error"
 )]
 
+mod packages;
 mod pages;
 mod resolution;
 mod rules;

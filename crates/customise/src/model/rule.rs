@@ -119,7 +119,7 @@ pub struct RuleAction {
 }
 
 /// A rule to write.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct RuleSpec {
     /// Its name.
     pub name: String,

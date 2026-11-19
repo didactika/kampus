@@ -59,7 +59,7 @@ const MAX_LABEL: usize = 100;
 const MAX_TARGET: usize = 2000;
 
 /// An item ready to store: its id, its parent and its position among its siblings.
-type Flat<'a> = (uuid::Uuid, Option<uuid::Uuid>, i32, &'a MenuItem);
+pub(super) type Flat<'a> = (uuid::Uuid, Option<uuid::Uuid>, i32, &'a MenuItem);
 
 /// Whether a target is a path of the site or a web address.
 fn is_target(target: &str) -> bool {
@@ -69,7 +69,7 @@ fn is_target(target: &str) -> bool {
 }
 
 /// The items of a menu in the order they are stored, parents first, with the problems they have.
-fn flatten(items: &[MenuItem]) -> (Vec<Flat<'_>>, Vec<FieldError>) {
+pub(super) fn flatten(items: &[MenuItem]) -> (Vec<Flat<'_>>, Vec<FieldError>) {
     let (mut flat, mut problems) = (Vec::new(), Vec::new());
     let mut pending: Vec<(Option<uuid::Uuid>, usize, String, &[MenuItem])> =
         vec![(None, 1, "items".to_owned(), items)];
@@ -104,13 +104,13 @@ fn flatten(items: &[MenuItem]) -> (Vec<Flat<'_>>, Vec<FieldError>) {
 }
 
 /// A stored item: its parent, what it says, where it leads and who sees it.
-struct Stored {
+pub(super) struct Stored {
     /// Its id.
-    id: uuid::Uuid,
+    pub(super) id: uuid::Uuid,
     /// Its parent, if any.
-    parent: Option<uuid::Uuid>,
+    pub(super) parent: Option<uuid::Uuid>,
     /// The item, without its children.
-    item: MenuItem,
+    pub(super) item: MenuItem,
 }
 
 impl Customise {
@@ -242,7 +242,7 @@ impl Customise {
     }
 
     /// Fails unless a module declares the kind of menu.
-    async fn require_menu_kind(&self, conn: &mut PgConnection, kind: &str) -> Result<()> {
+    pub(super) async fn require_menu_kind(&self, conn: &mut PgConnection, kind: &str) -> Result<()> {
         sqlx::query_scalar::<_, String>(sql(format!(
             "select code from {} where code = $1 and retired_at is null",
             self.table("menu_kind")
@@ -256,7 +256,7 @@ impl Customise {
     }
 
     /// Stores the items of a menu, parents first, replacing the ones it had.
-    async fn write_items_in(
+    pub(super) async fn write_items_in(
         &self,
         conn: &mut PgConnection,
         menu: uuid::Uuid,
@@ -293,7 +293,7 @@ impl Customise {
 
 /// The items under a parent, in order, each with the items under it; an item hidden from the reader hides
 /// the items under it too.
-fn tree(stored: &[Stored], parent: Option<uuid::Uuid>) -> Vec<MenuItem> {
+pub(super) fn tree(stored: &[Stored], parent: Option<uuid::Uuid>) -> Vec<MenuItem> {
     stored
         .iter()
         .filter(|s| s.parent == parent)

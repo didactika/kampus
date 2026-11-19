@@ -52,7 +52,7 @@ use crate::{Customise, Origin, Theme, sql};
 const MAX_FONT_FAMILY: usize = 200;
 
 /// The tokens a scope sets.
-type Tokens = BTreeMap<String, Value>;
+pub(super) type Tokens = BTreeMap<String, Value>;
 
 /// A colour `#rrggbb` as its three channels.
 fn channels(colour: &str) -> Option<[u8; 3]> {
@@ -107,7 +107,7 @@ fn fitted(kind: TokenKind, value: &Value) -> Option<Value> {
 }
 
 /// The tokens of a theme that fit their kinds, normalised, or the problems of those that do not.
-fn checked(tokens: &Tokens) -> std::result::Result<Tokens, Vec<FieldError>> {
+pub(super) fn checked(tokens: &Tokens) -> std::result::Result<Tokens, Vec<FieldError>> {
     let mut problems = Vec::new();
     let mut fitting = Tokens::new();
     for (name, value) in tokens {
@@ -130,7 +130,7 @@ fn checked(tokens: &Tokens) -> std::result::Result<Tokens, Vec<FieldError>> {
 }
 
 /// The pairs of a theme whose contrast is too low.
-fn low_contrast(theme: &Theme) -> Vec<FieldError> {
+pub(super) fn low_contrast(theme: &Theme) -> Vec<FieldError> {
     let colour = |name: &str| theme.tokens.get(name).and_then(Value::as_str).and_then(channels);
     CONTRAST_PAIRS
         .iter()
@@ -160,10 +160,10 @@ fn defaults() -> Theme {
 }
 
 /// The themes set along a path, farthest first: the scope, its tokens and whether it locks.
-type Path = Vec<(i32, ScopeId, Tokens, bool)>;
+pub(super) type Path = Vec<(i32, ScopeId, Tokens, bool)>;
 
 /// A theme made of the defaults and the tokens set along a path, down to the first scope that locks.
-fn merged(path: &Path) -> (Theme, Option<ScopeId>) {
+pub(super) fn merged(path: &Path) -> (Theme, Option<ScopeId>) {
     let mut theme = defaults();
     for (_, scope, tokens, locked) in path {
         for (name, value) in tokens {
@@ -273,7 +273,7 @@ impl Customise {
     }
 
     /// The themes set along the path of a scope, farthest first.
-    async fn themes_along(&self, scope: ScopeId) -> Result<Path> {
+    pub(super) async fn themes_along(&self, scope: ScopeId) -> Result<Path> {
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
         let depths = self.depths(&mut conn, scope).await?;
         let ids: Vec<uuid::Uuid> = depths.keys().copied().collect();
