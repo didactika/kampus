@@ -264,3 +264,22 @@ impl Site {
         instance
     }
 }
+
+impl Site {
+    /// Drops the installation, every schema of its prefix.
+    pub(crate) async fn drop(self) {
+        let names = kampus_server::wiring::registry::MODULES
+            .iter()
+            .map(|m| m.name)
+            .chain(["db"]);
+        for name in names {
+            sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
+                "drop schema if exists {} cascade",
+                self.db.prefix().schema(name)
+            )))
+            .execute(self.db.pool())
+            .await
+            .unwrap();
+        }
+    }
+}

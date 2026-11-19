@@ -183,6 +183,7 @@ async fn a_course_is_built_with_sections_and_published_with_if_match() {
         )
         .await;
     assert_eq!(unknown.status, StatusCode::UNPROCESSABLE_ENTITY);
+    site.drop().await;
 }
 
 #[tokio::test]
@@ -270,6 +271,7 @@ async fn learners_see_only_what_is_shown_and_do_not_edit() {
         StatusCode::FORBIDDEN,
         "a learner does not edit the course"
     );
+    site.drop().await;
 }
 
 #[tokio::test]
@@ -372,4 +374,5 @@ async fn groups_split_the_people_of_a_course() {
     assert_eq!(listed.body[0]["groups"], json!([group]));
     let forbidden = site.call(Method::GET, &sets, Some(&lea), &[], None).await;
     assert_eq!(forbidden.status, StatusCode::FORBIDDEN);
+    site.drop().await;
 }

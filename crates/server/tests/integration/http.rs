@@ -106,13 +106,19 @@ async fn readiness_waits_for_the_upgrade() {
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body["status"], "ready");
 
-    sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
-        "drop schema if exists {} cascade",
-        db.prefix().schema("db")
-    )))
-    .execute(db.pool())
-    .await
-    .unwrap();
+    for name in kampus_server::wiring::registry::MODULES
+        .iter()
+        .map(|m| m.name)
+        .chain(["db"])
+    {
+        sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
+            "drop schema if exists {} cascade",
+            db.prefix().schema(name)
+        )))
+        .execute(db.pool())
+        .await
+        .unwrap();
+    }
 }
 
 #[tokio::test]

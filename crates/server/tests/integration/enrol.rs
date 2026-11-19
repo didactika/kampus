@@ -100,6 +100,7 @@ async fn people_enrol_themselves_with_a_key() {
         StatusCode::FORBIDDEN,
         "learners do not list participants"
     );
+    site.drop().await;
 }
 
 #[tokio::test]
@@ -161,4 +162,5 @@ async fn a_request_to_join_waits_for_its_approval() {
         .call(Method::GET, &participants, Some(&admin), &[], None)
         .await;
     assert_eq!(listed.body.as_array().unwrap().len(), 1, "approving enrolled her");
+    site.drop().await;
 }
