@@ -40,6 +40,8 @@ pub mod field;
 pub mod flag;
 pub mod layout;
 pub mod menu;
+pub mod rule;
+pub mod run;
 pub mod term;
 pub mod theme;
 

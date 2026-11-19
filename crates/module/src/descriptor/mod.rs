@@ -39,6 +39,7 @@ mod customise;
 mod event;
 mod job;
 mod preference;
+mod rule;
 mod setting;
 mod value;
 
@@ -50,6 +51,7 @@ pub use customise::{
 pub use event::{Event, EventDeclaration, EventRun, ListenerDeclaration};
 pub use job::{JobDeclaration, JobFuture, JobRun, ScheduleDeclaration};
 pub use preference::PreferenceDeclaration;
+pub use rule::{RuleActionDeclaration, RuleActionRun, RuleParameter};
 pub use setting::SettingDeclaration;
 pub use value::ValueKind;
 
@@ -95,6 +97,8 @@ pub struct Module {
     pub widgets: &'static [WidgetDeclaration],
     /// The kinds of navigation menu it shows, from `src/settings/customise.rs`.
     pub menu_kinds: &'static [MenuKindDeclaration],
+    /// The actions it offers to rules, from `src/settings/customise.rs`.
+    pub rule_actions: &'static [RuleActionDeclaration],
     /// The events it publishes, from `src/events/mod.rs`.
     pub events: &'static [EventDeclaration],
     /// Its reactions to events, from `src/observers/mod.rs`.

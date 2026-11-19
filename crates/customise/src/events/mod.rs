@@ -32,19 +32,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The events customisation publishes, so the modules and nodes that keep a resolved value refresh it.
+//! The events customisation publishes: its changes, so the modules and nodes that keep a resolved value
+//! refresh it, and the failures of rules.
 
 use kampus_module::EventDeclaration;
 
 /// A customisation changed in a scope.
 pub const CHANGED: &str = "customise.changed";
 
+/// A rule failed to run its actions for an event.
+pub const RULE_FAILED: &str = "customise.rule_failed";
+
 /// The events of this module.
-pub const EVENTS: &[EventDeclaration] = &[EventDeclaration {
-    code: CHANGED,
-    version: 1,
-    summary: "A customisation changed in a scope",
-    fields: &["kind", "object", "scope"],
-    audited: true,
-    personal_fields: &[],
-}];
+pub const EVENTS: &[EventDeclaration] = &[
+    EventDeclaration {
+        code: CHANGED,
+        version: 1,
+        summary: "A customisation changed in a scope",
+        fields: &["kind", "object", "scope"],
+        audited: true,
+        personal_fields: &[],
+    },
+    EventDeclaration {
+        code: RULE_FAILED,
+        version: 1,
+        summary: "A rule failed to run its actions for an event",
+        fields: &["rule", "event", "error"],
+        audited: true,
+        personal_fields: &[],
+    },
+];

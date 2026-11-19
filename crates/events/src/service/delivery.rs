@@ -87,8 +87,8 @@ pub struct Delivery {
 }
 
 impl Events {
-    /// Turns the committed events of the outbox into deliveries for every listener of their type, and
-    /// marks them dispatched; returns how many events it dispatched.
+    /// Turns the committed events of the outbox into deliveries for every listener of their type or of
+    /// `events.any`, and marks them dispatched; returns how many events it dispatched.
     ///
     /// # Errors
     ///
@@ -109,7 +109,7 @@ impl Events {
         sqlx::query(sql(format!(
             "insert into {deliveries} (listener_id, event_id, object, occurred_at)
              select l.id, e.id, e.object, e.occurred_at from {events} e
-             join {listeners} l on l.type_code = e.type_code and l.retired_at is null
+             join {listeners} l on l.type_code in (e.type_code, 'events.any') and l.retired_at is null
              where e.id = any($1) on conflict do nothing",
             deliveries = self.table("delivery"),
             events = self.table("event"),

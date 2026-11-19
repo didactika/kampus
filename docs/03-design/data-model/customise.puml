@@ -124,19 +124,21 @@ entity theme {
 entity rule {
   id <<PK>>
   scope_id <<FK>>
-  owner_id <<FK>>
+  owner
   name
   trigger
   conditions
   actions
   enabled
   version
+  created_at
 }
 entity rule_run {
   id <<PK>>
   rule_id <<FK>>
-  event_id <<FK>>
+  event
   outcome
+  actions_done
   error
   at
 }

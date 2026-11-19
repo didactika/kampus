@@ -42,4 +42,5 @@
 
 mod pages;
 mod resolution;
+mod rules;
 mod world;

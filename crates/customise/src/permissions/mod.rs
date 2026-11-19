@@ -56,6 +56,8 @@ pub const LAYOUT_MANAGE: &str = "customise.layout.manage";
 pub const MENU_MANAGE: &str = "customise.menu.manage";
 /// Change the theme of a scope.
 pub const THEME_MANAGE: &str = "customise.theme.manage";
+/// Write, change and remove the rules of a scope.
+pub const RULE_MANAGE: &str = "customise.rule.manage";
 
 /// The permissions of this module.
 pub const PERMISSIONS: &[PermissionDeclaration] = &[
@@ -103,6 +105,12 @@ pub const PERMISSIONS: &[PermissionDeclaration] = &[
     },
     PermissionDeclaration {
         code: THEME_MANAGE,
+        kind: PermissionKind::Write,
+        risks: &[Risk::Configuration],
+        lowest_kind: ScopeKind::Course,
+    },
+    PermissionDeclaration {
+        code: RULE_MANAGE,
         kind: PermissionKind::Write,
         risks: &[Risk::Configuration],
         lowest_kind: ScopeKind::Course,

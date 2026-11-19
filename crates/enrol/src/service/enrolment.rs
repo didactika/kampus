@@ -580,7 +580,9 @@ impl Enrol {
         if let (Some(target), Some(more)) = (payload.as_object_mut(), extra.as_object()) {
             target.extend(more.clone());
         }
+        let scope = self.courses.course(course).await?.scope;
         let mut event = kampus_events::Publish::new(code, Some(enrolment.as_uuid()), payload);
+        event.scope = Some(scope.as_uuid());
         event.summary = Some(format!("{code} {enrolment}"));
         kampus_events::Events::new(self.db.clone())
             .publish_in(conn, event)

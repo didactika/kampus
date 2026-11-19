@@ -36,6 +36,8 @@
 //! courses fill in, and turns groups off in one course.
 
 use axum::http::{Method, StatusCode};
+use kampus_events::{Dispatcher, Events};
+use kampus_server::wiring::registry::MODULES;
 use serde_json::json;
 
 use crate::site::site;
@@ -216,4 +218,92 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
         refused.body
     );
     assert_eq!(refused.code(), "customise.theme_contrast");
+}
+
+#[tokio::test]
+async fn a_rule_adds_who_enrols_to_a_group() {
+    let site = site().await;
+    let admin = site.session("admin").await;
+    let (_, course) = site.course(&admin).await;
+    let read = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/courses/{course}"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    let scope = read.body["scope"].as_str().unwrap().to_owned();
+    let group = site
+        .call(
+            Method::POST,
+            &format!("/api/v1/courses/{course}/groups"),
+            Some(&admin),
+            &[],
+            Some(json!({ "name": "Newcomers" })),
+        )
+        .await;
+    assert_eq!(group.status, StatusCode::CREATED, "{}", group.body);
+    let group = group.body["id"].as_str().unwrap().to_owned();
+    let rule = site
+        .call(
+            Method::POST,
+            &format!("/api/v1/scopes/{scope}/rules"),
+            Some(&admin),
+            &[],
+            Some(json!({
+                "name": "Newcomers join their group",
+                "trigger": "enrol.enrolment_created",
+                "actions": [{ "action": "courses.add_to_group", "params": { "group": group } }],
+            })),
+        )
+        .await;
+    assert_eq!(rule.status, StatusCode::CREATED, "{}", rule.body);
+    let rule = rule.body["id"].as_str().unwrap().to_owned();
+    let instance = site
+        .call(
+            Method::POST,
+            &format!("/api/v1/courses/{course}/enrolment-instances"),
+            Some(&admin),
+            &[],
+            Some(json!({ "method": "self", "name": "Self", "role": site.roles["learner"] })),
+        )
+        .await;
+    assert_eq!(instance.status, StatusCode::CREATED, "{}", instance.body);
+    let instance = instance.body["id"].as_str().unwrap().to_owned();
+    let (lea, session) = site.learner(&admin, "lea@example.org").await;
+    let joined = site
+        .call(
+            Method::POST,
+            &format!("/api/v1/enrolment-instances/{instance}/self"),
+            Some(&session),
+            &[],
+            Some(json!({})),
+        )
+        .await;
+    assert_eq!(joined.status, StatusCode::CREATED, "{}", joined.body);
+
+    let dispatcher = Dispatcher::new(Events::new(site.db.clone()), MODULES, site.context.clone());
+    while dispatcher.run_once().await.unwrap() {}
+    let members = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/groups/{group}/members"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    assert!(members.body.to_string().contains(&lea), "{}", members.body);
+    let runs = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/rules/{rule}/runs"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    assert_eq!(runs.body[0]["outcome"], "succeeded", "{}", runs.body);
 }

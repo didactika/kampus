@@ -101,7 +101,7 @@ impl Services {
     pub fn build(parts: Parts) -> Self {
         let access = Access::new(parts.db.clone(), parts.clock.clone());
         let settings = Settings::new(parts.db.clone(), access.clone());
-        let customise = Customise::new(parts.db.clone(), access.clone());
+        let customise = Customise::new(parts.db.clone(), access.clone()).with_modules(MODULES);
         let identity = Identity::new(
             parts.db.clone(),
             access.clone(),

@@ -52,6 +52,7 @@ pub use descriptor::{
     FieldKindDeclaration, FlagDeclaration, MenuKindDeclaration, PageKindDeclaration, TermDeclaration,
     TermForms, WidgetDeclaration, WidgetSetting,
 };
+pub use descriptor::{RuleActionDeclaration, RuleActionRun, RuleParameter};
 pub use permission::{
     PermissionDeclaration, PermissionKind, Risk, RoleTemplateDeclaration, ScopeKind, Value,
 };

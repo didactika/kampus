@@ -90,10 +90,16 @@ impl Events {
     ///
     /// # Errors
     ///
-    /// `validation` (`events.type_unknown`) for an undeclared type, `validation` (`events.payload_invalid`)
+    /// `validation` (`events.type_unknown`) for an undeclared type or `events.any`, `validation` (`events.payload_invalid`)
     /// naming the declared fields the payload lacks, `conflict` (`events.chain_limit_reached`) when
     /// listeners published more than [`MAX_DEPTH`] events in a chain.
     pub async fn publish_in(&self, conn: &mut PgConnection, event: Publish<'_>) -> Result<uuid::Uuid> {
+        if event.code == crate::ANY {
+            return Err(
+                Error::validation("events.type_unknown", vec![FieldError::new("code", "declared")])
+                    .with_param("code", event.code.to_owned()),
+            );
+        }
         let declared = sqlx::query(sql(format!(
             "select version, fields, audited from {} where code = $1 and retired_at is null",
             self.table("event_type")

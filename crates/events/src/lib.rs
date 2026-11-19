@@ -39,6 +39,7 @@
 
 pub mod commands;
 pub mod db;
+pub mod events;
 pub mod jobs;
 pub mod module;
 pub mod permissions;
@@ -46,6 +47,7 @@ pub mod service;
 
 use kampus_db::Database;
 
+pub use events::ANY;
 pub use module::MODULE;
 pub use service::audit::{AuditEntry, Purged};
 pub use service::delivery::Delivery;
