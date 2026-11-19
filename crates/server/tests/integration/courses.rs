@@ -46,7 +46,7 @@ impl Site {
         let invited = self
             .call(
                 Method::POST,
-                &format!("/api/v1/campuses/{}/accounts", self.campus),
+                &format!("/api/v1/identity/campuses/{}/accounts", self.campus),
                 Some(admin),
                 &[],
                 Some(json!({ "email": email })),
@@ -55,7 +55,7 @@ impl Site {
         assert_eq!(invited.status, StatusCode::CREATED, "{}", invited.body);
         self.call(
             Method::POST,
-            "/api/v1/auth/invitations/accept",
+            "/api/v1/identity/auth/invitations/accept",
             None,
             &[],
             Some(json!({ "token": self.token_sent_to(email), "password": PASSWORD })),
@@ -70,7 +70,7 @@ impl Site {
         let science = self
             .call(
                 Method::POST,
-                &format!("/api/v1/campuses/{}/categories", self.campus),
+                &format!("/api/v1/courses/campuses/{}/categories", self.campus),
                 Some(admin),
                 &[],
                 Some(json!({ "name": "Science", "code": "SCI" })),
@@ -81,7 +81,7 @@ impl Site {
         let created = self
             .call(
                 Method::POST,
-                &format!("/api/v1/categories/{category}/courses"),
+                &format!("/api/v1/courses/categories/{category}/courses"),
                 Some(admin),
                 &[],
                 Some(json!({ "short_name": "PHY101", "full_name": "Physics I" })),
@@ -106,7 +106,7 @@ async fn a_course_is_built_with_sections_and_published_with_if_match() {
     let read = site
         .call(
             Method::GET,
-            &format!("/api/v1/courses/{course}"),
+            &format!("/api/v1/courses/courses/{course}"),
             Some(&admin),
             &[],
             None,
@@ -122,7 +122,7 @@ async fn a_course_is_built_with_sections_and_published_with_if_match() {
     let added = site
         .call(
             Method::POST,
-            &format!("/api/v1/courses/{course}/sections"),
+            &format!("/api/v1/courses/courses/{course}/sections"),
             Some(&admin),
             &[],
             Some(json!({ "title": "Unit 1", "place": { "at": "first" } })),
@@ -132,7 +132,7 @@ async fn a_course_is_built_with_sections_and_published_with_if_match() {
     let sections = site
         .call(
             Method::GET,
-            &format!("/api/v1/courses/{course}/sections"),
+            &format!("/api/v1/courses/courses/{course}/sections"),
             Some(&admin),
             &[],
             None,
@@ -151,7 +151,7 @@ async fn a_course_is_built_with_sections_and_published_with_if_match() {
         "placed before the first section"
     );
 
-    let state = format!("/api/v1/courses/{course}/state");
+    let state = format!("/api/v1/courses/courses/{course}/state");
     let unconditional = site
         .call(
             Method::PUT,
@@ -195,7 +195,7 @@ async fn learners_see_only_what_is_shown_and_do_not_edit() {
     let seen = site
         .call(
             Method::GET,
-            &format!("/api/v1/courses/{course}"),
+            &format!("/api/v1/courses/courses/{course}"),
             Some(&lea),
             &[],
             None,
@@ -206,7 +206,7 @@ async fn learners_see_only_what_is_shown_and_do_not_edit() {
     let category_read = site
         .call(
             Method::GET,
-            &format!("/api/v1/categories/{category}"),
+            &format!("/api/v1/courses/categories/{category}"),
             Some(&admin),
             &[],
             None,
@@ -215,7 +215,7 @@ async fn learners_see_only_what_is_shown_and_do_not_edit() {
     let hidden = site
         .call(
             Method::PUT,
-            &format!("/api/v1/categories/{category}"),
+            &format!("/api/v1/courses/categories/{category}"),
             Some(&admin),
             &[("if-match", &etag(&category_read.headers))],
             Some(json!({ "name": "Science", "code": "SCI", "visibility": { "mode": "hidden" } })),
@@ -225,7 +225,7 @@ async fn learners_see_only_what_is_shown_and_do_not_edit() {
     let gone = site
         .call(
             Method::GET,
-            &format!("/api/v1/courses/{course}"),
+            &format!("/api/v1/courses/courses/{course}"),
             Some(&lea),
             &[],
             None,
@@ -239,7 +239,7 @@ async fn learners_see_only_what_is_shown_and_do_not_edit() {
     let listed = site
         .call(
             Method::GET,
-            &format!("/api/v1/campuses/{}/categories", site.campus),
+            &format!("/api/v1/courses/campuses/{}/categories", site.campus),
             Some(&lea),
             &[],
             None,
@@ -249,7 +249,7 @@ async fn learners_see_only_what_is_shown_and_do_not_edit() {
     let still = site
         .call(
             Method::GET,
-            &format!("/api/v1/courses/{course}"),
+            &format!("/api/v1/courses/courses/{course}"),
             Some(&admin),
             &[],
             None,
@@ -260,7 +260,7 @@ async fn learners_see_only_what_is_shown_and_do_not_edit() {
     let edit = site
         .call(
             Method::PUT,
-            &format!("/api/v1/courses/{course}"),
+            &format!("/api/v1/courses/courses/{course}"),
             Some(&lea),
             &[("if-match", &etag(&still.headers))],
             Some(json!({ "short_name": "PHY101", "full_name": "Mine now" })),
@@ -279,7 +279,7 @@ async fn groups_split_the_people_of_a_course() {
     let site = site().await;
     let admin = site.session("admin").await;
     let (_, course) = site.course(&admin).await;
-    let groups = format!("/api/v1/courses/{course}/groups");
+    let groups = format!("/api/v1/courses/courses/{course}/groups");
     let group = site
         .call(
             Method::POST,
@@ -307,7 +307,7 @@ async fn groups_split_the_people_of_a_course() {
     let outsider = site
         .call(
             Method::POST,
-            &format!("/api/v1/groups/{group}/members"),
+            &format!("/api/v1/courses/groups/{group}/members"),
             Some(&admin),
             &[],
             Some(json!({ "account": lea_id })),
@@ -328,7 +328,7 @@ async fn groups_split_the_people_of_a_course() {
     let added = site
         .call(
             Method::POST,
-            &format!("/api/v1/groups/{group}/members"),
+            &format!("/api/v1/courses/groups/{group}/members"),
             Some(&admin),
             &[],
             Some(json!({ "account": lea_id })),
@@ -340,7 +340,7 @@ async fn groups_split_the_people_of_a_course() {
     let members = site
         .call(
             Method::GET,
-            &format!("/api/v1/groups/{group}/members"),
+            &format!("/api/v1/courses/groups/{group}/members"),
             Some(&lea),
             &[],
             None,
@@ -348,7 +348,7 @@ async fn groups_split_the_people_of_a_course() {
         .await;
     assert_eq!(members.body[0]["origin"]["kind"], "manual");
 
-    let sets = format!("/api/v1/courses/{course}/group-sets");
+    let sets = format!("/api/v1/courses/courses/{course}/group-sets");
     let set = site
         .call(
             Method::POST,
@@ -363,7 +363,7 @@ async fn groups_split_the_people_of_a_course() {
     let put = site
         .call(
             Method::PUT,
-            &format!("/api/v1/group-sets/{set}/groups/{group}"),
+            &format!("/api/v1/courses/group-sets/{set}/groups/{group}"),
             Some(&admin),
             &[],
             None,

@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/setUpSecondFactor/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Second-factor service | service | `crates/identity/src/service/second_factor.rs` |
-| `/api/v1/me/second-factors` | API endpoints | `docs/03-design/api/identity.openapi.yaml` |
+| `/api/v1/identity/me/second-factors` | API endpoints | `docs/03-design/api/identity.openapi.yaml` |
 | `identity.second_factor`, `identity.passkey`, `identity.recovery_code` | tables | `docs/03-design/data-model/identity.md` |
 
 ## Sequence

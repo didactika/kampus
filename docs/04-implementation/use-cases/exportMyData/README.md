@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/exportMyData/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Request coordinator | service | `crates/privacy/src/requests.rs` | no (to build) |
-| `/api/v1/privacy/requests` | API endpoints | `docs/03-design/api/privacy.openapi.yaml` | no (to build) |
+| `/api/v1/privacy/privacy/requests` | API endpoints | `docs/03-design/api/privacy.openapi.yaml` | no (to build) |
 
 ## Tests
 

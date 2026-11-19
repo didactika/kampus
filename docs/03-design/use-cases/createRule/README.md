@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/createRule/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Rule engine | service | `crates/customise/src/rules.rs` |
-| `/api/v1/scopes/{scope_id}/rules` | API endpoints | `docs/03-design/api/customise.openapi.yaml` |
+| `/api/v1/customise/scopes/{scope_id}/rules` | API endpoints | `docs/03-design/api/customise.openapi.yaml` |
 
 ## Sequence
 

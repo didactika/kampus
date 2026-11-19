@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/overridePermission/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Override service | service | `crates/access/src/service/overrides.rs` | no (to build) |
-| `PUT /api/v1/scopes/{scope_id}/overrides` | API endpoint | `docs/03-design/api/access.openapi.yaml` | no (to build) |
+| `PUT /api/v1/access/scopes/{scope_id}/overrides` | API endpoint | `docs/03-design/api/access.openapi.yaml` | no (to build) |
 | `access.permission_override` | table | `docs/03-design/data-model/access.md` | no (to build) |
 
 ## Tests

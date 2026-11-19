@@ -6,22 +6,22 @@ info:
     Entries, the calendar view with recurrences expanded and activity dates (RN-156 to RN-158),
     subscriptions (RN-159) and personal feeds (RN-161). Conventions of DEC-025 and DEC-026.
 paths:
-  /api/v1/calendar:
+  /api/v1/calendar/calendar:
     get: { summary: 'Occurrences in a range for the caller, with activity dates and exceptions applied', parameters: [{ name: from, in: query, required: true, schema: { type: string, format: date-time } }, { name: to, in: query, required: true, schema: { type: string, format: date-time } }], responses: { '200': { description: Occurrences } } }
-  /api/v1/scopes/{scope_id}/calendar-entries:
+  /api/v1/calendar/scopes/{scope_id}/calendar-entries:
     post: { summary: Create an entry in a scope, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created } } }
-  /api/v1/calendar-entries/{entry_id}:
+  /api/v1/calendar/calendar-entries/{entry_id}:
     patch: { summary: Change an entry, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }
     delete: { summary: Delete an entry, responses: { '204': { description: Deleted } } }
-  /api/v1/calendar-entries/{entry_id}/exceptions/{occurrence_at}:
+  /api/v1/calendar/calendar-entries/{entry_id}/exceptions/{occurrence_at}:
     put: { summary: Cancel or change one occurrence, responses: { '200': { description: Set } } }
-  /api/v1/scopes/{scope_id}/calendar-subscriptions:
+  /api/v1/calendar/scopes/{scope_id}/calendar-subscriptions:
     post: { summary: 'Subscribe to an external calendar (RN-159)', responses: { '201': { description: Subscribed } } }
-  /api/v1/calendar-subscriptions/{subscription_id}/refresh:
+  /api/v1/calendar/calendar-subscriptions/{subscription_id}/refresh:
     post: { summary: Queue a refresh, responses: { '202': { description: Queued } } }
-  /api/v1/calendar-feeds:
+  /api/v1/calendar/calendar-feeds:
     post: { summary: 'Create a personal feed token; shown once (RN-161)', responses: { '201': { description: Token and feed URL } } }
-  /api/v1/calendar-feeds/{feed_id}:
+  /api/v1/calendar/calendar-feeds/{feed_id}:
     delete: { summary: Revoke a feed token, responses: { '204': { description: Revoked } } }
 components:
   parameters:

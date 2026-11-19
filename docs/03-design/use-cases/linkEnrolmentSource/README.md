@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/linkEnrolmentSource/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Sync service | service | `crates/enrol/src/sync.rs` |
-| `PUT /api/v1/enrolment-instances/{instance_id}/source` | API endpoint | `docs/03-design/api/enrolment.openapi.yaml` |
+| `PUT /api/v1/enrol/enrolment-instances/{instance_id}/source` | API endpoint | `docs/03-design/api/enrolment.openapi.yaml` |
 | `enrol.linked_group`, `enrol.linked_course` | tables | `docs/03-design/data-model/enrolment.md` |
 
 ## Sequence

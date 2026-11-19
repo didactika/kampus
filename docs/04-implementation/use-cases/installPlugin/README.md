@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/installPlugin/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Plugin installer | service | `crates/plugin-host/src/install.rs` | no (to build) |
-| `/api/v1/plugins` | API endpoints | `docs/03-design/api/plugins.openapi.yaml` | no (to build) |
+| `/api/v1/plugins/plugins` | API endpoints | `docs/03-design/api/plugins.openapi.yaml` | no (to build) |
 
 ## Tests
 

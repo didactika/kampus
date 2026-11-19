@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/addActivity/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Course module service | service | `crates/activities/src/module.rs` | no (to build) |
-| `POST /api/v1/sections/{section_id}/course-modules` | API endpoint | `docs/03-design/api/activities.openapi.yaml` | no (to build) |
+| `POST /api/v1/activities/sections/{section_id}/course-modules` | API endpoint | `docs/03-design/api/activities.openapi.yaml` | no (to build) |
 
 ## Tests
 

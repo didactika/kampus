@@ -52,10 +52,10 @@ use crate::{ImportId, Package, PackageKind};
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
     Router::new()
-        .route("/scopes/{scope}/customisation-packages", post(export))
-        .route("/scopes/{scope}/customisation-imports", post(preview))
-        .route("/customisation-imports/{id}", get(read))
-        .route("/customisation-imports/{id}/apply", post(apply))
+        .route("/scopes/{scope}/packages", post(export))
+        .route("/scopes/{scope}/imports", post(preview))
+        .route("/imports/{id}", get(read))
+        .route("/imports/{id}/apply", post(apply))
 }
 
 /// The kinds to export.

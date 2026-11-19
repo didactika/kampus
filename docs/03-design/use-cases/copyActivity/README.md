@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/copyActivity/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Course module service | service | `crates/activities/src/module.rs` |
-| `/api/v1/course-modules/{course_module_id}/copy`, `/move` | API endpoints | `docs/03-design/api/activities.openapi.yaml` |
+| `/api/v1/activities/course-modules/{course_module_id}/copy`, `/move` | API endpoints | `docs/03-design/api/activities.openapi.yaml` |
 
 ## Sequence
 

@@ -21,7 +21,7 @@ Analysis: [README](../../../02-analysis/use-cases/configureRecords/README.md)
 | --- | --- | --- |
 | Records structure service | service | `crates/records/src/structure.rs` |
 | Aggregation methods | service | `crates/records/src/aggregation.rs` |
-| `/api/v1/courses/{course_id}/records/*`, `/api/v1/records/{record_id}` | API endpoints | `docs/03-design/api/records.openapi.yaml` |
+| `/api/v1/records/courses/{course_id}/records/*`, `/api/v1/records/records/{record_id}` | API endpoints | `docs/03-design/api/records.openapi.yaml` |
 
 ## Sequence
 

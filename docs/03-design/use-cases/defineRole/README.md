@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/defineRole/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Role service | service | `crates/access/src/service/role.rs` |
-| `/api/v1/campuses/{campus_id}/roles`, `/api/v1/roles/{role_id}`, reset preview and reset | API endpoints | `docs/03-design/api/access.openapi.yaml` |
+| `/api/v1/access/campuses/{campus_id}/roles`, `/api/v1/access/roles/{role_id}`, reset preview and reset | API endpoints | `docs/03-design/api/access.openapi.yaml` |
 | `access.role`, `access.role_permission`, `access.role_allowance` | tables | `docs/03-design/data-model/access.md` |
 
 ## Sequence

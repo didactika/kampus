@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/renameTerms/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Term resolver | service | `crates/customise/src/terms.rs` |
-| `/api/v1/scopes/{scope_id}/terms` | API endpoints | `docs/03-design/api/customise.openapi.yaml` |
+| `/api/v1/customise/scopes/{scope_id}/terms` | API endpoints | `docs/03-design/api/customise.openapi.yaml` |
 
 ## Sequence
 

@@ -6,17 +6,17 @@ info:
     Declared event types, the audit log (RN-143, RN-144), deliveries and the dead-letter list (RN-139).
     Conventions of DEC-025 and DEC-026.
 paths:
-  /api/v1/event-types:
+  /api/v1/events/event-types:
     get: { summary: Declared event types with version and schema, responses: { '200': { description: Types } } }
-  /api/v1/audit:
+  /api/v1/events/audit:
     get: { summary: 'Audit entries filtered by scope, actor, object and dates, as the caller may see them (RN-144)', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page of entries } } }
-  /api/v1/audit/export:
+  /api/v1/events/audit/export:
     post: { summary: Queue an export of a filtered audit range, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '202': { description: Job } } }
-  /api/v1/deliveries/dead:
+  /api/v1/events/deliveries/dead:
     get: { summary: Deliveries that exhausted their retries, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
-  /api/v1/deliveries/{listener_id}/{event_id}/retry:
+  /api/v1/events/deliveries/{listener_id}/{event_id}/retry:
     post: { summary: Retry a dead delivery, responses: { '202': { description: Queued } } }
-  /api/v1/retention-policies:
+  /api/v1/events/retention-policies:
     get: { summary: Retention policies of the campus, responses: { '200': { description: Policies } } }
     put: { summary: Replace the policies, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
 components:

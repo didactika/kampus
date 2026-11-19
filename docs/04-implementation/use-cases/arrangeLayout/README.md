@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/arrangeLayout/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Layout and menu service | service | `crates/customise/src/layout.rs` | no (to build) |
-| `/api/v1/scopes/{scope_id}/layouts`, `/menus` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
+| `/api/v1/access/scopes/{scope_id}/layouts`, `/menus` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
 
 ## Tests
 

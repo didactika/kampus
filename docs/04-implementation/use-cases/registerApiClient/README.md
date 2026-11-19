@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/registerApiClient/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Client registry and token service | service | `crates/api/src/clients.rs` | no (to build) |
-| `/api/v1/api-clients`, `/oauth/*` | API endpoints | `docs/03-design/api/integrations.openapi.yaml` | no (to build) |
+| `/api/v1/integrations/api-clients`, `/oauth/*` | API endpoints | `docs/03-design/api/integrations.openapi.yaml` | no (to build) |
 
 ## Tests
 

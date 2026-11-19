@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/uploadFile/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Upload pipeline | service | `crates/files/src/upload.rs` | no (to build) |
-| `/api/v1/uploads` | API endpoints | `docs/03-design/api/files.openapi.yaml` | no (to build) |
+| `/api/v1/files/uploads` | API endpoints | `docs/03-design/api/files.openapi.yaml` | no (to build) |
 
 ## Tests
 

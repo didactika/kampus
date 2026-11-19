@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/chooseLanguage/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Language resolver and bundles | service | `crates/i18n/src/resolve.rs` | no (to build) |
-| `/api/v1/me/language`, `/api/v1/languages/{code}/bundles/{module}` | API endpoints | `docs/03-design/api/i18n.openapi.yaml` | no (to build) |
+| `/api/v1/i18n/me/language`, `/api/v1/i18n/languages/{code}/bundles/{module}` | API endpoints | `docs/03-design/api/i18n.openapi.yaml` | no (to build) |
 
 ## Tests
 

@@ -21,7 +21,7 @@ Analysis: [README](../../../02-analysis/use-cases/checkPermission/README.md)
 | --- | --- | --- |
 | Permission checker | service | `crates/access/src/service/check.rs` |
 | Per-user access cache | cache | `crates/access/src/service/cache.rs` |
-| `POST /api/v1/scopes/{scope_id}/checks` | API endpoint | `docs/03-design/api/access.openapi.yaml` |
+| `POST /api/v1/access/scopes/{scope_id}/checks` | API endpoint | `docs/03-design/api/access.openapi.yaml` |
 
 ## Sequence
 

@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/retryDeliveries/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Dispatcher and delivery store | service | `crates/events/src/dispatch.rs` | no (to build) |
-| `/api/v1/deliveries` | API endpoints | `docs/03-design/api/events.openapi.yaml` | no (to build) |
+| `/api/v1/events/deliveries` | API endpoints | `docs/03-design/api/events.openapi.yaml` | no (to build) |
 
 ## Tests
 

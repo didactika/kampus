@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/subscribeWebhook/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Webhook dispatcher | service | `crates/api/src/webhooks.rs` |
-| `/api/v1/api-clients/{client_id}/webhooks` | API endpoints | `docs/03-design/api/integrations.openapi.yaml` |
+| `/api/v1/integrations/api-clients/{client_id}/webhooks` | API endpoints | `docs/03-design/api/integrations.openapi.yaml` |
 
 ## Sequence
 

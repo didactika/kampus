@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/renameTerms/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Term resolver | service | `crates/customise/src/terms.rs` | no (to build) |
-| `/api/v1/scopes/{scope_id}/terms` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
+| `/api/v1/customise/scopes/{scope_id}/terms` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
 
 ## Tests
 

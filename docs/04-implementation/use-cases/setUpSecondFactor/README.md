@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/setUpSecondFactor/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Second-factor service | service | `crates/identity/src/service/second_factor.rs` | no (to build) |
-| `/api/v1/me/second-factors` | API endpoints | `docs/03-design/api/identity.openapi.yaml` | no (to build) |
+| `/api/v1/identity/me/second-factors` | API endpoints | `docs/03-design/api/identity.openapi.yaml` | no (to build) |
 | `identity.second_factor`, `identity.passkey`, `identity.recovery_code` | tables | `docs/03-design/data-model/identity.md` | no (to build) |
 
 ## Tests

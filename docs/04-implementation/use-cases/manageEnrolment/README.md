@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/manageEnrolment/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Enrolment service | service | `crates/enrol/src/enrolment.rs` | no (to build) |
-| `/api/v1/enrolments/{enrolment_id}` | API endpoint | `docs/03-design/api/enrolment.openapi.yaml` | no (to build) |
+| `/api/v1/enrol/enrolments/{enrolment_id}` | API endpoint | `docs/03-design/api/enrolment.openapi.yaml` | no (to build) |
 | `enrol.enrolment` | table | `docs/03-design/data-model/enrolment.md` | no (to build) |
 
 ## Tests

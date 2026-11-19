@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/reviewAuditLog/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Audit query service | service | `crates/events/src/audit.rs` | no (to build) |
-| `/api/v1/audit` | API endpoints | `docs/03-design/api/events.openapi.yaml` | no (to build) |
+| `/api/v1/events/audit` | API endpoints | `docs/03-design/api/events.openapi.yaml` | no (to build) |
 
 ## Tests
 

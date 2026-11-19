@@ -21,7 +21,7 @@ Design: [README](../../../03-design/use-cases/configureRecords/README.md)
 | --- | --- | --- | --- |
 | Records structure service | service | `crates/records/src/structure.rs` | no (to build) |
 | Aggregation methods | service | `crates/records/src/aggregation.rs` | no (to build) |
-| `/api/v1/courses/{course_id}/records/*`, `/api/v1/records/{record_id}` | API endpoints | `docs/03-design/api/records.openapi.yaml` | no (to build) |
+| `/api/v1/records/courses/{course_id}/records/*`, `/api/v1/records/records/{record_id}` | API endpoints | `docs/03-design/api/records.openapi.yaml` | no (to build) |
 
 ## Tests
 

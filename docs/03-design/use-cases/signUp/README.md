@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/signUp/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Account service | service | `crates/identity/src/service/account.rs` |
-| `/api/v1/auth/sign-up`, `/api/v1/auth/confirm` | API endpoints | `docs/03-design/api/identity.openapi.yaml` |
+| `/api/v1/identity/auth/sign-up`, `/api/v1/identity/auth/confirm` | API endpoints | `docs/03-design/api/identity.openapi.yaml` |
 | `identity.account`, `identity.one_time_token` | tables | `docs/03-design/data-model/identity.md` |
 
 ## Sequence

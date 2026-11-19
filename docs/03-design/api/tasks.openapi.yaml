@@ -6,19 +6,19 @@ info:
     Jobs and schedules for administrators: states, attempts, retry, cancel (RN-172, RN-176) and schedules
     (RN-174, RN-175). Conventions of DEC-025 and DEC-026.
 paths:
-  /api/v1/jobs:
+  /api/v1/tasks/jobs:
     get: { summary: 'Jobs filtered by type, state and dates', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
-  /api/v1/jobs/{job_id}:
+  /api/v1/tasks/jobs/{job_id}:
     get: { summary: A job with its attempts and progress, responses: { '200': { description: Job } } }
-  /api/v1/jobs/{job_id}/retry:
+  /api/v1/tasks/jobs/{job_id}/retry:
     post: { summary: Retry a failed job, responses: { '202': { description: Queued }, '409': { description: Not failed } } }
-  /api/v1/jobs/{job_id}/cancel:
+  /api/v1/tasks/jobs/{job_id}/cancel:
     post: { summary: 'Cancel; a running job stops at its next step (RN-176)', responses: { '202': { description: Cancelling } } }
-  /api/v1/schedules:
+  /api/v1/tasks/schedules:
     get: { summary: Schedules with next and last runs, responses: { '200': { description: Schedules } } }
-  /api/v1/schedules/{schedule_id}:
+  /api/v1/tasks/schedules/{schedule_id}:
     patch: { summary: 'Change the rule, time zone or state (RN-175)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }
-  /api/v1/schedules/{schedule_id}/run:
+  /api/v1/tasks/schedules/{schedule_id}/run:
     post: { summary: Run now, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '202': { description: Job queued } } }
 components:
   parameters:

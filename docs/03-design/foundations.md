@@ -53,7 +53,7 @@ The conventions every module, the API and plugins share: identifiers, time, numb
 ## API shape and versioning (DEC-025)
 
 - REST over HTTPS, described by an **OpenAPI 3.1** document generated from the code, which is also the source of the web client's typed API client.
-- Paths are plural nouns under the major version: `/api/v1/courses/{course_id}/sections`. Actions that are not plain changes are sub-resources (`/api/v1/enrolments/{id}/suspension`).
+- Paths are plural nouns under the major version: `/api/v1/courses/courses/{course_id}/sections`. Actions that are not plain changes are sub-resources (`/api/v1/enrol/enrolments/{id}/suspension`).
 - JSON bodies use `snake_case` fields, RFC 3339 times, string UUIDs and string decimals for exact numbers.
 - Errors are RFC 9457 problem details with the error kind and code of DEC-018.
 - Within a major version changes are **additive** only. A deprecated field or endpoint is announced with the `Deprecation` and `Sunset` headers and in the changelog, and kept for at least two minor releases. A breaking change is a new major version, served beside the old one for a transition period.

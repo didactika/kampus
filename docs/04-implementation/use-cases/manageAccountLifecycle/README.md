@@ -21,7 +21,7 @@ Design: [README](../../../03-design/use-cases/manageAccountLifecycle/README.md)
 | --- | --- | --- | --- |
 | Account lifecycle service | service | `crates/identity/src/service/lifecycle.rs` | no (to build) |
 | Deletion job | job | `crates/identity/src/jobs/delete_account.rs` | no (to build) |
-| `/api/v1/accounts/{account_id}/transitions`, bulk | API endpoints | `docs/03-design/api/identity.openapi.yaml` | no (to build) |
+| `/api/v1/identity/accounts/{account_id}/transitions`, bulk | API endpoints | `docs/03-design/api/identity.openapi.yaml` | no (to build) |
 | `identity.account`, `identity.account_transition` | tables | `docs/03-design/data-model/identity.md` | no (to build) |
 
 ## Tests

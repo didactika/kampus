@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/signUp/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Account service | service | `crates/identity/src/service/account.rs` | no (to build) |
-| `/api/v1/auth/sign-up`, `/api/v1/auth/confirm` | API endpoints | `docs/03-design/api/identity.openapi.yaml` | no (to build) |
+| `/api/v1/identity/auth/sign-up`, `/api/v1/identity/auth/confirm` | API endpoints | `docs/03-design/api/identity.openapi.yaml` | no (to build) |
 | `identity.account`, `identity.one_time_token` | tables | `docs/03-design/data-model/identity.md` | no (to build) |
 
 ## Tests

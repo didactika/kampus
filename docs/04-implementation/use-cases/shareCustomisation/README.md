@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/shareCustomisation/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Package service | service | `crates/customise/src/packages.rs` | no (to build) |
-| `/api/v1/scopes/{scope_id}/customisation-packages`, `/customisation-imports` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
+| `/api/v1/customise/scopes/{scope_id}/packages`, `/customisation-imports` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
 
 ## Tests
 

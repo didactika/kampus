@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/processDeletionRequest/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Request coordinator and retention job | service | `crates/privacy/src/requests.rs` | no (to build) |
-| `/api/v1/privacy/requests/{request_id}/approve` | API endpoint | `docs/03-design/api/privacy.openapi.yaml` | no (to build) |
+| `/api/v1/privacy/privacy/requests/{request_id}/approve` | API endpoint | `docs/03-design/api/privacy.openapi.yaml` | no (to build) |
 
 ## Tests
 

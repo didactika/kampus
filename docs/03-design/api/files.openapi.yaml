@@ -6,18 +6,18 @@ info:
     One upload pipeline (RN-129), file metadata and short-lived signed URLs (RN-131). A file is readable
     when its owner is readable (RN-128). Conventions of DEC-025 and DEC-026.
 paths:
-  /api/v1/uploads:
+  /api/v1/files/uploads:
     post: { summary: 'Open an upload session for an area, checked against size, types and quota (RN-129, RN-130, RN-134)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Session with an upload URL }, '413': { description: Too large or over quota }, '415': { description: Type not allowed } } }
-  /api/v1/uploads/{upload_id}:
+  /api/v1/files/uploads/{upload_id}:
     put: { summary: Send the content; the hash is computed and the blob de-duplicated (RN-126), responses: { '200': { description: Received } } }
     post: { summary: 'Complete the upload; the file is returned pending its scan (RN-129)', responses: { '201': { description: File } } }
-  /api/v1/files/{file_id}:
+  /api/v1/files/files/{file_id}:
     get: { summary: File metadata when the owner is readable, responses: { '200': { description: Metadata }, '404': { description: Not found or not readable } } }
-  /api/v1/files/{file_id}/url:
+  /api/v1/files/files/{file_id}/url:
     post: { summary: 'A signed URL valid for minutes, for this file only (RN-131)', responses: { '200': { description: URL and expiry } } }
-  /api/v1/files/{file_id}/conversions/{kind}:
+  /api/v1/files/files/{file_id}/conversions/{kind}:
     get: { summary: State or result of a conversion (RN-135), responses: { '200': { description: Conversion }, '202': { description: Queued } } }
-  /api/v1/scopes/{scope_id}/quota:
+  /api/v1/files/scopes/{scope_id}/quota:
     get: { summary: Quota and usage of a scope, responses: { '200': { description: Quota } } }
     put: { summary: Set the quota, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Set } } }
 components:

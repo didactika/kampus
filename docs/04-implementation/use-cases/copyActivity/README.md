@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/copyActivity/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Course module service | service | `crates/activities/src/module.rs` | no (to build) |
-| `/api/v1/course-modules/{course_module_id}/copy`, `/move` | API endpoints | `docs/03-design/api/activities.openapi.yaml` | no (to build) |
+| `/api/v1/activities/course-modules/{course_module_id}/copy`, `/move` | API endpoints | `docs/03-design/api/activities.openapi.yaml` | no (to build) |
 
 ## Tests
 

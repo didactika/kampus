@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/organiseSections/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Section service | service | `crates/courses/src/section.rs` | no (to build) |
-| `/api/v1/courses/{course_id}/sections`, `/api/v1/sections/{section_id}`, move | API endpoints | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
+| `/api/v1/courses/courses/{course_id}/sections`, `/api/v1/courses/sections/{section_id}`, move | API endpoints | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
 | `courses.section` | table | `docs/03-design/data-model/courses.md` | no (to build) |
 
 ## Tests

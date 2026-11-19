@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/uploadFile/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Upload pipeline | service | `crates/files/src/upload.rs` |
-| `/api/v1/uploads` | API endpoints | `docs/03-design/api/files.openapi.yaml` |
+| `/api/v1/files/uploads` | API endpoints | `docs/03-design/api/files.openapi.yaml` |
 
 ## Sequence
 

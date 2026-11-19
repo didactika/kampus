@@ -65,13 +65,15 @@ async fn a_session_cookie_reads_the_account_and_needs_the_csrf_header_to_change_
     let session = answer.session();
 
     let me = site
-        .call(Method::GET, "/api/v1/me", Some(&session), &[], None)
+        .call(Method::GET, "/api/v1/identity/me", Some(&session), &[], None)
         .await;
     assert_eq!(me.status, StatusCode::OK);
     assert_eq!(me.body["username"], "admin");
     assert!(me.headers.contains_key(header::ETAG));
 
-    let anonymous = site.call(Method::GET, "/api/v1/me", None, &[], None).await;
+    let anonymous = site
+        .call(Method::GET, "/api/v1/identity/me", None, &[], None)
+        .await;
     assert_eq!(anonymous.status, StatusCode::UNAUTHORIZED);
     assert_eq!(anonymous.code(), "identity.sign_in_required");
     assert_eq!(
@@ -83,7 +85,7 @@ async fn a_session_cookie_reads_the_account_and_needs_the_csrf_header_to_change_
     let forged = site
         .call(
             Method::POST,
-            "/api/v1/auth/sign-out",
+            "/api/v1/identity/auth/sign-out",
             None,
             &[("cookie", &format!("kampus_session={session}"))],
             None,
@@ -93,11 +95,17 @@ async fn a_session_cookie_reads_the_account_and_needs_the_csrf_header_to_change_
     assert_eq!(forged.code(), "identity.csrf_header_missing");
 
     let out = site
-        .call(Method::POST, "/api/v1/auth/sign-out", Some(&session), &[], None)
+        .call(
+            Method::POST,
+            "/api/v1/identity/auth/sign-out",
+            Some(&session),
+            &[],
+            None,
+        )
         .await;
     assert_eq!(out.status, StatusCode::NO_CONTENT);
     let after = site
-        .call(Method::GET, "/api/v1/me", Some(&session), &[], None)
+        .call(Method::GET, "/api/v1/identity/me", Some(&session), &[], None)
         .await;
     assert_eq!(after.status, StatusCode::UNAUTHORIZED);
     site.drop().await;
@@ -108,7 +116,7 @@ async fn a_profile_change_on_an_old_version_is_refused() {
     let site = site().await;
     let session = site.session("admin").await;
     let read = site
-        .call(Method::GET, "/api/v1/me/profile", Some(&session), &[], None)
+        .call(Method::GET, "/api/v1/users/me/profile", Some(&session), &[], None)
         .await;
     assert_eq!(read.status, StatusCode::OK);
     assert_eq!(read.headers[header::ETAG], "\"0\"");
@@ -117,7 +125,7 @@ async fn a_profile_change_on_an_old_version_is_refused() {
     let saved = site
         .call(
             Method::PUT,
-            "/api/v1/me/profile",
+            "/api/v1/users/me/profile",
             Some(&session),
             &[("if-match", "\"0\"")],
             Some(fields.clone()),
@@ -130,7 +138,7 @@ async fn a_profile_change_on_an_old_version_is_refused() {
     let stale = site
         .call(
             Method::PUT,
-            "/api/v1/me/profile",
+            "/api/v1/users/me/profile",
             Some(&session),
             &[("if-match", "\"0\"")],
             Some(fields),
@@ -141,7 +149,7 @@ async fn a_profile_change_on_an_old_version_is_refused() {
     let invalid = site
         .call(
             Method::PUT,
-            "/api/v1/me/profile",
+            "/api/v1/users/me/profile",
             Some(&session),
             &[("if-match", "\"1\"")],
             Some(json!({ "time_zone": "Mars/Olympus" })),
@@ -152,7 +160,7 @@ async fn a_profile_change_on_an_old_version_is_refused() {
     let unconditional = site
         .call(
             Method::PUT,
-            "/api/v1/me/profile",
+            "/api/v1/users/me/profile",
             Some(&session),
             &[],
             Some(json!({ "given_name": "Eve" })),
@@ -162,7 +170,13 @@ async fn a_profile_change_on_an_old_version_is_refused() {
     assert_eq!(unconditional.code(), "module.if_match_required");
 
     let malformed = site
-        .call(Method::PATCH, "/api/v1/me/preferences", Some(&session), &[], None)
+        .call(
+            Method::PATCH,
+            "/api/v1/users/me/preferences",
+            Some(&session),
+            &[],
+            None,
+        )
         .await;
     assert_eq!(malformed.code(), "module.body_invalid");
     site.drop().await;
@@ -175,7 +189,7 @@ async fn an_invited_person_chooses_a_password_and_signs_in() {
     let invited = site
         .call(
             Method::POST,
-            &format!("/api/v1/campuses/{}/accounts", site.campus),
+            &format!("/api/v1/identity/campuses/{}/accounts", site.campus),
             Some(&admin),
             &[],
             Some(json!({ "email": "ana@example.org" })),
@@ -188,7 +202,7 @@ async fn an_invited_person_chooses_a_password_and_signs_in() {
     let accepted = site
         .call(
             Method::POST,
-            "/api/v1/auth/invitations/accept",
+            "/api/v1/identity/auth/invitations/accept",
             None,
             &[],
             Some(json!({ "token": token, "password": PASSWORD })),
@@ -200,7 +214,7 @@ async fn an_invited_person_chooses_a_password_and_signs_in() {
     let read = site
         .call(
             Method::GET,
-            &format!("/api/v1/accounts/{account}"),
+            &format!("/api/v1/identity/accounts/{account}"),
             Some(&admin),
             &[],
             None,
@@ -211,7 +225,7 @@ async fn an_invited_person_chooses_a_password_and_signs_in() {
     let suspended = site
         .call(
             Method::POST,
-            &format!("/api/v1/accounts/{account}/transitions"),
+            &format!("/api/v1/identity/accounts/{account}/transitions"),
             Some(&admin),
             &[("if-match", &version)],
             Some(json!({ "to": "suspended", "reason": "testing" })),
@@ -221,14 +235,16 @@ async fn an_invited_person_chooses_a_password_and_signs_in() {
     let again = site
         .call(
             Method::POST,
-            &format!("/api/v1/accounts/{account}/transitions"),
+            &format!("/api/v1/identity/accounts/{account}/transitions"),
             Some(&admin),
             &[("if-match", &version)],
             Some(json!({ "to": "active", "reason": "testing" })),
         )
         .await;
     assert_eq!(again.status, StatusCode::PRECONDITION_FAILED);
-    let ended = site.call(Method::GET, "/api/v1/me", Some(&ana), &[], None).await;
+    let ended = site
+        .call(Method::GET, "/api/v1/identity/me", Some(&ana), &[], None)
+        .await;
     assert_eq!(
         ended.status,
         StatusCode::UNAUTHORIZED,
@@ -238,7 +254,7 @@ async fn an_invited_person_chooses_a_password_and_signs_in() {
     let not_allowed = site
         .call(
             Method::POST,
-            &format!("/api/v1/campuses/{}/accounts", site.campus),
+            &format!("/api/v1/identity/campuses/{}/accounts", site.campus),
             None,
             &[],
             Some(json!({ "email": "eve@example.org" })),
@@ -255,7 +271,7 @@ async fn an_authenticator_app_is_asked_at_the_next_sign_in() {
     let setup = site
         .call(
             Method::POST,
-            "/api/v1/me/second-factors/totp",
+            "/api/v1/identity/me/second-factors/totp",
             Some(&session),
             &[],
             None,
@@ -278,7 +294,7 @@ async fn an_authenticator_app_is_asked_at_the_next_sign_in() {
     let added = site
         .call(
             Method::POST,
-            "/api/v1/me/second-factors/totp/confirm",
+            "/api/v1/identity/me/second-factors/totp/confirm",
             Some(&session),
             &[],
             Some(json!({ "label": "phone", "secret": secret, "code": code })),
@@ -289,7 +305,7 @@ async fn an_authenticator_app_is_asked_at_the_next_sign_in() {
     let factors = site
         .call(
             Method::GET,
-            "/api/v1/me/second-factors",
+            "/api/v1/identity/me/second-factors",
             Some(&session),
             &[],
             None,
@@ -305,7 +321,7 @@ async fn an_authenticator_app_is_asked_at_the_next_sign_in() {
     let completed = site
         .call(
             Method::POST,
-            "/api/v1/auth/second-factor",
+            "/api/v1/identity/auth/second-factor",
             None,
             &[],
             Some(json!({ "challenge": challenge, "proof": { "kind": "recovery_code", "code": recovery } })),
@@ -314,7 +330,7 @@ async fn an_authenticator_app_is_asked_at_the_next_sign_in() {
     assert_eq!(completed.status, StatusCode::OK, "{}", completed.body);
     let strong = completed.session();
     let me = site
-        .call(Method::GET, "/api/v1/me", Some(&strong), &[], None)
+        .call(Method::GET, "/api/v1/identity/me", Some(&strong), &[], None)
         .await;
     assert_eq!(me.status, StatusCode::OK);
     site.drop().await;
@@ -327,7 +343,7 @@ async fn an_api_token_acts_only_within_what_it_carries() {
     let created = site
         .call(
             Method::POST,
-            "/api/v1/me/tokens",
+            "/api/v1/identity/me/tokens",
             Some(&session),
             &[],
             Some(json!({
@@ -339,14 +355,14 @@ async fn an_api_token_acts_only_within_what_it_carries() {
     assert_eq!(created.status, StatusCode::CREATED, "{}", created.body);
     let bearer = format!("Bearer {}", created.body["token"].as_str().unwrap());
     let me = site
-        .call(Method::GET, "/api/v1/me", Some(&session), &[], None)
+        .call(Method::GET, "/api/v1/identity/me", Some(&session), &[], None)
         .await;
     let account = me.body["id"].as_str().unwrap().to_owned();
 
     let read = site
         .call(
             Method::GET,
-            &format!("/api/v1/accounts/{account}"),
+            &format!("/api/v1/identity/accounts/{account}"),
             None,
             &[("authorization", &bearer)],
             None,
@@ -356,7 +372,7 @@ async fn an_api_token_acts_only_within_what_it_carries() {
     let invite = site
         .call(
             Method::POST,
-            &format!("/api/v1/campuses/{}/accounts", site.campus),
+            &format!("/api/v1/identity/campuses/{}/accounts", site.campus),
             None,
             &[("authorization", &bearer)],
             Some(json!({ "email": "eve@example.org" })),
@@ -367,7 +383,7 @@ async fn an_api_token_acts_only_within_what_it_carries() {
     let credentials = site
         .call(
             Method::GET,
-            "/api/v1/me/sessions",
+            "/api/v1/identity/me/sessions",
             None,
             &[("authorization", &bearer)],
             None,
@@ -381,7 +397,7 @@ async fn an_api_token_acts_only_within_what_it_carries() {
     let invalid = site
         .call(
             Method::GET,
-            "/api/v1/me",
+            "/api/v1/identity/me",
             None,
             &[("authorization", "Bearer kmp_not_a_token")],
             None,
@@ -398,7 +414,7 @@ async fn a_provider_signs_a_person_in_through_the_browser_flow() {
     let invited = site
         .call(
             Method::POST,
-            &format!("/api/v1/campuses/{}/accounts", site.campus),
+            &format!("/api/v1/identity/campuses/{}/accounts", site.campus),
             Some(&admin),
             &[],
             Some(json!({ "email": "ana@example.org" })),
@@ -407,7 +423,7 @@ async fn a_provider_signs_a_person_in_through_the_browser_flow() {
     assert_eq!(invited.status, StatusCode::CREATED);
     site.call(
         Method::POST,
-        "/api/v1/auth/invitations/accept",
+        "/api/v1/identity/auth/invitations/accept",
         None,
         &[],
         Some(json!({ "token": site.token_sent_to("ana@example.org"), "password": PASSWORD })),
@@ -417,7 +433,7 @@ async fn a_provider_signs_a_person_in_through_the_browser_flow() {
     let added = site
         .call(
             Method::POST,
-            &format!("/api/v1/campuses/{}/identity-providers", site.campus),
+            &format!("/api/v1/identity/campuses/{}/identity-providers", site.campus),
             Some(&admin),
             &[],
             Some(json!({
@@ -433,7 +449,7 @@ async fn a_provider_signs_a_person_in_through_the_browser_flow() {
     let listed = site
         .call(
             Method::GET,
-            &format!("/api/v1/campuses/{}/identity-providers", site.campus),
+            &format!("/api/v1/identity/campuses/{}/identity-providers", site.campus),
             None,
             &[],
             None,
@@ -444,7 +460,7 @@ async fn a_provider_signs_a_person_in_through_the_browser_flow() {
     let start = site
         .call(
             Method::GET,
-            &format!("/api/v1/auth/oidc/{provider}/start"),
+            &format!("/api/v1/identity/auth/oidc/{provider}/start"),
             None,
             &[],
             None,
@@ -471,12 +487,12 @@ async fn a_provider_signs_a_person_in_through_the_browser_flow() {
     let back = Url::parse(at_provider.headers()["location"].to_str().unwrap()).unwrap();
     assert!(
         back.as_str()
-            .starts_with(&format!("{SITE}/api/v1/auth/oidc/{provider}/callback"))
+            .starts_with(&format!("{SITE}/api/v1/identity/auth/oidc/{provider}/callback"))
     );
     let query: BTreeMap<String, String> = back.query_pairs().into_owned().collect();
 
     let callback = format!(
-        "/api/v1/auth/oidc/{provider}/callback?code={}&state={}",
+        "/api/v1/identity/auth/oidc/{provider}/callback?code={}&state={}",
         query["code"], query["state"]
     );
     let without_flow = site.call(Method::GET, &callback, None, &[], None).await;
@@ -487,7 +503,9 @@ async fn a_provider_signs_a_person_in_through_the_browser_flow() {
     assert_eq!(signed_in.status, StatusCode::OK, "{}", signed_in.body);
     assert_eq!(signed_in.body["status"], "signed_in");
     let ana = signed_in.session();
-    let me = site.call(Method::GET, "/api/v1/me", Some(&ana), &[], None).await;
+    let me = site
+        .call(Method::GET, "/api/v1/identity/me", Some(&ana), &[], None)
+        .await;
     assert_eq!(me.body["email"], "ana@example.org");
     site.drop().await;
 }

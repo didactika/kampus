@@ -6,37 +6,37 @@ info:
     Method instances, enrolments, requests, self-enrolment and linked sources. Conventions of DEC-025 and
     DEC-026; permissions checked inside every operation (DEC-017).
 paths:
-  /api/v1/courses/{course_id}/enrolment-instances:
+  /api/v1/enrol/courses/{course_id}/enrolment-instances:
     get: { summary: Method instances of a course, responses: { '200': { description: Instances } } }
     post: { summary: 'Add a method instance (manual, self with an optional key, system group with its group); whoever adds it must be able to grant its role', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Added }, '403': { description: 'Without the permission, or unable to grant the role' } } }
-  /api/v1/enrolment-instances/{instance_id}:
+  /api/v1/enrol/enrolment-instances/{instance_id}:
     get: { summary: An instance, responses: { '200': { description: 'Instance, with its version as ETag' } } }
     put: { summary: 'Replace role, period, capacity, approval and expiry rule; enable or disable (RN-071)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
     delete: { summary: 'Delete the instance with the enrolments, grants and group memberships it owns (RN-071)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '204': { description: Deleted } } }
-  /api/v1/enrolment-instances/{instance_id}/keys:
+  /api/v1/enrol/enrolment-instances/{instance_id}/keys:
     put: { summary: 'Set or remove the key of a self instance, for the course or one of its groups (RN-064)', responses: { '204': { description: Set } } }
-  /api/v1/enrolment-instances/{instance_id}/source:
+  /api/v1/enrol/enrolment-instances/{instance_id}/source:
     put: { summary: 'Link a course; refused if it would create a cycle (RN-067). Arrives with the course-link method', responses: { '200': { description: Linked; a sync job is queued } } }
-  /api/v1/enrolment-instances/{instance_id}/sync:
+  /api/v1/enrol/enrolment-instances/{instance_id}/sync:
     post: { summary: 'Bring a system group instance in step with its group (RN-067)', responses: { '200': { description: Enrolments added and removed } } }
-  /api/v1/courses/{course_id}/participants:
+  /api/v1/enrol/courses/{course_id}/participants:
     get:
       summary: 'Enrolments of a course, every one or only the active ones'
       parameters: [{ name: active, in: query, schema: { type: boolean } }, { $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }]
       responses: { '200': { description: Enrolments } }
-  /api/v1/enrolment-instances/{instance_id}/enrolments:
+  /api/v1/enrol/enrolment-instances/{instance_id}/enrolments:
     post: { summary: 'Enrol one or more people through a manual instance (RN-063, RN-073)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '200': { description: 'A report per person: the enrolment or the code of its error' } } }
-  /api/v1/enrolments/{enrolment_id}:
+  /api/v1/enrol/enrolments/{enrolment_id}:
     get: { summary: 'An enrolment, for its owner or who reads the participants', responses: { '200': { description: 'The enrolment, with its version as ETag' } } }
     put: { summary: 'Replace status, period and reason (RN-070)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
     delete: { summary: 'Remove an enrolment; records and progress are kept (RN-069)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '204': { description: Removed }, '409': { description: Owned by a linked source } } }
-  /api/v1/enrolment-instances/{instance_id}/self:
+  /api/v1/enrol/enrolment-instances/{instance_id}/self:
     post: { summary: 'Self-enrol with an optional key; creates a request when approval is required (RN-063 to RN-065)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Enrolled }, '202': { description: Request created }, '422': { description: Wrong key }, '429': { description: Too many wrong keys } } }
-  /api/v1/courses/{course_id}/enrolment-requests:
+  /api/v1/enrol/courses/{course_id}/enrolment-requests:
     get: { summary: Pending requests of a course, responses: { '200': { description: Requests } } }
-  /api/v1/enrolment-requests/{request_id}/decision:
+  /api/v1/enrol/enrolment-requests/{request_id}/decision:
     put: { summary: 'Approve or reject a request (RN-065)', responses: { '200': { description: Decided }, '409': { description: Already decided } } }
-  /api/v1/enrolment-requests/{request_id}:
+  /api/v1/enrol/enrolment-requests/{request_id}:
     delete: { summary: Withdraw one's own request while it waits, responses: { '204': { description: Withdrawn } } }
 components:
   parameters:

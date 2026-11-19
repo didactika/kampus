@@ -21,7 +21,7 @@ Design: [README](../../../03-design/use-cases/signIn/README.md)
 | --- | --- | --- | --- |
 | Sign-in pipeline | service | `crates/identity/src/service/sign_in.rs` | no (to build) |
 | OIDC client | adapter | `crates/identity/src/service/oidc.rs` | no (to build) |
-| `/api/v1/auth/sign-in`, `/second-factor`, `/oidc/*`, `/recovery` | API endpoints | `docs/03-design/api/identity.openapi.yaml` | no (to build) |
+| `/api/v1/identity/auth/sign-in`, `/second-factor`, `/oidc/*`, `/recovery` | API endpoints | `docs/03-design/api/identity.openapi.yaml` | no (to build) |
 | `identity.session`, `identity.sign_in_attempt` | tables | `docs/03-design/data-model/identity.md` | no (to build) |
 
 ## Tests
