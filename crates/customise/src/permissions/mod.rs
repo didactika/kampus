@@ -58,6 +58,8 @@ pub const MENU_MANAGE: &str = "customise.menu.manage";
 pub const THEME_MANAGE: &str = "customise.theme.manage";
 /// Write, change and remove the rules of a scope.
 pub const RULE_MANAGE: &str = "customise.rule.manage";
+/// Export the customisations of a scope and import packages into it.
+pub const PACKAGE_MANAGE: &str = "customise.package.manage";
 
 /// The permissions of this module.
 pub const PERMISSIONS: &[PermissionDeclaration] = &[
@@ -111,6 +113,12 @@ pub const PERMISSIONS: &[PermissionDeclaration] = &[
     },
     PermissionDeclaration {
         code: RULE_MANAGE,
+        kind: PermissionKind::Write,
+        risks: &[Risk::Configuration],
+        lowest_kind: ScopeKind::Course,
+    },
+    PermissionDeclaration {
+        code: PACKAGE_MANAGE,
         kind: PermissionKind::Write,
         risks: &[Risk::Configuration],
         lowest_kind: ScopeKind::Course,

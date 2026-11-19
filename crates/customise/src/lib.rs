@@ -51,6 +51,10 @@ use kampus_db::Database;
 use kampus_module::{Module, RuleActionDeclaration};
 
 pub use model::layout::{Layout, Menu, MenuItem, Placement};
+pub use model::package::{
+    Difference, Exported, Import, ImportId, Package, PackageField, PackageFlag, PackageKind, PackageLayout,
+    PackageMenu, PackageTerm, PackageTheme,
+};
 pub use model::rule::{Comparison, Condition, Operator, Rule, RuleAction, RuleId, RuleRun, RuleSpec};
 pub use model::theme::Theme;
 pub use model::{

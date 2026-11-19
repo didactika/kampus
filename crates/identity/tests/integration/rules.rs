@@ -184,6 +184,19 @@ async fn world_with(policy: CampusPolicy) -> World {
 }
 
 impl World {
+    /// Drops the installation.
+    async fn drop(self) {
+        for module in ["identity", "access", "db"] {
+            sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
+                "drop schema if exists {} cascade",
+                self.db.prefix().schema(module)
+            )))
+            .execute(self.db.pool())
+            .await
+            .unwrap();
+        }
+    }
+
     /// Invites a person to the campus and accepts the invitation with [`PASSWORD`].
     async fn person(&self, email: &str) -> AccountId {
         let id = self
@@ -297,6 +310,7 @@ async fn usernames_and_emails_are_unique_in_a_campus() {
     let account = w.identity.account(&w.other_admin, id).await.unwrap();
     assert_eq!(account.email.as_deref(), Some("ana@example.org"));
     assert_eq!(account.username.as_deref(), Some("ana"));
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -385,6 +399,7 @@ async fn the_lifecycle_is_a_recorded_state_machine() {
         ]
     );
     assert_eq!(history[2].2.as_deref(), Some("unpaid fees"));
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -424,6 +439,8 @@ async fn every_sign_in_runs_the_same_pipeline() {
         SignInOutcome::SecondFactorRequired { challenge, .. } => assert_eq!(challenge.len(), 43),
         SignInOutcome::SignedIn(_) => panic!("the campus requires a second factor"),
     }
+    strict.drop().await;
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -463,6 +480,7 @@ async fn passwords_follow_the_policy_and_are_hashed() {
             .all(|m| !format!("{:?}", m.notice).contains(PASSWORD)),
         "a password is never sent"
     );
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -511,6 +529,7 @@ async fn one_time_tokens_are_hashed_expire_and_work_once() {
     let dani = w.identity.confirm(&second, PASSWORD).await.unwrap();
     assert_eq!(w.account(dani).await.status, AccountStatus::Active);
     assert_eq!(error(w.identity.confirm(&second, PASSWORD).await), invalid);
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -586,6 +605,7 @@ async fn answers_never_reveal_accounts_and_sign_in_is_throttled() {
         ErrorKind::RateLimited,
         "an address with too many failures is locked for every name"
     );
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -655,6 +675,7 @@ async fn sessions_are_checked_on_every_request_and_revoked_centrally() {
         "idle too long"
     );
     w.identity.sign_out("not a token").await.unwrap();
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -684,6 +705,7 @@ async fn sensitive_operations_need_a_recent_strong_authentication() {
         .change_password(&session, PASSWORD, "a brand new long river")
         .await
         .unwrap();
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -775,6 +797,7 @@ async fn api_tokens_are_scoped_expiring_and_hashed() {
         error(w.identity.authenticate_token(&short.token).await).0,
         ErrorKind::Unauthenticated
     );
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -804,6 +827,7 @@ async fn deletion_erases_personal_data_and_leaves_a_tombstone() {
         again, ana,
         "the email is free for a new account; the tombstone keeps its id"
     );
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -832,6 +856,7 @@ async fn deletion_waits_for_the_grace_period_and_can_be_cancelled() {
         .await
         .unwrap();
     w.session("ana@example.org").await;
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -882,6 +907,7 @@ async fn service_accounts_authenticate_only_with_api_tokens() {
         error(w.identity.authenticate_token(&token.token).await).0,
         ErrorKind::Unauthenticated
     );
+    w.drop().await;
 }
 
 /// The current code of an authenticator app with this base32 secret.
@@ -1026,6 +1052,7 @@ async fn second_factors_are_required_once_set_up() {
     }
     assert_eq!(w.count("recovery_code", ana).await, 0);
     w.session("ana@example.org").await;
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -1073,6 +1100,7 @@ async fn a_role_can_require_a_second_factor() {
         error(w.identity.remove_second_factor(&session, factor).await),
         (ErrorKind::Conflict, "identity.second_factor_required".to_owned())
     );
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -1162,6 +1190,7 @@ async fn recovery_checks_the_second_factor_first_and_never_signs_in() {
         .filter(|m| matches!(m.notice, Notice::Recovery { .. }))
         .count();
     assert_eq!(links, 3, "at most three links an hour");
+    w.drop().await;
 }
 
 /// Where the browser comes back from the provider.
@@ -1291,6 +1320,7 @@ async fn a_verified_email_links_by_policy_and_then_by_subject() {
             "identity.external_identity_not_linked".to_owned()
         )
     );
+    w.drop().await;
 }
 
 /// Adds the same issuer a second time.
@@ -1329,6 +1359,7 @@ async fn an_unverified_or_unknown_email_never_links() {
             "{issuer}"
         );
         assert_eq!(w.count("external_identity", ana).await, 0);
+        w.drop().await;
     }
     let w = world().await;
     let manager = Actor::Principal(w.manager);
@@ -1350,6 +1381,7 @@ async fn an_unverified_or_unknown_email_never_links() {
         .0,
         ErrorKind::PermissionDenied
     );
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -1388,6 +1420,7 @@ async fn the_owner_can_confirm_a_link() {
         ),
         "an identity links to one account"
     );
+    w.drop().await;
 }
 
 #[tokio::test]
@@ -1443,4 +1476,5 @@ async fn a_new_email_is_used_only_once_its_link_is_opened() {
         error(w.identity.change_email(&later, "ana.third@example.org").await).1,
         "identity.step_up_required"
     );
+    w.drop().await;
 }

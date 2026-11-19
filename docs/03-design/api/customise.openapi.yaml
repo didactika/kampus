@@ -48,11 +48,13 @@ paths:
     get: { summary: One flag with origin, responses: { '200': { description: Flag }, '404': { description: Unknown flag } } }
     put: { summary: 'Switch a feature, locked or not (RN-220)', responses: { '200': { description: The flag as it now resolves }, '409': { description: Locked above } } }
   /api/v1/scopes/{scope_id}/customisation-packages:
-    post: { summary: Export the chosen kinds as a package, responses: { '200': { description: Package } } }
+    post: { summary: 'Export what the scope sets of the kinds chosen (terms, flags, fields, layouts, menus, theme, rules), with its checksum', responses: { '200': { description: Package and checksum } } }
   /api/v1/scopes/{scope_id}/customisation-imports:
-    post: { summary: 'Preview the differences of a package (RN-221)', responses: { '200': { description: Differences } } }
-  /api/v1/scopes/{scope_id}/customisation-imports/{import_id}/apply:
-    post: { summary: Apply in one transaction, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '200': { description: Applied } } }
+    post: { summary: 'Read a package into the scope: validated, and kept with its differences (RN-221)', responses: { '201': { description: The import with its differences }, '403': { description: Without a permission it needs }, '422': { description: 'Items not declared, that do not fit, or locked above (customise.package_invalid)' } } }
+  /api/v1/customisation-imports/{import_id}:
+    get: { summary: An import with its differences, responses: { '200': { description: Import } } }
+  /api/v1/customisation-imports/{import_id}/apply:
+    post: { summary: 'Check the import again and apply it in one transaction, recorded as one change', responses: { '200': { description: Applied }, '409': { description: Already applied }, '422': { description: No longer fits the scope } } }
 components:
   parameters:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }

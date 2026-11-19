@@ -90,4 +90,5 @@ async fn the_policy_of_a_campus_follows_its_settings() {
         StatusCode::UNPROCESSABLE_ENTITY,
         "a longer password is asked now"
     );
+    site.drop().await;
 }

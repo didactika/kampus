@@ -100,6 +100,7 @@ async fn a_session_cookie_reads_the_account_and_needs_the_csrf_header_to_change_
         .call(Method::GET, "/api/v1/me", Some(&session), &[], None)
         .await;
     assert_eq!(after.status, StatusCode::UNAUTHORIZED);
+    site.drop().await;
 }
 
 #[tokio::test]
@@ -164,6 +165,7 @@ async fn a_profile_change_on_an_old_version_is_refused() {
         .call(Method::PATCH, "/api/v1/me/preferences", Some(&session), &[], None)
         .await;
     assert_eq!(malformed.code(), "module.body_invalid");
+    site.drop().await;
 }
 
 #[tokio::test]
@@ -243,6 +245,7 @@ async fn an_invited_person_chooses_a_password_and_signs_in() {
         )
         .await;
     assert_eq!(not_allowed.status, StatusCode::FORBIDDEN);
+    site.drop().await;
 }
 
 #[tokio::test]
@@ -314,6 +317,7 @@ async fn an_authenticator_app_is_asked_at_the_next_sign_in() {
         .call(Method::GET, "/api/v1/me", Some(&strong), &[], None)
         .await;
     assert_eq!(me.status, StatusCode::OK);
+    site.drop().await;
 }
 
 #[tokio::test]
@@ -384,6 +388,7 @@ async fn an_api_token_acts_only_within_what_it_carries() {
         )
         .await;
     assert_eq!(invalid.status, StatusCode::UNAUTHORIZED);
+    site.drop().await;
 }
 
 #[tokio::test]
@@ -484,4 +489,5 @@ async fn a_provider_signs_a_person_in_through_the_browser_flow() {
     let ana = signed_in.session();
     let me = site.call(Method::GET, "/api/v1/me", Some(&ana), &[], None).await;
     assert_eq!(me.body["email"], "ana@example.org");
+    site.drop().await;
 }

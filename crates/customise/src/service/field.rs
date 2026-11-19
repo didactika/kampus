@@ -52,7 +52,7 @@ use crate::{Choice, Customise, Field, FieldId, FieldSpec, FieldType, FieldValueI
 const MAX_TEXT: i32 = 1000;
 
 /// The columns of a field.
-const COLUMNS: &str = "f.id, f.kind_code, f.scope_id, f.code, f.name, f.type, f.required, f.visibility, f.max_length, \
+pub(super) const COLUMNS: &str = "f.id, f.kind_code, f.scope_id, f.code, f.name, f.type, f.required, f.visibility, f.max_length, \
     f.version";
 
 /// Checks that a value fits its field; returns the choice codes of a field of several choices.
@@ -427,7 +427,7 @@ impl Customise {
     }
 
     /// Fields from their rows, with their choices in order.
-    async fn with_choices(&self, rows: Vec<PgRow>) -> Result<Vec<Field>> {
+    pub(super) async fn with_choices(&self, rows: Vec<PgRow>) -> Result<Vec<Field>> {
         let ids: Vec<uuid::Uuid> = rows.iter().map(|r| r.get("id")).collect();
         let choices = sqlx::query(sql(format!(
             "select field_id, code, label from {} where field_id = any($1) order by sort_key",

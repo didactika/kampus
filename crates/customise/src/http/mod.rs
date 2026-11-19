@@ -33,8 +33,9 @@
 // ------------------------------------------------------------------------------
 
 //! The HTTP routes of customisation: the words of a scope, its feature flags and its custom fields here,
-//! its layouts, menus and theme in [`pages`], and its rules in [`rules`].
+//! its layouts, menus and theme in [`pages`], its rules in [`rules`], and its packages in [`packages`].
 
+mod packages;
 mod pages;
 mod rules;
 
@@ -71,6 +72,7 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/fields/{id}", get(field).delete(delete_field))
         .merge(pages::routes())
         .merge(rules::routes())
+        .merge(packages::routes())
         .with_state(shared)
 }
 

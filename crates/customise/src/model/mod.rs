@@ -36,6 +36,7 @@
 //! their choices and types, and in [`layout`] and [`theme`] layouts, menus and themes.
 
 pub mod layout;
+pub mod package;
 pub mod rule;
 pub mod theme;
 
@@ -204,7 +205,7 @@ pub struct Field {
 }
 
 /// A custom field to define.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FieldSpec {
     /// Its code.
     pub code: String,

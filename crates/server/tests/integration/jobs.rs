@@ -78,4 +78,5 @@ async fn the_jobs_of_every_module_run_with_the_services_of_the_server() {
     ] {
         assert!(scheduled.iter().any(|s| s == code), "{code} is scheduled");
     }
+    site.drop().await;
 }

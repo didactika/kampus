@@ -133,6 +133,7 @@ async fn a_campus_renames_terms_adds_course_fields_and_turns_groups_off() {
         .await;
     assert_eq!(group.status, StatusCode::CONFLICT, "{}", group.body);
     assert_eq!(group.code(), "customise.feature_off");
+    site.drop().await;
 }
 
 #[tokio::test]
@@ -218,6 +219,7 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
         refused.body
     );
     assert_eq!(refused.code(), "customise.theme_contrast");
+    site.drop().await;
 }
 
 #[tokio::test]
@@ -306,4 +308,75 @@ async fn a_rule_adds_who_enrols_to_a_group() {
         )
         .await;
     assert_eq!(runs.body[0]["outcome"], "succeeded", "{}", runs.body);
+    site.drop().await;
+}
+
+#[tokio::test]
+async fn a_campus_exports_its_customisation_and_a_course_imports_it_after_review() {
+    let site = site().await;
+    let admin = site.session("admin").await;
+    let (_, course) = site.course(&admin).await;
+    let read = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/courses/{course}"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    let scope = read.body["scope"].as_str().unwrap().to_owned();
+    let campus = site.campus.to_string();
+    site.call(
+        Method::PUT,
+        &format!("/api/v1/scopes/{campus}/terms/courses.section"),
+        Some(&admin),
+        &[],
+        Some(json!({ "singular": "week", "plural": "weeks" })),
+    )
+    .await;
+    let exported = site
+        .call(
+            Method::POST,
+            &format!("/api/v1/scopes/{campus}/customisation-packages"),
+            Some(&admin),
+            &[],
+            Some(json!({ "kinds": ["terms", "theme"] })),
+        )
+        .await;
+    assert_eq!(exported.status, StatusCode::OK, "{}", exported.body);
+    assert_eq!(exported.body["package"]["terms"][0]["singular"], "week");
+    let preview = site
+        .call(
+            Method::POST,
+            &format!("/api/v1/scopes/{scope}/customisation-imports"),
+            Some(&admin),
+            &[],
+            Some(exported.body["package"].clone()),
+        )
+        .await;
+    assert_eq!(preview.status, StatusCode::CREATED, "{}", preview.body);
+    assert_eq!(preview.body["differences"][0]["key"], "courses.section/en");
+    let id = preview.body["id"].as_str().unwrap().to_owned();
+    let applied = site
+        .call(
+            Method::POST,
+            &format!("/api/v1/customisation-imports/{id}/apply"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    assert_eq!(applied.status, StatusCode::OK, "{}", applied.body);
+    let term = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/scopes/{scope}/terms/courses.section"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    assert_eq!(term.body["origin"]["scope"], scope.as_str());
+    site.drop().await;
 }

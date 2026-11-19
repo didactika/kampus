@@ -1812,6 +1812,7 @@ dependencies = [
  "kampus-module",
  "serde",
  "serde_json",
+ "sha2 0.11.1",
  "sqlx",
  "time",
  "tokio",

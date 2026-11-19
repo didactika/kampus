@@ -56,6 +56,7 @@ kampus-identity = { path = "../identity" }
 axum.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 sqlx.workspace = true
 time.workspace = true
 uuid.workspace = true

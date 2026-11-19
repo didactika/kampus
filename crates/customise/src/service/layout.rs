@@ -52,7 +52,7 @@ use crate::{Customise, Layout, Origin, Placement, sql};
 const MAX_PLACEMENTS: usize = 50;
 
 /// A widget as declared: the page kinds it may be placed in and its settings.
-struct Widget {
+pub(super) struct Widget {
     /// The page kinds; every one when empty.
     page_kinds: Vec<String>,
     /// Its settings as stored: key, kind and default.
@@ -82,7 +82,7 @@ impl Widget {
 }
 
 /// Reads a widget from its row.
-fn widget(row: &sqlx::postgres::PgRow, settings: &str) -> Widget {
+pub(super) fn widget(row: &sqlx::postgres::PgRow, settings: &str) -> Widget {
     let strings = |v: Value| -> Vec<Value> { v.as_array().cloned().unwrap_or_default() };
     Widget {
         page_kinds: strings(row.get("page_kinds"))
@@ -94,7 +94,7 @@ fn widget(row: &sqlx::postgres::PgRow, settings: &str) -> Widget {
 }
 
 /// The problems of the placements of a layout of a page kind.
-fn problems(
+pub(super) fn problems(
     page_kind: &str,
     regions: &[String],
     widgets: &BTreeMap<String, Widget>,
@@ -207,19 +207,7 @@ impl Customise {
         self.access.require(actor, LAYOUT_MANAGE, scope).await?;
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
         let regions = self.regions(&mut conn, page_kind).await?;
-        let codes: Vec<&str> = placements.iter().map(|p| p.widget.as_str()).collect();
-        let rows = sqlx::query(sql(format!(
-            "select code, page_kinds, settings from {} where code = any($1) and retired_at is null",
-            self.table("widget")
-        )))
-        .bind(&codes)
-        .fetch_all(&mut *conn)
-        .await
-        .map_err(kampus_db::classify)?;
-        let widgets: BTreeMap<String, Widget> = rows
-            .iter()
-            .map(|r| (r.get("code"), widget(r, "settings")))
-            .collect();
+        let widgets = self.widgets(&mut conn, &placements).await?;
         let problems = problems(page_kind, &regions, &widgets, &placements);
         if !problems.is_empty() {
             return Err(Error::validation("customise.layout_invalid", problems));
@@ -259,8 +247,29 @@ impl Customise {
         self.layout(actor, page_kind, scope).await
     }
 
+    /// The declared widgets that placements name, by code.
+    pub(super) async fn widgets(
+        &self,
+        conn: &mut PgConnection,
+        placements: &[Placement],
+    ) -> Result<BTreeMap<String, Widget>> {
+        let codes: Vec<&str> = placements.iter().map(|p| p.widget.as_str()).collect();
+        let rows = sqlx::query(sql(format!(
+            "select code, page_kinds, settings from {} where code = any($1) and retired_at is null",
+            self.table("widget")
+        )))
+        .bind(&codes)
+        .fetch_all(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(rows
+            .iter()
+            .map(|r| (r.get("code"), widget(r, "settings")))
+            .collect())
+    }
+
     /// The regions of a page kind, in order.
-    async fn regions(&self, conn: &mut PgConnection, page_kind: &str) -> Result<Vec<String>> {
+    pub(super) async fn regions(&self, conn: &mut PgConnection, page_kind: &str) -> Result<Vec<String>> {
         let regions: Value = sqlx::query_scalar(sql(format!(
             "select regions from {} where code = $1 and retired_at is null",
             self.table("page_kind")
@@ -276,7 +285,7 @@ impl Customise {
     }
 
     /// Stores the layout of a page kind in a scope with its placements, replacing the ones it had.
-    async fn write_layout_in(
+    pub(super) async fn write_layout_in(
         &self,
         conn: &mut PgConnection,
         page_kind: &str,
