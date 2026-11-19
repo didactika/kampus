@@ -53,6 +53,7 @@ kampus-module.workspace = true
 kampus-access.workspace = true
 kampus-identity = { path = "../identity" }
 kampus-events = { path = "../events" }
+kampus-settings = { path = "../settings" }
 async-trait.workspace = true
 axum.workspace = true
 serde.workspace = true

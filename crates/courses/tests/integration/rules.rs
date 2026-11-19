@@ -40,8 +40,8 @@ use std::sync::Arc;
 use kampus_access::{Access, Actor, RoleId, ScopeId, ScopeKind};
 use kampus_common::{ErrorKind, Result, SystemClock, Timestamp};
 use kampus_courses::{
-    CampusMembers, CategoryFields, CourseFields, CourseState, Courses, GroupFields, GroupVisibility,
-    MemberOrigin, Place, SectionFields, Visibility,
+    CampusMembers, CategoryFields, CourseFields, CourseState, Courses, GroupFields, GroupMode,
+    GroupVisibility, MemberOrigin, Place, SectionFields, Visibility,
 };
 use kampus_db::{Database, Prefix, Upgrader};
 use kampus_identity::{AccountId, FixedPolicies, Identity, MemoryCourier, Notice, PasswordCost, SecretKey};
@@ -130,6 +130,7 @@ async fn world() -> World {
         &kampus_events::MODULE,
         &kampus_access::MODULE,
         &kampus_identity::MODULE,
+        &kampus_settings::MODULE,
         &kampus_courses::MODULE,
     ];
     let schemas: Vec<_> = modules.iter().map(|m| m.schema()).collect();
@@ -138,6 +139,10 @@ async fn world() -> World {
     let access = Access::new(db.clone(), clock.clone());
     access.sync_modules(&modules).await.unwrap();
     kampus_events::Events::new(db.clone())
+        .sync_declarations(&modules)
+        .await
+        .unwrap();
+    kampus_settings::Settings::new(db.clone(), access.clone())
         .sync_declarations(&modules)
         .await
         .unwrap();
@@ -203,7 +208,7 @@ impl World {
 
     /// Drops the installation.
     async fn drop(self) {
-        for module in ["courses", "identity", "access", "events", "db"] {
+        for module in ["courses", "settings", "identity", "access", "events", "db"] {
             sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
                 "drop schema if exists {} cascade",
                 self.db.prefix().schema(module)
@@ -872,5 +877,51 @@ async fn a_course_whose_deletion_is_due_goes_with_everything_it_owns() {
         "its scope went with it"
     );
     assert_eq!(c.course(kept.id).await.unwrap().short_name, "PHY102");
+    w.drop().await;
+}
+
+#[tokio::test]
+async fn the_group_mode_of_a_section_comes_from_its_course_unless_it_sets_its_own() {
+    let w = world().await;
+    let c = &w.courses;
+    let science = c
+        .create_category(&w.admin, w.campus, None, category("Science"), Place::Last)
+        .await
+        .unwrap();
+    let physics = c
+        .create_course(&w.admin, science.id, course("PHY101"), Place::Last)
+        .await
+        .unwrap();
+    let labs = c
+        .add_section(&w.admin, physics.id, None, section("Labs"), Place::Last)
+        .await
+        .unwrap();
+    assert_eq!(c.group_mode(labs.scope).await.unwrap(), GroupMode::None);
+    let settings = kampus_settings::Settings::new(w.db.clone(), w.access.clone());
+    settings
+        .set(
+            &w.admin,
+            "courses.group_mode",
+            physics.scope,
+            serde_json::json!("visible"),
+            false,
+            None,
+        )
+        .await
+        .unwrap();
+    assert_eq!(c.group_mode(labs.scope).await.unwrap(), GroupMode::Visible);
+    settings
+        .set(
+            &w.admin,
+            "courses.group_mode",
+            labs.scope,
+            serde_json::json!("separate"),
+            false,
+            None,
+        )
+        .await
+        .unwrap();
+    assert_eq!(c.group_mode(labs.scope).await.unwrap(), GroupMode::Separate);
+    assert_eq!(c.group_mode(physics.scope).await.unwrap(), GroupMode::Visible);
     w.drop().await;
 }

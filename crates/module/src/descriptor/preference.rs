@@ -34,38 +34,7 @@
 
 //! The preferences a module declares: per-person settings with a type and a default, kept by users.
 
-/// The type of a preference, with its default.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum PreferenceKind {
-    /// On or off.
-    Boolean {
-        /// The value when the person did not choose one.
-        default: bool,
-    },
-    /// One of a list of options.
-    Choice {
-        /// The options.
-        options: &'static [&'static str],
-        /// The value when the person did not choose one.
-        default: &'static str,
-    },
-    /// A whole number in a range.
-    Integer {
-        /// The smallest value.
-        min: i64,
-        /// The largest value.
-        max: i64,
-        /// The value when the person did not choose one.
-        default: i64,
-    },
-    /// Text of at most some characters.
-    Text {
-        /// The longest text.
-        max: usize,
-        /// The value when the person did not choose one.
-        default: &'static str,
-    },
-}
+use crate::ValueKind;
 
 /// A preference a module declares.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -75,5 +44,5 @@ pub struct PreferenceDeclaration {
     /// What it sets.
     pub summary: &'static str,
     /// Its type and default.
-    pub kind: PreferenceKind,
+    pub kind: ValueKind,
 }

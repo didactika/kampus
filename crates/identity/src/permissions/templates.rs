@@ -38,8 +38,8 @@
 use kampus_access::{RoleTemplateDeclaration, Value};
 
 use super::{
-    ACCOUNT_DELETE, ACCOUNT_INVITE, ACCOUNT_READ, ACCOUNT_SUSPEND, PROVIDER_MANAGE, TOKEN_MANAGE_ANY,
-    TOKEN_MANAGE_OWN,
+    ACCOUNT_DELETE, ACCOUNT_INVITE, ACCOUNT_READ, ACCOUNT_SUSPEND, POLICY_MANAGE, PROVIDER_MANAGE,
+    TOKEN_MANAGE_ANY, TOKEN_MANAGE_OWN,
 };
 
 /// Every permission of this module, allowed: what an administrator holds.
@@ -51,6 +51,7 @@ const ALL_ALLOWED: &[(&str, Value)] = &[
     (PROVIDER_MANAGE, Value::Allow),
     (TOKEN_MANAGE_OWN, Value::Allow),
     (TOKEN_MANAGE_ANY, Value::Allow),
+    (POLICY_MANAGE, Value::Allow),
 ];
 
 /// The values identity gives in the default role templates, version 1; templates it leaves out give

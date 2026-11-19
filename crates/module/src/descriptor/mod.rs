@@ -38,11 +38,15 @@ mod command;
 mod event;
 mod job;
 mod preference;
+mod setting;
+mod value;
 
 pub use command::{Argument, Command, CommandContext, CommandFuture};
 pub use event::{Event, EventDeclaration, EventRun, ListenerDeclaration};
 pub use job::{JobDeclaration, JobFuture, JobRun, ScheduleDeclaration};
-pub use preference::{PreferenceDeclaration, PreferenceKind};
+pub use preference::PreferenceDeclaration;
+pub use setting::SettingDeclaration;
+pub use value::ValueKind;
 
 use kampus_db::{ModuleSteps, Step};
 
@@ -72,6 +76,8 @@ pub struct Module {
     pub commands: &'static [Command],
     /// The per-person preferences it declares, from `src/settings/preferences.rs`.
     pub preferences: &'static [PreferenceDeclaration],
+    /// The settings it declares, kept per scope, from `src/settings/mod.rs`.
+    pub settings: &'static [SettingDeclaration],
     /// The events it publishes, from `src/events/mod.rs`.
     pub events: &'static [EventDeclaration],
     /// Its reactions to events, from `src/observers/mod.rs`.

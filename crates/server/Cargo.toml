@@ -50,6 +50,7 @@ kind = "server"
 kampus-events = { path = "../events" }
 kampus-tasks = { path = "../tasks" }
 kampus-access = { path = "../access" }
+kampus-settings = { path = "../settings" }
 kampus-identity = { path = "../identity" }
 kampus-users = { path = "../users" }
 kampus-courses = { path = "../courses" }

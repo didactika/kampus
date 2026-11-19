@@ -487,3 +487,15 @@ impl<T> Default for Place<T> {
         Self::Last
     }
 }
+
+/// Whether people of a course, a section or an activity work in groups.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum GroupMode {
+    /// No groups.
+    None,
+    /// Each group works on its own and sees only itself.
+    Separate,
+    /// Each group works on its own and sees the others.
+    Visible,
+}

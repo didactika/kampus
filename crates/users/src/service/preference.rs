@@ -39,37 +39,13 @@ use kampus_access::Actor;
 use kampus_common::{Error, FieldError, Result};
 use kampus_identity::AccountId;
 use kampus_identity::permissions::ACCOUNT_READ;
-use kampus_module::{PreferenceDeclaration, PreferenceKind};
+use kampus_module::PreferenceDeclaration;
 use serde_json::Value;
 use sqlx::Row;
 
 use crate::permissions::{PROFILE_UPDATE_ANY, PROFILE_UPDATE_OWN};
 use crate::service::profile::is_self;
 use crate::{Users, sql};
-
-/// The default of a declaration, as JSON.
-fn default_of(kind: PreferenceKind) -> Value {
-    match kind {
-        PreferenceKind::Boolean { default } => Value::Bool(default),
-        PreferenceKind::Choice { default, .. } | PreferenceKind::Text { default, .. } => {
-            Value::String(default.to_owned())
-        }
-        PreferenceKind::Integer { default, .. } => Value::from(default),
-    }
-}
-
-/// Whether a value fits a declaration.
-fn fits(kind: PreferenceKind, value: &Value) -> bool {
-    match (kind, value) {
-        (PreferenceKind::Boolean { .. }, Value::Bool(_)) => true,
-        (PreferenceKind::Choice { options, .. }, Value::String(text)) => options.contains(&text.as_str()),
-        (PreferenceKind::Integer { min, max, .. }, Value::Number(n)) => {
-            n.as_i64().is_some_and(|n| (min..=max).contains(&n))
-        }
-        (PreferenceKind::Text { max, .. }, Value::String(text)) => text.chars().count() <= max,
-        _ => false,
-    }
-}
 
 impl Users {
     /// Every declared preference of an account, with its value or its default, by key.
@@ -98,10 +74,10 @@ impl Users {
                     .iter()
                     .find(|r| r.get::<String, _>("key") == declaration.key)
                     .map(|r| r.get::<Value, _>("value"))
-                    .filter(|v| fits(declaration.kind, v));
+                    .filter(|v| declaration.kind.accepts(v));
                 (
                     declaration.key,
-                    stored.unwrap_or_else(|| default_of(declaration.kind)),
+                    stored.unwrap_or_else(|| declaration.kind.default_value()),
                 )
             })
             .collect())
@@ -144,7 +120,7 @@ impl Users {
             .await
             .map(drop)
             .map_err(kampus_db::classify),
-            Some(value) if fits(declaration.kind, &value) => sqlx::query(sql(format!(
+            Some(value) if declaration.kind.accepts(&value) => sqlx::query(sql(format!(
                 "insert into {table} (account_id, key, value) values ($1, $2, $3)
                  on conflict (account_id, key) do update set value = excluded.value, updated_at = now()"
             )))

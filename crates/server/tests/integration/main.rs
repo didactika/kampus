@@ -46,4 +46,5 @@ mod enrol;
 mod http;
 mod install;
 mod jobs;
+mod settings;
 mod site;

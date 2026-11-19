@@ -40,6 +40,7 @@ pub const MODULES: &[&kampus_module::Module] = &[
     &kampus_events::MODULE,
     &kampus_tasks::MODULE,
     &kampus_access::MODULE,
+    &kampus_settings::MODULE,
     &kampus_identity::MODULE,
     &kampus_users::MODULE,
     &kampus_courses::MODULE,

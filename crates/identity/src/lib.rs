@@ -48,6 +48,7 @@ pub mod module;
 pub mod permissions;
 pub mod ports;
 pub mod service;
+pub mod settings;
 pub mod support;
 
 use std::sync::Arc;
@@ -63,6 +64,7 @@ pub use model::{
 pub use module::MODULE;
 pub use ports::courier::{Courier, LogCourier, MemoryCourier, Message, Notice};
 pub use ports::policy::{CampusPolicy, FixedPolicies, Policies, Throttle};
+pub use settings::SettingsPolicies;
 pub use support::secret::{PasswordCost, PasswordHasher, SecretKey};
 
 /// The identity service.
