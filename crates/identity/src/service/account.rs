@@ -47,7 +47,7 @@ use crate::{Account, AccountId, AccountKind, AccountStatus, Identity, Message, N
 /// The columns of an account, in the order [`from_row`] reads them.
 pub(crate) const COLUMNS: &str =
     "id, campus_id, scope_id, kind, username, email, email_verified_at, status, status_reason,
-    last_sign_in_at, deletion_due_at, pseudonym, version";
+    last_sign_in_at, deletion_due_at, pseudonym, pending_email, version";
 
 /// A sign-up request.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -124,6 +124,7 @@ pub(crate) fn from_row(row: &PgRow) -> Result<Account> {
         last_sign_in_at: instant("last_sign_in_at"),
         deletion_due_at: instant("deletion_due_at"),
         pseudonym: row.get("pseudonym"),
+        pending_email: row.get("pending_email"),
         version: row.get("version"),
     })
 }

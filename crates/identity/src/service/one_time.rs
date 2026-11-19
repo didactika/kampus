@@ -56,6 +56,8 @@ pub enum Purpose {
     EmailCode,
     /// A sign-in that waits for its second factor.
     SecondFactor,
+    /// Confirms a new email of an account.
+    EmailChange,
 }
 
 impl Purpose {
@@ -69,6 +71,7 @@ impl Purpose {
             Self::Recovery => "recovery",
             Self::EmailCode => "email_code",
             Self::SecondFactor => "second_factor",
+            Self::EmailChange => "email_change",
         }
     }
 }

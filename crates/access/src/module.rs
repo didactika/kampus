@@ -49,4 +49,5 @@ pub const MODULE: Module = Module {
     templates: crate::permissions::TEMPLATES,
     plugin_types: &[],
     commands: &[],
+    preferences: &[],
 };

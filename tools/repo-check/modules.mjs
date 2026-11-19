@@ -221,6 +221,16 @@ function checkLayout(root) {
   return problems;
 }
 
+/**
+ * A constant array as rustfmt writes it: on one line when it fits in 110 columns, otherwise one entry
+ * per line.
+ */
+export function rustList(declaration, entries) {
+  const line = `${declaration} &[${entries.join(', ')}];`;
+  if (line.length <= 110) return line;
+  return [`${declaration} &[`, ...entries.map((e) => `    ${e},`), '];'].join('\n');
+}
+
 /** The kinds of test a crate may have, one test binary each. */
 const TEST_KINDS = ['unit', 'integration', 'conformance', 'support'];
 
@@ -245,7 +255,7 @@ function rustBody(modules) {
     '//! the module crates and `crates/server/modules.toml`. Do not edit by hand.',
     '',
     '/// Every module of this build.',
-    `pub const MODULES: &[&kampus_module::Module] = &[${entries.join(', ')}];`,
+    rustList('pub const MODULES: &[&kampus_module::Module] =', entries),
     '',
     '/// The packages of the modules that come from outside the repository.',
     `pub const EXTERNAL: &[&str] = &[${modules.filter((m) => m.external).map((m) => JSON.stringify(m.crate)).join(', ')}];`,

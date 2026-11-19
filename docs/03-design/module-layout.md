@@ -25,6 +25,7 @@ pub const MODULE: Module = Module {
     templates: crate::permissions::TEMPLATES,
     plugin_types: &[],
     commands: crate::commands::COMMANDS,
+    preferences: crate::settings::PREFERENCES,
 };
 ```
 
@@ -33,6 +34,7 @@ pub const MODULE: Module = Module {
 | `name` | `src/module.rs` | Names the module's database schema and owns its grants |
 | `manifest` | `version.toml`, `Cargo.toml` and `assets/icon.svg`, read by `manifest!()` | Checks it and records the version (see [the version file](#the-version-file)) |
 | `commands` | `src/commands/mod.rs` | Offers them as `kampus-server <module> <command>` (see [commands](#commands-of-a-component)) |
+| `preferences` | `src/settings/preferences.rs` | Kept by users per person: only declared keys, each checked against its type, with its default when unset |
 | `plugin_types` | `src/module.rs` | Accepts plugins named `<type>_<name>` in `crates/<module>/<type>/<name>` |
 | `steps` | `src/db/steps.rs` | Applies the pending upgrade steps (DEC-082) |
 | `permissions` | `src/permissions/mod.rs` | Synchronises them at start-up and retires those no module declares (RN-021) |
@@ -55,7 +57,7 @@ pub const MODULE: Module = Module {
 | `src/commands/` | Its commands on the command line, `kampus-server <module> <command>` | when it has any |
 | `src/events/` | One file per event it publishes | from the events module (T-C.06) |
 | `src/observers/` | One file per event of another module it handles | from the events module (T-C.06) |
-| `src/settings/` | The settings it declares | from the settings module (T-C.06) |
+| `src/settings/` | `preferences.rs`, the per-person preferences it declares (type and default); the campus settings arrive with the settings module | when it has any |
 | `src/http/` | Its routes and their request and response types | from the API module (T-C.12) |
 | `src/privacy/` | Its export and erase handlers (DEC-061) | from the privacy module (T-C.12) |
 | `tests/` | Integration tests against the real ports, one test per business rule or use case | yes |

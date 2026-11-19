@@ -35,8 +35,10 @@
 //! The descriptor of a module: what it adds to the platform, as the server reads it.
 
 mod command;
+mod preference;
 
 pub use command::{Argument, Command, CommandContext, CommandFuture};
+pub use preference::{PreferenceDeclaration, PreferenceKind};
 
 use kampus_db::{ModuleSteps, Step};
 
@@ -64,6 +66,8 @@ pub struct Module {
     pub plugin_types: &'static [&'static str],
     /// The commands it offers on the command line, from `src/commands/mod.rs`.
     pub commands: &'static [Command],
+    /// The per-person preferences it declares, from `src/settings/preferences.rs`.
+    pub preferences: &'static [PreferenceDeclaration],
 }
 
 impl Module {
