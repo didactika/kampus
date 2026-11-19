@@ -35,10 +35,6 @@
 //! What modules need to offer HTTP routes: the services the server composed, errors as problem details
 //! (RFC 9457) with the request id, and the conditional requests of `If-Match`.
 
-use std::any::{Any, TypeId};
-use std::collections::HashMap;
-use std::sync::Arc;
-
 use axum::http::{HeaderMap, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
 use kampus_common::{Error, ErrorKind, FieldError};
@@ -47,45 +43,6 @@ use serde_json::json;
 tokio::task_local! {
     /// The id of the request being served, set by the server around every request.
     pub static REQUEST_ID: String;
-}
-
-/// The services the server composed, by type, shared by the routes of every module.
-#[derive(Clone, Default)]
-pub struct HttpContext {
-    /// The services, by their type.
-    services: Arc<HashMap<TypeId, Arc<dyn Any + Send + Sync>>>,
-}
-
-impl std::fmt::Debug for HttpContext {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("HttpContext")
-            .field("services", &self.services.len())
-            .finish()
-    }
-}
-
-impl HttpContext {
-    /// A context with these services.
-    #[must_use]
-    pub fn with<T: Any + Send + Sync>(mut self, service: T) -> Self {
-        Arc::make_mut(&mut self.services).insert(TypeId::of::<T>(), Arc::new(service));
-        self
-    }
-
-    /// A service of the context.
-    ///
-    /// # Errors
-    ///
-    /// `internal` (`module.service_missing`) when the server did not compose it.
-    pub fn service<T: Any + Send + Sync + Clone>(&self) -> Result<T, Error> {
-        self.services
-            .get(&TypeId::of::<T>())
-            .and_then(|s| s.downcast_ref::<T>())
-            .cloned()
-            .ok_or_else(|| {
-                Error::internal("module.service_missing").with_param("type", std::any::type_name::<T>())
-            })
-    }
 }
 
 /// An error answered as problem details.

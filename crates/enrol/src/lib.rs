@@ -39,6 +39,7 @@
 pub mod commands;
 pub mod db;
 pub mod http;
+pub mod jobs;
 pub mod model;
 pub mod module;
 pub mod permissions;

@@ -50,7 +50,8 @@ use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use kampus_access::{Actor, ScopeId};
 use kampus_common::{Error, Result, Timestamp};
-use kampus_module::http::{ApiError, HttpContext};
+use kampus_module::ServiceContext;
+use kampus_module::http::ApiError;
 
 use crate::service::api_token::TokenAuth;
 use crate::service::session::Client;
@@ -257,7 +258,7 @@ async fn caller(
 }
 
 /// The routes of identity.
-pub fn routes(context: &HttpContext) -> Router {
+pub fn routes(context: &ServiceContext) -> Router {
     let shared = Shared {
         identity: context.service::<Identity>().ok(),
         settings: context.service::<HttpSettings>().ok(),

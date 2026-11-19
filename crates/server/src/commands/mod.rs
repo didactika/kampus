@@ -39,15 +39,15 @@ pub mod cli;
 pub mod install;
 pub mod status;
 
+use std::sync::Arc;
+
 use kampus_common::{Error, PLATFORM_VERSION, Result};
 use kampus_db::{Database, UpgradePlan, Upgrader};
+use kampus_identity::LogCourier;
+use kampus_tasks::{Scheduler, Tasks, Worker};
 use tokio::net::TcpListener;
 
 use crate::config::{Config, LogFormat};
-use std::sync::Arc;
-
-use kampus_identity::LogCourier;
-
 use crate::http::campus::Campuses;
 use crate::http::{Api, AppState, router};
 use crate::wiring::components;
@@ -125,7 +125,32 @@ pub async fn serve(config: &Config) -> Result<()> {
     })?;
     tracing::info!(role = %config.role, address = %config.http_address, version = PLATFORM_VERSION, "kampus started");
     let ports = crate::wiring::ports::Ports::open(config).await?;
-    let api = api(config, &db)?;
+    let services = services(config, &db)?;
+    let api = match (&services, config.role.serves_api()) {
+        (Some(services), true) => Some(Api {
+            campuses: Campuses::new(config.tenancy.clone(), services.access.clone()),
+            services: services.clone(),
+        }),
+        _ => None,
+    };
+    let (stop, stopped) = tokio::sync::watch::channel(false);
+    let mut background = Vec::new();
+    if let Some(services) = services.as_ref().filter(|_| config.role.runs_jobs()) {
+        let worker = Worker::new(
+            Tasks::new(db.clone()),
+            crate::wiring::registry::MODULES
+                .iter()
+                .flat_map(|m| m.jobs.iter().copied()),
+            services.context.clone(),
+            format!("{}-{}", config.role, std::process::id()),
+        );
+        background.push(tokio::spawn(worker.run(stopped.clone())));
+    }
+    if config.role.runs_schedules() {
+        background.push(tokio::spawn(
+            Scheduler::new(Tasks::new(db.clone())).run(stopped.clone()),
+        ));
+    }
     let app = router(
         AppState {
             db: db.clone(),
@@ -134,25 +159,33 @@ pub async fn serve(config: &Config) -> Result<()> {
         },
         api.as_ref(),
     );
-    axum::serve(
+    let served = axum::serve(
         listener,
         app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
     )
-    .with_graceful_shutdown(shutdown_signal())
+    .with_graceful_shutdown(async move {
+        shutdown_signal().await;
+        stop.send_replace(true);
+    })
     .await
-    .map_err(|error| Error::unavailable("server.http").with_source(error))?;
+    .map_err(|error| Error::unavailable("server.http").with_source(error));
+    for task in background {
+        drop(task.await);
+    }
+    served?;
     db.close().await;
     tracing::info!("kampus stopped");
     Ok(())
 }
 
-/// The API of the modules, for the roles that serve it.
+/// The services of the modules, for the roles that serve the API or run jobs; the scheduler only fires
+/// schedules and needs none.
 ///
 /// # Errors
 ///
-/// `validation` when such a role has no site address or secret key.
-fn api(config: &Config, db: &Database) -> Result<Option<Api>> {
-    if !config.role.serves_api() {
+/// `validation` when such a role has no secret key, or serves the API without a site address.
+fn services(config: &Config, db: &Database) -> Result<Option<Services>> {
+    if !config.role.serves_api() && !config.role.runs_jobs() {
         return Ok(None);
     }
     let missing = |key: &str| {
@@ -161,17 +194,21 @@ fn api(config: &Config, db: &Database) -> Result<Option<Api>> {
             vec![kampus_common::FieldError::new(key, "required")],
         )
     };
-    let site_url = config
-        .site_url
-        .clone()
-        .ok_or_else(|| missing("KAMPUS_SITE_URL"))?;
+    let site_url = match (&config.site_url, config.role.serves_api()) {
+        (Some(url), _) => url.clone(),
+        (None, true) => return Err(missing("KAMPUS_SITE_URL")),
+        (None, false) => String::new(),
+    };
     let secret_key = config
         .secret_key
         .clone()
         .ok_or_else(|| missing("KAMPUS_SECURITY_SECRET_KEY"))?;
-    let services = Services::build(Parts::new(db.clone(), site_url, secret_key, Arc::new(LogCourier)));
-    let campuses = Campuses::new(config.tenancy.clone(), services.access.clone());
-    Ok(Some(Api { services, campuses }))
+    Ok(Some(Services::build(Parts::new(
+        db.clone(),
+        site_url,
+        secret_key,
+        Arc::new(LogCourier),
+    ))))
 }
 
 /// Applies every pending upgrade step, from whichever release the installation is on.

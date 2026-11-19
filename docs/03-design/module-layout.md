@@ -26,6 +26,8 @@ pub const MODULE: Module = Module {
     plugin_types: &[],
     commands: crate::commands::COMMANDS,
     preferences: crate::settings::PREFERENCES,
+    jobs: crate::jobs::JOBS,
+    schedules: crate::jobs::SCHEDULES,
     routes: Some(crate::http::routes),
 };
 ```
@@ -40,6 +42,7 @@ pub const MODULE: Module = Module {
 | `steps` | `src/db/steps.rs` | Applies the pending upgrade steps (DEC-082) |
 | `permissions` | `src/permissions/mod.rs` | Synchronises them at start-up and retires those no module declares (RN-021) |
 | `templates` | `src/permissions/templates.rs` | Merges the values of every module for each role template |
+| `jobs`, `schedules` | `src/jobs/mod.rs` | Runs the jobs in the worker roles and fires the schedules in the scheduler roles (see [background jobs](#background-jobs)) |
 | `routes` | `src/http/mod.rs`, `None` without routes | Serves them under `/api/v1`, behind the campus of the request and its authentication (see [routes](#routes)) |
 
 ## The folders
@@ -55,7 +58,7 @@ pub const MODULE: Module = Module {
 | `src/service/` | The service API, one file per area of use cases (`account.rs`, `sign_in.rs`) | when it has any |
 | `src/ports/` | Traits that other modules implement for this one (`Courier`, `Policies`) | when it has any |
 | `src/support/` | Internal helpers that are not part of the API (hashing, encodings) | when it has any |
-| `src/jobs/` | One file per job | when it has any |
+| `src/jobs/` | `mod.rs` with `JOBS`, `SCHEDULES` and their handlers, which call the services | when it has any |
 | `src/commands/` | Its commands on the command line, `kampus-server <module> <command>` | when it has any |
 | `src/events/` | One file per event it publishes | from the events module (T-C.06) |
 | `src/observers/` | One file per event of another module it handles | from the events module (T-C.06) |
@@ -71,10 +74,10 @@ Nothing else may sit at the top of the crate or of `src/`; `tools/repo-check` re
 
 ## Routes
 
-A module serves HTTP by exposing `routes` in its descriptor: a function that builds its `axum::Router` from the `HttpContext`, the services the server composed once per process. A handler reads the services it needs by type, never builds one itself.
+A module serves HTTP by exposing `routes` in its descriptor: a function that builds its `axum::Router` from the `ServiceContext`, the services the server composed once per process. A handler reads the services it needs by type, never builds one itself.
 
 ```rust
-pub fn routes(context: &HttpContext) -> Router {
+pub fn routes(context: &ServiceContext) -> Router {
     let shared = Shared { users: context.service::<Users>().ok() };
     Router::new()
         .route("/me/profile", get(my_profile).put(update_my_profile))
@@ -104,6 +107,50 @@ A browser authenticates with the `kampus_session` cookie (HttpOnly, SameSite=Lax
 | `with_etag(response, version)` | Answers a resource with its version as `ETag` |
 
 The routes of a module live in `src/http/`: `mod.rs` with `routes` and what its handlers share, and one file per area (`auth.rs`, `me.rs`, `accounts.rs`). The OpenAPI fragment of the module in `docs/03-design/api/` lists every route. Tests of routes go through the server, in `crates/server/tests/integration/`, as a client sees them.
+
+## Background jobs
+
+Work that does not belong in a request, or that recurs, is a **job** in the queue of `kampus-tasks`. A module declares its kinds of job and their schedules in `src/jobs/mod.rs` and exposes them through `jobs` and `schedules` in its descriptor:
+
+```rust
+pub const JOBS: &[JobDeclaration] = &[JobDeclaration {
+    code: "enrol.run_expiry",
+    summary: "Apply the expiry rule to the enrolments whose end has passed",
+    max_attempts: 5,
+    backoff_seconds: 60,
+    timeout_seconds: 1800,
+    concurrency: Some("all"),
+    run: run_expiry,
+}];
+
+pub const SCHEDULES: &[ScheduleDeclaration] = &[ScheduleDeclaration {
+    job: "enrol.run_expiry",
+    cron: "5 * * * *",
+    time_zone: "UTC",
+}];
+
+fn run_expiry(run: JobRun<'_>) -> JobFuture<'_> {
+    Box::pin(async move {
+        run.services.service::<Enrol>()?.run_expiry().await?;
+        Ok(())
+    })
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `code` | `<module>.<name>`, unique in the build |
+| `max_attempts` | Runs before the job is failed, with its last error kept and logged |
+| `backoff_seconds` | The wait before the first retry; it doubles at each one |
+| `timeout_seconds` | How long one run may take; a run past it is stopped and counts as a failed attempt. The worker's lease lasts as long, so a job whose worker stops is taken again |
+| `concurrency` | A payload field: jobs of the type with the same value run one at a time (`Some("course")`); a field absent from the payload, such as `"all"`, keeps the whole type one at a time |
+| `run` | The handler; it gets the job's id, its payload and the [`ServiceContext`](#routes) |
+
+A handler may run again after a failure or a stopped worker, so it does what is left and nothing twice. Payloads hold identifiers, never copies of personal data. A long job reports its progress with `Tasks::report_progress` and stops at its next step when `Tasks::cancelled` says so.
+
+To enqueue a job from a change, use `Tasks::enqueue_in` inside the change's transaction: the job exists only if the change commits.
+
+The server synchronises job types and schedules at start-up; a schedule keeps the rule an operator set. The `worker` and `all` roles run jobs; the `scheduler` and `all` roles fire schedules, once per instant across every node. Operators see and steer them with `kampus-server tasks`.
 
 ## Commands of a component
 

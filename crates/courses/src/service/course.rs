@@ -408,6 +408,42 @@ impl Courses {
         course(&row)
     }
 
+    /// Deletes the courses whose scheduled deletion is due: the course and its scope go, and with them by
+    /// cascade everything the course owns, sections, groups, enrolments and grants in it. Returns how
+    /// many were deleted.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails; a course that fails is retried on the next run.
+    pub async fn run_due_deletions(&self) -> Result<usize> {
+        let due: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+            "select id from {} where state = 'deletion_scheduled' and deletion_due_at <= now() order by deletion_due_at, id",
+            self.table("course")
+        )))
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        let mut deleted = 0;
+        for id in due {
+            let mut tx = self.db.begin().await?;
+            let course = self
+                .read_course_in(&mut tx, CourseId::from_uuid(id), true)
+                .await?;
+            if course.state != CourseState::DeletionScheduled {
+                continue;
+            }
+            sqlx::query(sql(format!("delete from {} where id = $1", self.table("course"))))
+                .bind(id)
+                .execute(&mut *tx)
+                .await
+                .map_err(kampus_db::classify)?;
+            self.access.delete_scope_in(&mut tx, course.scope).await?;
+            tx.commit().await.map_err(kampus_db::classify)?;
+            deleted += 1;
+        }
+        Ok(deleted)
+    }
+
     /// Requires `courses.course.delete`, which the owners of the course hold as owners.
     async fn require_owner_or(&self, actor: &Actor, course: &Course, conn: &mut PgConnection) -> Result<()> {
         if let Some(p) = principal(actor) {

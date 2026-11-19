@@ -46,15 +46,19 @@ use crate::wiring::registry::MODULES;
 pub static SCHEMAS: LazyLock<Vec<ModuleSteps>> =
     LazyLock::new(|| MODULES.iter().map(|m| m.schema()).collect());
 
-/// Brings what the modules of this build declare into the database at start-up: permissions
-/// and role templates, with the values of every module for each template merged.
+/// Brings what the modules of this build declare into the database at start-up: permissions and role
+/// templates, with the values of every module for each template merged, and job types and schedules.
 ///
 /// # Errors
 ///
-/// The errors of [`kampus_access::Access::sync`].
+/// The errors of [`kampus_access::Access::sync`] and [`kampus_tasks::Tasks::sync_declarations`].
 pub async fn sync_declarations(db: &kampus_db::Database) -> kampus_common::Result<()> {
+    use kampus_common::Clock;
     kampus_access::Access::new(db.clone(), std::sync::Arc::new(kampus_common::SystemClock))
         .sync_modules(MODULES)
+        .await?;
+    kampus_tasks::Tasks::new(db.clone())
+        .sync_declarations(MODULES, kampus_common::SystemClock.now())
         .await
 }
 

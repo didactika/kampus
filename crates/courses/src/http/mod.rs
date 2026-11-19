@@ -46,10 +46,10 @@ use kampus_access::{Actor, ScopeId};
 use kampus_common::{Error, Result};
 use kampus_identity::Identity;
 use kampus_identity::http::Caller;
-use kampus_module::http::HttpContext;
+use kampus_module::ServiceContext;
 
 /// The routes of courses.
-pub fn routes(context: &HttpContext) -> Router {
+pub fn routes(context: &ServiceContext) -> Router {
     let shared = Shared {
         courses: context.service::<Courses>().ok(),
         identity: context.service::<Identity>().ok(),
