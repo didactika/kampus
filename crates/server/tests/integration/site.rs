@@ -67,6 +67,8 @@ pub(crate) struct Site {
     pub(crate) courier: Arc<MemoryCourier>,
     /// The campus.
     pub(crate) campus: ScopeId,
+    /// The roles of the campus, by template.
+    pub(crate) roles: std::collections::BTreeMap<&'static str, kampus_access::RoleId>,
     /// Keeps the files of the storage port.
     pub(crate) _files: tempfile::TempDir,
 }
@@ -128,7 +130,7 @@ pub(crate) async fn site() -> Site {
     let access: Access = services.access.clone();
     let platform = access.create_platform().await.unwrap();
     let campus = access.create_scope(platform, ScopeKind::Campus).await.unwrap();
-    access.install_campus_roles(campus).await.unwrap();
+    let roles = access.install_campus_roles(campus).await.unwrap();
     services
         .identity
         .install_administrator(campus, "admin@example.org", "admin", PASSWORD)
@@ -150,6 +152,7 @@ pub(crate) async fn site() -> Site {
         router,
         courier,
         campus,
+        roles,
         _files: files,
     }
 }
@@ -222,5 +225,34 @@ impl Site {
             Some(Notice::Invitation { token } | Notice::ConfirmEmail { token }) => token,
             other => panic!("no link sent to {email}: {other:?}"),
         }
+    }
+}
+
+impl Site {
+    /// Enrols an account in a course through a new manual instance giving a role.
+    pub(crate) async fn enrol(&self, admin: &str, course: &str, account: &str, role: &str) -> String {
+        let instance = self
+            .call(
+                Method::POST,
+                &format!("/api/v1/courses/{course}/enrolment-instances"),
+                Some(admin),
+                &[],
+                Some(json!({ "method": "manual", "name": format!("Manual {account}"), "role": self.roles[role] })),
+            )
+            .await;
+        assert_eq!(instance.status, StatusCode::CREATED, "{}", instance.body);
+        let instance = instance.body["id"].as_str().unwrap().to_owned();
+        let enrolled = self
+            .call(
+                Method::POST,
+                &format!("/api/v1/enrolment-instances/{instance}/enrolments"),
+                Some(admin),
+                &[],
+                Some(json!({ "accounts": [account] })),
+            )
+            .await;
+        assert_eq!(enrolled.status, StatusCode::OK, "{}", enrolled.body);
+        assert!(enrolled.body[0]["enrolment"].is_string(), "{}", enrolled.body);
+        instance
     }
 }

@@ -42,7 +42,7 @@ use crate::site::{PASSWORD, Site, site};
 
 impl Site {
     /// Invites a person and lets them choose [`PASSWORD`]; returns the account and a session.
-    async fn learner(&self, admin: &str, email: &str) -> (String, String) {
+    pub(crate) async fn learner(&self, admin: &str, email: &str) -> (String, String) {
         let invited = self
             .call(
                 Method::POST,
@@ -66,7 +66,7 @@ impl Site {
     }
 
     /// Creates a category and a course in it; returns both ids.
-    async fn course(&self, admin: &str) -> (String, String) {
+    pub(crate) async fn course(&self, admin: &str) -> (String, String) {
         let science = self
             .call(
                 Method::POST,
@@ -302,6 +302,21 @@ async fn groups_split_the_people_of_a_course() {
     assert_eq!(taken.code(), "courses.group_name_taken");
 
     let (lea_id, lea) = site.learner(&admin, "lea@example.org").await;
+    let outsider = site
+        .call(
+            Method::POST,
+            &format!("/api/v1/groups/{group}/members"),
+            Some(&admin),
+            &[],
+            Some(json!({ "account": lea_id })),
+        )
+        .await;
+    assert_eq!(
+        outsider.code(),
+        "courses.member_not_participant",
+        "only participants join groups"
+    );
+    site.enrol(&admin, &course, &lea_id, "learner").await;
     let before = site.call(Method::GET, &groups, Some(&lea), &[], None).await;
     assert_eq!(
         before.body,

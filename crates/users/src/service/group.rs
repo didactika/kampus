@@ -180,6 +180,25 @@ impl Users {
         .map_err(kampus_db::classify)
     }
 
+    /// The accounts in a system group, whatever their origin, for a module that keeps something in step
+    /// with it, such as enrolment.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown group.
+    pub async fn member_accounts(&self, group: GroupId) -> Result<Vec<AccountId>> {
+        self.group(group).await?;
+        let ids: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+            "select distinct account_id from {} where group_id = $1 order by account_id",
+            self.table("system_group_member")
+        )))
+        .bind(group.as_uuid())
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(ids.into_iter().map(AccountId::from_uuid).collect())
+    }
+
     /// The members of a group, once per origin.
     ///
     /// # Errors
