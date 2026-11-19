@@ -8,7 +8,6 @@ title Schema enrol (PostgreSQL)
 entity instance {
   * id : uuid <<PK>>
   course_id : uuid <<FK>>
-  section_id : uuid <<FK>>
   method_code : text
   role_id : uuid <<FK>>
   enabled : boolean
@@ -23,7 +22,7 @@ entity self_key {
   * id : uuid <<PK>>
   instance_id : uuid <<FK>>
   group_id : uuid <<FK>>
-  hash : bytea
+  hash : text
 }
 entity linked_group {
   * instance_id : uuid <<PK, FK>>

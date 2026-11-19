@@ -102,7 +102,28 @@ impl Access {
         to: PrincipalId,
         until: Option<Timestamp>,
     ) -> Result<GrantId> {
-        self.insert_grant_in(conn, Origin::Module(module), role, scope, to, until)
+        self.insert_grant_in(conn, Origin::Module(module), role, scope, to, (None, until))
+            .await
+    }
+
+    /// Grants a role on behalf of a module inside the caller's transaction, valid from `from` (now when
+    /// absent) until `until`, such as the period of an enrolment.
+    ///
+    /// # Errors
+    ///
+    /// As [`Access::grant_for_module`], and `validation` for an end before the start.
+    #[allow(clippy::too_many_arguments, reason = "the grant and its period")]
+    pub async fn grant_for_module_between_in(
+        &self,
+        conn: &mut PgConnection,
+        module: &str,
+        role: RoleId,
+        scope: ScopeId,
+        to: PrincipalId,
+        from: Option<Timestamp>,
+        until: Option<Timestamp>,
+    ) -> Result<GrantId> {
+        self.insert_grant_in(conn, Origin::Module(module), role, scope, to, (from, until))
             .await
     }
 
@@ -143,13 +164,14 @@ impl Access {
     ) -> Result<GrantId> {
         let mut tx = self.db.begin().await?;
         let id = self
-            .insert_grant_in(&mut tx, origin, role, scope, to, until)
+            .insert_grant_in(&mut tx, origin, role, scope, to, (None, until))
             .await?;
         tx.commit().await.map_err(kampus_db::classify)?;
         Ok(id)
     }
 
-    /// Inserts a grant after its checks, inside the caller's transaction.
+    /// Inserts a grant after its checks, inside the caller's transaction, valid from the first instant of the
+    /// period (now when absent) until its second.
     async fn insert_grant_in(
         &self,
         tx: &mut PgConnection,
@@ -157,7 +179,7 @@ impl Access {
         role: RoleId,
         scope: ScopeId,
         to: PrincipalId,
-        until: Option<Timestamp>,
+        (from, until): (Option<Timestamp>, Option<Timestamp>),
     ) -> Result<GrantId> {
         let path = self.path(&mut *tx, scope).await?;
         let kind = path[0].kind;
@@ -193,7 +215,7 @@ impl Access {
             ));
         }
         let id = GrantId::generate();
-        let from = self.now();
+        let from = from.unwrap_or_else(|| self.now());
         sqlx::query(sql(format!(
             "insert into {} (id, role_id, scope_id, principal_id, origin, origin_module, valid_from, valid_until, granted_by)
              values ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
@@ -237,9 +259,53 @@ impl Access {
         self.remove_grant(None, Some(module), grant).await
     }
 
+    /// Removes a grant a module owns inside the caller's transaction, so it goes together with what owns
+    /// it, such as an enrolment.
+    ///
+    /// # Errors
+    ///
+    /// As [`Access::revoke_for_module`].
+    pub async fn revoke_for_module_in(
+        &self,
+        conn: &mut PgConnection,
+        module: &str,
+        grant: GrantId,
+    ) -> Result<()> {
+        self.remove_grant_in(conn, None, Some(module), grant).await
+    }
+
+    /// Fails unless the actor holds `permission` in the scope and one of its roles may grant `role`.
+    ///
+    /// # Errors
+    ///
+    /// `permission_denied` without the permission (`access.denied`) or the allowance (`access.no_allowance`).
+    pub async fn require_may_grant(
+        &self,
+        actor: &Actor,
+        permission: &str,
+        scope: ScopeId,
+        role: RoleId,
+    ) -> Result<()> {
+        let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
+        self.require_with_allowance(&mut conn, actor, permission, scope, role, AllowanceKind::Grant)
+            .await
+    }
+
     /// Removes a grant after its checks.
     async fn remove_grant(&self, actor: Option<&Actor>, module: Option<&str>, grant: GrantId) -> Result<()> {
         let mut tx = self.db.begin().await?;
+        self.remove_grant_in(&mut tx, actor, module, grant).await?;
+        tx.commit().await.map_err(kampus_db::classify)
+    }
+
+    /// Removes a grant after its checks, inside a transaction.
+    async fn remove_grant_in(
+        &self,
+        tx: &mut PgConnection,
+        actor: Option<&Actor>,
+        module: Option<&str>,
+        grant: GrantId,
+    ) -> Result<()> {
         let row = sqlx::query(sql(format!(
             "select scope_id, origin_module, role_id, principal_id from {} where id = $1",
             self.table("grant")
@@ -258,7 +324,7 @@ impl Access {
                         .with_param("module", owner.unwrap_or_default()));
                 }
                 if !self
-                    .evaluate(&mut tx, actor, GRANT_DELETE, scope, false)
+                    .evaluate(&mut *tx, actor, GRANT_DELETE, scope, false)
                     .await?
                     .allowed
                 {
@@ -274,17 +340,17 @@ impl Access {
                 }
             }
         }
-        let campus = self.campus_of(&mut tx, scope).await?;
-        let was_managed = self.managed_before(&mut tx, campus).await?;
+        let campus = self.campus_of(&mut *tx, scope).await?;
+        let was_managed = self.managed_before(&mut *tx, campus).await?;
         sqlx::query(sql(format!("delete from {} where id = $1", self.table("grant"))))
             .bind(grant.as_uuid())
             .execute(&mut *tx)
             .await
             .map_err(kampus_db::classify)?;
-        self.ensure_still_managed(&mut tx, campus, was_managed).await?;
+        self.ensure_still_managed(&mut *tx, campus, was_managed).await?;
         let before = json!({ "role": RoleId::from_uuid(row.get("role_id")), "scope": scope, "principal": PrincipalId::from_uuid(row.get("principal_id")) });
         self.record(
-            &mut tx,
+            &mut *tx,
             actor.and_then(principal),
             "grant",
             &grant.to_string(),
@@ -292,7 +358,7 @@ impl Access {
             None,
         )
         .await?;
-        tx.commit().await.map_err(kampus_db::classify)
+        Ok(())
     }
 
     /// Requires a permission and an allowance of one of the actor's roles over the target role.

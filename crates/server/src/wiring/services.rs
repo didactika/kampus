@@ -39,10 +39,11 @@ use std::sync::Arc;
 
 use kampus_access::Access;
 use kampus_common::{Clock, SystemClock};
-use kampus_courses::{CampusMembers, Courses};
+use kampus_courses::Courses;
 use kampus_db::Database;
+use kampus_enrol::{Enrol, Participation};
 use kampus_identity::http::HttpSettings;
-use kampus_identity::{Courier, FixedPolicies, Identity, PasswordCost, SecretKey};
+use kampus_identity::{Courier, FixedPolicies, Identity, PasswordCost, PasswordHasher, SecretKey};
 use kampus_module::http::HttpContext;
 use kampus_users::Users;
 
@@ -112,12 +113,28 @@ impl Services {
             .flat_map(|m| m.preferences.iter().copied())
             .collect();
         let users = Users::new(parts.db.clone(), access.clone(), identity.clone(), preferences);
-        let courses = Courses::new(parts.db, access.clone(), parts.clock, Arc::new(CampusMembers));
+        let courses = Courses::new(
+            parts.db.clone(),
+            access.clone(),
+            parts.clock.clone(),
+            Arc::new(Participation::new(parts.db.clone())),
+        );
+        let hasher = PasswordHasher::new(parts.password_cost.unwrap_or_default());
+        let enrol = Enrol::new(
+            parts.db,
+            access.clone(),
+            courses.clone(),
+            identity.clone(),
+            users.clone(),
+            parts.clock,
+            hasher,
+        );
         let context = HttpContext::default()
             .with(access.clone())
             .with(identity.clone())
             .with(users)
             .with(courses)
+            .with(enrol)
             .with(HttpSettings {
                 api_url: format!(
                     "{}{}",
