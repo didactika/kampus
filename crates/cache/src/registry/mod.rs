@@ -45,6 +45,8 @@ pub type Opening = std::pin::Pin<Box<dyn std::future::Future<Output = Result<Arc
 /// A cache adapter as it registers itself in a build: the URL schemes it serves and how it opens.
 #[derive(Debug, Clone, Copy)]
 pub struct Adapter {
+    /// What it says about itself; its name is `cache_<name>`.
+    pub manifest: kampus_common::component::Manifest,
     /// The name of the adapter, for logs and errors.
     pub name: &'static str,
     /// The URL schemes it serves (`redis`, `valkey`).

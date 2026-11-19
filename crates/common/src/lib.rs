@@ -33,15 +33,16 @@
 // ------------------------------------------------------------------------------
 
 //! Foundations shared by every Kampus module, as fixed by the platform foundations: the error model,
-//! typed identifiers, instants and the clock, cursor pagination,
-//! request identifiers and the platform version.
+//! typed identifiers, instants and the clock, cursor pagination, request identifiers, what every component
+//! says about itself, and the platform version.
 //!
-//! This crate depends on no other Kampus crate.
+//! This crate depends only on `kampus-macros`.
 
 extern crate self as kampus_common;
 
 pub mod adapter;
 pub mod clock;
+pub mod component;
 pub mod error;
 pub mod id;
 pub mod page;
@@ -50,6 +51,7 @@ pub mod request;
 pub use adapter::AdapterSettings;
 pub use clock::{Clock, FixedClock, SystemClock, Timestamp};
 pub use error::{Error, ErrorKind, FieldError, Result};
+pub use kampus_macros::manifest;
 pub use page::{Cursor, Page, PageRequest};
 pub use request::RequestId;
 

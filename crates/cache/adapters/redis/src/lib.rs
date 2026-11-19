@@ -43,6 +43,10 @@ pub use store::RedisCache;
 
 /// The registration of this adapter: `redis://`, `rediss://` and `valkey://` URLs.
 pub const ADAPTER: kampus_cache::Adapter = kampus_cache::Adapter {
+    manifest: kampus_common::manifest! {
+        maturity: kampus_common::component::Maturity::Alpha,
+        kampus: Some(">=0.1.0, <0.2.0"),
+    },
     name: "redis",
     schemes: &["redis", "rediss", "valkey"],
     open: |settings| {

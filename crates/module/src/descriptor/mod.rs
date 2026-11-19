@@ -42,6 +42,8 @@ use crate::permission::{PermissionDeclaration, RoleTemplateDeclaration};
 /// by the core module that introduces it, together with the folder it lives in and its documentation.
 #[derive(Debug, Clone, Copy)]
 pub struct Module {
+    /// What it says about itself: version, maturity, the releases it supports, what it requires, its icon.
+    pub manifest: kampus_common::component::Manifest,
     /// The name of the module, also the logical name of its database schema (`identity`).
     pub name: &'static str,
     /// What the module does, in one sentence.
@@ -53,6 +55,9 @@ pub struct Module {
     /// The values it gives in role templates, from `src/permissions/templates.rs`; the values of every
     /// module for one template are merged.
     pub templates: &'static [RoleTemplateDeclaration],
+    /// The plugin types it defines: their plugins are named `<type>_<name>` and live in
+    /// `crates/<this module>/<type>/<name>`.
+    pub plugin_types: &'static [&'static str],
 }
 
 impl Module {

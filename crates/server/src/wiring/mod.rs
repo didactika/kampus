@@ -36,6 +36,7 @@
 //! how the server composes them with the configuration.
 
 pub mod adapters;
+pub mod components;
 pub mod modules;
 pub mod ports;
 pub mod registry;

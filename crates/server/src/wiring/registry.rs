@@ -37,3 +37,6 @@
 
 /// Every module of this build.
 pub const MODULES: &[&kampus_module::Module] = &[&kampus_access::MODULE, &kampus_identity::MODULE];
+
+/// The packages of the modules that come from outside the repository.
+pub const EXTERNAL: &[&str] = &[];

@@ -92,6 +92,8 @@ const OWNER: ForeignKey = local(&["account_id"], "account", OnDelete::Cascade);
 pub const STEPS: &[Step] = &[Step {
     sequence: 1,
     name: "accounts, credentials, sessions and tokens",
+    revert: &[],
+    action: None,
     changes: &[
         Change::CreateTable(Table {
             name: "account",

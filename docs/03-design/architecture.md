@@ -25,7 +25,8 @@ Modules call **down** the ranking through service APIs, and learn about things *
 
 | Level | Crate | Responsibility | Depends on |
 | --- | --- | --- | --- |
-| 0 Foundation | `kampus-common` | Errors, identifiers, time, money, pagination, request context | — |
+| 0 Foundation | `kampus-macros` | Macros that read the files of the crate using them, such as the icon of a component | — |
+| 0 Foundation | `kampus-common` | Errors, identifiers, time, money, pagination, request context | macros |
 | 0 Foundation | `kampus-db` | Database port: neutral schema, dialect adapters (PostgreSQL first), migrations, transactions | common |
 | 0 Foundation | `kampus-module` | The module contract (DEC-015, DEC-087): the descriptor every module exposes and the vocabulary of its declarations | common, db |
 | 0 Foundation | `kampus-storage` | File storage port: local and S3-compatible first (DEC-009) | common |
