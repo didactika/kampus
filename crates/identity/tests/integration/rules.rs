@@ -1389,3 +1389,58 @@ async fn the_owner_can_confirm_a_link() {
         "an identity links to one account"
     );
 }
+
+#[tokio::test]
+async fn a_new_email_is_used_only_once_its_link_is_opened() {
+    let w = world().await;
+    let ana = w.person("ana@example.org").await;
+    let (session, _) = w.session("ana@example.org").await;
+    w.person("bea@example.org").await;
+    assert_eq!(
+        error(w.identity.change_email(&session, "bea@example.org").await),
+        (ErrorKind::Conflict, "identity.email_taken".to_owned())
+    );
+    w.identity
+        .change_email(&session, "Ana.New@Example.org")
+        .await
+        .unwrap();
+    assert_eq!(
+        w.courier.last_to("ana@example.org").map(|m| m.notice),
+        Some(Notice::EmailChangeRequested),
+        "the current address is told"
+    );
+    let Some(Notice::ConfirmNewEmail { token }) = w.courier.last_to("ana.new@example.org").map(|m| m.notice)
+    else {
+        panic!("the new address receives its link");
+    };
+    assert_eq!(
+        w.account(ana).await.email.as_deref(),
+        Some("ana@example.org"),
+        "nothing changes before the link is opened"
+    );
+    w.identity.confirm_email_change(&token).await.unwrap();
+    let account = w.account(ana).await;
+    assert_eq!(account.email.as_deref(), Some("ana.new@example.org"));
+    assert_eq!(
+        account.username.as_deref(),
+        Some("ana.new@example.org"),
+        "a username that was the email follows it"
+    );
+    assert_eq!(account.pending_email, None);
+    assert_eq!(
+        error(w.identity.confirm_email_change(&token).await).1,
+        "identity.token_invalid"
+    );
+
+    w.advance(time::Duration::minutes(16));
+    let later = w
+        .identity
+        .authenticate(&w.session("ana.new@example.org").await.1)
+        .await
+        .unwrap();
+    w.advance(time::Duration::minutes(16));
+    assert_eq!(
+        error(w.identity.change_email(&later, "ana.third@example.org").await).1,
+        "identity.step_up_required"
+    );
+}

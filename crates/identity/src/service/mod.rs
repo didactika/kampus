@@ -36,6 +36,7 @@
 
 pub mod account;
 pub mod api_token;
+pub mod email;
 pub mod lifecycle;
 pub mod oidc;
 pub mod one_time;

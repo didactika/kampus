@@ -80,6 +80,13 @@ pub enum Notice {
     SecondFactorRemoved,
     /// An identity provider account was linked, a new way to sign in.
     IdentityLinked,
+    /// Sent to a new email: the link that confirms it.
+    ConfirmNewEmail {
+        /// The one-time token of the link.
+        token: String,
+    },
+    /// Sent to the current email: someone asked to change it.
+    EmailChangeRequested,
 }
 
 impl Notice {
@@ -98,6 +105,8 @@ impl Notice {
             Self::SecondFactorAdded => "second_factor_added",
             Self::SecondFactorRemoved => "second_factor_removed",
             Self::IdentityLinked => "identity_linked",
+            Self::ConfirmNewEmail { .. } => "confirm_new_email",
+            Self::EmailChangeRequested => "email_change_requested",
         }
     }
 }

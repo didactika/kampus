@@ -24,6 +24,8 @@ All notable changes to Kampus are recorded here, following [Keep a Changelog](ht
 
 ### Added
 
+- `kampus-users` (`crates/users`): profiles (names, language, time zone) saved with `If-Match`, one's own or anyone's with its permission; preferences that modules declare with a type and a default (`preferences` in the descriptor); system groups of a campus or a category whose members are added by hand, by a rule over profiles or by a sync, a rule or a sync removing only what it added.
+- Changing the email of an account in `kampus-identity`: step-up, a link to the new address, a notice to the current one, the username following the email when they were equal (`identity` step 2).
 - Commands of components: a module declares them in `src/commands/` and the server runs them as `kampus-server <component> <command>`, with `kampus-server <component> --help`; identity offers `purge` and `run-deletions`.
 - `kampus-server install`: writes `config.toml`, asking only for what the file and the environment do not give (or nothing with `--non-interactive`), generates the secret key, and creates the installation with its first campus and administrator; an installed database is left as it is. `config.example.toml` shows every section; the image reads `/etc/kampus/config.toml`.
 - Multi-tenancy is configured in `[tenancy]` (`single`, or `multi` with a base domain).

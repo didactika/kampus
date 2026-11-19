@@ -41,6 +41,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { header } from './headers.mjs';
+import { rustList } from './modules.mjs';
 
 /** The marker lines of the generated block in the server manifest. */
 const START = '# adapters:start';
@@ -108,7 +109,7 @@ function rustBody(adapters) {
   ];
   for (const port of ports) {
     const entries = adapters.filter((a) => a.port === port).map((a) => `${a.crate.replace(/-/g, '_')}::ADAPTER`);
-    lines.push('', `/// The ${port} adapters of this build.`, `pub const ${port.toUpperCase()}: &[kampus_${port}::Adapter] = &[${entries.join(', ')}];`);
+    lines.push('', `/// The ${port} adapters of this build.`, rustList(`pub const ${port.toUpperCase()}: &[kampus_${port}::Adapter] =`, entries));
   }
   const external = adapters.filter((a) => a.external).map((a) => JSON.stringify(a.crate));
   lines.push('', '/// The packages of the adapters that come from outside the repository.', `pub const EXTERNAL: &[&str] = &[${external.join(', ')}];`);

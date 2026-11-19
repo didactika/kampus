@@ -388,4 +388,33 @@ pub const STEPS: &[Step] = &[Step {
             ..Table::EMPTY
         }),
     ],
+},
+Step {
+    sequence: 2,
+    name: "changing the email of an account",
+    revert: &[
+        Change::Postgres {
+            sql: "delete from {schema}.\"one_time_token\" where \"purpose\" = 'email_change';
+alter table {schema}.\"one_time_token\" drop constraint \"one_time_token_purpose_check\";
+alter table {schema}.\"one_time_token\" add constraint \"one_time_token_purpose_check\" check (\"purpose\" in ('confirm_email', 'invitation', 'set_password', 'recovery', 'email_code', 'second_factor'));",
+            reason: "the neutral schema has no change of a check",
+        },
+        Change::DropColumn {
+            table: "account",
+            column: "pending_email",
+            unused_since: "0.1.0",
+        },
+    ],
+    action: None,
+    changes: &[
+        Change::AddColumn {
+            table: "account",
+            column: Column::new("pending_email", Type::Text).nullable(),
+        },
+        Change::Postgres {
+            sql: "alter table {schema}.\"one_time_token\" drop constraint \"one_time_token_purpose_check\";
+alter table {schema}.\"one_time_token\" add constraint \"one_time_token_purpose_check\" check (\"purpose\" in ('confirm_email', 'invitation', 'set_password', 'recovery', 'email_code', 'second_factor', 'email_change'));",
+            reason: "the neutral schema has no change of a check",
+        },
+    ],
 }];

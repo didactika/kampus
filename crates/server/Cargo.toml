@@ -49,6 +49,7 @@ kind = "server"
 # modules:start
 kampus-access = { path = "../access" }
 kampus-identity = { path = "../identity" }
+kampus-users = { path = "../users" }
 # modules:end
 # adapters:start
 kampus-cache-moka = { path = "../cache/adapters/moka" }

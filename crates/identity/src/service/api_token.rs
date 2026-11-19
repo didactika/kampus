@@ -158,8 +158,12 @@ impl Identity {
         self.insert_token(owner, request).await
     }
 
-    /// The campus of an account.
-    async fn campus_of(&self, account: AccountId) -> Result<ScopeId> {
+    /// The campus of an account, for modules that keep data per account.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown account.
+    pub async fn campus_of(&self, account: AccountId) -> Result<ScopeId> {
         sqlx::query_scalar(sql(format!(
             "select campus_id from {} where id = $1",
             self.table("account")

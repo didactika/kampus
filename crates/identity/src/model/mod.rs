@@ -296,6 +296,8 @@ pub struct Account {
     pub deletion_due_at: Option<Timestamp>,
     /// The pseudonym of a tombstone.
     pub pseudonym: Option<String>,
+    /// A new email waiting for its confirmation.
+    pub pending_email: Option<String>,
     /// The version, for `If-Match`.
     pub version: i32,
 }
