@@ -43,7 +43,8 @@ use sqlx::{PgConnection, Row};
 use super::{check_version, optional, required, taken, valid, visibility_of, window_of};
 use crate::permissions::CATEGORY_MANAGE;
 use crate::support::sort_key;
-use crate::{Category, CategoryFields, CategoryId, Courses, Place, sql};
+use crate::{Category, CategoryFields, CategoryId, Courses, Place, RecordKind, sql};
+use kampus_db::references::ExternalReference;
 
 /// The columns of a category, as read.
 const COLUMNS: &str = "id, scope_id, campus_id, parent_id, code, name, description, sort_key, visibility, \
@@ -96,6 +97,19 @@ impl Courses {
         fields: CategoryFields,
         place: Place<CategoryId>,
     ) -> Result<Category> {
+        self.create_category_with(actor, (campus, parent), fields, place, None)
+            .await
+    }
+
+    /// Creates a category, with the identifier a system gives it when one is given, in one transaction.
+    pub(crate) async fn create_category_with(
+        &self,
+        actor: &Actor,
+        (campus, parent): (ScopeId, Option<CategoryId>),
+        fields: CategoryFields,
+        place: Place<CategoryId>,
+        reference: Option<&ExternalReference>,
+    ) -> Result<Category> {
         let fields = checked(fields)?;
         let mut tx = self.db.begin().await?;
         let parent_scope = self.parent_scope_in(&mut tx, campus, parent).await?;
@@ -127,8 +141,14 @@ impl Courses {
         .await
         .map_err(kampus_db::classify)
         .map_err(taken("courses.category_code_taken"))?;
+        let created = category(&row);
+        if let Some(reference) = reference {
+            self.references(RecordKind::Category)
+                .set_in(&mut tx, campus.as_uuid(), created.id.as_uuid(), reference)
+                .await?;
+        }
         tx.commit().await.map_err(kampus_db::classify)?;
-        Ok(category(&row))
+        Ok(created)
     }
 
     /// A category, as stored.

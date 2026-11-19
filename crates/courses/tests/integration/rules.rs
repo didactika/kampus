@@ -1043,3 +1043,91 @@ async fn groups_cannot_be_created_where_the_feature_is_off() {
         .unwrap();
     w.drop().await;
 }
+
+#[tokio::test]
+async fn records_are_found_and_updated_by_the_identifier_a_system_gives_them() {
+    let w = world().await;
+    let c = &w.courses;
+    let sis = |id: &str| kampus_db::references::ExternalReference::new("sis", id).unwrap();
+    let (science, created) = c
+        .upsert_category_by_reference(&w.admin, w.campus, &sis("FAC-1"), None, category("Science"))
+        .await
+        .unwrap();
+    assert!(created);
+    let (renamed, created) = c
+        .upsert_category_by_reference(&w.admin, w.campus, &sis("FAC-1"), None, category("Sciences"))
+        .await
+        .unwrap();
+    assert_eq!(
+        (renamed.id, renamed.name.as_str(), created),
+        (science.id, "Sciences", false)
+    );
+    let (physics, created) = c
+        .upsert_course_by_reference(&w.admin, science.id, &sis("PHY-2026"), course("PHY101"))
+        .await
+        .unwrap();
+    assert!(created);
+    let found = c
+        .find_by_reference(kampus_courses::RecordKind::Course, w.campus, &sis("PHY-2026"))
+        .await
+        .unwrap();
+    assert_eq!(found, Some(physics.id.as_uuid()));
+    let moodle = kampus_db::references::ExternalReference::new("moodle", "77").unwrap();
+    let both = c
+        .set_external_reference(
+            &w.admin,
+            kampus_courses::RecordKind::Course,
+            physics.id.as_uuid(),
+            &moodle,
+        )
+        .await
+        .unwrap();
+    assert_eq!(both.len(), 2);
+    let chemistry = c
+        .create_course(&w.admin, science.id, course("CHE101"), Place::Last)
+        .await
+        .unwrap();
+    let taken = c
+        .set_external_reference(
+            &w.admin,
+            kampus_courses::RecordKind::Course,
+            chemistry.id.as_uuid(),
+            &moodle,
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(taken.code(), "references.taken");
+    c.set_external_reference(
+        &w.admin,
+        kampus_courses::RecordKind::Category,
+        science.id.as_uuid(),
+        &moodle,
+    )
+    .await
+    .unwrap();
+    c.remove_external_reference(
+        &w.admin,
+        kampus_courses::RecordKind::Course,
+        physics.id.as_uuid(),
+        "moodle",
+    )
+    .await
+    .unwrap();
+    let left = c
+        .external_references(&w.admin, kampus_courses::RecordKind::Course, physics.id.as_uuid())
+        .await
+        .unwrap();
+    assert_eq!(left, [sis("PHY-2026")]);
+    let learner = w.person("lea@example.org").await;
+    let denied = c
+        .set_external_reference(
+            &learner,
+            kampus_courses::RecordKind::Course,
+            physics.id.as_uuid(),
+            &moodle,
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(denied.kind(), ErrorKind::PermissionDenied);
+    w.drop().await;
+}

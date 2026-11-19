@@ -61,6 +61,7 @@ pub use model::{
 };
 pub use module::MODULE;
 pub use ports::participants::{CampusMembers, Participants};
+pub use service::reference::RecordKind;
 
 /// How long a scheduled deletion of a course waits.
 pub const DELETION_GRACE: time::Duration = time::Duration::days(14);

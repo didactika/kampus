@@ -376,3 +376,81 @@ async fn groups_split_the_people_of_a_course() {
     assert_eq!(forbidden.status, StatusCode::FORBIDDEN);
     site.drop().await;
 }
+
+#[tokio::test]
+async fn an_integration_creates_and_finds_records_by_their_external_identifiers() {
+    let site = site().await;
+    let admin = site.session("admin").await;
+    let campus = site.campus.to_string();
+    let category = site
+        .call(
+            Method::PUT,
+            &format!("/api/v1/courses/campuses/{campus}/categories/by-reference/sis/FAC-1"),
+            Some(&admin),
+            &[],
+            Some(json!({ "name": "Science" })),
+        )
+        .await;
+    assert_eq!(category.status, StatusCode::CREATED, "{}", category.body);
+    let category = category.body["id"].as_str().unwrap().to_owned();
+    let course = format!("/api/v1/courses/categories/{category}/courses/by-reference/sis/PHY-2026");
+    let fields = json!({ "short_name": "PHY101", "full_name": "Physics I" });
+    let created = site
+        .call(Method::PUT, &course, Some(&admin), &[], Some(fields))
+        .await;
+    assert_eq!(created.status, StatusCode::CREATED, "{}", created.body);
+    let renamed = json!({ "short_name": "PHY101", "full_name": "Physics One" });
+    let updated = site
+        .call(Method::PUT, &course, Some(&admin), &[], Some(renamed))
+        .await;
+    assert_eq!(updated.status, StatusCode::OK, "{}", updated.body);
+    assert_eq!(updated.body["id"], created.body["id"]);
+    assert_eq!(updated.body["full_name"], "Physics One");
+    let found = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/courses/campuses/{campus}/courses/by-reference/sis/PHY-2026"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    assert_eq!(found.body["id"], created.body["id"], "{}", found.body);
+    let id = created.body["id"].as_str().unwrap();
+    let set = site
+        .call(
+            Method::PUT,
+            &format!("/api/v1/courses/courses/{id}/references/moodle"),
+            Some(&admin),
+            &[],
+            Some(json!({ "external_id": "77" })),
+        )
+        .await;
+    assert_eq!(set.body.as_array().unwrap().len(), 2, "{}", set.body);
+
+    let me = site
+        .call(Method::GET, "/api/v1/identity/me", Some(&admin), &[], None)
+        .await;
+    let account = me.body["id"].as_str().unwrap().to_owned();
+    let linked = site
+        .call(
+            Method::PUT,
+            &format!("/api/v1/identity/accounts/{account}/references/sis"),
+            Some(&admin),
+            &[],
+            Some(json!({ "external_id": "S-001" })),
+        )
+        .await;
+    assert_eq!(linked.status, StatusCode::OK, "{}", linked.body);
+    let by_reference = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/identity/campuses/{campus}/accounts/by-reference/sis/S-001"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    assert_eq!(by_reference.body["id"], account.as_str());
+    site.drop().await;
+}

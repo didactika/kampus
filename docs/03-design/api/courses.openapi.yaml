@@ -61,6 +61,17 @@ paths:
   /api/v1/courses/group-sets/{set_id}/groups/{group_id}:
     put: { summary: 'Put a group of the same course in the set, once (RN-058)', responses: { '204': { description: In the set } } }
     delete: { summary: Take a group out of the set, responses: { '204': { description: Out of the set } } }
+  /api/v1/courses/{kind}/{record_id}/references:
+    get: { summary: 'The identifiers systems give a category, course, section, group or group set (kind: categories, courses, sections, groups, group-sets); needs the permission that manages it (DEC-021)', responses: { '200': { description: References } } }
+  /api/v1/courses/{kind}/{record_id}/references/{system}:
+    put: { summary: 'Give the record the identifier a system uses for it, replacing the one that system gave it', responses: { '200': { description: References }, '409': { description: 'Another record of the kind has it in the campus (references.taken)' }, '422': { description: Invalid system or identifier } } }
+    delete: { summary: Remove the identifier a system gave the record, responses: { '204': { description: Removed }, '404': { description: None set } } }
+  /api/v1/courses/campuses/{campus_id}/{kind}/by-reference/{system}/{external_id}:
+    get: { summary: 'The record of a kind a system knows by an identifier in the campus', responses: { '200': { description: 'Its kind and id' }, '404': { description: No record has it } } }
+  /api/v1/courses/campuses/{campus_id}/categories/by-reference/{system}/{external_id}:
+    put: { summary: 'Update the category a system knows by an identifier, or create it with that identifier last under its parent', responses: { '200': { description: Updated }, '201': { description: Created } } }
+  /api/v1/courses/categories/{category_id}/courses/by-reference/{system}/{external_id}:
+    put: { summary: 'Update the course a system knows by an identifier in the campus, or create it with that identifier last in the category; a course found elsewhere stays where it is', responses: { '200': { description: Updated }, '201': { description: Created } } }
 components:
   parameters:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }

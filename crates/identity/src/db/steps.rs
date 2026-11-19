@@ -417,4 +417,10 @@ alter table {schema}.\"one_time_token\" add constraint \"one_time_token_purpose_
             reason: "the neutral schema has no change of a check",
         },
     ],
+}, Step {
+    sequence: 3,
+    name: "external references of accounts",
+    revert: &[],
+    action: None,
+    changes: &[kampus_db::reference_table!("account_reference", "account")],
 }];

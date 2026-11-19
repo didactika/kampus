@@ -39,6 +39,7 @@ mod categories;
 mod courses;
 mod fields;
 mod groups;
+mod references;
 mod sections;
 
 use crate::Courses;
@@ -61,6 +62,7 @@ pub fn routes(context: &ServiceContext) -> Router {
         .merge(fields::routes())
         .merge(sections::routes())
         .merge(groups::routes())
+        .merge(references::routes())
         .with_state(shared)
 }
 

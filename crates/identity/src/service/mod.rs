@@ -42,6 +42,7 @@ pub mod oidc;
 pub mod one_time;
 pub mod password;
 pub mod recovery;
+pub mod reference;
 pub mod second_factor;
 pub mod session;
 pub mod sign_in;

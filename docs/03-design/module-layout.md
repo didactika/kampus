@@ -229,6 +229,16 @@ Customisation never owns an entity of another module: the values of custom field
 
 The theme of a scope is not declared by modules: it is a fixed set of design tokens (colours, font, sizes, motion) that each scope may set over those above it, checked for WCAG 2.2 AA contrast (`customise.theme.manage`). Modules style their pages with the `--kampus-*` custom properties of `GET /scopes/{scope}/theme.css`, never with colours of their own.
 
+## External references
+
+Every record an integration touches carries the identifiers other systems give it, as external references (system, identifier), never as a column of the record and never in its human `code`. A module adds one table per kind of record in a step, with `kampus_db::reference_table!("course_reference", "course")`, and reaches it through `kampus_db::references::References::new(&db, module::NAME, "course_reference")`: `set`/`set_in`, `remove`, `find` and `of`. `ExternalReference::new(system, external_id)` checks and trims what a caller sends.
+
+| A module | Does |
+| --- | --- |
+| Sets and removes references | With the permission that manages the record, which also decides who reads them |
+| Finds a record by one | `GET /api/v1/<module>/campuses/{campus}/<records>/by-reference/{system}/{external_id}` |
+| Creates or updates by one, when integrations create the record | Sets the reference in the transaction that creates the record, so it never exists without it; `PUT …/by-reference/{system}/{external_id}` answers 201 or 200 |
+
 ## Background jobs
 
 Work that does not belong in a request, or that recurs, is a **job** in the queue of `kampus-tasks`. A module declares its kinds of job and their schedules in `src/jobs/mod.rs` and exposes them through `jobs` and `schedules` in its descriptor:

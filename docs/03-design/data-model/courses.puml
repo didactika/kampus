@@ -70,6 +70,36 @@ entity group_set_group {
   course_id : uuid <<FK>>
 }
 
+entity category_reference {
+  * campus_id : uuid <<PK, FK>>
+  * system : text <<PK>>
+  * identifier : text <<PK>>
+  record_id : uuid <<FK>>
+}
+entity course_reference {
+  * campus_id : uuid <<PK, FK>>
+  * system : text <<PK>>
+  * identifier : text <<PK>>
+  record_id : uuid <<FK>>
+}
+entity section_reference {
+  * campus_id : uuid <<PK, FK>>
+  * system : text <<PK>>
+  * identifier : text <<PK>>
+  record_id : uuid <<FK>>
+}
+entity group_reference {
+  * campus_id : uuid <<PK, FK>>
+  * system : text <<PK>>
+  * identifier : text <<PK>>
+  record_id : uuid <<FK>>
+}
+entity group_set_reference {
+  * campus_id : uuid <<PK, FK>>
+  * system : text <<PK>>
+  * identifier : text <<PK>>
+  record_id : uuid <<FK>>
+}
 category }o--o| category : parent
 course }o--|| category
 course_layout_setting }o--|| course
@@ -83,4 +113,9 @@ group_set }o--|| course
 group_set_group }o--|| group_set
 group_set_group }o--|| group
 course_field }o--|| course
+category_reference }o--|| category
+course_reference }o--|| course
+section_reference }o--|| section
+group_reference }o--|| group
+group_set_reference }o--|| group_set
 @enduml

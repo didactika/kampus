@@ -39,9 +39,11 @@
 //! - [`Upgrader`]: applies every pending step of every module in one run, from any supported release,
 //!   and refuses a database that is newer than the code or whose steps changed.
 //! - [`Database`]: the connection pool with the prefix, and transactions.
+//! - [`references`]: the identifiers other systems give records, (system, external id) per campus.
 
 mod connection;
 pub mod lint;
+pub mod references;
 pub mod schema;
 mod upgrade;
 

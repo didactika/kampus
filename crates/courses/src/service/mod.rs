@@ -38,6 +38,7 @@ pub mod category;
 pub mod course;
 pub mod field;
 pub mod group;
+pub mod reference;
 pub mod section;
 pub mod visibility;
 
