@@ -37,11 +37,6 @@
 //! capability is exercised on it.
 
 #![allow(
-    clippy::unwrap_used,
-    clippy::expect_used,
-    reason = "a failing setup must stop the test"
-)]
-#![allow(
     clippy::too_many_lines,
     reason = "each conformance scenario reads as one story"
 )]

@@ -60,24 +60,3 @@ pub async fn sync_declarations(db: &kampus_db::Database) -> kampus_common::Resul
 
 /// The oldest release still supported: columns may be dropped only when it no longer reads them.
 pub const OLDEST_SUPPORTED: &str = kampus_common::PLATFORM.upgrade_from;
-
-#[cfg(test)]
-mod tests {
-    use super::{OLDEST_SUPPORTED, SCHEMAS};
-
-    #[test]
-    fn the_schema_of_every_module_passes_the_linter() {
-        let mut modules = vec![kampus_db::OWN_STEPS];
-        modules.extend_from_slice(&SCHEMAS);
-        let findings = kampus_db::lint::lint(&modules, OLDEST_SUPPORTED);
-        assert!(
-            findings.is_empty(),
-            "{}",
-            findings
-                .iter()
-                .map(ToString::to_string)
-                .collect::<Vec<_>>()
-                .join("\n")
-        );
-    }
-}

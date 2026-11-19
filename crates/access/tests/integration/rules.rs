@@ -35,11 +35,6 @@
 //! One test per behaviour of access, against PostgreSQL, on a campus with nested
 //! scopes, the default roles and a few people.
 
-#![allow(
-    clippy::unwrap_used,
-    clippy::expect_used,
-    reason = "a failing setup must stop the test"
-)]
 #![allow(clippy::too_many_lines, reason = "each rule reads as one story")]
 
 use std::collections::BTreeMap;

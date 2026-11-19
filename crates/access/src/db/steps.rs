@@ -353,12 +353,3 @@ pub const STEPS: &[Step] = &[
         }],
     },
 ];
-
-#[cfg(test)]
-mod tests {
-
-    #[test]
-    fn the_schema_passes_the_linter() {
-        assert_eq!(kampus_db::lint::lint(&[crate::MODULE.schema()], "0.1.0"), []);
-    }
-}

@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU Affero General Public License along with Kampus.
 // If not, see <https://www.gnu.org/licenses/>.
 //
-// @package   kampus-cache-redis
+// @package   kampus-common
 // @copyright 2026 Didactika
 // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
 // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
@@ -32,21 +32,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The cache conformance suite against Redis or Valkey (`KAMPUS_TEST_CACHE_URL`).
+//! Tests of `kampus-common`: platform.
 
-#![allow(
-    clippy::unwrap_used,
-    clippy::expect_used,
-    reason = "a failing setup must stop the test"
-)]
+use kampus_common::PLATFORM;
 
-use kampus_cache::conformance;
-use kampus_cache_redis::RedisCache;
-
-#[tokio::test]
-async fn a_shared_cache_conforms() {
-    let url = std::env::var("KAMPUS_TEST_CACHE_URL").expect("KAMPUS_TEST_CACHE_URL is set");
-    let prefix = format!("t{}_", &uuid::Uuid::now_v7().simple().to_string()[26..]);
-    let cache = RedisCache::connect(&url, &prefix).await.unwrap();
-    conformance::run(&cache, "conformance").await;
+#[test]
+fn the_platform_is_the_workspace_release() {
+    assert_eq!(PLATFORM.version, env!("CARGO_PKG_VERSION"));
+    assert_eq!(PLATFORM.name, "Kampus");
 }

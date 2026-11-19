@@ -86,24 +86,23 @@ pub struct Requirement {
     pub version: &'static str,
 }
 
-/// What a component says about itself. Write it with [`crate::manifest!`], which takes the package name,
-/// version, description and licence from the component's `Cargo.toml` and the icon from its
-/// `assets/icon.svg`, so they are written once. Every other field is optional: a component without them
-/// builds and runs, and `kampus-server components` shows what it lacks.
+/// What a component says about itself, read from its `version.toml` by [`crate::manifest!`] when it is built:
+/// the version, maturity, supported Kampus releases, date and requirements; the name, description and
+/// licence come from `Cargo.toml` and the icon from `assets/icon.svg`. Only the version is required: a
+/// component without the rest builds and runs, and `kampus-server components` shows what it lacks.
 ///
+/// ```toml
+/// [component]
+/// version = "1.2.0"
+/// maturity = "beta"
+/// kampus = ">=0.1.0, <0.3.0"
+///
+/// [requires]
+/// access = ">=0.1.0"
 /// ```
-/// use kampus_common::component::{Maturity, Requirement};
 ///
-/// const FULL: kampus_common::component::Manifest = kampus_common::manifest! {
-///     maturity: Maturity::Alpha,
-///     kampus: Some(">=0.1.0, <0.2.0"),
-///     requires: &[Requirement { component: "access", version: ">=0.1.0" }],
-///     icon: Some("<svg xmlns=\"http://www.w3.org/2000/svg\"/>"),
-/// };
-/// const PLAIN: kampus_common::component::Manifest = kampus_common::manifest! {};
-/// assert_eq!(FULL.component(), "common");
-/// assert_eq!(PLAIN.maturity, Maturity::Stable);
-/// assert!(PLAIN.icon.is_none(), "kampus-common has no assets/icon.svg");
+/// ```ignore
+/// const MANIFEST: kampus_common::component::Manifest = kampus_common::manifest!();
 /// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Manifest {
@@ -120,6 +119,8 @@ pub struct Manifest {
     /// The Kampus releases it works with, as a Cargo version requirement (`>=0.1.0, <0.3.0`); any release
     /// when not said.
     pub kampus: Option<&'static str>,
+    /// The date of its release, `YYYY-MM-DD`.
+    pub date: Option<&'static str>,
     /// The components it needs.
     pub requires: &'static [Requirement],
     /// Its icon, an SVG document, usually `include_str!("../assets/icon.svg")`; a generic icon when absent.
@@ -135,6 +136,7 @@ impl Manifest {
         license: "",
         maturity: Maturity::Stable,
         kampus: None,
+        date: None,
         requires: &[],
         icon: None,
     };

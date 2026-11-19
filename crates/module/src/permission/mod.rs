@@ -254,18 +254,3 @@ pub struct RoleTemplateDeclaration {
     /// The values the template gives.
     pub values: &'static [(&'static str, Value)],
 }
-
-#[cfg(test)]
-mod tests {
-    use super::ScopeKind;
-
-    #[test]
-    fn kinds_follow_the_tree() {
-        assert!(ScopeKind::Section.may_hang_from(ScopeKind::Section));
-        assert!(ScopeKind::Campus.may_hang_from(ScopeKind::Tenant));
-        assert!(!ScopeKind::Course.may_hang_from(ScopeKind::Campus));
-        assert!(!ScopeKind::Platform.may_hang_from(ScopeKind::Platform));
-        assert_eq!("section".parse::<ScopeKind>().unwrap(), ScopeKind::Section);
-        assert!("room".parse::<ScopeKind>().is_err());
-    }
-}

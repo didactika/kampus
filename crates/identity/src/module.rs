@@ -34,7 +34,6 @@
 
 //! The descriptor of identity: what the server installs and synchronises for it.
 
-use kampus_common::component::{Maturity, Requirement};
 use kampus_module::Module;
 
 /// The name of the module and of its schema.
@@ -43,14 +42,7 @@ pub const NAME: &str = "identity";
 /// Identity, as the server reads it.
 pub const MODULE: Module = Module {
     name: NAME,
-    manifest: kampus_common::manifest! {
-        maturity: Maturity::Alpha,
-        kampus: Some(">=0.1.0, <0.2.0"),
-        requires: &[Requirement {
-            component: "access",
-            version: ">=0.1.0, <0.2.0",
-        }],
-    },
+    manifest: kampus_common::manifest!(),
     summary: "Accounts, credentials, sign-in, second factors, sessions and API tokens",
     steps: crate::db::STEPS,
     permissions: crate::permissions::PERMISSIONS,

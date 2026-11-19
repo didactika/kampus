@@ -35,12 +35,6 @@
 //! The HTTP layer against PostgreSQL: liveness, readiness before and after the upgrade, request ids and
 //! problem details.
 
-#![allow(
-    clippy::unwrap_used,
-    clippy::expect_used,
-    reason = "a failing setup must stop the test"
-)]
-
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;

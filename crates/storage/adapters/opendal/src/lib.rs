@@ -46,10 +46,7 @@ pub use store::{OpendalStorage, S3Config};
 /// in an S3-compatible bucket, with the options `s3_endpoint`, `s3_region`, `s3_access_key_id` and
 /// `s3_secret_access_key`.
 pub const ADAPTER: kampus_storage::Adapter = kampus_storage::Adapter {
-    manifest: kampus_common::manifest! {
-        maturity: kampus_common::component::Maturity::Alpha,
-        kampus: Some(">=0.1.0, <0.2.0"),
-    },
+    manifest: kampus_common::manifest!(),
     name: "opendal",
     schemes: &["file", "s3"],
     open: |settings| {
