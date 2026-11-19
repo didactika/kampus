@@ -55,6 +55,7 @@ kampus-identity = { path = "../identity" }
 kampus-users = { path = "../users" }
 kampus-courses = { path = "../courses" }
 kampus-events = { path = "../events" }
+kampus-customise = { path = "../customise" }
 async-trait.workspace = true
 axum.workspace = true
 serde.workspace = true

@@ -35,6 +35,7 @@
 //! The descriptor of a module: what it adds to the platform, as the server reads it.
 
 mod command;
+mod customise;
 mod event;
 mod job;
 mod preference;
@@ -42,6 +43,7 @@ mod setting;
 mod value;
 
 pub use command::{Argument, Command, CommandContext, CommandFuture};
+pub use customise::{FieldKindDeclaration, FlagDeclaration, TermDeclaration, TermForms};
 pub use event::{Event, EventDeclaration, EventRun, ListenerDeclaration};
 pub use job::{JobDeclaration, JobFuture, JobRun, ScheduleDeclaration};
 pub use preference::PreferenceDeclaration;
@@ -78,6 +80,12 @@ pub struct Module {
     pub preferences: &'static [PreferenceDeclaration],
     /// The settings it declares, kept per scope, from `src/settings/mod.rs`.
     pub settings: &'static [SettingDeclaration],
+    /// The words of its domain a campus may rename, from `src/settings/`.
+    pub terms: &'static [TermDeclaration],
+    /// The features a scope may turn off, from `src/settings/`.
+    pub flags: &'static [FlagDeclaration],
+    /// The kinds of entity that accept custom fields.
+    pub field_kinds: &'static [FieldKindDeclaration],
     /// The events it publishes, from `src/events/mod.rs`.
     pub events: &'static [EventDeclaration],
     /// Its reactions to events, from `src/observers/mod.rs`.

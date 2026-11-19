@@ -59,6 +59,11 @@ entity group_set {
   * id : uuid <<PK>>
   course_id : uuid <<FK>>
 }
+entity course_field {
+  * course_id : uuid <<PK, FK>>
+  * field_id : uuid <<PK, FK>>
+  field_value_id : uuid <<FK>>
+}
 entity group_set_group {
   * set_id : uuid <<PK, FK>>
   * group_id : uuid <<PK, FK>>
@@ -77,4 +82,5 @@ group_member }o--|| group
 group_set }o--|| course
 group_set_group }o--|| group_set
 group_set_group }o--|| group
+course_field }o--|| course
 @enduml

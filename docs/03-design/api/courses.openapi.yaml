@@ -22,6 +22,10 @@ paths:
   /api/v1/courses/{course_id}:
     get: { summary: 'A course with its layout, dates, state, visibility and owners', responses: { '200': { description: 'The course, with its version as ETag' }, '404': { description: Unknown or hidden } } }
     put: { summary: 'Replace names, code, summary, layout, dates and visibility; switching layout keeps every section (RN-052)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
+  /api/v1/courses/{course_id}/fields:
+    get: { summary: 'The custom fields that apply to a course, with the values the caller sees (RN-214)', responses: { '200': { description: Fields with values } } }
+  /api/v1/courses/{course_id}/fields/{code}:
+    put: { summary: 'Set the value of a custom field, or clear it with null', responses: { '200': { description: The field with its value }, '404': { description: No such field applies }, '422': { description: The value does not fit the field } } }
   /api/v1/courses/{course_id}/state:
     put: { summary: 'Publish, take back to draft, archive, unarchive, schedule or cancel deletion (RN-049, RN-050)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/StateChange' } } } }, responses: { '200': { description: Changed }, '409': { description: Not allowed from the current state } } }
   /api/v1/courses/{course_id}/move:
@@ -41,7 +45,7 @@ paths:
     post: { summary: Restore a deleted section with the sections deleted with it, responses: { '200': { description: Restored }, '409': { description: Its parent is deleted } } }
   /api/v1/courses/{course_id}/groups:
     get: { summary: 'Groups the caller may see (RN-056)', responses: { '200': { description: Groups } } }
-    post: { summary: Create a group (optionally limited to a section), parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created }, '409': { description: Name or code in use } } }
+    post: { summary: Create a group (optionally limited to a section), parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created }, '409': { description: 'Name or code in use, or groups turned off in the course (customise.feature_off)' } } }
   /api/v1/groups/{group_id}:
     get: { summary: A group the caller sees, responses: { '200': { description: 'Group, with its version as ETag' } } }
     put: { summary: Replace a group, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }

@@ -151,6 +151,7 @@ async fn world() -> World {
         &kampus_access::MODULE,
         &kampus_identity::MODULE,
         &kampus_users::MODULE,
+        &kampus_customise::MODULE,
         &kampus_courses::MODULE,
         &kampus_enrol::MODULE,
     ];
@@ -255,7 +256,16 @@ impl World {
 
     /// Drops the installation.
     async fn drop(self) {
-        for module in ["enrol", "courses", "users", "identity", "access", "events", "db"] {
+        for module in [
+            "enrol",
+            "courses",
+            "customise",
+            "users",
+            "identity",
+            "access",
+            "events",
+            "db",
+        ] {
             sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
                 "drop schema if exists {} cascade",
                 self.db.prefix().schema(module)

@@ -6,25 +6,36 @@ skinparam linetype ortho
 title Schema customise (PostgreSQL)
 
 entity term {
-  code
+  code <<PK>>
   module
   forms
+  retired_at
 }
 entity term_override {
   term_code <<FK>>
   scope_id <<FK>>
-  language_code <<FK>>
-  forms
+  language_code
+  singular
+  plural
+  locked
+  version
+}
+entity field_kind {
+  code <<PK>>
+  module
+  summary
+  retired_at
 }
 entity field {
   id <<PK>>
-  entity_kind
+  kind_code <<FK>>
   scope_id <<FK>>
   code
+  name
   type
-  validation
-  visibility
   required
+  visibility
+  max_length
   sort_key
   version
 }
@@ -39,12 +50,12 @@ entity field_value {
   id <<PK>>
   field_id <<FK>>
   text_value
-  number_value
+  integer_value
   date_value
   boolean_value
   choice_id <<FK>>
-  file_id <<FK>>
   account_id <<FK>>
+  updated_at
 }
 entity field_value_choice {
   field_value_id <<FK>>
@@ -108,9 +119,11 @@ entity rule_run {
   at
 }
 entity flag {
-  code
+  code <<PK>>
   module
+  summary
   default_value
+  retired_at
 }
 entity flag_value {
   flag_code <<FK>>
@@ -121,16 +134,17 @@ entity flag_value {
 entity change {
   id <<PK>>
   kind
-  object_id
-  scope_id
-  actor_id
+  object
+  scope_id <<FK>>
+  actor
   before
   after
   at
-  package_checksum
 }
 
 term_override }o--|| term
+field }o--|| field_kind
+flag_value }o--|| flag
 field_choice }o--|| field
 field_value }o--|| field
 field_value }o--|| field_choice

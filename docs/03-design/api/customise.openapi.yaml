@@ -9,12 +9,14 @@ paths:
   /api/v1/scopes/{scope_id}/terms:
     get: { summary: Resolved terms with origin, parameters: [{ name: language, in: query, schema: { type: string } }], responses: { '200': { description: Terms } } }
   /api/v1/scopes/{scope_id}/terms/{code}:
-    put: { summary: 'Rename a term with its forms (RN-212)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Renamed }, '409': { description: Locked above } } }
-    delete: { summary: Remove the override, responses: { '204': { description: Removed } } }
+    get: { summary: 'The forms of a term in a language (English when absent), with origin', parameters: [{ name: language, in: query, schema: { type: string } }], responses: { '200': { description: Term }, '404': { description: Unknown term } } }
+    put: { summary: 'Rename a term in a language with its singular and plural, locked or not (RN-212)', responses: { '200': { description: Renamed }, '409': { description: Locked above }, '422': { description: Empty or long forms } } }
+    delete: { summary: 'Remove the override of a language; the word above applies again', parameters: [{ name: language, in: query, schema: { type: string } }], responses: { '200': { description: The term as it now resolves } } }
   /api/v1/scopes/{scope_id}/fields:
-    get: { summary: Custom fields of an entity kind, parameters: [{ name: entity_kind, in: query, required: true, schema: { type: string } }], responses: { '200': { description: Fields } } }
-    post: { summary: 'Define a field (RN-214)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Defined } } }
+    get: { summary: Custom fields of an entity kind, parameters: [{ name: kind, in: query, required: true, schema: { type: string } }], responses: { '200': { description: 'Fields that apply in the scope; the nearest with a code wins' } } }
+    post: { summary: 'Define a field: text, integer, date, boolean, choice, choices or account (RN-214)', responses: { '201': { description: Defined }, '409': { description: Code taken in the scope }, '422': { description: Invalid } } }
   /api/v1/fields/{field_id}:
+    get: { summary: A field with its choices, responses: { '200': { description: Field } } }
     patch: { summary: Change a field; changing the type is refused when values exist, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed }, '409': { description: Values exist } } }
     delete: { summary: Delete a field and its values after confirmation, responses: { '204': { description: Deleted } } }
   /api/v1/scopes/{scope_id}/layouts/{page_kind}:
@@ -37,7 +39,8 @@ paths:
   /api/v1/scopes/{scope_id}/flags:
     get: { summary: Resolved feature flags, responses: { '200': { description: Flags } } }
   /api/v1/scopes/{scope_id}/flags/{code}:
-    put: { summary: 'Switch a feature (RN-220)', responses: { '204': { description: Switched } } }
+    get: { summary: One flag with origin, responses: { '200': { description: Flag }, '404': { description: Unknown flag } } }
+    put: { summary: 'Switch a feature, locked or not (RN-220)', responses: { '200': { description: The flag as it now resolves }, '409': { description: Locked above } } }
   /api/v1/scopes/{scope_id}/customisation-packages:
     post: { summary: Export the chosen kinds as a package, responses: { '200': { description: Package } } }
   /api/v1/scopes/{scope_id}/customisation-imports:
