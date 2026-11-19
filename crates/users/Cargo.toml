@@ -49,6 +49,7 @@ kind = "module"
 kampus-common.workspace = true
 kampus-db.workspace = true
 kampus-module.workspace = true
+axum.workspace = true
 kampus-access.workspace = true
 kampus-identity = { path = "../identity" }
 jiff.workspace = true

@@ -33,18 +33,28 @@
 // ------------------------------------------------------------------------------
 
 //! The HTTP layer of every role: liveness and readiness, request identifiers on every request
-//! and response, and problem details (RFC 9457) for errors.
+//! and response, problem details (RFC 9457) for errors, and, for the roles that serve the API, the routes of
+//! every module behind the campus of the request and its authentication.
+
+pub mod campus;
 
 use axum::Router;
-use axum::extract::State;
-use axum::http::{HeaderMap, HeaderName, HeaderValue, Request, StatusCode};
+use axum::extract::{Request, State};
+use axum::http::{HeaderName, HeaderValue, StatusCode};
+use axum::middleware::{self, Next};
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 use kampus_common::{Error, PLATFORM_VERSION, RequestId};
 use kampus_db::{Database, ModuleSteps, Upgrader};
+use kampus_module::http::{REQUEST_ID as CURRENT_REQUEST, problem};
 use serde_json::json;
 use tower_http::request_id::{MakeRequestId, PropagateRequestIdLayer, SetRequestIdLayer};
 use tower_http::trace::TraceLayer;
+
+use crate::wiring::services::Services;
+
+/// The path every module route is served under.
+pub const API_PREFIX: &str = "/api/v1";
 
 /// The header that carries the request identifier.
 pub const REQUEST_ID: HeaderName = HeaderName::from_static("x-request-id");
@@ -60,19 +70,60 @@ pub struct AppState {
     pub ports: crate::wiring::ports::Ports,
 }
 
-/// Builds the router of a process.
-pub fn router(state: AppState) -> Router {
-    Router::new()
+/// The API of the modules: their services and how the campus of a request is found.
+#[derive(Debug, Clone)]
+pub struct Api {
+    /// The services of the modules.
+    pub services: Services,
+    /// Finds the campus of each request.
+    pub campuses: campus::Campuses,
+}
+
+impl Api {
+    /// The routes of every module, behind the campus of the request and its authentication.
+    fn router(&self) -> Router {
+        self.services
+            .routes()
+            .layer(middleware::from_fn_with_state(
+                self.services.identity.clone(),
+                kampus_identity::http::authenticate,
+            ))
+            .layer(middleware::from_fn_with_state(
+                self.campuses.clone(),
+                campus::resolve,
+            ))
+    }
+}
+
+/// Builds the router of a process; `api` adds the routes of the modules.
+pub fn router(state: AppState, api: Option<&Api>) -> Router {
+    let mut router = Router::new()
         .route("/health/live", get(live))
         .route("/health/ready", get(ready))
+        .with_state(state);
+    if let Some(api) = api {
+        router = router.nest(API_PREFIX, api.router());
+    }
+    router
         .fallback(not_found)
-        .with_state(state)
+        .layer(middleware::from_fn(scoped))
         .layer(PropagateRequestIdLayer::new(REQUEST_ID))
-        .layer(TraceLayer::new_for_http().make_span_with(|request: &Request<_>| {
+        .layer(TraceLayer::new_for_http().make_span_with(|request: &axum::http::Request<_>| {
             let id = request.headers().get(REQUEST_ID).and_then(|v| v.to_str().ok()).unwrap_or_default();
             tracing::info_span!("request", method = %request.method(), path = %request.uri().path(), request_id = %id)
         }))
         .layer(SetRequestIdLayer::new(REQUEST_ID, KampusRequestId))
+}
+
+/// Serves a request with its id at hand, so problem details carry it.
+async fn scoped(request: Request, next: Next) -> Response {
+    let id = request
+        .headers()
+        .get(REQUEST_ID)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or_default()
+        .to_owned();
+    CURRENT_REQUEST.scope(id, next.run(request)).await
 }
 
 /// Gives every request an identifier, keeping a safe one sent by the caller or a proxy.
@@ -80,7 +131,10 @@ pub fn router(state: AppState) -> Router {
 struct KampusRequestId;
 
 impl MakeRequestId for KampusRequestId {
-    fn make_request_id<B>(&mut self, _request: &Request<B>) -> Option<tower_http::request_id::RequestId> {
+    fn make_request_id<B>(
+        &mut self,
+        _request: &axum::http::Request<B>,
+    ) -> Option<tower_http::request_id::RequestId> {
         HeaderValue::from_str(RequestId::generate().as_str())
             .ok()
             .map(tower_http::request_id::RequestId::new)
@@ -91,7 +145,6 @@ impl MakeRequestId for KampusRequestId {
 async fn live() -> Response {
     axum::Json(json!({ "status": "live", "version": PLATFORM_VERSION })).into_response()
 }
-
 /// The process can serve: the database answers and its upgrade steps match this build, and the storage and
 /// the cache answer.
 async fn ready(State(state): State<AppState>) -> Response {
@@ -130,33 +183,6 @@ async fn ready(State(state): State<AppState>) -> Response {
 }
 
 /// Answers routes that do not exist with problem details.
-async fn not_found(headers: HeaderMap) -> Response {
-    problem(&Error::not_found("server.route_not_found"), &headers)
-}
-
-/// Turns an error into problem details: kind, code, parameters, fields and the request id; internal
-/// errors expose only the request id.
-pub fn problem(error: &Error, headers: &HeaderMap) -> Response {
-    let request_id = headers
-        .get(REQUEST_ID)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or_default();
-    let status =
-        StatusCode::from_u16(error.kind().http_status()).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-    let internal = error.kind() == kampus_common::ErrorKind::Internal;
-    let body = json!({
-        "type": format!("https://kampus.didactika.org/problems/{}", error.kind()),
-        "title": error.kind().as_str(),
-        "status": status.as_u16(),
-        "code": if internal { "internal" } else { error.code() },
-        "params": if internal { json!({}) } else { json!(error.params().iter().cloned().collect::<std::collections::BTreeMap<_, _>>()) },
-        "fields": if internal { json!([]) } else { json!(error.fields()) },
-        "request_id": request_id,
-    });
-    let mut response = (status, axum::Json(body)).into_response();
-    response.headers_mut().insert(
-        axum::http::header::CONTENT_TYPE,
-        HeaderValue::from_static("application/problem+json"),
-    );
-    response
+async fn not_found() -> Response {
+    problem(&Error::not_found("server.route_not_found"))
 }

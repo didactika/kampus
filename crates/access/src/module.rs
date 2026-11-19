@@ -50,4 +50,5 @@ pub const MODULE: Module = Module {
     plugin_types: &[],
     commands: &[],
     preferences: &[],
+    routes: None,
 };

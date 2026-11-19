@@ -34,8 +34,9 @@
 
 //! Installing Kampus: the configuration file first, asked for interactively or taken from the file and
 //! the environment, then the database, the first campus and its administrator. An installation that
-//! exists is left as it is, so a filled `config.toml` pointing at an installed database is all a new
-//! server needs.
+//! exists is left as it is, except that one without a campus yet, such as one created by an upgrade, gets
+//! its first campus and administrator; so a filled `config.toml` pointing at an installed database is all a
+//! new server needs.
 
 use std::io::{BufRead, IsTerminal, Write};
 use std::path::{Path, PathBuf};
@@ -206,7 +207,8 @@ pub async fn install(
     let db = connect(&config).await?;
     let upgrader = upgrader(&db)?;
     let plan = upgrader.plan().await?;
-    if plan.installed {
+    let access = Access::new(db.clone(), Arc::new(SystemClock));
+    if plan.installed && !(plan.is_current() && access.campuses().await?.is_empty()) {
         let current = plan.is_current();
         db.close().await;
         return Ok(Installed::Existing {
@@ -215,10 +217,14 @@ pub async fn install(
         });
     }
     let username = administrator(&terminal)?;
-    upgrader.apply(true).await?;
+    if !plan.installed {
+        upgrader.apply(true).await?;
+    }
     crate::wiring::modules::sync_declarations(&db).await?;
-    let access = Access::new(db.clone(), Arc::new(SystemClock));
-    let platform = access.create_platform().await?;
+    let platform = match access.platform().await? {
+        Some(platform) => platform,
+        None => access.create_platform().await?,
+    };
     let campus = access.create_scope(platform, ScopeKind::Campus).await?;
     access.install_campus_roles(campus).await?;
     let key = config

@@ -50,4 +50,5 @@ pub const MODULE: Module = Module {
     plugin_types: &[],
     commands: crate::commands::COMMANDS,
     preferences: &[],
+    routes: Some(crate::http::routes),
 };

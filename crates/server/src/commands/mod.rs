@@ -44,9 +44,15 @@ use kampus_db::{Database, UpgradePlan, Upgrader};
 use tokio::net::TcpListener;
 
 use crate::config::{Config, LogFormat};
-use crate::http::{AppState, router};
+use std::sync::Arc;
+
+use kampus_identity::LogCourier;
+
+use crate::http::campus::Campuses;
+use crate::http::{Api, AppState, router};
 use crate::wiring::components;
 use crate::wiring::modules::SCHEMAS;
+use crate::wiring::services::{Parts, Services};
 
 /// Starts logging as the configuration asks: JSON lines by default, with the request id in each span.
 pub fn init_logging(config: &Config) {
@@ -119,18 +125,53 @@ pub async fn serve(config: &Config) -> Result<()> {
     })?;
     tracing::info!(role = %config.role, address = %config.http_address, version = PLATFORM_VERSION, "kampus started");
     let ports = crate::wiring::ports::Ports::open(config).await?;
-    let app = router(AppState {
-        db: db.clone(),
-        modules: SCHEMAS.as_slice(),
-        ports,
-    });
-    axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
-        .await
-        .map_err(|error| Error::unavailable("server.http").with_source(error))?;
+    let api = api(config, &db)?;
+    let app = router(
+        AppState {
+            db: db.clone(),
+            modules: SCHEMAS.as_slice(),
+            ports,
+        },
+        api.as_ref(),
+    );
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await
+    .map_err(|error| Error::unavailable("server.http").with_source(error))?;
     db.close().await;
     tracing::info!("kampus stopped");
     Ok(())
+}
+
+/// The API of the modules, for the roles that serve it.
+///
+/// # Errors
+///
+/// `validation` when such a role has no site address or secret key.
+fn api(config: &Config, db: &Database) -> Result<Option<Api>> {
+    if !config.role.serves_api() {
+        return Ok(None);
+    }
+    let missing = |key: &str| {
+        Error::validation(
+            "server.config_invalid",
+            vec![kampus_common::FieldError::new(key, "required")],
+        )
+    };
+    let site_url = config
+        .site_url
+        .clone()
+        .ok_or_else(|| missing("KAMPUS_SITE_URL"))?;
+    let secret_key = config
+        .secret_key
+        .clone()
+        .ok_or_else(|| missing("KAMPUS_SECURITY_SECRET_KEY"))?;
+    let services = Services::build(Parts::new(db.clone(), site_url, secret_key, Arc::new(LogCourier)));
+    let campuses = Campuses::new(config.tenancy.clone(), services.access.clone());
+    Ok(Some(Api { services, campuses }))
 }
 
 /// Applies every pending upgrade step, from whichever release the installation is on.

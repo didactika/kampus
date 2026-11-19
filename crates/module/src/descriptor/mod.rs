@@ -68,6 +68,8 @@ pub struct Module {
     pub commands: &'static [Command],
     /// The per-person preferences it declares, from `src/settings/preferences.rs`.
     pub preferences: &'static [PreferenceDeclaration],
+    /// Its HTTP routes, from `src/http/mod.rs`, built with the services the server composed.
+    pub routes: Option<fn(&crate::http::HttpContext) -> axum::Router>,
 }
 
 impl Module {

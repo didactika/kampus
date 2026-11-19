@@ -36,6 +36,7 @@
 //! system groups of a campus or a category, whose members are added by hand, by a rule or by a sync.
 
 pub mod db;
+pub mod http;
 pub mod model;
 pub mod module;
 pub mod permissions;

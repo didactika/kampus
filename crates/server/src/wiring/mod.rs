@@ -40,3 +40,4 @@ pub mod components;
 pub mod modules;
 pub mod ports;
 pub mod registry;
+pub mod services;

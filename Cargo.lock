@@ -1797,6 +1797,7 @@ version = "0.1.0"
 dependencies = [
  "argon2",
  "async-trait",
+ "axum",
  "base64 0.23.1",
  "chacha20poly1305",
  "getrandom 0.4.3",
@@ -1828,9 +1829,13 @@ dependencies = [
 name = "kampus-module"
 version = "0.1.0"
 dependencies = [
+ "axum",
  "kampus-common",
  "kampus-db",
  "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
 ]
 
 [[package]]
@@ -1851,6 +1856,7 @@ dependencies = [
  "kampus-storage",
  "kampus-storage-opendal",
  "kampus-users",
+ "openidconnect",
  "rpassword",
  "semver",
  "serde",
@@ -1894,6 +1900,7 @@ dependencies = [
 name = "kampus-users"
 version = "0.1.0"
 dependencies = [
+ "axum",
  "jiff 1.0.1",
  "kampus-access",
  "kampus-common",

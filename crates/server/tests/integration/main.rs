@@ -40,5 +40,6 @@
     reason = "a failing test stops on the first error"
 )]
 
+mod api;
 mod http;
 mod install;
