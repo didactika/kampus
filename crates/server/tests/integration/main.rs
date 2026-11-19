@@ -41,5 +41,7 @@
 )]
 
 mod api;
+mod courses;
 mod http;
 mod install;
+mod site;

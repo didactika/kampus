@@ -148,6 +148,24 @@ impl Access {
         }
     }
 
+    /// Fails with `permission_denied` unless the actor may, checked as if the scope were not frozen: for the
+    /// changes that take a scope out of its frozen state, such as bringing an archived course back.
+    ///
+    /// # Errors
+    ///
+    /// As [`Access::require`].
+    pub async fn require_while_frozen(&self, actor: &Actor, permission: &str, scope: ScopeId) -> Result<()> {
+        let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
+        let decision = self.evaluate(&mut conn, actor, permission, scope, true).await?;
+        if decision.allowed {
+            Ok(())
+        } else {
+            Err(Error::permission_denied("access.denied")
+                .with_param("permission", permission)
+                .with_param("rule", decision.rule))
+        }
+    }
+
     /// Evaluates a check on a connection, so it can run inside the transaction of a change.
     /// `ignore_frozen` lets unfreezing be checked as if the scope were open.
     pub(crate) async fn evaluate(

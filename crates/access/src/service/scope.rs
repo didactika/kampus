@@ -269,6 +269,140 @@ impl Access {
         .map_err(kampus_db::classify)
     }
 
+    /// Freezes or unfreezes a scope inside the caller's transaction, for a module that checked its own
+    /// permission, such as archiving a course.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown scope.
+    pub async fn set_frozen_in(&self, conn: &mut PgConnection, scope: ScopeId, frozen: bool) -> Result<()> {
+        let changed = sqlx::query(sql(format!(
+            "update {} set frozen = $2, version = version + 1 where id = $1",
+            self.table("scope")
+        )))
+        .bind(scope.as_uuid())
+        .bind(frozen)
+        .execute(conn)
+        .await
+        .map_err(kampus_db::classify)?
+        .rows_affected();
+        if changed == 0 {
+            return Err(Error::not_found("access.scope_not_found"));
+        }
+        Ok(())
+    }
+
+    /// Moves a scope and its subtree under another parent of the same campus, inside the caller's
+    /// transaction: grants, overrides and descendants move with it, and only the closure rows that cross
+    /// the moved subtree change.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown scope or parent, `validation` (`access.scope_parent_invalid`) for a
+    /// parent of a kind it may not hang from, of another campus, or inside its own subtree.
+    pub async fn move_scope_in(
+        &self,
+        conn: &mut PgConnection,
+        scope: ScopeId,
+        parent: ScopeId,
+    ) -> Result<()> {
+        let scopes = self.table("scope");
+        let closure = self.table("scope_closure");
+        let rows = sqlx::query(sql(format!(
+            "select id, kind, campus_id from {scopes} where id = any($1) for update"
+        )))
+        .bind([scope.as_uuid(), parent.as_uuid()].as_slice())
+        .fetch_all(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
+        let find = |id: ScopeId| {
+            rows.iter()
+                .find(|r| r.get::<uuid::Uuid, _>("id") == id.as_uuid())
+                .ok_or_else(|| Error::not_found("access.scope_not_found"))
+        };
+        let (moved, target) = (find(scope)?, find(parent)?);
+        let kind: ScopeKind = moved.get::<String, _>("kind").parse()?;
+        let parent_kind: ScopeKind = target.get::<String, _>("kind").parse()?;
+        let same_campus = moved.get::<Option<uuid::Uuid>, _>("campus_id")
+            == target.get::<Option<uuid::Uuid>, _>("campus_id");
+        let inside: bool = sqlx::query_scalar(sql(format!(
+            "select exists (select 1 from {closure} where ancestor_id = $1 and descendant_id = $2)"
+        )))
+        .bind(scope.as_uuid())
+        .bind(parent.as_uuid())
+        .fetch_one(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
+        if !kind.may_hang_from(parent_kind) || !same_campus || inside {
+            return Err(Error::validation(
+                "access.scope_parent_invalid",
+                vec![kampus_common::FieldError::new("parent", "kind")],
+            )
+            .with_param("kind", kind.as_str())
+            .with_param("parent", parent_kind.as_str()));
+        }
+        sqlx::query(sql(format!(
+            "delete from {closure} where descendant_id in (select descendant_id from {closure} where ancestor_id = $1)
+             and ancestor_id not in (select descendant_id from {closure} where ancestor_id = $1)"
+        )))
+        .bind(scope.as_uuid())
+        .execute(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
+        sqlx::query(sql(format!(
+            "insert into {closure} (ancestor_id, descendant_id, depth)
+             select a.ancestor_id, d.descendant_id, a.depth + d.depth + 1
+             from {closure} a cross join {closure} d where a.descendant_id = $2 and d.ancestor_id = $1"
+        )))
+        .bind(scope.as_uuid())
+        .bind(parent.as_uuid())
+        .execute(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
+        sqlx::query(sql(format!(
+            "update {scopes} set parent_id = $2, version = version + 1 where id = $1"
+        )))
+        .bind(scope.as_uuid())
+        .bind(parent.as_uuid())
+        .execute(conn)
+        .await
+        .map(drop)
+        .map_err(kampus_db::classify)
+    }
+
+    /// Deletes a scope inside the caller's transaction, for the module that owns the entity it belongs to:
+    /// its descendants, grants and overrides go with it, so the module checks first that nothing else
+    /// hangs from it.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown scope, `validation` for the platform or a campus.
+    pub async fn delete_scope_in(&self, conn: &mut PgConnection, scope: ScopeId) -> Result<()> {
+        let kind: Option<String> = sqlx::query_scalar(sql(format!(
+            "select kind from {} where id = $1",
+            self.table("scope")
+        )))
+        .bind(scope.as_uuid())
+        .fetch_optional(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
+        let kind: ScopeKind = kind
+            .ok_or_else(|| Error::not_found("access.scope_not_found"))?
+            .parse()?;
+        if matches!(kind, ScopeKind::Platform | ScopeKind::Tenant | ScopeKind::Campus) {
+            return Err(Error::validation(
+                "access.scope_not_deletable",
+                vec![kampus_common::FieldError::new("scope", "kind")],
+            ));
+        }
+        sqlx::query(sql(format!("delete from {} where id = $1", self.table("scope"))))
+            .bind(scope.as_uuid())
+            .execute(conn)
+            .await
+            .map(drop)
+            .map_err(kampus_db::classify)
+    }
+
     /// Creates a principal in a campus; identity creates one for every account, with the account's id.
     ///
     /// # Errors

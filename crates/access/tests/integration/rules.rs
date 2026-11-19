@@ -866,3 +866,53 @@ async fn undeclared_and_retired_permissions_fail() {
     );
     w.drop().await;
 }
+
+#[tokio::test]
+async fn a_permission_of_a_module_installed_later_reaches_the_existing_roles() {
+    const AWARD: &str = "badges.badge.award";
+    const BADGES: &[PermissionDeclaration] = &[PermissionDeclaration {
+        code: AWARD,
+        kind: PermissionKind::Write,
+        risks: &[],
+        lowest_kind: ScopeKind::Course,
+    }];
+    const BADGE_TEMPLATES: &[RoleTemplateDeclaration] = &[RoleTemplateDeclaration {
+        code: "teacher",
+        version: 1,
+        values: &[(AWARD, Value::Allow)],
+    }];
+    let w = world().await;
+    w.access
+        .set_role_value(&w.admin, w.roles["teacher"], UPDATE, Some(Value::Deny))
+        .await
+        .unwrap();
+    let mut templates: Vec<RoleTemplateDeclaration> = permissions::TEMPLATES
+        .iter()
+        .filter(|t| !TEMPLATES.iter().any(|x| x.code == t.code))
+        .copied()
+        .collect();
+    templates.extend_from_slice(TEMPLATES);
+    templates.extend_from_slice(BADGE_TEMPLATES);
+    w.access
+        .sync(
+            &[
+                ("access", permissions::PERMISSIONS),
+                ("courses", COURSE_PERMISSIONS),
+                ("badges", BADGES),
+            ],
+            &templates,
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        w.can(&w.teacher, AWARD, w.course).await,
+        (true, "allowed"),
+        "the teacher role of the campus got the new permission from its template"
+    );
+    assert!(!w.can(&w.learner, AWARD, w.course).await.0);
+    assert!(
+        !w.can(&w.teacher, UPDATE, w.course).await.0,
+        "a value the administrator changed stays as it is"
+    );
+    w.drop().await;
+}

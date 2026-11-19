@@ -50,6 +50,7 @@ kind = "server"
 kampus-access = { path = "../access" }
 kampus-identity = { path = "../identity" }
 kampus-users = { path = "../users" }
+kampus-courses = { path = "../courses" }
 # modules:end
 # adapters:start
 kampus-cache-moka = { path = "../cache/adapters/moka" }

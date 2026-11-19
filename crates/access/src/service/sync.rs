@@ -55,7 +55,10 @@ impl Access {
         self.sync(&permissions, &templates).await
     }
 
-    /// Brings the declared permissions and role templates into the database, in one transaction.
+    /// Brings the declared permissions and role templates into the database, in one transaction. A
+    /// permission declared for the first time, such as one of a module installed on a running site, reaches
+    /// the roles that already exist with the value their template gives it; values an administrator set stay
+    /// as they are.
     ///
     /// # Errors
     ///
@@ -67,6 +70,13 @@ impl Access {
         templates: &[RoleTemplateDeclaration],
     ) -> Result<()> {
         let mut tx = self.db.begin().await?;
+        let known: Vec<String> = sqlx::query_scalar(sql(format!(
+            "select code from {} where retired_at is null",
+            self.table("permission")
+        )))
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(kampus_db::classify)?;
         let mut codes = Vec::new();
         for (module, declarations) in permissions {
             for permission in *declarations {
@@ -128,6 +138,19 @@ impl Access {
                 .map_err(kampus_db::classify)?;
             }
         }
+        let added: Vec<&String> = codes.iter().filter(|c| !known.contains(c)).collect();
+        sqlx::query(sql(format!(
+            "insert into {} (role_id, permission_code, value)
+             select r.id, v.permission_code, v.value from {} r join {} v on v.template_id = r.template_id
+             where v.permission_code = any($1) on conflict do nothing",
+            self.table("role_permission"),
+            self.table("role"),
+            self.table("role_template_value")
+        )))
+        .bind(&added)
+        .execute(&mut *tx)
+        .await
+        .map_err(kampus_db::classify)?;
         tx.commit().await.map_err(kampus_db::classify)
     }
 }
