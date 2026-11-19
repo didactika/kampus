@@ -52,6 +52,7 @@ const END = '# modules:end';
 const KINDS = ['foundation', 'port', 'adapter', 'module', 'server'];
 
 const SRC_FOLDERS = [
+  'commands',
   'db',
   'permissions',
   'model',

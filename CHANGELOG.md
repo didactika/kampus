@@ -24,6 +24,7 @@ All notable changes to Kampus are recorded here, following [Keep a Changelog](ht
 
 ### Added
 
+- Commands of components: a module declares them in `src/commands/` and the server runs them as `kampus-server <component> <command>`, with `kampus-server <component> --help`; identity offers `purge` and `run-deletions`.
 - `kampus-server install`: writes `config.toml`, asking only for what the file and the environment do not give (or nothing with `--non-interactive`), generates the secret key, and creates the installation with its first campus and administrator; an installed database is left as it is. `config.example.toml` shows every section; the image reads `/etc/kampus/config.toml`.
 - Multi-tenancy is configured in `[tenancy]` (`single`, or `multi` with a base domain).
 - `version.toml` at the root describes the platform release (name, version, maturity, date, `upgrade_from`); the core reads it when it is built, registers the platform as the component `kampus`, and refuses installations older than `upgrade_from`.

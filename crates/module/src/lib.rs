@@ -40,7 +40,7 @@
 pub mod descriptor;
 pub mod permission;
 
-pub use descriptor::Module;
+pub use descriptor::{Argument, Command, CommandContext, CommandFuture, Module};
 pub use permission::{
     PermissionDeclaration, PermissionKind, Risk, RoleTemplateDeclaration, ScopeKind, Value,
 };
