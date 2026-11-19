@@ -440,3 +440,72 @@ async fn system_groups_live_in_a_campus_or_a_category() {
         .unwrap();
     w.drop().await;
 }
+
+#[tokio::test]
+async fn a_system_group_is_created_once_and_found_by_the_identifier_a_system_gives_it() {
+    let w = world().await;
+    let sis = |code: &str| kampus_db::references::ExternalReference::new("sis", code).unwrap();
+    let (cohort, created) = w
+        .users
+        .ensure_group_by_reference(
+            &w.admin,
+            w.category,
+            &sis("COH-2026"),
+            ("c2026", "Cohort 2026"),
+            GroupKind::Manual,
+        )
+        .await
+        .unwrap();
+    assert!(created);
+    let (same, created) = w
+        .users
+        .ensure_group_by_reference(
+            &w.admin,
+            w.category,
+            &sis("COH-2026"),
+            ("other", "Other"),
+            GroupKind::Manual,
+        )
+        .await
+        .unwrap();
+    assert_eq!((same, created), (cohort, false));
+    assert_eq!(
+        w.users
+            .group_by_reference(w.campus, &sis("COH-2026"))
+            .await
+            .unwrap(),
+        Some(cohort)
+    );
+    let manual = w
+        .users
+        .create_group(&w.admin, w.campus, "staff", "Staff", GroupKind::Manual)
+        .await
+        .unwrap();
+    let taken = w
+        .users
+        .set_group_reference(&w.admin, manual, &sis("COH-2026"))
+        .await
+        .unwrap_err();
+    assert_eq!(taken.code(), "references.taken");
+    w.users
+        .set_group_reference(&w.admin, manual, &sis("STAFF"))
+        .await
+        .unwrap();
+    assert_eq!(
+        w.users.group_external_references(&w.admin, manual).await.unwrap(),
+        [sis("STAFF")]
+    );
+    w.users
+        .remove_group_reference(&w.admin, manual, "sis")
+        .await
+        .unwrap();
+    assert_eq!(
+        w.users
+            .remove_group_reference(&w.admin, manual, "sis")
+            .await
+            .unwrap_err()
+            .code(),
+        "references.not_found"
+    );
+    w.drop().await;
+}

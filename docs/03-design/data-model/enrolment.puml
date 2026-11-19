@@ -32,6 +32,12 @@ entity linked_course {
   * instance_id : uuid <<PK, FK>>
   source_course_id : uuid <<FK>>
 }
+entity enrolment_reference {
+  campus_id <<PK, FK>>
+  system <<PK>>
+  identifier <<PK>>
+  record_id <<FK>>
+}
 entity enrolment {
   * id : uuid <<PK>>
   instance_id : uuid <<FK>>
@@ -64,4 +70,5 @@ enrolment }o--|| instance
 enrolment_grant }o--|| enrolment
 request }o--|| instance
 expiry_outcome }o--|| enrolment
+enrolment_reference }o--|| enrolment
 @enduml

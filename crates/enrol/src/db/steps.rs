@@ -289,4 +289,10 @@ alter table {schema}.\"instance\" add constraint \"instance_method_code_check\" 
             reason: "the neutral schema has no unique index on an expression, a partial one, or one where nulls are equal, and no pattern",
         },
     ],
+}, Step {
+    sequence: 2,
+    name: "external references of enrolments",
+    revert: &[],
+    action: None,
+    changes: &[kampus_db::reference_table!("enrolment_reference", "enrolment")],
 }];

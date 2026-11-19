@@ -38,6 +38,15 @@ paths:
     put: { summary: 'Approve or reject a request (RN-065)', responses: { '200': { description: Decided }, '409': { description: Already decided } } }
   /api/v1/enrol/enrolment-requests/{request_id}:
     delete: { summary: Withdraw one's own request while it waits, responses: { '204': { description: Withdrawn } } }
+  /api/v1/enrol/enrolments/{enrolment_id}/references:
+    get: { summary: 'The identifiers systems give an enrolment; needs enrol.enrolment.read (DEC-021)', responses: { '200': { description: References } } }
+  /api/v1/enrol/enrolments/{enrolment_id}/references/{system}:
+    put: { summary: 'Give the enrolment the identifier a system uses for it; needs enrol.enrolment.manage', responses: { '200': { description: References }, '409': { description: 'Another enrolment of the campus has it (references.taken)' } } }
+    delete: { summary: Remove the identifier a system gave the enrolment, responses: { '204': { description: Removed } } }
+  /api/v1/enrol/campuses/{campus_id}/enrolments/by-reference/{system}/{external_id}:
+    get: { summary: The enrolment a system knows by an identifier in the campus, responses: { '200': { description: Enrolment }, '404': { description: No enrolment has it } } }
+  /api/v1/enrol/enrolment-instances/{instance_id}/enrolments/by-reference/{system}/{external_id}:
+    put: { summary: 'Enrol the account through a manual instance with the identifier, or change the period of the enrolment that has it', responses: { '200': { description: Updated }, '201': { description: Enrolled }, '409': { description: 'The identifier names the enrolment of someone else (enrol.reference_other_account)' }, '422': { description: Not a manual instance } } }
 components:
   parameters:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }

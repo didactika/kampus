@@ -164,3 +164,80 @@ async fn a_request_to_join_waits_for_its_approval() {
     assert_eq!(listed.body.as_array().unwrap().len(), 1, "approving enrolled her");
     site.drop().await;
 }
+
+#[tokio::test]
+async fn a_sync_enrols_people_and_creates_cohorts_by_their_identifiers() {
+    let site = site().await;
+    let admin = site.session("admin").await;
+    let (_, course) = site.course(&admin).await;
+    let campus = site.campus.to_string();
+    let cohort = site
+        .call(
+            Method::PUT,
+            &format!("/api/v1/users/scopes/{campus}/system-groups/by-reference/sis/COH-2026"),
+            Some(&admin),
+            &[],
+            Some(json!({ "code": "c2026", "name": "Cohort 2026" })),
+        )
+        .await;
+    assert_eq!(cohort.status, StatusCode::CREATED, "{}", cohort.body);
+    let found = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/users/campuses/{campus}/system-groups/by-reference/sis/COH-2026"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    assert_eq!(found.body["id"], cohort.body["id"], "{}", found.body);
+
+    let manual = site
+        .call(
+            Method::POST,
+            &format!("/api/v1/enrol/courses/{course}/enrolment-instances"),
+            Some(&admin),
+            &[],
+            Some(json!({ "method": "manual", "name": "Manual", "role": site.roles["learner"] })),
+        )
+        .await;
+    assert_eq!(manual.status, StatusCode::CREATED, "{}", manual.body);
+    let manual = manual.body["id"].as_str().unwrap().to_owned();
+    let (lea, _) = site.learner(&admin, "lea@example.org").await;
+    let enrol = format!("/api/v1/enrol/enrolment-instances/{manual}/enrolments/by-reference/sis/R-1");
+    let created = site
+        .call(
+            Method::PUT,
+            &enrol,
+            Some(&admin),
+            &[],
+            Some(json!({ "account": lea })),
+        )
+        .await;
+    assert_eq!(created.status, StatusCode::CREATED, "{}", created.body);
+    let again = site
+        .call(
+            Method::PUT,
+            &enrol,
+            Some(&admin),
+            &[],
+            Some(json!({ "account": lea })),
+        )
+        .await;
+    assert_eq!(again.status, StatusCode::OK, "{}", again.body);
+    let by_reference = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/enrol/campuses/{campus}/enrolments/by-reference/sis/R-1"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    assert_eq!(
+        by_reference.body["id"], created.body["id"],
+        "{}",
+        by_reference.body
+    );
+    site.drop().await;
+}

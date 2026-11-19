@@ -36,9 +36,10 @@
 //! transaction, with the instance locked, so concurrent requests never exceed it. An enrolment owns the
 //! grant of its role, and only its own grants and group memberships go with it.
 
-use kampus_access::{Actor, GrantId, PrincipalId, RoleId};
+use kampus_access::{Actor, GrantId, PrincipalId, RoleId, ScopeId};
 use kampus_common::{Error, FieldError, Result, Timestamp};
 use kampus_courses::{CourseId, GroupId};
+use kampus_db::references::ExternalReference;
 use sqlx::postgres::PgRow;
 use sqlx::{PgConnection, Row};
 
@@ -263,6 +264,19 @@ impl Enrol {
         period: Period,
         created_by: Option<PrincipalId>,
     ) -> Result<EnrolmentId> {
+        self.create_enrolment_with(instance, account, period, created_by, None)
+            .await
+    }
+
+    /// Creates an enrolment, with the identifier a system gives it when one is given, in one transaction.
+    pub(crate) async fn create_enrolment_with(
+        &self,
+        instance: &Instance,
+        account: PrincipalId,
+        period: Period,
+        created_by: Option<PrincipalId>,
+        reference: Option<(ScopeId, &ExternalReference)>,
+    ) -> Result<EnrolmentId> {
         let mut tx = self.db.begin().await?;
         let instance = self.read_instance_in(&mut tx, instance.id, true).await?;
         let course = self.courses.course(instance.course).await?;
@@ -338,6 +352,11 @@ impl Enrol {
             serde_json::json!({ "instance": instance.id }),
         )
         .await?;
+        if let Some((campus, reference)) = reference {
+            self.enrolment_references()
+                .set_in(&mut tx, campus.as_uuid(), id.as_uuid(), reference)
+                .await?;
+        }
         tx.commit().await.map_err(kampus_db::classify)?;
         Ok(id)
     }

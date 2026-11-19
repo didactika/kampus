@@ -35,6 +35,8 @@
 //! The HTTP routes of enrolment: the method instances of a course, its participants, enrolling people
 //! and oneself, and the requests that wait for a decision.
 
+mod references;
+
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
@@ -81,6 +83,7 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/courses/{id}/enrolment-requests", get(requests))
         .route("/enrolment-requests/{id}/decision", put(decide))
         .route("/enrolment-requests/{id}", axum::routing::delete(withdraw))
+        .merge(references::routes())
         .with_state(shared)
 }
 

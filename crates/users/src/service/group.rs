@@ -45,6 +45,7 @@ use sqlx::Row;
 
 use crate::permissions::GROUP_MANAGE;
 use crate::{GroupId, GroupKind, GroupRule, Member, Origin, SystemGroup, Users, sql};
+use kampus_db::references::ExternalReference;
 
 impl Users {
     /// Creates a system group in a campus or a category; needs `users.system_group.manage` there.
@@ -61,10 +62,27 @@ impl Users {
         name: &str,
         kind: GroupKind,
     ) -> Result<GroupId> {
+        self.create_group_with(actor, scope, (code, name), kind, None)
+            .await
+    }
+
+    /// Creates a system group, with the identifier a system gives it when one is given, in one transaction.
+    pub(crate) async fn create_group_with(
+        &self,
+        actor: &Actor,
+        scope: ScopeId,
+        (code, name): (&str, &str),
+        kind: GroupKind,
+        reference: Option<&ExternalReference>,
+    ) -> Result<GroupId> {
         self.access.require(actor, GROUP_MANAGE, scope).await?;
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
         let path = self.access.path(&mut conn, scope).await?;
         drop(conn);
+        let campus = path
+            .iter()
+            .find(|s| s.kind == ScopeKind::Campus)
+            .map_or(scope, |s| s.id);
         let mut problems = Vec::new();
         if !matches!(path[0].kind, ScopeKind::Campus | ScopeKind::Category) {
             problems.push(FieldError::new("scope", "campus_or_category"));
@@ -90,6 +108,7 @@ impl Users {
             ),
         };
         let id = GroupId::generate();
+        let mut tx = self.db.begin().await?;
         sqlx::query(sql(format!(
             "insert into {} (id, scope_id, code, name, kind, rule) values ($1, $2, $3, $4, $5, $6)",
             self.table("system_group")
@@ -100,7 +119,7 @@ impl Users {
         .bind(name)
         .bind(kind_text)
         .bind(rule)
-        .execute(self.db.pool())
+        .execute(&mut *tx)
         .await
         .map_err(kampus_db::classify)
         .map_err(|error| {
@@ -110,6 +129,12 @@ impl Users {
                 error
             }
         })?;
+        if let Some(reference) = reference {
+            self.group_references()
+                .set_in(&mut tx, campus.as_uuid(), id.as_uuid(), reference)
+                .await?;
+        }
+        tx.commit().await.map_err(kampus_db::classify)?;
         Ok(id)
     }
 

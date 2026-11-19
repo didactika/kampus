@@ -59,87 +59,99 @@ const fn scope(columns: &'static [&'static str]) -> ForeignKey {
 }
 
 /// The upgrade steps of this module.
-pub const STEPS: &[Step] = &[Step {
-    sequence: 1,
-    name: "profiles, preferences and system groups",
-    revert: &[],
-    action: None,
-    changes: &[
-        Change::CreateTable(Table {
-            name: "profile",
-            columns: &[
-                Column::new("account_id", Type::Uuid),
-                Column::new("campus_id", Type::Uuid),
-                Column::new("given_name", Type::Text).nullable(),
-                Column::new("family_name", Type::Text).nullable(),
-                Column::new("display_name", Type::Text).nullable(),
-                Column::new("language_code", Type::Text).nullable(),
-                Column::new("time_zone", Type::Text).nullable(),
-                Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
-                Column::new("updated_at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["account_id"],
-            foreign_keys: &[ACCOUNT, scope(&["campus_id"])],
-            without_natural_key: Some("one row per account, keyed by the account"),
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "preference",
-            columns: &[
-                Column::new("account_id", Type::Uuid),
-                Column::new("key", Type::Text),
-                Column::new("value", Type::Json("users.preference_value")),
-                Column::new("updated_at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["account_id", "key"],
-            foreign_keys: &[ACCOUNT],
-            without_natural_key: Some("keyed by the account and the declared key"),
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "system_group",
-            columns: &[
-                Column::new("id", Type::Uuid),
-                Column::new("scope_id", Type::Uuid),
-                Column::new("code", Type::Text),
-                Column::new("name", Type::Text),
-                Column::new("kind", Type::Text),
-                Column::new("rule", Type::Json("users.group_rule")).nullable(),
-                Column::new("owner_module", Type::Text).nullable(),
-                Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["id"],
-            unique: &[&["scope_id", "code"]],
-            foreign_keys: &[scope(&["scope_id"])],
-            checks: &[Check::OneOf("kind", &["manual", "rule"])],
-            ..Table::EMPTY
-        }),
-        Change::Postgres {
-            sql: "alter table {schema}.\"system_group\" add constraint \"system_group_rule_check\" check ((\"kind\" = 'rule') = (\"rule\" is not null));",
-            reason: "the neutral schema has no condition between two columns",
-        },
-        Change::CreateTable(Table {
-            name: "system_group_member",
-            columns: &[
-                Column::new("group_id", Type::Uuid),
-                Column::new("account_id", Type::Uuid),
-                Column::new("origin", Type::Text),
-                Column::new("added_at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["group_id", "account_id", "origin"],
-            foreign_keys: &[
-                ForeignKey {
-                    columns: &["group_id"],
-                    module: None,
-                    table: "system_group",
-                    references: &["id"],
-                    on_delete: OnDelete::Cascade,
-                },
-                ACCOUNT,
-            ],
-            checks: &[Check::OneOf("origin", &["manual", "rule", "sync"])],
-            without_natural_key: Some("a membership is its group, its account and its origin"),
-            ..Table::EMPTY
-        }),
-    ],
-}];
+pub const STEPS: &[Step] = &[
+    Step {
+        sequence: 1,
+        name: "profiles, preferences and system groups",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::CreateTable(Table {
+                name: "profile",
+                columns: &[
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("campus_id", Type::Uuid),
+                    Column::new("given_name", Type::Text).nullable(),
+                    Column::new("family_name", Type::Text).nullable(),
+                    Column::new("display_name", Type::Text).nullable(),
+                    Column::new("language_code", Type::Text).nullable(),
+                    Column::new("time_zone", Type::Text).nullable(),
+                    Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+                    Column::new("updated_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["account_id"],
+                foreign_keys: &[ACCOUNT, scope(&["campus_id"])],
+                without_natural_key: Some("one row per account, keyed by the account"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "preference",
+                columns: &[
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("key", Type::Text),
+                    Column::new("value", Type::Json("users.preference_value")),
+                    Column::new("updated_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["account_id", "key"],
+                foreign_keys: &[ACCOUNT],
+                without_natural_key: Some("keyed by the account and the declared key"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "system_group",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("scope_id", Type::Uuid),
+                    Column::new("code", Type::Text),
+                    Column::new("name", Type::Text),
+                    Column::new("kind", Type::Text),
+                    Column::new("rule", Type::Json("users.group_rule")).nullable(),
+                    Column::new("owner_module", Type::Text).nullable(),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                unique: &[&["scope_id", "code"]],
+                foreign_keys: &[scope(&["scope_id"])],
+                checks: &[Check::OneOf("kind", &["manual", "rule"])],
+                ..Table::EMPTY
+            }),
+            Change::Postgres {
+                sql: "alter table {schema}.\"system_group\" add constraint \"system_group_rule_check\" check ((\"kind\" = 'rule') = (\"rule\" is not null));",
+                reason: "the neutral schema has no condition between two columns",
+            },
+            Change::CreateTable(Table {
+                name: "system_group_member",
+                columns: &[
+                    Column::new("group_id", Type::Uuid),
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("origin", Type::Text),
+                    Column::new("added_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["group_id", "account_id", "origin"],
+                foreign_keys: &[
+                    ForeignKey {
+                        columns: &["group_id"],
+                        module: None,
+                        table: "system_group",
+                        references: &["id"],
+                        on_delete: OnDelete::Cascade,
+                    },
+                    ACCOUNT,
+                ],
+                checks: &[Check::OneOf("origin", &["manual", "rule", "sync"])],
+                without_natural_key: Some("a membership is its group, its account and its origin"),
+                ..Table::EMPTY
+            }),
+        ],
+    },
+    Step {
+        sequence: 2,
+        name: "external references of system groups",
+        revert: &[],
+        action: None,
+        changes: &[kampus_db::reference_table!(
+            "system_group_reference",
+            "system_group"
+        )],
+    },
+];
