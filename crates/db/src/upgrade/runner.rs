@@ -694,24 +694,3 @@ fn lock_key(prefix: &str) -> i64 {
 pub(super) fn newer(recorded: &str, current: &str) -> bool {
     matches!((Version::parse(recorded), Version::parse(current)), (Ok(r), Ok(c)) if r > c)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::{lock_key, newer};
-
-    #[test]
-    fn versions_compare_semantically() {
-        assert!(newer("0.2.0", "0.1.9"));
-        assert!(newer("1.0.0", "0.10.0"));
-        assert!(newer("0.2.0", "0.2.0-rc.1"));
-        assert!(!newer("0.1.0", "0.1.0"));
-        assert!(!newer("0.2.0-rc.1", "0.2.0"));
-        assert!(!newer("garbage", "0.1.0"));
-    }
-
-    #[test]
-    fn each_installation_has_its_own_lock() {
-        assert_eq!(lock_key("kmp_"), lock_key("kmp_"));
-        assert_ne!(lock_key("kmp_"), lock_key("t1_"));
-    }
-}

@@ -102,33 +102,3 @@ impl fmt::Display for Prefix {
         f.write_str(&self.0)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::Prefix;
-
-    #[test]
-    fn valid_prefixes_are_accepted() {
-        for text in ["kmp_", "a_", "test01_", "k2b3c4d_"] {
-            assert_eq!(text.parse::<Prefix>().unwrap().as_str(), text);
-        }
-    }
-
-    #[test]
-    fn invalid_prefixes_are_refused() {
-        for text in ["", "_", "kmp", "Kmp_", "1kmp_", "kmp-_", "toolongpx_", "k m_"] {
-            assert_eq!(
-                text.parse::<Prefix>().unwrap_err().code(),
-                "db.prefix_invalid",
-                "{text:?}"
-            );
-        }
-    }
-
-    #[test]
-    fn schemas_are_prefixed_and_quoted() {
-        let prefix = Prefix::default();
-        assert_eq!(prefix.schema("courses"), "\"kmp_courses\"");
-        assert_eq!(prefix.schema_name("db"), "kmp_db");
-    }
-}

@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU Affero General Public License along with Kampus.
 // If not, see <https://www.gnu.org/licenses/>.
 //
-// @package   kampus-common
+// @package   kampus-module
 // @copyright 2026 Didactika
 // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
 // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
@@ -32,28 +32,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Proves that the test environment reaches PostgreSQL 17, as the tests of every module will.
+//! Tests of `kampus-module`: permission.
 
-#![allow(
-    clippy::unwrap_used,
-    clippy::expect_used,
-    reason = "a failing setup must stop the test"
-)]
+use kampus_module::ScopeKind;
 
-use sqlx::Connection;
-
-#[tokio::test]
-async fn postgres_17_is_reachable() {
-    let url = std::env::var("KAMPUS_TEST_DATABASE_URL").expect("KAMPUS_TEST_DATABASE_URL is set");
-    let mut connection = sqlx::PgConnection::connect(&url)
-        .await
-        .expect("the test database accepts connections");
-    let (version,): (String,) = sqlx::query_as("select current_setting('server_version')")
-        .fetch_one(&mut connection)
-        .await
-        .expect("the server answers");
-    assert!(
-        version.starts_with("17"),
-        "PostgreSQL 17 expected, found {version}"
-    );
+#[test]
+fn kinds_follow_the_tree() {
+    assert!(ScopeKind::Section.may_hang_from(ScopeKind::Section));
+    assert!(ScopeKind::Campus.may_hang_from(ScopeKind::Tenant));
+    assert!(!ScopeKind::Course.may_hang_from(ScopeKind::Campus));
+    assert!(!ScopeKind::Platform.may_hang_from(ScopeKind::Platform));
+    assert_eq!("section".parse::<ScopeKind>().unwrap(), ScopeKind::Section);
+    assert!("room".parse::<ScopeKind>().is_err());
 }

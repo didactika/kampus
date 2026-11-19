@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU Affero General Public License along with Kampus.
 // If not, see <https://www.gnu.org/licenses/>.
 //
-// @package   kampus-storage-opendal
+// @package   kampus-module
 // @copyright 2026 Didactika
 // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
 // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
@@ -32,41 +32,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The storage conformance suite against the local disk and against an S3-compatible store
-//! (`KAMPUS_TEST_S3_ENDPOINT`, bucket `kampus-test`).
+//! Unit tests: pure checks, without databases or services. One file per topic of `kampus-module`.
 
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,
-    reason = "a failing setup must stop the test"
+    reason = "a failing test stops on the first error"
 )]
 
-use kampus_storage::conformance;
-use kampus_storage_opendal::{OpendalStorage, S3Config};
-
-/// A namespace of its own for each run.
-fn namespace() -> String {
-    format!("run-{}", uuid::Uuid::now_v7().simple())
-}
-
-#[tokio::test]
-async fn the_local_disk_conforms() {
-    let dir = tempfile::tempdir().unwrap();
-    let storage = OpendalStorage::local(dir.path().to_str().unwrap()).unwrap();
-    conformance::run(&storage, &namespace()).await;
-}
-
-#[tokio::test]
-async fn an_s3_compatible_store_conforms() {
-    let endpoint = std::env::var("KAMPUS_TEST_S3_ENDPOINT").expect("KAMPUS_TEST_S3_ENDPOINT is set");
-    let storage = OpendalStorage::s3(&S3Config {
-        endpoint: Some(endpoint),
-        region: "us-east-1".into(),
-        bucket: "kampus-test".into(),
-        root: "/conformance".into(),
-        access_key_id: "kampus".into(),
-        secret_access_key: "kampus-secret".into(),
-    })
-    .unwrap();
-    conformance::run(&storage, &namespace()).await;
-}
+mod permission;

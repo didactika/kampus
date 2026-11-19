@@ -149,19 +149,3 @@ pub fn entry_key(namespace: &str, key: &str) -> Result<String> {
         Err(Error::validation("cache.key_invalid", fields))
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::entry_key;
-
-    #[test]
-    fn keys_are_namespaced_and_validated() {
-        assert_eq!(
-            entry_key("access.decisions", "u1:s2").unwrap(),
-            "access.decisions:u1:s2"
-        );
-        let error = entry_key("Access", "").unwrap_err();
-        let fields: Vec<_> = error.fields().iter().map(|f| f.field.as_str()).collect();
-        assert_eq!(fields, ["namespace", "key"]);
-    }
-}

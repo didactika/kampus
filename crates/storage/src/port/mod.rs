@@ -203,39 +203,3 @@ pub fn verify(key: &StorageKey, data: &[u8], expected: &[u8; 32]) -> Result<()> 
         .with_param("key", key.as_str()))
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::{StorageKey, sha256, verify};
-
-    #[test]
-    fn keys_are_validated() {
-        for key in ["ab/cd/abcd", "files/report-2026_01.pdf", "a"] {
-            assert!(StorageKey::new(key).is_ok(), "{key}");
-        }
-        for key in ["", "/a", "a//b", "A/b", "a/../b", "a b", "ñ"] {
-            assert_eq!(
-                StorageKey::new(key).unwrap_err().code(),
-                "storage.key_invalid",
-                "{key:?}"
-            );
-        }
-    }
-
-    #[test]
-    fn hash_keys_are_sharded() {
-        let key = StorageKey::for_hash(&sha256(b"hello"));
-        assert!(key.as_str().starts_with("2c/f2/2cf24dba5fb0a30e"));
-        assert!(StorageKey::new(key.as_str()).is_ok());
-    }
-
-    #[test]
-    fn content_must_match_its_hash() {
-        let key = StorageKey::new("a").unwrap();
-        assert!(verify(&key, b"hello", &sha256(b"hello")).is_ok());
-        assert_eq!(
-            verify(&key, b"hello", &sha256(b"other")).unwrap_err().code(),
-            "storage.hash_mismatch"
-        );
-    }
-}

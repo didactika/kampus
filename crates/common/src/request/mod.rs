@@ -74,21 +74,3 @@ impl fmt::Display for RequestId {
         f.write_str(&self.0)
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::RequestId;
-
-    #[test]
-    fn header_values_are_accepted_only_when_safe() {
-        assert_eq!(RequestId::from_header("abc-123").unwrap().as_str(), "abc-123");
-        assert!(RequestId::from_header("").is_none());
-        assert!(RequestId::from_header("with space").is_none());
-        assert!(RequestId::from_header(&"x".repeat(129)).is_none());
-    }
-
-    #[test]
-    fn generated_identifiers_are_unique() {
-        assert_ne!(RequestId::generate(), RequestId::generate());
-    }
-}

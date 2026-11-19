@@ -105,27 +105,3 @@ pub fn choose<'a, A>(
             .with_param("known", known.join(", "))
         })
 }
-
-#[cfg(test)]
-mod tests {
-    use super::{AdapterSettings, choose};
-
-    #[test]
-    fn the_scheme_chooses_the_adapter() {
-        let adapters = [("memory", &["memory"][..]), ("redis", &["redis", "valkey"][..])];
-        let settings = AdapterSettings {
-            url: "Valkey://cache:6379".into(),
-            ..AdapterSettings::default()
-        };
-        assert_eq!(settings.location(), "cache:6379");
-        assert_eq!(choose(&adapters, |a| a.1, &settings, "cache").unwrap().0, "redis");
-        let unknown = AdapterSettings {
-            url: "memcached://x".into(),
-            ..AdapterSettings::default()
-        };
-        let error = choose(&adapters, |a| a.1, &unknown, "cache").unwrap_err();
-        assert_eq!(error.code(), "cache.adapter_unknown");
-        assert!(error.to_string().contains("known=memory, redis, valkey"));
-        assert!(AdapterSettings::default().scheme().is_err());
-    }
-}

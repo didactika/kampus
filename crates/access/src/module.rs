@@ -34,7 +34,6 @@
 
 //! The descriptor of access: what the server installs and synchronises for it.
 
-use kampus_common::component::Maturity;
 use kampus_module::Module;
 
 /// The name of the module and of its schema.
@@ -43,10 +42,7 @@ pub const NAME: &str = "access";
 /// Access, as the server reads it.
 pub const MODULE: Module = Module {
     name: NAME,
-    manifest: kampus_common::manifest! {
-        maturity: Maturity::Alpha,
-        kampus: Some(">=0.1.0, <0.2.0"),
-    },
+    manifest: kampus_common::manifest!(),
     summary: "Scopes, principals, roles, grants, overrides and permission checks",
     steps: crate::db::STEPS,
     permissions: crate::permissions::PERMISSIONS,

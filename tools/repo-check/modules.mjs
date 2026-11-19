@@ -66,6 +66,9 @@ const SRC_FOLDERS = [
   'privacy',
 ];
 
+/** The start of a component's `version.toml`: its table and its version. */
+const COMPONENT_VERSION = /^\[component\]\s*\nversion = "/m;
+
 /**
  * The layout of each kind of crate: what may sit at its root besides `Cargo.toml`, `README.md`, `src` and
  * `tests`; the only files at the top of `src/`; the folders allowed there (`null`: any, named by concern);
@@ -75,18 +78,22 @@ const LAYOUTS = {
   foundation: { root: [], files: ['lib.rs'], folders: null, required: [], declarations: [] },
   port: { root: ['adapters'], files: ['lib.rs'], folders: null, required: ['port', 'registry', 'conformance'], declarations: [] },
   adapter: {
-    root: ['assets'],
+    root: ['assets', 'version.toml'],
     files: ['lib.rs'],
     folders: null,
     required: ['store'],
-    declarations: [['src/lib.rs', /pub const ADAPTER: /, 'declares `pub const ADAPTER`']],
+    declarations: [
+      ['src/lib.rs', /pub const ADAPTER: /, 'declares `pub const ADAPTER`'],
+      ['version.toml', COMPONENT_VERSION, 'starts its [component] table with the version'],
+    ],
   },
   server: { root: ['adapters.toml', 'modules.toml'], files: ['lib.rs', 'main.rs'], folders: null, required: ['commands', 'config', 'http', 'wiring'], declarations: [] },
-  module: { root: ['web', 'lang', 'assets'], files: ['lib.rs', 'module.rs'], folders: null, required: ['db', 'permissions'], declarations: null },
+  module: { root: ['web', 'lang', 'assets', 'version.toml'], files: ['lib.rs', 'module.rs'], folders: null, required: ['db', 'permissions'], declarations: null },
 };
 
 /** Files a module must have, and what each must declare. */
 const REQUIRED = [
+  ['version.toml', COMPONENT_VERSION, 'starts its [component] table with the version'],
   ['src/module.rs', /pub const MODULE: Module = Module \{/, 'declares `pub const MODULE: Module`'],
   ['src/db/mod.rs', /pub use steps::/, 're-exports its steps'],
   ['src/db/steps.rs', /pub const STEPS: &\[Step\]/, 'declares `pub const STEPS: &[Step]`'],
@@ -183,6 +190,22 @@ function checkLayout(root) {
     for (const folder of layout.required) {
       if (!fs.existsSync(path.join(src, folder))) problems.push(`${c.dir}/src/${folder}: missing from ${where}`);
     }
+    for (const file of walkFiles(src).filter((f) => f.endsWith('.rs'))) {
+      if (/^\s*#\[cfg\(test\)\]/m.test(fs.readFileSync(file, 'utf8'))) {
+        problems.push(`${path.relative(root, file)}: tests live in tests/, never in the code`);
+      }
+    }
+    const tests = path.join(base, 'tests');
+    if (fs.existsSync(tests)) {
+      for (const entry of fs.readdirSync(tests, { withFileTypes: true })) {
+        const where = `${c.dir}/tests/${entry.name}`;
+        if (!entry.isDirectory() || !TEST_KINDS.includes(entry.name)) {
+          problems.push(`${where}: tests/ holds only the folders ${TEST_KINDS.join(', ')}`);
+        } else if (entry.name !== 'support' && !fs.existsSync(path.join(tests, entry.name, 'main.rs'))) {
+          problems.push(`${where}: needs its main.rs, which declares one module per topic`);
+        }
+      }
+    }
     for (const folder of walkFolders(src)) {
       const name = path.basename(folder);
       if (!/^[a-z][a-z0-9_]*$/.test(name)) problems.push(`${path.relative(root, folder)}: folders are snake case`);
@@ -195,6 +218,15 @@ function checkLayout(root) {
     }
   }
   return problems;
+}
+
+/** The kinds of test a crate may have, one test binary each. */
+const TEST_KINDS = ['unit', 'integration', 'conformance', 'support'];
+
+/** Every file under a directory. */
+function walkFiles(dir) {
+  return fs.readdirSync(dir, { withFileTypes: true })
+    .flatMap((e) => (e.isDirectory() ? walkFiles(path.join(dir, e.name)) : [path.join(dir, e.name)]));
 }
 
 /** Every folder under a directory, deepest last. */

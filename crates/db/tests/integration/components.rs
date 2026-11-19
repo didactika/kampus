@@ -35,12 +35,6 @@
 //! The registry of components against PostgreSQL: versions and the history of runs, data actions inside
 //! their steps, the way back to an older release, and uninstalling a component.
 
-#![allow(
-    clippy::unwrap_used,
-    clippy::expect_used,
-    reason = "a failing setup must stop the test"
-)]
-
 use kampus_common::{Error, ErrorKind};
 use kampus_db::schema::Change;
 use kampus_db::{

@@ -34,11 +34,6 @@
 
 //! One test per behaviour of identity, against PostgreSQL, on a campus with its default roles, an administrator and a manager.
 
-#![allow(
-    clippy::unwrap_used,
-    clippy::expect_used,
-    reason = "a failing setup must stop the test"
-)]
 #![allow(clippy::too_many_lines, reason = "each rule reads as one story")]
 
 use std::collections::BTreeMap;

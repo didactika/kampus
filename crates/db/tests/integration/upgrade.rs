@@ -35,12 +35,6 @@
 //! The upgrade runner against PostgreSQL: fresh installations, upgrades from any earlier state in one run,
 //! refused databases and concurrent upgrades. Each test runs in an installation of its own prefix.
 
-#![allow(
-    clippy::unwrap_used,
-    clippy::expect_used,
-    reason = "a failing setup must stop the test"
-)]
-
 use kampus_common::ErrorKind;
 use kampus_db::schema::Change;
 use kampus_db::{Database, ModuleSteps, Prefix, Problem, Step, Upgrader};

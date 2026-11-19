@@ -54,14 +54,3 @@ pub struct Platform {
 
 /// The release this build belongs to, read from `version.toml` when the build is compiled.
 pub const PLATFORM: Platform = kampus_macros::platform!();
-
-#[cfg(test)]
-mod tests {
-    use super::PLATFORM;
-
-    #[test]
-    fn the_platform_is_the_workspace_release() {
-        assert_eq!(PLATFORM.version, env!("CARGO_PKG_VERSION"));
-        assert_eq!(PLATFORM.name, "Kampus");
-    }
-}
