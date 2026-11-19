@@ -33,9 +33,10 @@
 // ------------------------------------------------------------------------------
 
 //! The HTTP routes of customisation: the words of a scope, its feature flags and its custom fields here,
-//! and its layouts, menus and theme in [`pages`].
+//! its layouts, menus and theme in [`pages`], and its rules in [`rules`].
 
 mod pages;
+mod rules;
 
 use axum::extract::{Path, Query, State};
 use axum::http::StatusCode;
@@ -69,6 +70,7 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/scopes/{scope}/fields", get(fields).post(create_field))
         .route("/fields/{id}", get(field).delete(delete_field))
         .merge(pages::routes())
+        .merge(rules::routes())
         .with_state(shared)
 }
 

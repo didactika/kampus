@@ -30,13 +30,15 @@ PostgreSQL schema `customise`, owned by `kampus-customise`, following DEC-014, D
 | `menu` | `id`, `menu_kind_code` FK → `menu_kind` (`CASCADE`), `scope_id` FK → `access.scope` (`CASCADE`), `locked`, `version` | `UNIQUE` (`menu_kind_code`, `scope_id`) |
 | `menu_item` | `id`, `menu_id` FK (`CASCADE`), `parent_id` FK → `menu_item` (`CASCADE`), `label`, `target` (a path of the site or an `http`/`https` address), `permission`, `position` | Index (`menu_id`, `parent_id`, `position`); at most 100 items, 3 levels deep; a hidden item hides its children. Labels per language arrive with languages |
 | `theme` | `id`, `scope_id` FK → `access.scope` (`CASCADE`), `tokens` jsonb (the tokens this scope sets, validated, RN-217), `locked`, `version` | `UNIQUE` (`scope_id`); tokens merge from the platform down to the scope read, stopping at the first scope that locks; the parent of a theme is the theme of the scope above, so it needs no column |
-| `rule` | `id`, `scope_id` FK → `access.scope` (`CASCADE`), `owner_id` FK → `identity.account`, `name`, `trigger` (event type), `conditions` jsonb (typed tree), `actions` jsonb (typed list), `enabled`, `version` | Index (`trigger`) where `enabled` |
-| `rule_run` | `id`, `rule_id` FK (`CASCADE`), `event_id` FK → `events.event`, `outcome`, `error`, `at` | Index (`rule_id`, `at`); purged by retention |
+| `rule` | `id`, `scope_id` FK → `access.scope` (`CASCADE`), `owner` (the principal it acts as, who wrote it last; not a foreign key), `name`, `trigger` (a declared event type), `conditions` jsonb (typed tree of `all`, `any`, `not` and `compare` on the fields the trigger declares), `actions` jsonb (declared actions with typed parameters), `enabled`, `version`, `created_at` | Index (`trigger`, `enabled`), index on `scope_id`; reacts to the events of its scope and the scopes below (RN-218) |
+| `rule_run` | `id`, `rule_id` FK (`CASCADE`), `event` (soft reference: events are purged), `outcome` (`running`, `succeeded`, `failed`, `skipped`), `actions_done`, `error`, `at` | `UNIQUE` (`rule_id`, `event`): one evaluation per event, which a redelivery resumes after its last done action; index (`rule_id`, `at`) (RN-219) |
 | `flag` | `code` PK, `module`, `summary`, `default_value` boolean, `retired_at` | Synchronised from declarations |
 | `flag_value` | `flag_code` FK (`CASCADE`), `scope_id` FK → `access.scope` (`CASCADE`), `enabled`, `locked` | PK (`flag_code`, `scope_id`) |
 | `change` | `id`, `kind` (`term`, `flag`, `field`, `layout`, `menu`, `theme`), `object`, `scope_id` FK → `access.scope` (`CASCADE`), `actor` (not a foreign key, it outlives the account), `before` jsonb, `after` jsonb, `at` | Append-only (RN-222); index (`scope_id`, `at`); every change also publishes `customise.changed`. The package checksum arrives with packages |
 
-Rules and packages arrive in later parts of customisation; until then their tables are not created.
+Packages arrive in a later part of customisation; until then their tables are not created.
+
+Rules listen to `events.any`, the type `kampus-events` declares so that a listener receives every event. An action runs after the event committed, as the owner of the rule, who must hold the permission the action declares in the scope of the event; a failure is recorded and publishes `customise.rule_failed`, and is not retried. A rule cannot be triggered by an event its actions declare they publish, and no rule runs for an event more than five steps down a chain.
 
 ## Theme tokens (RN-217)
 

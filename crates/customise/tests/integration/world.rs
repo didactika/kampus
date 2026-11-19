@@ -35,15 +35,16 @@
 //! The world of the integration tests: an installation of its own with a tree of scopes down to a section,
 //! a module that declares what the tests customise, its administrator and someone without permissions.
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use kampus_access::{Access, Actor, PrincipalId, ScopeId, ScopeKind};
 use kampus_common::SystemClock;
 use kampus_customise::{Choice, Customise, FieldSpec, FieldType, FieldVisibility};
 use kampus_db::{Database, Prefix, Upgrader};
 use kampus_module::{
-    FieldKindDeclaration, FlagDeclaration, MenuKindDeclaration, Module, PageKindDeclaration, TermDeclaration,
-    TermForms, ValueKind, WidgetDeclaration, WidgetSetting,
+    EventDeclaration, FieldKindDeclaration, FlagDeclaration, JobFuture, MenuKindDeclaration, Module,
+    PageKindDeclaration, RuleActionDeclaration, RuleActionRun, RuleParameter, TermDeclaration, TermForms,
+    ValueKind, WidgetDeclaration, WidgetSetting,
 };
 use serde_json::Value;
 
@@ -109,6 +110,73 @@ const MENUS: &[MenuKindDeclaration] = &[MenuKindDeclaration {
     summary: "A menu",
 }];
 
+/// The event types of these tests.
+const EVENTS: &[EventDeclaration] = &[EventDeclaration {
+    code: "testing.happened",
+    version: 1,
+    summary: "Something happened",
+    fields: &["account", "level"],
+    audited: false,
+    personal_fields: &[],
+}];
+
+/// What the action of these tests noted: the event and the parameters, by event.
+pub(crate) static NOTED: Mutex<Vec<(uuid::Uuid, Value)>> = Mutex::new(Vec::new());
+
+/// Notes the event with its parameters.
+fn note(run: RuleActionRun<'_>) -> JobFuture<'_> {
+    Box::pin(async move {
+        NOTED.lock().unwrap().push((run.event.id, run.params.clone()));
+        Ok(())
+    })
+}
+
+/// Fails.
+fn fail(_: RuleActionRun<'_>) -> JobFuture<'_> {
+    Box::pin(async { Err(kampus_common::Error::conflict("testing.failed")) })
+}
+
+/// The rule actions of these tests.
+const ACTIONS: &[RuleActionDeclaration] = &[
+    RuleActionDeclaration {
+        code: "testing.note",
+        summary: "Notes the event",
+        params: &[
+            RuleParameter {
+                key: "tag",
+                kind: ValueKind::Text { max: 20, default: "" },
+                required: true,
+            },
+            RuleParameter {
+                key: "loud",
+                kind: ValueKind::Boolean { default: false },
+                required: false,
+            },
+        ],
+        needs: &["account"],
+        permission: "customise.flag.manage",
+        publishes: &[],
+        run: note,
+    },
+    RuleActionDeclaration {
+        code: "testing.fail",
+        summary: "Fails",
+        params: &[],
+        needs: &[],
+        permission: "customise.flag.manage",
+        publishes: &[],
+        run: fail,
+    },
+    RuleActionDeclaration {
+        code: "testing.echo",
+        summary: "Publishes what triggers it",
+        params: &[],
+        needs: &[],
+        permission: "customise.flag.manage",
+        publishes: &["testing.happened"],
+        run: fail,
+    },
+];
 /// A module that declares what these tests customise.
 pub(crate) const TESTING: Module = Module {
     name: "testing",
@@ -118,8 +186,14 @@ pub(crate) const TESTING: Module = Module {
     page_kinds: PAGES,
     widgets: WIDGETS,
     menu_kinds: MENUS,
+    events: EVENTS,
+    listeners: &[],
+    rule_actions: ACTIONS,
     ..kampus_customise::MODULE
 };
+
+/// The modules whose rule actions the tests run.
+static MODULES: &[&Module] = &[&TESTING];
 
 /// A tree of scopes down to a section, with its administrator and someone without permissions.
 pub(crate) struct World {
@@ -161,10 +235,10 @@ pub(crate) async fn world() -> World {
         .await
         .unwrap();
     kampus_events::Events::new(db.clone())
-        .sync_declarations(&[&kampus_customise::MODULE])
+        .sync_declarations(&[&kampus_events::MODULE, &kampus_customise::MODULE, &TESTING])
         .await
         .unwrap();
-    let customise = Customise::new(db.clone(), access.clone());
+    let customise = Customise::new(db.clone(), access.clone()).with_modules(MODULES);
     customise.sync_declarations(&[&TESTING]).await.unwrap();
     let platform = access.create_platform().await.unwrap();
     let campus = access.create_scope(platform, ScopeKind::Campus).await.unwrap();

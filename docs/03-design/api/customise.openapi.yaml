@@ -34,13 +34,14 @@ paths:
   /api/v1/scopes/{scope_id}/theme.css:
     get: { summary: 'The theme as CSS custom properties (--kampus-<token>) on :root', responses: { '200': { description: 'text/css' } } }
   /api/v1/scopes/{scope_id}/rules:
-    get: { summary: Rules of a scope, responses: { '200': { description: Rules } } }
-    post: { summary: 'Create a rule from declared triggers, conditions and actions (RN-218)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created } } }
+    get: { summary: 'The rules the scope writes; needs customise.rule.manage there', responses: { '200': { description: Rules } } }
+    post: { summary: 'Write a rule from a declared trigger, typed conditions and declared actions; its author becomes its owner (RN-218)', responses: { '201': { description: 'Created, with its version as ETag' }, '403': { description: 'Without customise.rule.manage or a permission an action needs' }, '422': { description: 'Unknown trigger or action, conditions on undeclared fields, parameters of another kind, or an action that publishes its own trigger' } } }
   /api/v1/rules/{rule_id}:
-    patch: { summary: 'Change, enable or disable', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }
-    delete: { summary: Delete, responses: { '204': { description: Deleted } } }
+    get: { summary: A rule, responses: { '200': { description: 'The rule, with its version as ETag' } } }
+    put: { summary: 'Replace a rule, enabled or not; its author becomes its owner', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced }, '409': { description: Changed since it was read } } }
+    delete: { summary: Delete a rule with its runs, responses: { '204': { description: Deleted } } }
   /api/v1/rules/{rule_id}/runs:
-    get: { summary: 'Runs with outcome and error (RN-219)', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
+    get: { summary: 'The latest 50 evaluations, newest first, with outcome, actions done and error (RN-219)', responses: { '200': { description: Runs } } }
   /api/v1/scopes/{scope_id}/flags:
     get: { summary: Resolved feature flags, responses: { '200': { description: Flags } } }
   /api/v1/scopes/{scope_id}/flags/{code}:

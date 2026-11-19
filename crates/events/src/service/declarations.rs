@@ -114,4 +114,25 @@ impl Events {
         .map_err(kampus_db::classify)?;
         tx.commit().await.map_err(kampus_db::classify)
     }
+
+    /// The fields every payload of a declared event type has; none for a type no module declares, or
+    /// for `events.any`.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn declared_fields(&self, code: &str) -> Result<Option<Vec<String>>> {
+        if code == crate::ANY {
+            return Ok(None);
+        }
+        let fields: Option<serde_json::Value> = sqlx::query_scalar(sql(format!(
+            "select fields from {} where code = $1 and retired_at is null",
+            self.table("event_type")
+        )))
+        .bind(code)
+        .fetch_optional(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(fields.map(|f| serde_json::from_value(f).unwrap_or_default()))
+    }
 }

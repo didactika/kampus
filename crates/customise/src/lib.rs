@@ -41,14 +41,17 @@ pub mod events;
 pub mod http;
 pub mod model;
 pub mod module;
+pub mod observers;
 pub mod permissions;
 pub mod service;
 pub mod settings;
 
 use kampus_access::Access;
 use kampus_db::Database;
+use kampus_module::{Module, RuleActionDeclaration};
 
 pub use model::layout::{Layout, Menu, MenuItem, Placement};
+pub use model::rule::{Comparison, Condition, Operator, Rule, RuleAction, RuleId, RuleRun, RuleSpec};
 pub use model::theme::Theme;
 pub use model::{
     Choice, Field, FieldEntry, FieldId, FieldSpec, FieldType, FieldValueId, FieldVisibility, Flag, Origin,
@@ -63,13 +66,33 @@ pub struct Customise {
     db: Database,
     /// Access, for the scope tree and the checks.
     access: Access,
+    /// The modules of the build, for the actions of rules.
+    modules: &'static [&'static Module],
 }
 
 impl Customise {
-    /// The customisation of an installation.
+    /// The customisation of an installation, whose rules run no action until it knows the modules.
     #[must_use]
     pub const fn new(db: Database, access: Access) -> Self {
-        Self { db, access }
+        Self {
+            db,
+            access,
+            modules: &[],
+        }
+    }
+
+    /// The customisation with the modules of the build, whose actions rules run.
+    #[must_use]
+    pub fn with_modules(self, modules: &'static [&'static Module]) -> Self {
+        Self { modules, ..self }
+    }
+
+    /// The rule action a module of the build declares with a code.
+    fn rule_action(&self, code: &str) -> Option<&'static RuleActionDeclaration> {
+        self.modules
+            .iter()
+            .flat_map(|m| m.rule_actions.iter())
+            .find(|a| a.code == code)
     }
 
     /// The quoted name of a table of this module.

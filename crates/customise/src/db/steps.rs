@@ -34,7 +34,7 @@
 
 //! The upgrade steps of the `customise` schema, in the neutral schema: terms and their overrides, feature
 //! flags and their values, custom fields with their choices and typed values, the record of changes, and
-//! layouts with their placements, menus with their items, and themes.
+//! layouts with their placements, menus with their items, themes, and rules with their runs.
 
 use kampus_db::Step;
 use kampus_db::schema::{Change, Check, Column, ColumnDefault, ForeignKey, Index, OnDelete, Table, Type};
@@ -43,6 +43,10 @@ use kampus_db::schema::{Change, Check, Column, ColumnDefault, ForeignKey, Index,
 pub const FIELD_TYPES: &[&str] = &[
     "text", "integer", "date", "boolean", "choice", "choices", "account",
 ];
+
+/// How one evaluation of a rule ended: still running its actions, done, failed, or its conditions did not
+/// hold.
+pub const RUN_OUTCOMES: &[&str] = &["running", "succeeded", "failed", "skipped"];
 
 /// Who sees the value of a custom field.
 pub const VISIBILITIES: &[&str] = &["public", "private"];
@@ -385,6 +389,63 @@ alter table {schema}.\"field_value\" add constraint \"field_value_at_most_one_ch
             primary_key: &["id"],
             unique: &[&["scope_id"]],
             foreign_keys: &[SCOPE],
+            ..Table::EMPTY
+        }),
+    ],
+}, Step {
+    sequence: 3,
+    name: "rules and their runs",
+    revert: &[],
+    action: None,
+    changes: &[
+        Change::CreateTable(Table {
+            name: "rule",
+            columns: &[
+                Column::new("id", Type::Uuid),
+                Column::new("scope_id", Type::Uuid),
+                Column::new("owner", Type::Uuid),
+                Column::new("name", Type::Text),
+                Column::new("trigger", Type::Text),
+                Column::new("conditions", Type::Json("customise.rule_conditions")).nullable(),
+                Column::new("actions", Type::Json("customise.rule_actions")),
+                Column::new("enabled", Type::Boolean).default(ColumnDefault::Bool(true)),
+                Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+                Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+            ],
+            primary_key: &["id"],
+            foreign_keys: &[SCOPE],
+            indexes: &[
+                Index {
+                    columns: &["trigger", "enabled"],
+                    unique: false,
+                },
+                Index {
+                    columns: &["scope_id"],
+                    unique: false,
+                },
+            ],
+            without_natural_key: Some("a rule is known by its id; several rules of a scope may share a name"),
+            ..Table::EMPTY
+        }),
+        Change::CreateTable(Table {
+            name: "rule_run",
+            columns: &[
+                Column::new("id", Type::Uuid),
+                Column::new("rule_id", Type::Uuid),
+                Column::new("event", Type::Uuid),
+                Column::new("outcome", Type::Text),
+                Column::new("actions_done", Type::Integer).default(ColumnDefault::Int(0)),
+                Column::new("error", Type::Text).nullable(),
+                Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
+            ],
+            primary_key: &["id"],
+            unique: &[&["rule_id", "event"]],
+            foreign_keys: &[own(&["rule_id"], "rule", &["id"], OnDelete::Cascade)],
+            checks: &[Check::OneOf("outcome", RUN_OUTCOMES), Check::NonNegative("actions_done")],
+            indexes: &[Index {
+                columns: &["rule_id", "at"],
+                unique: false,
+            }],
             ..Table::EMPTY
         }),
     ],

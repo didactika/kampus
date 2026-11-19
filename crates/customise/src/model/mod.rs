@@ -36,6 +36,7 @@
 //! their choices and types, and in [`layout`] and [`theme`] layouts, menus and themes.
 
 pub mod layout;
+pub mod rule;
 pub mod theme;
 
 use std::str::FromStr;

@@ -295,6 +295,26 @@ impl Courses {
         self.delete_member(group.id, account, MANUAL).await
     }
 
+    /// Adds a membership that a module owns on behalf of an actor, such as a rule acting as its owner;
+    /// needs `courses.groups.manage` in the course of the group, and only that module removes it.
+    ///
+    /// # Errors
+    ///
+    /// `permission_denied` without the permission, `validation` for an invalid module name or someone who
+    /// does not take part in the course.
+    pub async fn add_member_for(
+        &self,
+        actor: &Actor,
+        module: &str,
+        group: GroupId,
+        account: PrincipalId,
+    ) -> Result<()> {
+        let origin = module_origin(module)?;
+        let (group, course) = self.group_and_course(group).await?;
+        self.access.require(actor, GROUPS_MANAGE, course.scope).await?;
+        self.insert_member(&group, &course, account, origin).await
+    }
+
     /// Adds a membership that a module owns, such as enrolment; only that module removes it.
     ///
     /// # Errors

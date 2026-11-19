@@ -33,12 +33,18 @@
 // ------------------------------------------------------------------------------
 
 //! What courses offers to customisation: the words of its domain in English and Spanish, the groups
-//! feature, custom fields on courses, and the page of a course with its widgets.
+//! feature, custom fields on courses, the page of a course with its widgets, and the actions rules run.
 
+use kampus_access::{Actor, PrincipalId};
+use kampus_common::{Error, FieldError};
 use kampus_module::{
-    FieldKindDeclaration, FlagDeclaration, PageKindDeclaration, TermDeclaration, TermForms, ValueKind,
-    WidgetDeclaration, WidgetSetting,
+    FieldKindDeclaration, FlagDeclaration, JobFuture, PageKindDeclaration, RuleActionDeclaration,
+    RuleActionRun, RuleParameter, TermDeclaration, TermForms, ValueKind, WidgetDeclaration, WidgetSetting,
 };
+use serde_json::Value;
+
+use crate::permissions::GROUPS_MANAGE;
+use crate::{Courses, GroupId};
 
 /// The kind of entity of the custom fields of a course.
 pub const COURSE_KIND: &str = "courses.course";
@@ -136,3 +142,57 @@ pub const WIDGETS: &[WidgetDeclaration] = &[
         settings: &[],
     },
 ];
+
+/// The actions of this module rules run.
+pub const RULE_ACTIONS: &[RuleActionDeclaration] = &[RuleActionDeclaration {
+    code: "courses.add_to_group",
+    summary: "Adds the account of the event to a group; the membership belongs to rules",
+    params: &[RuleParameter {
+        key: "group",
+        kind: ValueKind::Text { max: 36, default: "" },
+        required: true,
+    }],
+    needs: &["account"],
+    permission: GROUPS_MANAGE,
+    publishes: &[],
+    run: add_to_group,
+}];
+
+/// Adds the account of the event to the group of the rule, as the owner of the rule.
+fn add_to_group(run: RuleActionRun<'_>) -> JobFuture<'_> {
+    Box::pin(async move {
+        let invalid = || {
+            Error::validation(
+                "courses.rule_params_invalid",
+                vec![FieldError::new("group", "uuid")],
+            )
+        };
+        let group = run
+            .params
+            .get("group")
+            .and_then(Value::as_str)
+            .and_then(|g| uuid::Uuid::parse_str(g).ok())
+            .ok_or_else(invalid)?;
+        let account = run
+            .event
+            .payload
+            .get("account")
+            .and_then(Value::as_str)
+            .and_then(|a| uuid::Uuid::parse_str(a).ok())
+            .ok_or_else(|| {
+                Error::validation(
+                    "courses.rule_event_invalid",
+                    vec![FieldError::new("account", "uuid")],
+                )
+            })?;
+        let courses = run.services.service::<Courses>()?;
+        courses
+            .add_member_for(
+                &Actor::Principal(PrincipalId::from_uuid(run.owner)),
+                "rules",
+                GroupId::from_uuid(group),
+                PrincipalId::from_uuid(account),
+            )
+            .await
+    })
+}
