@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/deleteActivity/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Bin service and purge job | service | `crates/activities/src/bin.rs` | no (to build) |
-| `/api/v1/courses/{course_id}/bin`, restore, retry | API endpoints | `docs/03-design/api/activities.openapi.yaml` | no (to build) |
+| `/api/v1/activities/courses/{course_id}/bin`, restore, retry | API endpoints | `docs/03-design/api/activities.openapi.yaml` | no (to build) |
 
 ## Tests
 

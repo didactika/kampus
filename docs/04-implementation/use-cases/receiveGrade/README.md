@@ -21,7 +21,7 @@ Design: [README](../../../03-design/use-cases/receiveGrade/README.md)
 | --- | --- | --- | --- |
 | Grade service | service | `crates/records/src/grade.rs` | no (to build) |
 | Recalculation job | job | `crates/records/src/jobs/recalculate.rs` | no (to build) |
-| `PUT /api/v1/records/{record_id}/grades` | API endpoint | `docs/03-design/api/records.openapi.yaml` | no (to build) |
+| `PUT /api/v1/records/records/{record_id}/grades` | API endpoint | `docs/03-design/api/records.openapi.yaml` | no (to build) |
 
 ## Tests
 

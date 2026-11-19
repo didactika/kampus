@@ -121,8 +121,9 @@ async fn add_provider(
 async fn start(State(shared): State<Shared>, Path(provider): Path<String>) -> ApiResult<Response> {
     let provider: ProviderId = id(&provider)?;
     let redirect = format!(
-        "{}/auth/oidc/{provider}/callback",
-        shared.settings()?.api_url.trim_end_matches('/')
+        "{}/{}/auth/oidc/{provider}/callback",
+        shared.settings()?.api_url.trim_end_matches('/'),
+        crate::module::NAME
     );
     let started = shared.identity()?.oidc_start(provider, &redirect).await?;
     Ok((

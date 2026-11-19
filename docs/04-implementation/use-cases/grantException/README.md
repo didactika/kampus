@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/grantException/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Exception resolver | service | `crates/activities/src/exceptions.rs` | no (to build) |
-| `/api/v1/course-modules/{course_module_id}/exceptions`, effective values | API endpoints | `docs/03-design/api/activities.openapi.yaml` | no (to build) |
+| `/api/v1/activities/course-modules/{course_module_id}/exceptions`, effective values | API endpoints | `docs/03-design/api/activities.openapi.yaml` | no (to build) |
 
 ## Tests
 

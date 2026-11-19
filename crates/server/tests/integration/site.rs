@@ -211,7 +211,7 @@ impl Site {
     pub(crate) async fn sign_in(&self, name: &str) -> Answer {
         self.call(
             Method::POST,
-            "/api/v1/auth/sign-in",
+            "/api/v1/identity/auth/sign-in",
             None,
             &[],
             Some(json!({ "name": name, "password": PASSWORD })),
@@ -242,7 +242,7 @@ impl Site {
         let instance = self
             .call(
                 Method::POST,
-                &format!("/api/v1/courses/{course}/enrolment-instances"),
+                &format!("/api/v1/enrol/courses/{course}/enrolment-instances"),
                 Some(admin),
                 &[],
                 Some(json!({ "method": "manual", "name": format!("Manual {account}"), "role": self.roles[role] })),
@@ -253,7 +253,7 @@ impl Site {
         let enrolled = self
             .call(
                 Method::POST,
-                &format!("/api/v1/enrolment-instances/{instance}/enrolments"),
+                &format!("/api/v1/enrol/enrolment-instances/{instance}/enrolments"),
                 Some(admin),
                 &[],
                 Some(json!({ "accounts": [account] })),

@@ -8,40 +8,40 @@ info:
     ETag and If-Match on changes, Idempotency-Key on creation. Every operation checks its permission
     inside the service (DEC-017).
 paths:
-  /api/v1/scopes/{scope_id}:
+  /api/v1/access/scopes/{scope_id}:
     get:
       summary: A scope with its kind, parent and frozen state
       parameters: [{ $ref: '#/components/parameters/ScopeId' }]
       responses: { '200': { description: The scope, content: { application/json: { schema: { $ref: '#/components/schemas/Scope' } } } } }
-  /api/v1/scopes/{scope_id}/freeze:
+  /api/v1/access/scopes/{scope_id}/freeze:
     put: { summary: Freeze the scope (read-only for everyone), parameters: [{ $ref: '#/components/parameters/ScopeId' }], responses: { '204': { description: Frozen } } }
     delete: { summary: Unfreeze the scope, parameters: [{ $ref: '#/components/parameters/ScopeId' }], responses: { '204': { description: Unfrozen } } }
-  /api/v1/permissions:
+  /api/v1/access/permissions:
     get:
       summary: Declared permissions, with kind, risks, lowest scope kind and module
       parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }]
       responses: { '200': { description: A page of permissions } }
-  /api/v1/role-templates:
+  /api/v1/access/role-templates:
     get: { summary: Role templates and their versions, responses: { '200': { description: A page of templates } } }
-  /api/v1/campuses/{campus_id}/roles:
+  /api/v1/access/campuses/{campus_id}/roles:
     get: { summary: Roles of a campus, responses: { '200': { description: A page of roles } } }
     post:
       summary: Create a role from a template version
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/RoleInput' } } } }
       responses: { '201': { description: Created } }
-  /api/v1/roles/{role_id}:
+  /api/v1/access/roles/{role_id}:
     get: { summary: 'A role with its values, allowances and assignable scope kinds', responses: { '200': { description: The role } } }
     patch:
       summary: Change names, values, allowances or assignable kinds
       parameters: [{ $ref: '#/components/parameters/IfMatch' }]
       responses: { '200': { description: Updated }, '412': { description: Stale version } }
     delete: { summary: Delete a role without grants, responses: { '204': { description: Deleted }, '409': { description: The role still has grants } } }
-  /api/v1/roles/{role_id}/reset-preview:
+  /api/v1/access/roles/{role_id}/reset-preview:
     post: { summary: Differences between the role and a template version (RN-017), responses: { '200': { description: The differences } } }
-  /api/v1/roles/{role_id}/reset:
+  /api/v1/access/roles/{role_id}/reset:
     post: { summary: Apply a previewed reset, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Reset } } }
-  /api/v1/scopes/{scope_id}/grants:
+  /api/v1/access/scopes/{scope_id}/grants:
     get:
       summary: Grants in a scope (optionally including inherited ones)
       parameters: [{ $ref: '#/components/parameters/ScopeId' }, { name: inherited, in: query, schema: { type: boolean } }]
@@ -51,21 +51,21 @@ paths:
       parameters: [{ $ref: '#/components/parameters/ScopeId' }, { $ref: '#/components/parameters/IdempotencyKey' }]
       requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/GrantInput' } } } }
       responses: { '201': { description: Granted }, '403': { description: Not allowed to grant this role } }
-  /api/v1/grants/{grant_id}:
+  /api/v1/access/grants/{grant_id}:
     delete: { summary: Remove a manual grant (RN-016), responses: { '204': { description: Removed }, '409': { description: Owned by a module } } }
-  /api/v1/scopes/{scope_id}/overrides:
+  /api/v1/access/scopes/{scope_id}/overrides:
     get: { summary: Overrides set in a scope, parameters: [{ $ref: '#/components/parameters/ScopeId' }], responses: { '200': { description: A page of overrides } } }
     put:
       summary: Set or clear (inherit) override values for a role in the scope (RN-014, RN-015)
       parameters: [{ $ref: '#/components/parameters/ScopeId' }, { $ref: '#/components/parameters/IfMatch' }]
       responses: { '200': { description: Updated } }
-  /api/v1/scopes/{scope_id}/checks:
+  /api/v1/access/scopes/{scope_id}/checks:
     post:
       summary: Check permissions for a user in the scope, with explanations (RN-019)
       parameters: [{ $ref: '#/components/parameters/ScopeId' }]
       requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/CheckInput' } } } }
       responses: { '200': { description: Decisions, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Decision' } } } } } }
-  /api/v1/scopes/{scope_id}/view-as:
+  /api/v1/access/scopes/{scope_id}/view-as:
     post: { summary: 'Start viewing the scope as a role, read-only (RN-018)', parameters: [{ $ref: '#/components/parameters/ScopeId' }], responses: { '201': { description: Started } } }
     delete: { summary: Stop viewing as, parameters: [{ $ref: '#/components/parameters/ScopeId' }], responses: { '204': { description: Ended } } }
 components:

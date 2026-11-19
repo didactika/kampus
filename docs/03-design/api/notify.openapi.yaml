@@ -6,22 +6,22 @@ info:
     Inbox, preferences per type and channel (RN-148, RN-147), conversations, messages, deletions and blocks
     (RN-152 to RN-155). Conventions of DEC-025 and DEC-026.
 paths:
-  /api/v1/notifications:
+  /api/v1/notify/notifications:
     get: { summary: The caller's inbox, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
-  /api/v1/notifications/{notification_id}/read:
+  /api/v1/notify/notifications/{notification_id}/read:
     put: { summary: Mark as read, responses: { '204': { description: Marked } } }
-  /api/v1/notification-preferences:
+  /api/v1/notify/notification-preferences:
     get: { summary: 'Preferences, with campus defaults and locked ones (RN-148)', responses: { '200': { description: Preferences } } }
     put: { summary: Replace the caller's preferences; required types cannot be disabled, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced }, '422': { description: A required or locked type } } }
-  /api/v1/conversations:
+  /api/v1/notify/conversations:
     get: { summary: The caller's conversations, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
     post: { summary: 'Open a direct or group conversation; a direct one is unique per pair (RN-152)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created }, '200': { description: Already exists } } }
-  /api/v1/conversations/{conversation_id}/messages:
+  /api/v1/notify/conversations/{conversation_id}/messages:
     get: { summary: Messages not deleted by the caller, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
     post: { summary: 'Send a message, refused when blocked or not allowed (RN-153)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Sent }, '403': { description: Not allowed } } }
-  /api/v1/messages/{message_id}:
+  /api/v1/notify/messages/{message_id}:
     delete: { summary: 'Delete for the caller; purged when every member deleted it (RN-154)', responses: { '204': { description: Deleted } } }
-  /api/v1/blocks/{account_id}:
+  /api/v1/notify/blocks/{account_id}:
     put: { summary: Block an account, responses: { '204': { description: Blocked } } }
     delete: { summary: Unblock, responses: { '204': { description: Unblocked } } }
 components:

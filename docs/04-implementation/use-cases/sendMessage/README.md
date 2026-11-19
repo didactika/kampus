@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/sendMessage/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Messaging service | service | `crates/notify/src/messaging.rs` | no (to build) |
-| `/api/v1/conversations` | API endpoints | `docs/03-design/api/notify.openapi.yaml` | no (to build) |
+| `/api/v1/notify/conversations` | API endpoints | `docs/03-design/api/notify.openapi.yaml` | no (to build) |
 
 ## Tests
 

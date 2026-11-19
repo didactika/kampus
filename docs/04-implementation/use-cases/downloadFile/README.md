@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/downloadFile/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | File access service | service | `crates/files/src/access.rs` | no (to build) |
-| `/api/v1/files/{file_id}/url` | API endpoint | `docs/03-design/api/files.openapi.yaml` | no (to build) |
+| `/api/v1/files/files/{file_id}/url` | API endpoint | `docs/03-design/api/files.openapi.yaml` | no (to build) |
 
 ## Tests
 

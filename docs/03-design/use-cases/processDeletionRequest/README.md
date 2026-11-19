@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/processDeletionRequest/README.
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Request coordinator and retention job | service | `crates/privacy/src/requests.rs` |
-| `/api/v1/privacy/requests/{request_id}/approve` | API endpoint | `docs/03-design/api/privacy.openapi.yaml` |
+| `/api/v1/privacy/privacy/requests/{request_id}/approve` | API endpoint | `docs/03-design/api/privacy.openapi.yaml` |
 
 ## Sequence
 

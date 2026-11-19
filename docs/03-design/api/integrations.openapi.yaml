@@ -7,30 +7,30 @@ info:
     can revoke and webhooks (RN-199 to RN-201). Rate limits answer 429 with Retry-After (RN-198).
     Conventions of DEC-025 and DEC-026.
 paths:
-  /api/v1/openapi.json:
+  /api/v1/integrations/openapi.json:
     get: { summary: The OpenAPI document generated from the declared routes, responses: { '200': { description: Document } } }
-  /api/v1/api-scopes:
+  /api/v1/integrations/api-scopes:
     get: { summary: Declared API scopes, responses: { '200': { description: Scopes } } }
-  /api/v1/api-clients:
+  /api/v1/integrations/api-clients:
     get: { summary: Registered clients, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
     post: { summary: Register a service or OAuth client; the secret is shown once, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Registered } } }
-  /api/v1/api-clients/{client_id}:
+  /api/v1/integrations/api-clients/{client_id}:
     patch: { summary: Change or disable a client, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }
   /oauth/authorize:
     get: { summary: Authorisation code with PKCE; asks the person for consent, responses: { '302': { description: Redirect with code } } }
   /oauth/token:
     post: { summary: 'Exchange a code or rotate a refresh token; reuse revokes the family (RN-197)', responses: { '200': { description: Tokens }, '400': { description: Invalid grant } } }
-  /api/v1/me/authorisations:
+  /api/v1/integrations/me/authorisations:
     get: { summary: Applications the caller authorised, responses: { '200': { description: Authorisations } } }
-  /api/v1/me/authorisations/{authorisation_id}:
+  /api/v1/integrations/me/authorisations/{authorisation_id}:
     delete: { summary: Revoke, responses: { '204': { description: Revoked } } }
-  /api/v1/api-clients/{client_id}/webhooks:
+  /api/v1/integrations/api-clients/{client_id}/webhooks:
     get: { summary: Webhooks of a client, responses: { '200': { description: Webhooks } } }
     post: { summary: 'Subscribe a URL to event types (RN-199, RN-201)', responses: { '201': { description: Subscribed }, '422': { description: URL or event type not allowed } } }
-  /api/v1/webhooks/{webhook_id}:
+  /api/v1/integrations/webhooks/{webhook_id}:
     patch: { summary: 'Change, enable or disable', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }
     delete: { summary: Remove, responses: { '204': { description: Removed } } }
-  /api/v1/webhooks/{webhook_id}/deliveries:
+  /api/v1/integrations/webhooks/{webhook_id}/deliveries:
     get: { summary: Recent deliveries with status codes, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
 components:
   parameters:

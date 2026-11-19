@@ -51,7 +51,7 @@ async fn a_campus_renames_terms_adds_course_fields_and_turns_groups_off() {
     let renamed = site
         .call(
             Method::PUT,
-            &format!("/api/v1/scopes/{campus}/terms/courses.course"),
+            &format!("/api/v1/customise/scopes/{campus}/terms/courses.course"),
             Some(&admin),
             &[],
             Some(json!({ "language": "es", "singular": "asignatura", "plural": "asignaturas" })),
@@ -61,7 +61,7 @@ async fn a_campus_renames_terms_adds_course_fields_and_turns_groups_off() {
     let read = site
         .call(
             Method::GET,
-            &format!("/api/v1/courses/{course}"),
+            &format!("/api/v1/courses/courses/{course}"),
             Some(&admin),
             &[],
             None,
@@ -71,7 +71,7 @@ async fn a_campus_renames_terms_adds_course_fields_and_turns_groups_off() {
     let term = site
         .call(
             Method::GET,
-            &format!("/api/v1/scopes/{scope}/terms/courses.course?language=es"),
+            &format!("/api/v1/customise/scopes/{scope}/terms/courses.course?language=es"),
             Some(&admin),
             &[],
             None,
@@ -82,7 +82,7 @@ async fn a_campus_renames_terms_adds_course_fields_and_turns_groups_off() {
     let field = site
         .call(
             Method::POST,
-            &format!("/api/v1/scopes/{campus}/fields"),
+            &format!("/api/v1/customise/scopes/{campus}/fields"),
             Some(&admin),
             &[],
             Some(
@@ -94,7 +94,7 @@ async fn a_campus_renames_terms_adds_course_fields_and_turns_groups_off() {
     let set = site
         .call(
             Method::PUT,
-            &format!("/api/v1/courses/{course}/fields/credits"),
+            &format!("/api/v1/courses/courses/{course}/fields/credits"),
             Some(&admin),
             &[],
             Some(json!({ "value": 6 })),
@@ -104,7 +104,7 @@ async fn a_campus_renames_terms_adds_course_fields_and_turns_groups_off() {
     let fields = site
         .call(
             Method::GET,
-            &format!("/api/v1/courses/{course}/fields"),
+            &format!("/api/v1/courses/courses/{course}/fields"),
             Some(&admin),
             &[],
             None,
@@ -115,7 +115,7 @@ async fn a_campus_renames_terms_adds_course_fields_and_turns_groups_off() {
     let off = site
         .call(
             Method::PUT,
-            &format!("/api/v1/scopes/{scope}/flags/courses.groups"),
+            &format!("/api/v1/customise/scopes/{scope}/flags/courses.groups"),
             Some(&admin),
             &[],
             Some(json!({ "enabled": false })),
@@ -125,7 +125,7 @@ async fn a_campus_renames_terms_adds_course_fields_and_turns_groups_off() {
     let group = site
         .call(
             Method::POST,
-            &format!("/api/v1/courses/{course}/groups"),
+            &format!("/api/v1/courses/courses/{course}/groups"),
             Some(&admin),
             &[],
             Some(json!({ "name": "Red" })),
@@ -144,7 +144,7 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
     let read = site
         .call(
             Method::GET,
-            &format!("/api/v1/courses/{course}"),
+            &format!("/api/v1/courses/courses/{course}"),
             Some(&admin),
             &[],
             None,
@@ -154,7 +154,7 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
     let layout = site
         .call(
             Method::PUT,
-            &format!("/api/v1/scopes/{scope}/layouts/courses.course"),
+            &format!("/api/v1/customise/scopes/{scope}/layouts/courses.course"),
             Some(&admin),
             &[],
             Some(json!({ "placements": [
@@ -171,7 +171,7 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
     let menu = site
         .call(
             Method::PUT,
-            &format!("/api/v1/scopes/{campus}/menus/customise.main"),
+            &format!("/api/v1/customise/scopes/{campus}/menus/customise.main"),
             Some(&admin),
             &[],
             Some(json!({ "items": [{ "label": "Courses", "target": "/courses" }] })),
@@ -182,7 +182,7 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
     let theme = site
         .call(
             Method::PUT,
-            &format!("/api/v1/scopes/{campus}/theme"),
+            &format!("/api/v1/customise/scopes/{campus}/theme"),
             Some(&admin),
             &[],
             Some(json!({ "tokens": { "primary": "#0f766e" } })),
@@ -192,7 +192,7 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
     let css = site
         .call(
             Method::GET,
-            &format!("/api/v1/scopes/{scope}/theme.css"),
+            &format!("/api/v1/customise/scopes/{scope}/theme.css"),
             Some(&admin),
             &[],
             None,
@@ -206,7 +206,7 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
     let refused = site
         .call(
             Method::PUT,
-            &format!("/api/v1/scopes/{campus}/theme"),
+            &format!("/api/v1/customise/scopes/{campus}/theme"),
             Some(&admin),
             &[],
             Some(json!({ "tokens": { "primary": "#0f766e", "on_primary": "#134e4a" } })),
@@ -230,7 +230,7 @@ async fn a_rule_adds_who_enrols_to_a_group() {
     let read = site
         .call(
             Method::GET,
-            &format!("/api/v1/courses/{course}"),
+            &format!("/api/v1/courses/courses/{course}"),
             Some(&admin),
             &[],
             None,
@@ -240,7 +240,7 @@ async fn a_rule_adds_who_enrols_to_a_group() {
     let group = site
         .call(
             Method::POST,
-            &format!("/api/v1/courses/{course}/groups"),
+            &format!("/api/v1/courses/courses/{course}/groups"),
             Some(&admin),
             &[],
             Some(json!({ "name": "Newcomers" })),
@@ -251,7 +251,7 @@ async fn a_rule_adds_who_enrols_to_a_group() {
     let rule = site
         .call(
             Method::POST,
-            &format!("/api/v1/scopes/{scope}/rules"),
+            &format!("/api/v1/customise/scopes/{scope}/rules"),
             Some(&admin),
             &[],
             Some(json!({
@@ -266,7 +266,7 @@ async fn a_rule_adds_who_enrols_to_a_group() {
     let instance = site
         .call(
             Method::POST,
-            &format!("/api/v1/courses/{course}/enrolment-instances"),
+            &format!("/api/v1/enrol/courses/{course}/enrolment-instances"),
             Some(&admin),
             &[],
             Some(json!({ "method": "self", "name": "Self", "role": site.roles["learner"] })),
@@ -278,7 +278,7 @@ async fn a_rule_adds_who_enrols_to_a_group() {
     let joined = site
         .call(
             Method::POST,
-            &format!("/api/v1/enrolment-instances/{instance}/self"),
+            &format!("/api/v1/enrol/enrolment-instances/{instance}/self"),
             Some(&session),
             &[],
             Some(json!({})),
@@ -291,7 +291,7 @@ async fn a_rule_adds_who_enrols_to_a_group() {
     let members = site
         .call(
             Method::GET,
-            &format!("/api/v1/groups/{group}/members"),
+            &format!("/api/v1/courses/groups/{group}/members"),
             Some(&admin),
             &[],
             None,
@@ -301,7 +301,7 @@ async fn a_rule_adds_who_enrols_to_a_group() {
     let runs = site
         .call(
             Method::GET,
-            &format!("/api/v1/rules/{rule}/runs"),
+            &format!("/api/v1/customise/rules/{rule}/runs"),
             Some(&admin),
             &[],
             None,
@@ -319,7 +319,7 @@ async fn a_campus_exports_its_customisation_and_a_course_imports_it_after_review
     let read = site
         .call(
             Method::GET,
-            &format!("/api/v1/courses/{course}"),
+            &format!("/api/v1/courses/courses/{course}"),
             Some(&admin),
             &[],
             None,
@@ -329,7 +329,7 @@ async fn a_campus_exports_its_customisation_and_a_course_imports_it_after_review
     let campus = site.campus.to_string();
     site.call(
         Method::PUT,
-        &format!("/api/v1/scopes/{campus}/terms/courses.section"),
+        &format!("/api/v1/customise/scopes/{campus}/terms/courses.section"),
         Some(&admin),
         &[],
         Some(json!({ "singular": "week", "plural": "weeks" })),
@@ -338,7 +338,7 @@ async fn a_campus_exports_its_customisation_and_a_course_imports_it_after_review
     let exported = site
         .call(
             Method::POST,
-            &format!("/api/v1/scopes/{campus}/customisation-packages"),
+            &format!("/api/v1/customise/scopes/{campus}/packages"),
             Some(&admin),
             &[],
             Some(json!({ "kinds": ["terms", "theme"] })),
@@ -349,7 +349,7 @@ async fn a_campus_exports_its_customisation_and_a_course_imports_it_after_review
     let preview = site
         .call(
             Method::POST,
-            &format!("/api/v1/scopes/{scope}/customisation-imports"),
+            &format!("/api/v1/customise/scopes/{scope}/imports"),
             Some(&admin),
             &[],
             Some(exported.body["package"].clone()),
@@ -361,7 +361,7 @@ async fn a_campus_exports_its_customisation_and_a_course_imports_it_after_review
     let applied = site
         .call(
             Method::POST,
-            &format!("/api/v1/customisation-imports/{id}/apply"),
+            &format!("/api/v1/customise/imports/{id}/apply"),
             Some(&admin),
             &[],
             None,
@@ -371,7 +371,7 @@ async fn a_campus_exports_its_customisation_and_a_course_imports_it_after_review
     let term = site
         .call(
             Method::GET,
-            &format!("/api/v1/scopes/{scope}/terms/courses.section"),
+            &format!("/api/v1/customise/scopes/{scope}/terms/courses.section"),
             Some(&admin),
             &[],
             None,

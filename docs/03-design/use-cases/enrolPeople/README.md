@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/enrolPeople/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Enrolment service | service | `crates/enrol/src/enrolment.rs` |
-| `POST /api/v1/enrolment-instances/{instance_id}/enrolments` | API endpoint | `docs/03-design/api/enrolment.openapi.yaml` |
+| `POST /api/v1/enrol/enrolment-instances/{instance_id}/enrolments` | API endpoint | `docs/03-design/api/enrolment.openapi.yaml` |
 | `enrol.enrolment`, `enrol.enrolment_grant` | tables | `docs/03-design/data-model/enrolment.md` |
 
 ## Sequence

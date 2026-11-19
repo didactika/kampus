@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/subscribeWebhook/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Webhook dispatcher | service | `crates/api/src/webhooks.rs` | no (to build) |
-| `/api/v1/api-clients/{client_id}/webhooks` | API endpoints | `docs/03-design/api/integrations.openapi.yaml` | no (to build) |
+| `/api/v1/integrations/api-clients/{client_id}/webhooks` | API endpoints | `docs/03-design/api/integrations.openapi.yaml` | no (to build) |
 
 ## Tests
 

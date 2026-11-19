@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/arrangeLayout/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Layout and menu service | service | `crates/customise/src/layout.rs` |
-| `/api/v1/scopes/{scope_id}/layouts`, `/menus` | API endpoints | `docs/03-design/api/customise.openapi.yaml` |
+| `/api/v1/access/scopes/{scope_id}/layouts`, `/menus` | API endpoints | `docs/03-design/api/customise.openapi.yaml` |
 
 ## Sequence
 

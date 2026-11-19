@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/managePlugin/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Plugin lifecycle service | service | `crates/plugin-host/src/lifecycle.rs` | no (to build) |
-| `/api/v1/plugins/{plugin_id}` | API endpoints | `docs/03-design/api/plugins.openapi.yaml` | no (to build) |
+| `/api/v1/plugins/plugins/plugins/{plugin_id}` | API endpoints | `docs/03-design/api/plugins.openapi.yaml` | no (to build) |
 
 ## Tests
 

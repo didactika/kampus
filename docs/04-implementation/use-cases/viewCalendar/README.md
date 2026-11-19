@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/viewCalendar/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Calendar view service | service | `crates/calendar/src/view.rs` | no (to build) |
-| `/api/v1/calendar` | API endpoints | `docs/03-design/api/calendar.openapi.yaml` | no (to build) |
+| `/api/v1/calendar/calendar` | API endpoints | `docs/03-design/api/calendar.openapi.yaml` | no (to build) |
 
 ## Tests
 

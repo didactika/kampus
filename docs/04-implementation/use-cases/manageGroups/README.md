@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/manageGroups/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Group service | service | `crates/courses/src/group.rs` | no (to build) |
-| `/api/v1/courses/{course_id}/groups`, `/api/v1/groups/{group_id}/members`, group sets | API endpoints | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
+| `/api/v1/courses/courses/{course_id}/groups`, `/api/v1/courses/groups/{group_id}/members`, group sets | API endpoints | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
 | `courses.group`, `courses.group_member`, `courses.group_set` | tables | `docs/03-design/data-model/courses.md` | no (to build) |
 
 ## Tests

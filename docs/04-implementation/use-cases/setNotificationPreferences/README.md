@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/setNotificationPreferences/README.
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Preference resolver | service | `crates/notify/src/preferences.rs` | no (to build) |
-| `/api/v1/notification-preferences` | API endpoint | `docs/03-design/api/notify.openapi.yaml` | no (to build) |
+| `/api/v1/notify/notification-preferences` | API endpoint | `docs/03-design/api/notify.openapi.yaml` | no (to build) |
 
 ## Tests
 

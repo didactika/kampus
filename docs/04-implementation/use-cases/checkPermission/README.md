@@ -21,7 +21,7 @@ Design: [README](../../../03-design/use-cases/checkPermission/README.md)
 | --- | --- | --- | --- |
 | Permission checker | service | `crates/access/src/service/check.rs` | no (to build) |
 | Per-user access cache | cache | `crates/access/src/service/cache.rs` | no (to build) |
-| `POST /api/v1/scopes/{scope_id}/checks` | API endpoint | `docs/03-design/api/access.openapi.yaml` | no (to build) |
+| `POST /api/v1/access/scopes/{scope_id}/checks` | API endpoint | `docs/03-design/api/access.openapi.yaml` | no (to build) |
 
 ## Tests
 

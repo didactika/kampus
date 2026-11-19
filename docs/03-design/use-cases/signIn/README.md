@@ -21,7 +21,7 @@ Analysis: [README](../../../02-analysis/use-cases/signIn/README.md)
 | --- | --- | --- |
 | Sign-in pipeline | service | `crates/identity/src/service/sign_in.rs` |
 | OIDC client | adapter | `crates/identity/src/service/oidc.rs` |
-| `/api/v1/auth/sign-in`, `/second-factor`, `/oidc/*`, `/recovery` | API endpoints | `docs/03-design/api/identity.openapi.yaml` |
+| `/api/v1/identity/auth/sign-in`, `/second-factor`, `/oidc/*`, `/recovery` | API endpoints | `docs/03-design/api/identity.openapi.yaml` |
 | `identity.session`, `identity.sign_in_attempt` | tables | `docs/03-design/data-model/identity.md` |
 
 ## Sequence

@@ -5,40 +5,40 @@ info:
   description: >-
     Activity types, course modules, access conditions, exceptions and the recycle bin. Conventions of
     DEC-025 and DEC-026; permissions checked inside every operation (DEC-017). Each activity type adds its
-    own endpoints under /api/v1/course-modules/{course_module_id}/{type}/... through the plugin SDK.
+    own endpoints under /api/v1/activities/course-modules/{course_module_id}/{type}/... through the plugin SDK.
 paths:
-  /api/v1/activity-types:
+  /api/v1/activities/activity-types:
     get: { summary: Enabled activity types with their features and settings schemas, responses: { '200': { description: Types } } }
-  /api/v1/sections/{section_id}/course-modules:
+  /api/v1/activities/sections/{section_id}/course-modules:
     get: { summary: 'Course modules of a section the caller may see, with availability for the caller', responses: { '200': { description: Course modules } } }
     post: { summary: 'Add a course module of a type, with its settings, between two siblings (RN-077, RN-078)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Added } } }
-  /api/v1/course-modules/{course_module_id}:
+  /api/v1/activities/course-modules/{course_module_id}:
     get: { summary: A course module with its common settings and the type settings, responses: { '200': { description: The course module } } }
     patch: { summary: Update settings and visibility, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
     delete: { summary: 'Move to the recycle bin (RN-088)', responses: { '202': { description: In the bin } } }
-  /api/v1/course-modules/{course_module_id}/move:
+  /api/v1/activities/course-modules/{course_module_id}/move:
     post: { summary: Move to another section and position, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Moved } } }
-  /api/v1/course-modules/{course_module_id}/copy:
+  /api/v1/activities/course-modules/{course_module_id}/copy:
     post: { summary: 'Copy within the course or to another course (RN-090)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Copied } } }
-  /api/v1/course-modules/{course_module_id}/conditions:
+  /api/v1/activities/course-modules/{course_module_id}/conditions:
     get: { summary: 'The condition tree, with any unknown or broken condition reported', responses: { '200': { description: Conditions } } }
     put: { summary: 'Replace the condition tree (RN-080)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
-  /api/v1/sections/{section_id}/conditions:
+  /api/v1/activities/sections/{section_id}/conditions:
     get: { summary: The condition tree of a section, responses: { '200': { description: Conditions } } }
     put: { summary: 'Replace the condition tree of a section (RN-083)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
-  /api/v1/course-modules/{course_module_id}/exceptions:
+  /api/v1/activities/course-modules/{course_module_id}/exceptions:
     get: { summary: Exceptions of a course module, responses: { '200': { description: Exceptions } } }
     post: { summary: 'Add an exception for a person or a group (RN-084, RN-085)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Added }, '409': { description: An exception already exists for that person or group } } }
-  /api/v1/exceptions/{exception_id}:
+  /api/v1/activities/exceptions/{exception_id}:
     patch: { summary: Change an exception, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
     delete: { summary: Remove an exception, responses: { '204': { description: Removed } } }
-  /api/v1/course-modules/{course_module_id}/effective-values:
+  /api/v1/activities/course-modules/{course_module_id}/effective-values:
     get: { summary: 'Effective dates, attempts and time limit for a person (RN-086)', parameters: [{ name: account_id, in: query, schema: { type: string, format: uuid } }], responses: { '200': { description: Effective values and where each comes from } } }
-  /api/v1/courses/{course_id}/bin:
+  /api/v1/activities/courses/{course_id}/bin:
     get: { summary: 'Recycle bin items, including failed deletions with their reason (RN-089)', responses: { '200': { description: Bin items } } }
-  /api/v1/bin-items/{bin_item_id}/restore:
+  /api/v1/activities/bin-items/{bin_item_id}/restore:
     post: { summary: Restore to the original section and position when they still exist, responses: { '200': { description: Restored } } }
-  /api/v1/bin-items/{bin_item_id}/retry:
+  /api/v1/activities/bin-items/{bin_item_id}/retry:
     post: { summary: Retry a failed deletion, responses: { '202': { description: Retried } } }
 components:
   parameters:

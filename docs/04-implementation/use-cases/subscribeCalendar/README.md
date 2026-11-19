@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/subscribeCalendar/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Subscription refresher | job | `crates/calendar/src/subscriptions.rs` | no (to build) |
-| `/api/v1/calendar-subscriptions`, `/api/v1/calendar-feeds` | API endpoints | `docs/03-design/api/calendar.openapi.yaml` | no (to build) |
+| `/api/v1/calendar/calendar-subscriptions`, `/api/v1/calendar/calendar/calendar-feeds` | API endpoints | `docs/03-design/api/calendar.openapi.yaml` | no (to build) |
 
 ## Tests
 

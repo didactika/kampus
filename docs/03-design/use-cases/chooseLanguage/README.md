@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/chooseLanguage/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Language resolver and bundles | service | `crates/i18n/src/resolve.rs` |
-| `/api/v1/me/language`, `/api/v1/languages/{code}/bundles/{module}` | API endpoints | `docs/03-design/api/i18n.openapi.yaml` |
+| `/api/v1/i18n/me/language`, `/api/v1/i18n/languages/{code}/bundles/{module}` | API endpoints | `docs/03-design/api/i18n.openapi.yaml` |
 
 ## Sequence
 

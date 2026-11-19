@@ -48,7 +48,7 @@ async fn the_policy_of_a_campus_follows_its_settings() {
     let closed = site
         .call(
             Method::POST,
-            "/api/v1/auth/sign-up",
+            "/api/v1/identity/auth/sign-up",
             None,
             &[],
             Some(sign_up.clone()),
@@ -72,14 +72,20 @@ async fn the_policy_of_a_campus_follows_its_settings() {
         .await
         .unwrap();
     let open = site
-        .call(Method::POST, "/api/v1/auth/sign-up", None, &[], Some(sign_up))
+        .call(
+            Method::POST,
+            "/api/v1/identity/auth/sign-up",
+            None,
+            &[],
+            Some(sign_up),
+        )
         .await;
     assert_eq!(open.status, StatusCode::ACCEPTED, "{}", open.body);
     let token = site.token_sent_to("lea@example.org");
     let short = site
         .call(
             Method::POST,
-            "/api/v1/auth/confirm",
+            "/api/v1/identity/auth/confirm",
             None,
             &[],
             Some(json!({ "token": token, "password": "only twenty-six characters" })),

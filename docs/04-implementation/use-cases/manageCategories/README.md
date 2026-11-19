@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/manageCategories/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Category service | service | `crates/courses/src/category.rs` | no (to build) |
-| `/api/v1/campuses/{campus_id}/categories`, `/api/v1/categories/{category_id}`, move | API endpoints | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
+| `/api/v1/courses/campuses/{campus_id}/categories`, `/api/v1/courses/categories/{category_id}`, move | API endpoints | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
 | `courses.category` | table | `docs/03-design/data-model/courses.md` | no (to build) |
 
 ## Tests

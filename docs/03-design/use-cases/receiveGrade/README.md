@@ -21,7 +21,7 @@ Analysis: [README](../../../02-analysis/use-cases/receiveGrade/README.md)
 | --- | --- | --- |
 | Grade service | service | `crates/records/src/grade.rs` |
 | Recalculation job | job | `crates/records/src/jobs/recalculate.rs` |
-| `PUT /api/v1/records/{record_id}/grades` | API endpoint | `docs/03-design/api/records.openapi.yaml` |
+| `PUT /api/v1/records/records/{record_id}/grades` | API endpoint | `docs/03-design/api/records.openapi.yaml` |
 
 ## Sequence
 

@@ -163,13 +163,14 @@ impl Services {
         }
     }
 
-    /// The routes every module of the build declares.
+    /// The routes every module of the build declares, each under the name of its module, so the routes of
+    /// two modules never meet whatever they add.
     pub fn routes(&self) -> axum::Router {
         MODULES
             .iter()
-            .filter_map(|m| m.routes)
-            .fold(axum::Router::new(), |router, routes| {
-                router.merge(routes(&self.context))
+            .fold(axum::Router::new(), |router, module| match module.routes {
+                Some(routes) => router.nest(&format!("/{}", module.name), routes(&self.context)),
+                None => router,
             })
     }
 }

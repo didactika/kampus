@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/createCourse/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Course service | service | `crates/courses/src/course.rs` | no (to build) |
-| `/api/v1/categories/{category_id}/courses`, `/api/v1/courses/{course_id}`, state | API endpoints | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
+| `/api/v1/courses/categories/{category_id}/courses`, `/api/v1/courses/courses/{course_id}`, state | API endpoints | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
 | `courses.course`, `courses.course_owner` | tables | `docs/03-design/data-model/courses.md` | no (to build) |
 
 ## Tests

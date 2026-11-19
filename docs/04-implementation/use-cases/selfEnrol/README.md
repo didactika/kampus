@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/selfEnrol/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Self-enrolment service | service | `crates/enrol/src/self_enrol.rs` | no (to build) |
-| `POST /api/v1/enrolment-instances/{instance_id}/self` | API endpoint | `docs/03-design/api/enrolment.openapi.yaml` | no (to build) |
+| `POST /api/v1/enrol/enrolment-instances/{instance_id}/self` | API endpoint | `docs/03-design/api/enrolment.openapi.yaml` | no (to build) |
 | `enrol.self_key`, `enrol.request`, `enrol.self_attempt` | tables | `docs/03-design/data-model/enrolment.md` | no (to build) |
 
 ## Tests

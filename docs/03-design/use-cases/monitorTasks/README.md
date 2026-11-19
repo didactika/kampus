@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/monitorTasks/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Job runner and scheduler | service | `crates/tasks/src/runner.rs` |
-| `/api/v1/jobs`, `/api/v1/schedules` | API endpoints | `docs/03-design/api/tasks.openapi.yaml` |
+| `/api/v1/tasks/jobs`, `/api/v1/tasks/schedules` | API endpoints | `docs/03-design/api/tasks.openapi.yaml` |
 
 ## Sequence
 

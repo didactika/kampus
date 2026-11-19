@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/subscribeCalendar/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Subscription refresher | job | `crates/calendar/src/subscriptions.rs` |
-| `/api/v1/calendar-subscriptions`, `/api/v1/calendar-feeds` | API endpoints | `docs/03-design/api/calendar.openapi.yaml` |
+| `/api/v1/calendar/calendar-subscriptions`, `/api/v1/calendar/calendar/calendar-feeds` | API endpoints | `docs/03-design/api/calendar.openapi.yaml` |
 
 ## Sequence
 

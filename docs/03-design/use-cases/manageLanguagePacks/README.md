@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/manageLanguagePacks/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Pack installer and customisations | service | `crates/i18n/src/packs.rs` |
-| `/api/v1/language-packs`, `/api/v1/scopes/{scope_id}/messages` | API endpoints | `docs/03-design/api/i18n.openapi.yaml` |
+| `/api/v1/i18n/language-packs`, `/api/v1/access/scopes/{scope_id}/messages` | API endpoints | `docs/03-design/api/i18n.openapi.yaml` |
 
 ## Sequence
 

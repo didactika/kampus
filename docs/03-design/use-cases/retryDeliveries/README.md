@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/retryDeliveries/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Dispatcher and delivery store | service | `crates/events/src/dispatch.rs` |
-| `/api/v1/deliveries` | API endpoints | `docs/03-design/api/events.openapi.yaml` |
+| `/api/v1/events/deliveries` | API endpoints | `docs/03-design/api/events.openapi.yaml` |
 
 ## Sequence
 

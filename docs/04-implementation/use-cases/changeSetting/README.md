@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/changeSetting/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Settings resolver | service | `crates/settings/src/resolve.rs` | no (to build) |
-| `/api/v1/scopes/{scope_id}/settings` | API endpoints | `docs/03-design/api/settings.openapi.yaml` | no (to build) |
+| `/api/v1/settings/scopes/{scope_id}/settings` | API endpoints | `docs/03-design/api/settings.openapi.yaml` | no (to build) |
 
 ## Tests
 

@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/chooseCourseLayout/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Layout registry | service | `crates/courses/src/layout.rs` | no (to build) |
-| `PUT /api/v1/courses/{course_id}/layout` | API endpoint | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
+| `PUT /api/v1/courses/courses/{course_id}/layout` | API endpoint | `docs/03-design/api/courses.openapi.yaml` | no (to build) |
 | `courses.course_layout_setting` | table | `docs/03-design/data-model/courses.md` | no (to build) |
 
 ## Tests

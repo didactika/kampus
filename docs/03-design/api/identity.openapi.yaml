@@ -8,109 +8,109 @@ info:
     DEC-026; permissions checked inside every operation (DEC-017). Answers to sign-in and recovery never
     reveal whether an account exists (RN-027). Browsers authenticate with the HttpOnly session cookie and send the X-Kampus header with every request that changes something; integrations send an API token as a Bearer credential.
 paths:
-  /api/v1/auth/sign-in:
+  /api/v1/identity/auth/sign-in:
     post: { summary: 'Sign in with username or email and password (RN-024); sets the session cookie', responses: { '200': { description: 'Signed in, or a second factor is required with its challenge' }, '401': { description: Invalid credentials }, '429': { description: Throttled } } }
-  /api/v1/auth/second-factor:
+  /api/v1/identity/auth/second-factor:
     post: { summary: 'Complete sign-in with an app code, a recovery code, an email code, or a first authenticator app', responses: { '200': { description: 'Signed in; recovery codes when a first factor was set up' }, '401': { description: Wrong factor; the challenge ends } } }
-  /api/v1/auth/second-factor/email-code:
+  /api/v1/identity/auth/second-factor/email-code:
     post: { summary: Send the email code of a pending sign-in, responses: { '202': { description: Sent when the account has codes by email } } }
-  /api/v1/auth/oidc/{provider_id}/start:
+  /api/v1/identity/auth/oidc/{provider_id}/start:
     get: { summary: 'Start sign-in with an identity provider; the state waits in the flow cookie', responses: { '303': { description: Redirect to the provider } } }
-  /api/v1/auth/oidc/{provider_id}/callback:
+  /api/v1/identity/auth/oidc/{provider_id}/callback:
     get: { summary: 'Finish sign-in; links by issuer and subject (RN-028)', responses: { '200': { description: 'Signed in, a second factor is required, or the owner must confirm the link' } } }
-  /api/v1/auth/step-up:
+  /api/v1/identity/auth/step-up:
     post: { summary: 'Re-authenticate for a sensitive operation (RN-032)', responses: { '200': { description: Strong authentication renewed } } }
-  /api/v1/auth/sign-out:
+  /api/v1/identity/auth/sign-out:
     post: { summary: Sign out this session and remove the cookie, responses: { '204': { description: Signed out } } }
-  /api/v1/auth/sign-up:
+  /api/v1/identity/auth/sign-up:
     post: { summary: 'Self sign-up when the campus allows it (UC-006)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '202': { description: Confirmation link sent } } }
-  /api/v1/auth/confirm:
+  /api/v1/identity/auth/confirm:
     post: { summary: 'Confirm a sign-up with its one-time token and set a password', responses: { '204': { description: Confirmed } } }
-  /api/v1/auth/invitations/accept:
+  /api/v1/identity/auth/invitations/accept:
     post: { summary: 'Accept an invitation with its one-time token and set a password', responses: { '204': { description: Accepted } } }
-  /api/v1/auth/email/confirm:
+  /api/v1/identity/auth/email/confirm:
     post: { summary: Confirm a new email with the link sent to it, responses: { '204': { description: The new email is in use } } }
-  /api/v1/auth/recovery:
+  /api/v1/identity/auth/recovery:
     post: { summary: 'Request account recovery (rate-limited, RN-030)', responses: { '202': { description: 'Accepted, whether or not the account exists' } } }
-  /api/v1/auth/recovery/needs:
+  /api/v1/identity/auth/recovery/needs:
     post: { summary: The second factors a recovery link asks for, responses: { '200': { description: 'Kinds of factor; empty when the link is enough' } } }
-  /api/v1/auth/recovery/complete:
+  /api/v1/identity/auth/recovery/complete:
     post: { summary: 'Complete recovery: token, then second factor or recovery code, then the new credential', responses: { '204': { description: Credential changed; sessions revoked; not signed in } } }
-  /api/v1/me:
+  /api/v1/identity/me:
     get: { summary: The account signed in, responses: { '200': { description: 'Account, with its version as ETag' } } }
-  /api/v1/me/password:
+  /api/v1/identity/me/password:
     post: { summary: 'Change the password (step-up required); every session and token ends', responses: { '204': { description: Changed } } }
-  /api/v1/me/email:
+  /api/v1/identity/me/email:
     post: { summary: 'Change the email (step-up required); a link goes to the new address', responses: { '202': { description: Link sent } } }
-  /api/v1/me/sessions:
+  /api/v1/identity/me/sessions:
     get: { summary: My sessions, responses: { '200': { description: Sessions } } }
     delete: { summary: Revoke all my other sessions, responses: { '204': { description: Revoked } } }
-  /api/v1/me/sessions/{session_id}:
+  /api/v1/identity/me/sessions/{session_id}:
     delete: { summary: Revoke one of my sessions, responses: { '204': { description: Revoked } } }
-  /api/v1/me/second-factors:
+  /api/v1/identity/me/second-factors:
     get: { summary: My second factors, responses: { '200': { description: Second factors } } }
-  /api/v1/me/second-factors/totp:
+  /api/v1/identity/me/second-factors/totp:
     post: { summary: 'A new secret for an authenticator app, as text and as an otpauth link', responses: { '200': { description: Secret } } }
-  /api/v1/me/second-factors/totp/confirm:
+  /api/v1/identity/me/second-factors/totp/confirm:
     post: { summary: 'Add an authenticator app once a current code proves it (step-up required)', responses: { '201': { description: 'Added, with recovery codes shown once' } } }
-  /api/v1/me/second-factors/email:
+  /api/v1/identity/me/second-factors/email:
     post: { summary: 'Add codes by email (step-up required)', responses: { '201': { description: 'Added, with recovery codes shown once' } } }
-  /api/v1/me/second-factors/{factor_id}:
+  /api/v1/identity/me/second-factors/{factor_id}:
     delete: { summary: 'Remove a second factor (step-up required)', responses: { '204': { description: Removed } } }
-  /api/v1/me/recovery-codes:
+  /api/v1/identity/me/recovery-codes:
     post: { summary: 'A new set of recovery codes, replacing the old one', responses: { '201': { description: Codes shown once } } }
-  /api/v1/me/identity-links:
+  /api/v1/identity/me/identity-links:
     post: { summary: 'Confirm the link of a provider identity (step-up required)', responses: { '204': { description: Linked } } }
-  /api/v1/me/tokens:
+  /api/v1/identity/me/tokens:
     get: { summary: 'My API tokens (prefix, scopes, expiry, last use)', responses: { '200': { description: Tokens } } }
     post: { summary: 'Create an API token; the secret is shown once (RN-033)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created } } }
-  /api/v1/me/tokens/{token_id}:
+  /api/v1/identity/me/tokens/{token_id}:
     delete: { summary: Revoke a token, responses: { '204': { description: Revoked } } }
-  /api/v1/me/profile:
+  /api/v1/users/me/profile:
     get: { summary: My profile, responses: { '200': { description: 'Profile, with its version as ETag' } } }
     put: { summary: Replace my profile, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated }, '412': { description: Changed since it was read } } }
-  /api/v1/me/preferences:
+  /api/v1/users/me/preferences:
     get: { summary: 'My preferences, by key, with their defaults', responses: { '200': { description: Preferences } } }
     patch: { summary: 'Set preferences; null goes back to the default', responses: { '204': { description: Set } } }
-  /api/v1/campuses/{campus_id}/accounts:
+  /api/v1/identity/campuses/{campus_id}/accounts:
     get: { summary: 'Accounts of a campus, filtered by permission before paging', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page of accounts } } }
     post: { summary: 'Invite a person (a set-password link is sent; no password is generated)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Invited } } }
-  /api/v1/campuses/{campus_id}/service-accounts:
+  /api/v1/identity/campuses/{campus_id}/service-accounts:
     post: { summary: 'Create a service account, which acts only with API tokens', responses: { '201': { description: Created } } }
-  /api/v1/campuses/{campus_id}/accounts/bulk:
+  /api/v1/identity/campuses/{campus_id}/accounts/bulk:
     post: { summary: 'Bulk invite, suspend or delete from a file; runs as a job with a per-row report (RN-038)', responses: { '202': { description: Job accepted } } }
-  /api/v1/accounts/{account_id}:
+  /api/v1/identity/accounts/{account_id}:
     get: { summary: An account, responses: { '200': { description: 'Account, with its version as ETag' } } }
-  /api/v1/accounts/{account_id}/transitions:
+  /api/v1/identity/accounts/{account_id}/transitions:
     post:
       summary: 'Change the status: suspend, reactivate, schedule deletion, cancel deletion (RN-023)'
       parameters: [{ $ref: '#/components/parameters/IfMatch' }]
       requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/Transition' } } } }
       responses: { '204': { description: Changed; sessions and tokens revoked when suspending or deleting }, '409': { description: Transition not allowed from the current status }, '412': { description: Changed since it was read } }
-  /api/v1/accounts/{account_id}/tokens:
+  /api/v1/identity/accounts/{account_id}/tokens:
     post: { summary: 'Create an API token for another account, such as a service account', responses: { '201': { description: Created } } }
-  /api/v1/tokens/{token_id}:
+  /api/v1/identity/tokens/{token_id}:
     delete: { summary: Revoke the token of any account, responses: { '204': { description: Revoked } } }
-  /api/v1/accounts/{account_id}/profile:
+  /api/v1/users/accounts/{account_id}/profile:
     get: { summary: 'A profile, with only the fields the caller may see (RN-036)', responses: { '200': { description: 'Profile, with its version as ETag' } } }
     put: { summary: Replace a profile, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated }, '412': { description: Changed since it was read } } }
-  /api/v1/campuses/{campus_id}/identity-providers:
+  /api/v1/identity/campuses/{campus_id}/identity-providers:
     get: { summary: Identity providers of a campus, responses: { '200': { description: Providers } } }
     post: { summary: 'Add an OIDC provider with its linking policy', responses: { '201': { description: Added } } }
-  /api/v1/scopes/{scope_id}/profile-fields:
+  /api/v1/users/scopes/{scope_id}/profile-fields:
     get: { summary: Custom profile fields defined in a campus or category, responses: { '200': { description: Fields } } }
     post: { summary: Define a custom profile field, responses: { '201': { description: Defined } } }
-  /api/v1/scopes/{scope_id}/system-groups:
+  /api/v1/users/scopes/{scope_id}/system-groups:
     get: { summary: System groups of a campus or category, responses: { '200': { description: A page of groups } } }
     post: { summary: Create a manual or rule-based system group, responses: { '201': { description: Created } } }
-  /api/v1/system-groups/{group_id}:
+  /api/v1/users/system-groups/{group_id}:
     get: { summary: A system group, responses: { '200': { description: Group } } }
-  /api/v1/system-groups/{group_id}/members:
+  /api/v1/users/system-groups/{group_id}/members:
     get: { summary: Members with their origin, responses: { '200': { description: Members } } }
-  /api/v1/system-groups/{group_id}/members/{account_id}:
+  /api/v1/users/system-groups/{group_id}/members/{account_id}:
     put: { summary: Add a member by hand, responses: { '204': { description: Added } } }
     delete: { summary: 'Remove a member added by hand; other origins keep theirs', responses: { '204': { description: Removed } } }
-  /api/v1/system-groups/{group_id}/apply-rule:
+  /api/v1/users/system-groups/{group_id}/apply-rule:
     post: { summary: 'Apply the rule: add who matches, remove who no longer does', responses: { '200': { description: Members after the rule } } }
 components:
   parameters:

@@ -6,54 +6,54 @@ info:
     Terms, custom fields, layouts, menus, themes, rules, feature flags and packages, each resolved by
     scope with its origin (RN-213). Conventions of DEC-025 and DEC-026.
 paths:
-  /api/v1/scopes/{scope_id}/terms:
+  /api/v1/customise/scopes/{scope_id}/terms:
     get: { summary: Resolved terms with origin, parameters: [{ name: language, in: query, schema: { type: string } }], responses: { '200': { description: Terms } } }
-  /api/v1/scopes/{scope_id}/terms/{code}:
+  /api/v1/customise/scopes/{scope_id}/terms/{code}:
     get: { summary: 'The forms of a term in a language (English when absent), with origin', parameters: [{ name: language, in: query, schema: { type: string } }], responses: { '200': { description: Term }, '404': { description: Unknown term } } }
     put: { summary: 'Rename a term in a language with its singular and plural, locked or not (RN-212)', responses: { '200': { description: Renamed }, '409': { description: Locked above }, '422': { description: Empty or long forms } } }
     delete: { summary: 'Remove the override of a language; the word above applies again', parameters: [{ name: language, in: query, schema: { type: string } }], responses: { '200': { description: The term as it now resolves } } }
-  /api/v1/scopes/{scope_id}/fields:
+  /api/v1/customise/scopes/{scope_id}/fields:
     get: { summary: Custom fields of an entity kind, parameters: [{ name: kind, in: query, required: true, schema: { type: string } }], responses: { '200': { description: 'Fields that apply in the scope; the nearest with a code wins' } } }
     post: { summary: 'Define a field: text, integer, date, boolean, choice, choices or account (RN-214)', responses: { '201': { description: Defined }, '409': { description: Code taken in the scope }, '422': { description: Invalid } } }
-  /api/v1/fields/{field_id}:
+  /api/v1/customise/fields/{field_id}:
     get: { summary: A field with its choices, responses: { '200': { description: Field } } }
     patch: { summary: Change a field; changing the type is refused when values exist, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed }, '409': { description: Values exist } } }
     delete: { summary: Delete a field and its values after confirmation, responses: { '204': { description: Deleted } } }
-  /api/v1/scopes/{scope_id}/layouts/{page_kind}:
+  /api/v1/customise/scopes/{scope_id}/layouts/{page_kind}:
     get: { summary: 'Resolved layout with its regions, the placements the caller sees with their settings and defaults, and origin', responses: { '200': { description: Layout }, '404': { description: Unknown page kind } } }
     put: { summary: 'Replace the placements, locked or not (RN-216)', responses: { '200': { description: The layout as it now resolves }, '409': { description: Locked above }, '422': { description: 'Unknown region or widget, a widget not offered for the page kind, or a setting it does not declare' } } }
     delete: { summary: 'Remove the layout of the scope; the one above applies again', responses: { '200': { description: The layout as it now resolves } } }
-  /api/v1/scopes/{scope_id}/menus/{menu_kind}:
+  /api/v1/customise/scopes/{scope_id}/menus/{menu_kind}:
     get: { summary: "Resolved menu with the items the caller's permissions show, and origin", responses: { '200': { description: Menu }, '404': { description: Unknown kind of menu } } }
     put: { summary: 'Replace the items, nested at most 3 deep and 100 in all, locked or not', responses: { '200': { description: The menu as it now resolves }, '409': { description: Locked above }, '422': { description: 'Empty label, a target that is neither a path nor a web address, too many or too deep' } } }
     delete: { summary: 'Remove the menu of the scope; the one above applies again', responses: { '200': { description: The menu as it now resolves } } }
-  /api/v1/scopes/{scope_id}/theme:
+  /api/v1/customise/scopes/{scope_id}/theme:
     get: { summary: Every design token with its value and origin, responses: { '200': { description: Theme } } }
     put: { summary: 'Set the tokens of the scope, locked or not; kinds and WCAG 2.2 AA contrast checked (RN-217)', responses: { '200': { description: The theme as it now resolves }, '409': { description: Locked above }, '422': { description: 'An unknown token or value (customise.theme_invalid), or contrast too low (customise.theme_contrast)' } } }
     delete: { summary: 'Remove the tokens of the scope', responses: { '200': { description: The theme as it now resolves } } }
-  /api/v1/scopes/{scope_id}/theme.css:
+  /api/v1/customise/scopes/{scope_id}/theme.css:
     get: { summary: 'The theme as CSS custom properties (--kampus-<token>) on :root', responses: { '200': { description: 'text/css' } } }
-  /api/v1/scopes/{scope_id}/rules:
+  /api/v1/customise/scopes/{scope_id}/rules:
     get: { summary: 'The rules the scope writes; needs customise.rule.manage there', responses: { '200': { description: Rules } } }
     post: { summary: 'Write a rule from a declared trigger, typed conditions and declared actions; its author becomes its owner (RN-218)', responses: { '201': { description: 'Created, with its version as ETag' }, '403': { description: 'Without customise.rule.manage or a permission an action needs' }, '422': { description: 'Unknown trigger or action, conditions on undeclared fields, parameters of another kind, or an action that publishes its own trigger' } } }
-  /api/v1/rules/{rule_id}:
+  /api/v1/customise/rules/{rule_id}:
     get: { summary: A rule, responses: { '200': { description: 'The rule, with its version as ETag' } } }
     put: { summary: 'Replace a rule, enabled or not; its author becomes its owner', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced }, '409': { description: Changed since it was read } } }
     delete: { summary: Delete a rule with its runs, responses: { '204': { description: Deleted } } }
-  /api/v1/rules/{rule_id}/runs:
+  /api/v1/customise/rules/{rule_id}/runs:
     get: { summary: 'The latest 50 evaluations, newest first, with outcome, actions done and error (RN-219)', responses: { '200': { description: Runs } } }
-  /api/v1/scopes/{scope_id}/flags:
+  /api/v1/customise/scopes/{scope_id}/flags:
     get: { summary: Resolved feature flags, responses: { '200': { description: Flags } } }
-  /api/v1/scopes/{scope_id}/flags/{code}:
+  /api/v1/customise/scopes/{scope_id}/flags/{code}:
     get: { summary: One flag with origin, responses: { '200': { description: Flag }, '404': { description: Unknown flag } } }
     put: { summary: 'Switch a feature, locked or not (RN-220)', responses: { '200': { description: The flag as it now resolves }, '409': { description: Locked above } } }
-  /api/v1/scopes/{scope_id}/customisation-packages:
+  /api/v1/customise/scopes/{scope_id}/packages:
     post: { summary: 'Export what the scope sets of the kinds chosen (terms, flags, fields, layouts, menus, theme, rules), with its checksum', responses: { '200': { description: Package and checksum } } }
-  /api/v1/scopes/{scope_id}/customisation-imports:
+  /api/v1/customise/scopes/{scope_id}/imports:
     post: { summary: 'Read a package into the scope: validated, and kept with its differences (RN-221)', responses: { '201': { description: The import with its differences }, '403': { description: Without a permission it needs }, '422': { description: 'Items not declared, that do not fit, or locked above (customise.package_invalid)' } } }
-  /api/v1/customisation-imports/{import_id}:
+  /api/v1/customise/imports/{import_id}:
     get: { summary: An import with its differences, responses: { '200': { description: Import } } }
-  /api/v1/customisation-imports/{import_id}/apply:
+  /api/v1/customise/imports/{import_id}/apply:
     post: { summary: 'Check the import again and apply it in one transaction, recorded as one change', responses: { '200': { description: Applied }, '409': { description: Already applied }, '422': { description: No longer fits the scope } } }
 components:
   parameters:

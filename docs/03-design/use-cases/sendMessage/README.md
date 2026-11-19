@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/sendMessage/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Messaging service | service | `crates/notify/src/messaging.rs` |
-| `/api/v1/conversations` | API endpoints | `docs/03-design/api/notify.openapi.yaml` |
+| `/api/v1/notify/conversations` | API endpoints | `docs/03-design/api/notify.openapi.yaml` |
 
 ## Sequence
 

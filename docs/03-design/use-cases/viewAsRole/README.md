@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/viewAsRole/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | View-as service | service | `crates/access/src/service/view_as.rs` |
-| `/api/v1/scopes/{scope_id}/view-as` | API endpoint | `docs/03-design/api/access.openapi.yaml` |
+| `/api/v1/access/scopes/{scope_id}/view-as` | API endpoint | `docs/03-design/api/access.openapi.yaml` |
 | `access.view_as_session` | table | `docs/03-design/data-model/access.md` |
 
 ## Sequence

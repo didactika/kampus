@@ -98,7 +98,9 @@ pub fn routes(context: &ServiceContext) -> Router {
 }
 ```
 
-The server serves every module's routes under `/api/v1`, and runs two layers before any handler:
+The server serves the routes of each module under `/api/v1/<module>`, the name of the module: the route above is `/api/v1/users/me/profile`. A module writes its paths without that prefix and never reaches into the prefix of another, so two modules, or one written later, cannot collide whatever routes they add; a path inside a module does not repeat the name of the module either (`/api/v1/customise/imports`, not `/api/v1/customise/customisation-imports`). Links a module builds to its own routes, such as the return address of a sign-in through a provider, use its name from `src/module.rs`.
+
+Before any handler the server runs two layers:
 
 | Layer | Owner | What a handler finds |
 | --- | --- | --- |

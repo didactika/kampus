@@ -45,7 +45,7 @@ async fn people_enrol_themselves_with_a_key() {
     let site = site().await;
     let admin = site.session("admin").await;
     let (_, course) = site.course(&admin).await;
-    let instances = format!("/api/v1/courses/{course}/enrolment-instances");
+    let instances = format!("/api/v1/enrol/courses/{course}/enrolment-instances");
     let open = site
         .call(
             Method::POST,
@@ -65,7 +65,7 @@ async fn people_enrol_themselves_with_a_key() {
     let open = open.body["id"].as_str().unwrap().to_owned();
 
     let (_, lea) = site.learner(&admin, "lea@example.org").await;
-    let join = format!("/api/v1/enrolment-instances/{open}/self");
+    let join = format!("/api/v1/enrol/enrolment-instances/{open}/self");
     let wrong = site
         .call(
             Method::POST,
@@ -89,7 +89,7 @@ async fn people_enrol_themselves_with_a_key() {
     assert_eq!(joined.status, StatusCode::CREATED, "{}", joined.body);
     assert_eq!(joined.body["outcome"], "enrolled");
 
-    let participants = format!("/api/v1/courses/{course}/participants?active=true");
+    let participants = format!("/api/v1/enrol/courses/{course}/participants?active=true");
     let listed = site
         .call(Method::GET, &participants, Some(&admin), &[], None)
         .await;
@@ -108,8 +108,8 @@ async fn a_request_to_join_waits_for_its_approval() {
     let site = site().await;
     let admin = site.session("admin").await;
     let (_, course) = site.course(&admin).await;
-    let instances = format!("/api/v1/courses/{course}/enrolment-instances");
-    let participants = format!("/api/v1/courses/{course}/participants?active=true");
+    let instances = format!("/api/v1/enrol/courses/{course}/enrolment-instances");
+    let participants = format!("/api/v1/enrol/courses/{course}/participants?active=true");
     let asked = site
         .call(
             Method::POST,
@@ -129,7 +129,7 @@ async fn a_request_to_join_waits_for_its_approval() {
     let requested = site
         .call(
             Method::POST,
-            &format!("/api/v1/enrolment-instances/{asked}/self"),
+            &format!("/api/v1/enrol/enrolment-instances/{asked}/self"),
             Some(&bea),
             &[],
             Some(json!({ "message": "May I join?" })),
@@ -139,7 +139,7 @@ async fn a_request_to_join_waits_for_its_approval() {
     let pending = site
         .call(
             Method::GET,
-            &format!("/api/v1/courses/{course}/enrolment-requests"),
+            &format!("/api/v1/enrol/courses/{course}/enrolment-requests"),
             Some(&admin),
             &[],
             None,
@@ -150,7 +150,7 @@ async fn a_request_to_join_waits_for_its_approval() {
     let decided = site
         .call(
             Method::PUT,
-            &format!("/api/v1/enrolment-requests/{request}/decision"),
+            &format!("/api/v1/enrol/enrolment-requests/{request}/decision"),
             Some(&admin),
             &[],
             Some(json!({ "approve": true })),

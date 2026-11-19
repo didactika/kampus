@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/manageGroups/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Group service | service | `crates/courses/src/group.rs` |
-| `/api/v1/courses/{course_id}/groups`, `/api/v1/groups/{group_id}/members`, group sets | API endpoints | `docs/03-design/api/courses.openapi.yaml` |
+| `/api/v1/courses/courses/{course_id}/groups`, `/api/v1/courses/groups/{group_id}/members`, group sets | API endpoints | `docs/03-design/api/courses.openapi.yaml` |
 | `courses.group`, `courses.group_member`, `courses.group_set` | tables | `docs/03-design/data-model/courses.md` |
 
 ## Sequence

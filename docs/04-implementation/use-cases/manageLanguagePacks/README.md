@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/manageLanguagePacks/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Pack installer and customisations | service | `crates/i18n/src/packs.rs` | no (to build) |
-| `/api/v1/language-packs`, `/api/v1/scopes/{scope_id}/messages` | API endpoints | `docs/03-design/api/i18n.openapi.yaml` | no (to build) |
+| `/api/v1/i18n/language-packs`, `/api/v1/access/scopes/{scope_id}/messages` | API endpoints | `docs/03-design/api/i18n.openapi.yaml` | no (to build) |
 
 ## Tests
 

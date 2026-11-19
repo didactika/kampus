@@ -20,7 +20,7 @@ Analysis: [README](../../../02-analysis/use-cases/addActivity/README.md)
 | Design element | Kind | Code target |
 | --- | --- | --- |
 | Course module service | service | `crates/activities/src/module.rs` |
-| `POST /api/v1/sections/{section_id}/course-modules` | API endpoint | `docs/03-design/api/activities.openapi.yaml` |
+| `POST /api/v1/activities/sections/{section_id}/course-modules` | API endpoint | `docs/03-design/api/activities.openapi.yaml` |
 
 ## Sequence
 

@@ -20,7 +20,7 @@ Design: [README](../../../03-design/use-cases/createRule/README.md)
 | Element | Kind | Location | Verified |
 | --- | --- | --- | --- |
 | Rule engine | service | `crates/customise/src/rules.rs` | no (to build) |
-| `/api/v1/scopes/{scope_id}/rules` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
+| `/api/v1/customise/scopes/{scope_id}/rules` | API endpoints | `docs/03-design/api/customise.openapi.yaml` | no (to build) |
 
 ## Tests
 
