@@ -849,3 +849,69 @@ async fn a_change_in_a_system_group_reaches_its_enrolments_through_its_event() {
     );
     w.drop().await;
 }
+
+#[tokio::test]
+async fn a_person_is_enrolled_and_found_by_the_identifier_a_system_gives_the_enrolment() {
+    let w = world().await;
+    let manual = w
+        .enrol
+        .create_instance(
+            &w.admin,
+            w.course.id,
+            Method::Manual,
+            w.fields("Manual", "learner"),
+            None,
+            None,
+        )
+        .await
+        .unwrap();
+    let sis = |reg: &str| kampus_db::references::ExternalReference::new("sis", reg).unwrap();
+    let ana = w.person("ana@example.org").await;
+    let bea = w.person("bea@example.org").await;
+    let (enrolment, created) = w
+        .enrol
+        .upsert_enrolment_by_reference(&w.admin, manual.id, id(&ana), Period::default(), &sis("R-1"))
+        .await
+        .unwrap();
+    assert!(created);
+    let (again, created) = w
+        .enrol
+        .upsert_enrolment_by_reference(&w.admin, manual.id, id(&ana), Period::default(), &sis("R-1"))
+        .await
+        .unwrap();
+    assert_eq!((again.id, created), (enrolment.id, false));
+    assert_eq!(
+        error(
+            w.enrol
+                .upsert_enrolment_by_reference(&w.admin, manual.id, id(&bea), Period::default(), &sis("R-1"))
+                .await
+        )
+        .1,
+        "enrol.reference_other_account"
+    );
+    let found = w
+        .enrol
+        .enrolment_by_reference(w.campus, &sis("R-1"))
+        .await
+        .unwrap();
+    assert_eq!(found, Some(enrolment.id));
+    let moodle = kampus_db::references::ExternalReference::new("moodle", "9").unwrap();
+    let both = w
+        .enrol
+        .set_enrolment_reference(&w.admin, enrolment.id, &moodle)
+        .await
+        .unwrap();
+    assert_eq!(both.len(), 2);
+    w.enrol
+        .remove_enrolment_reference(&w.admin, enrolment.id, "moodle")
+        .await
+        .unwrap();
+    assert_eq!(
+        w.enrol
+            .enrolment_external_references(&w.admin, enrolment.id)
+            .await
+            .unwrap(),
+        [sis("R-1")]
+    );
+    w.drop().await;
+}

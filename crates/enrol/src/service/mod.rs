@@ -38,6 +38,7 @@ pub mod enrolment;
 pub mod expiry;
 pub mod instance;
 pub mod participation;
+pub mod reference;
 pub mod request;
 pub mod self_enrol;
 pub mod sync;

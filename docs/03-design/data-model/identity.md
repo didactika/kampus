@@ -40,6 +40,7 @@ PostgreSQL schemas `identity` (owned by `kampus-identity`) and `users` (owned by
 | `account_field` | `account_id` FK → `identity.account` (`CASCADE`), `field_value_id` FK → `customise.field_value` (`CASCADE`) | Arrives with the customise module: profile fields are custom fields of the entity kind `account` (DEC-070) |
 | `preference` | `account_id` FK (`CASCADE`), `key` (declared by a module in its descriptor), `value` jsonb (checked against its declaration), `updated_at` | PK (`account_id`, `key`); undeclared keys are refused and a missing value reads its default |
 | `system_group` | `id`, `scope_id` FK → `access.scope` (a campus or a category), `code`, `name`, `kind` (`manual`, `rule`), `rule` jsonb (a profile field and the value it equals), `owner_module`, `created_at` | `UNIQUE` (`scope_id`, `code`); `CHECK` a rule exactly when the kind is `rule` |
+| `system_group_reference` | External references of system groups (`users` step 2), in the shape of the [conventions](conventions.md#external-references); the campus is the scope of the group or the campus above it | Read and set with `users.system_group.manage`; a group is created once by one |
 | `system_group_member` | `group_id` FK (`CASCADE`), `account_id` FK (`CASCADE`), `origin` (`manual`, `rule`, `sync`), `added_at` | PK (`group_id`, `account_id`, `origin`) (RN-037) |
 
 ## Anti-patterns avoided (DEC-014)

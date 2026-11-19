@@ -119,6 +119,15 @@ paths:
     delete: { summary: Remove the identifier a system gave the account, responses: { '204': { description: Removed } } }
   /api/v1/identity/campuses/{campus_id}/accounts/by-reference/{system}/{external_id}:
     get: { summary: 'The account a system knows by an identifier in the campus', responses: { '200': { description: Account }, '404': { description: No account has it } } }
+  /api/v1/users/system-groups/{group_id}/references:
+    get: { summary: 'The identifiers systems give a system group; needs users.system_group.manage (DEC-021)', responses: { '200': { description: References } } }
+  /api/v1/users/system-groups/{group_id}/references/{system}:
+    put: { summary: Give the group the identifier a system uses for it, responses: { '200': { description: References }, '409': { description: 'Another group of the campus has it (references.taken)' } } }
+    delete: { summary: Remove the identifier a system gave the group, responses: { '204': { description: Removed } } }
+  /api/v1/users/campuses/{campus_id}/system-groups/by-reference/{system}/{external_id}:
+    get: { summary: The system group a system knows by an identifier in the campus, responses: { '200': { description: Group }, '404': { description: No group has it } } }
+  /api/v1/users/scopes/{scope_id}/system-groups/by-reference/{system}/{external_id}:
+    put: { summary: 'The group a system knows by an identifier, created in the scope with it when there is none; an existing group is left as it is', responses: { '200': { description: Existing }, '201': { description: Created } } }
 components:
   parameters:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }

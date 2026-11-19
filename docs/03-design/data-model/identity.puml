@@ -67,6 +67,12 @@ package identity {
   }
 }
 package users {
+  entity system_group_reference {
+    campus_id <<PK, FK>>
+    system <<PK>>
+    identifier <<PK>>
+    record_id <<FK>>
+  }
   entity profile {
     * account_id : uuid <<PK, FK>>
     language_code : text <<FK i18n.language>>
@@ -101,4 +107,5 @@ account_field }o--|| account
 system_group_member }o--|| system_group
 system_group_member }o--|| account
 account_reference }o--|| account
+system_group_reference }o--|| system_group
 @enduml
