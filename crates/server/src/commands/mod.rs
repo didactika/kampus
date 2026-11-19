@@ -36,6 +36,7 @@
 //! its components and their history.
 
 pub mod cli;
+pub mod install;
 pub mod status;
 
 use kampus_common::{Error, PLATFORM_VERSION, Result};
@@ -60,7 +61,7 @@ pub fn init_logging(config: &Config) {
 }
 
 /// Connects to the database of the installation.
-async fn connect(config: &Config) -> Result<Database> {
+pub(crate) async fn connect(config: &Config) -> Result<Database> {
     Database::connect(
         &config.database_url,
         config.database_prefix.clone(),
@@ -70,7 +71,7 @@ async fn connect(config: &Config) -> Result<Database> {
 }
 
 /// The upgrader of this build, once its components pass their checks.
-fn upgrader(db: &Database) -> Result<Upgrader<'_>> {
+pub(crate) fn upgrader(db: &Database) -> Result<Upgrader<'_>> {
     let blocking: Vec<String> = components::problems(PLATFORM_VERSION)
         .iter()
         .filter(|p| p.blocking)

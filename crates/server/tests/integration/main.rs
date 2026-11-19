@@ -41,3 +41,4 @@
 )]
 
 mod http;
+mod install;

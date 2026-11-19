@@ -53,8 +53,15 @@ pub struct Cli {
 /// The commands of the binary.
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Serve the role of `KAMPUS_ROLE` until stopped.
+    /// Serve the role of `KAMPUS_SERVER_ROLE` until stopped.
     Serve,
+    /// Install Kampus: write `config.toml`, asking for what is missing, then create the installation,
+    /// the first campus and its administrator; an existing installation is left as it is.
+    Install {
+        /// Never ask: take everything from the file and the environment.
+        #[arg(long)]
+        non_interactive: bool,
+    },
     /// Apply every pending upgrade step and register the components, from any supported release.
     Upgrade {
         /// Create a new installation even if the database holds other installations.
@@ -109,6 +116,9 @@ fn print(line: &str) {
 /// Parses the command line, runs the command and returns how the process exits.
 pub async fn run() -> ExitCode {
     let cli = Cli::parse();
+    if let Some(Command::Install { non_interactive }) = cli.command {
+        return finish(install(!non_interactive).await);
+    }
     let config = match Config::from_environment() {
         Ok(config) => config,
         Err(error) => {
@@ -123,20 +133,57 @@ pub async fn run() -> ExitCode {
         }
     };
     super::init_logging(&config);
-    match execute(cli.command.unwrap_or(Command::Serve), &config).await {
+    finish(execute(cli.command.unwrap_or(Command::Serve), &config).await)
+}
+
+/// How the process exits after a command.
+fn finish(result: kampus_common::Result<()>) -> ExitCode {
+    match result {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
             tracing::error!(error = %error, "kampus-server failed");
             report(&format!("kampus-server: {error}"));
+            for field in error.fields() {
+                report(&format!("  {}: {}", field.field, field.rule));
+            }
             ExitCode::FAILURE
         }
     }
+}
+
+/// Installs, and tells the operator what happened.
+async fn install(interactive: bool) -> kampus_common::Result<()> {
+    let path = crate::config::file::path();
+    match super::install::install(&path, &|name| std::env::var(name).ok(), interactive).await? {
+        super::install::Installed::Existing { config, current } => {
+            report(&format!(
+                "kampus-server: the database already holds this installation; nothing was changed ({}).",
+                config.display()
+            ));
+            if !current {
+                report("  It does not match this build: run `kampus-server upgrade`.");
+            }
+        }
+        super::install::Installed::New {
+            config,
+            release,
+            administrator,
+        } => {
+            report(&format!(
+                "kampus-server: Kampus {release} installed, configured in {}.",
+                config.display()
+            ));
+            report(&format!("  Sign in as {administrator}."));
+        }
+    }
+    Ok(())
 }
 
 /// Runs one command.
 async fn execute(command: Command, config: &Config) -> kampus_common::Result<()> {
     match command {
         Command::Serve => super::serve(config).await,
+        Command::Install { .. } => Ok(()),
         Command::Upgrade { new_installation } => {
             let applied = super::upgrade(config, new_installation).await?;
             report(&format!(
@@ -148,34 +195,7 @@ async fn execute(command: Command, config: &Config) -> kampus_common::Result<()>
             }
             Ok(())
         }
-        Command::Check => {
-            let plan = super::check(config).await?;
-            report(&format!(
-                "kampus-server: installed {}, {} pending step(s), {} component version(s) to register",
-                plan.installed,
-                plan.pending.len(),
-                plan.changes.len()
-            ));
-            for step in &plan.pending {
-                report(&format!("  pending {step}"));
-            }
-            for change in &plan.changes {
-                report(&format!(
-                    "  {} {} -> {}",
-                    change.component,
-                    change.from.as_deref().unwrap_or("new"),
-                    change.to.as_deref().unwrap_or("removed")
-                ));
-            }
-            for problem in &plan.problems {
-                report(&format!("  problem: {problem}"));
-            }
-            if plan.is_current() {
-                Ok(())
-            } else {
-                Err(kampus_common::Error::conflict("server.schema_not_current"))
-            }
-        }
+        Command::Check => check(config).await,
         Command::Components { json } => {
             let statuses = statuses(config).await?;
             if json {
@@ -232,6 +252,36 @@ async fn execute(command: Command, config: &Config) -> kampus_common::Result<()>
             ));
             Ok(())
         }
+    }
+}
+
+/// Reports whether the installation matches the build.
+async fn check(config: &Config) -> kampus_common::Result<()> {
+    let plan = super::check(config).await?;
+    report(&format!(
+        "kampus-server: installed {}, {} pending step(s), {} component version(s) to register",
+        plan.installed,
+        plan.pending.len(),
+        plan.changes.len()
+    ));
+    for step in &plan.pending {
+        report(&format!("  pending {step}"));
+    }
+    for change in &plan.changes {
+        report(&format!(
+            "  {} {} -> {}",
+            change.component,
+            change.from.as_deref().unwrap_or("new"),
+            change.to.as_deref().unwrap_or("removed")
+        ));
+    }
+    for problem in &plan.problems {
+        report(&format!("  problem: {problem}"));
+    }
+    if plan.is_current() {
+        Ok(())
+    } else {
+        Err(kampus_common::Error::conflict("server.schema_not_current"))
     }
 }
 

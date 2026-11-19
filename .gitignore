@@ -45,5 +45,6 @@ node_modules/
 !docs/assets/**/*.png
 /dist/
 .env
+/config.toml
 .env.*
 !.env.example

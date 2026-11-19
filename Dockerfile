@@ -46,12 +46,15 @@ FROM debian:trixie-slim
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --system --uid 10001 --no-create-home kampus
+    && useradd --system --uid 10001 --no-create-home kampus \
+    && mkdir -p /etc/kampus /var/lib/kampus/files \
+    && chown kampus /etc/kampus /var/lib/kampus/files
 
 COPY --from=build /kampus-server /usr/local/bin/kampus-server
 
 USER kampus
-ENV KAMPUS_HTTP_ADDRESS=0.0.0.0:8080
+ENV KAMPUS_SERVER_HTTP_ADDRESS=0.0.0.0:8080 \
+    KAMPUS_CONFIG_FILE=/etc/kampus/config.toml
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=3s --retries=6 CMD curl -fsS http://127.0.0.1:8080/health/live || exit 1
 

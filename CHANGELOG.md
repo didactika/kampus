@@ -17,12 +17,15 @@ All notable changes to Kampus are recorded here, following [Keep a Changelog](ht
 
 ### Upgrade
 
+- The configuration file is `config.toml` (was `kampus.toml`), with one table per section; variables follow `KAMPUS_<SECTION>_<KEY>`: `KAMPUS_PUBLIC_URL` is now `KAMPUS_SITE_URL`, `KAMPUS_ROLE` `KAMPUS_SERVER_ROLE`, `KAMPUS_HTTP_ADDRESS` `KAMPUS_SERVER_HTTP_ADDRESS` and `KAMPUS_UPGRADE_ON_START` `KAMPUS_SERVER_UPGRADE_ON_START`. `KAMPUS_SECURITY_SECRET_KEY` (32 bytes in base64) is required by the server and worker roles; `kampus-server install` generates it.
 - The first start, or `kampus-server upgrade`, adds the registry of components (`db` step 2) and records every component of the build; from then on every upgrade, downgrade and uninstall is in `kampus-server history`.
 - `KAMPUS_STORAGE_URL` is now required for the `server`, `worker` and `all` roles (`file:///path` or `s3://bucket/prefix` with `KAMPUS_STORAGE_S3_ENDPOINT`, `_REGION`, `_ACCESS_KEY_ID`, `_SECRET_ACCESS_KEY`); `KAMPUS_CACHE_URL` turns on the shared cache.
 - New configuration variables: `KAMPUS_HTTP_ADDRESS`, `KAMPUS_CONFIG_FILE`, `KAMPUS_UPGRADE_ON_START`, `KAMPUS_LOG_FORMAT`. A new installation is created by `kampus-server upgrade`, or at start with `KAMPUS_UPGRADE_ON_START=true`.
 
 ### Added
 
+- `kampus-server install`: writes `config.toml`, asking only for what the file and the environment do not give (or nothing with `--non-interactive`), generates the secret key, and creates the installation with its first campus and administrator; an installed database is left as it is. `config.example.toml` shows every section; the image reads `/etc/kampus/config.toml`.
+- Multi-tenancy is configured in `[tenancy]` (`single`, or `multi` with a base domain).
 - `version.toml` at the root describes the platform release (name, version, maturity, date, `upgrade_from`); the core reads it when it is built, registers the platform as the component `kampus`, and refuses installations older than `upgrade_from`.
 - Components with versions (DEC-088): every module, plugin and adapter has a manifest (`kampus_common::manifest!`) built from its `Cargo.toml` and `assets/icon.svg`, with optional maturity, supported Kampus releases and requirements; names follow packages and folders (`kampus-cache-redis` is `cache_redis` in `crates/cache/adapters/redis`); the server checks them all before it installs, upgrades or starts.
 - The registry of an installation: the installed version of every component and the ordered history of runs, failed ones included; new versions need an upgrade, and newer or missing components stop the start.
