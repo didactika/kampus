@@ -45,6 +45,9 @@ publish.workspace = true
 [lib]
 proc-macro = true
 
+[dependencies]
+toml.workspace = true
+
 [package.metadata.kampus]
 kind = "foundation"
 

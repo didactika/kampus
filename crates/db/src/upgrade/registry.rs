@@ -120,7 +120,7 @@ pub(crate) const TABLES: &[Change] = &[
 pub struct ComponentRecord {
     /// Its name (`identity`, `cache_redis`).
     pub name: String,
-    /// `module`, `plugin` or `adapter`.
+    /// `platform`, `module`, `plugin` or `adapter`.
     pub kind: &'static str,
     /// `core` or `external`.
     pub origin: &'static str,

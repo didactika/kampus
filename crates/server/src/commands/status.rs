@@ -35,7 +35,7 @@
 //! What the operator sees of the components: each one in the build and in the installation, with its
 //! state and what it lacks, and the history of runs.
 
-use kampus_common::{PLATFORM_VERSION, Result};
+use kampus_common::{PLATFORM, PLATFORM_VERSION, Result};
 use kampus_db::Run;
 use serde::Serialize;
 
@@ -114,6 +114,34 @@ pub async fn statuses(config: &Config) -> Result<Vec<ComponentStatus>> {
             }
         })
         .collect();
+    let platform_installed = installed
+        .iter()
+        .find(|i| i.name == components::PLATFORM_COMPONENT)
+        .map(|i| i.version.clone());
+    statuses.insert(
+        0,
+        ComponentStatus {
+            name: components::PLATFORM_COMPONENT.to_owned(),
+            kind: "platform".to_owned(),
+            origin: "core".to_owned(),
+            build_version: Some(PLATFORM.version.to_owned()),
+            state: match &platform_installed {
+                None => "to install",
+                Some(v) if v == PLATFORM.version => "current",
+                Some(v) if newer(v, PLATFORM.version) => "newer installed",
+                Some(_) => "to upgrade",
+            },
+            installed_version: platform_installed,
+            maturity: PLATFORM.maturity.as_str().to_owned(),
+            kampus: None,
+            summary: format!(
+                "{} {}, released {}",
+                PLATFORM.name, PLATFORM.version, PLATFORM.date
+            ),
+            icon: false,
+            problems: Vec::new(),
+        },
+    );
     let built: Vec<String> = statuses.iter().map(|s| s.name.clone()).collect();
     for gone in installed.iter().filter(|i| !built.contains(&i.name)) {
         statuses.push(ComponentStatus {

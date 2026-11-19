@@ -35,10 +35,14 @@
 //! The components of this build, from the registries: core modules, plugins and adapters, what each
 //! says about itself, and the rules they must follow together.
 
+use kampus_common::PLATFORM;
 use kampus_common::component::{self, Manifest, Problem, Registered};
 use kampus_db::ComponentRecord;
 
 use super::{adapters, registry};
+
+/// The name the platform is registered with.
+pub const PLATFORM_COMPONENT: &str = "kampus";
 
 /// A component of this build.
 #[derive(Debug, Clone, Copy)]
@@ -141,18 +145,26 @@ pub fn problems(platform: &str) -> Vec<Problem> {
     found
 }
 
-/// The components as the upgrade registers them.
+/// The components as the upgrade registers them: the platform first, which owns the steps of the
+/// database layer, then every component of the build.
 #[must_use]
 pub fn records() -> Vec<ComponentRecord> {
-    build()
-        .into_iter()
-        .map(|c| ComponentRecord {
+    let platform = ComponentRecord {
+        name: PLATFORM_COMPONENT.to_owned(),
+        kind: "platform",
+        origin: "core",
+        version: PLATFORM.version.to_owned(),
+        maturity: PLATFORM.maturity.as_str(),
+        schema: Some(kampus_db::MODULE),
+    };
+    std::iter::once(platform)
+        .chain(build().into_iter().map(|c| ComponentRecord {
             name: c.name(),
             kind: c.kind,
             origin: if c.external { "external" } else { "core" },
             version: c.manifest.version.to_owned(),
             maturity: c.manifest.maturity.as_str(),
             schema: c.schema,
-        })
+        }))
         .collect()
 }

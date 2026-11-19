@@ -460,3 +460,25 @@ async fn a_component_no_longer_in_the_build_can_be_uninstalled() {
     assert_eq!(db.upgrade_history(1).await.unwrap()[0].operation, "uninstall");
     drop_installation(&db).await;
 }
+
+#[tokio::test]
+async fn an_installation_older_than_the_oldest_supported_release_is_refused() {
+    let db = installation().await;
+    Upgrader::new(&db, &[notes(&[CREATE])], "0.1.0")
+        .apply(true)
+        .await
+        .unwrap();
+    let later = Upgrader::new(&db, &[notes(&[CREATE, TEXT])], "0.3.0").upgrading_from("0.2.0");
+    assert!(later.plan().await.unwrap().problems.contains(&Problem::TooOld {
+        recorded: "0.1.0".to_owned(),
+        oldest: "0.2.0".to_owned(),
+    }));
+    assert_eq!(later.apply(false).await.unwrap_err().code(), "db.upgrade_refused");
+    let next = Upgrader::new(&db, &[notes(&[CREATE, TEXT])], "0.2.0").upgrading_from("0.1.0");
+    next.apply(false).await.unwrap();
+    assert!(
+        later.plan().await.unwrap().problems.is_empty(),
+        "0.2.0 upgrades to 0.3.0"
+    );
+    drop_installation(&db).await;
+}
