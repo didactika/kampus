@@ -40,6 +40,7 @@ pub const MODULES: &[&kampus_module::Module] = &[
     &kampus_access::MODULE,
     &kampus_identity::MODULE,
     &kampus_users::MODULE,
+    &kampus_courses::MODULE,
 ];
 
 /// The packages of the modules that come from outside the repository.

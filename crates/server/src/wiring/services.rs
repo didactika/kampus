@@ -39,6 +39,7 @@ use std::sync::Arc;
 
 use kampus_access::Access;
 use kampus_common::{Clock, SystemClock};
+use kampus_courses::{CampusMembers, Courses};
 use kampus_db::Database;
 use kampus_identity::http::HttpSettings;
 use kampus_identity::{Courier, FixedPolicies, Identity, PasswordCost, SecretKey};
@@ -97,7 +98,7 @@ impl Services {
         let identity = Identity::new(
             parts.db.clone(),
             access.clone(),
-            parts.clock,
+            parts.clock.clone(),
             Arc::new(FixedPolicies::default()),
             parts.courier,
             parts.secret_key,
@@ -110,11 +111,13 @@ impl Services {
             .iter()
             .flat_map(|m| m.preferences.iter().copied())
             .collect();
-        let users = Users::new(parts.db, access.clone(), identity.clone(), preferences);
+        let users = Users::new(parts.db.clone(), access.clone(), identity.clone(), preferences);
+        let courses = Courses::new(parts.db, access.clone(), parts.clock, Arc::new(CampusMembers));
         let context = HttpContext::default()
             .with(access.clone())
             .with(identity.clone())
             .with(users)
+            .with(courses)
             .with(HttpSettings {
                 api_url: format!(
                     "{}{}",

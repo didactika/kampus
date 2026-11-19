@@ -63,7 +63,7 @@ Module `kampus-courses` (level 3, [architecture](../03-design/architecture.md#mo
 
 ## Lifecycles
 
-- **Course:** draft → published → archived (frozen) → deletion scheduled → deleted. A published course can go back to draft only when nobody is enrolled.
+- **Course:** draft → published → archived (frozen) → deletion scheduled → deleted. A published course can go back to draft only when nobody is enrolled. Deletion can be scheduled from draft, published or archived, by the owners or with `courses.course.delete`; cancelling it takes the course back to draft.
 - **Section:** created → moved, nested, hidden, scheduled → deleted to the recycle bin → purged.
 - **Group membership:** added by hand or by its owning module → removed by its origin.
 

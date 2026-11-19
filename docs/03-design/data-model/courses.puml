@@ -19,7 +19,8 @@ entity course {
   category_id : uuid <<FK>>
   short_name : text
   layout_code : text
-  language_code : text <<FK i18n.language>>
+  language_code : text
+  deletion_due_at : timestamptz
   starts_at : timestamptz
   ends_at : timestamptz
   state : text
@@ -61,6 +62,7 @@ entity group_set {
 entity group_set_group {
   * set_id : uuid <<PK, FK>>
   * group_id : uuid <<PK, FK>>
+  course_id : uuid <<FK>>
 }
 
 category }o--o| category : parent
