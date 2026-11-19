@@ -44,8 +44,9 @@ use kampus_db::Database;
 use kampus_enrol::{Enrol, Participation};
 use kampus_events::Events;
 use kampus_identity::http::HttpSettings;
-use kampus_identity::{Courier, FixedPolicies, Identity, PasswordCost, PasswordHasher, SecretKey};
+use kampus_identity::{Courier, Identity, PasswordCost, PasswordHasher, SecretKey, SettingsPolicies};
 use kampus_module::ServiceContext;
+use kampus_settings::Settings;
 use kampus_tasks::Tasks;
 use kampus_users::Users;
 
@@ -98,11 +99,12 @@ impl Services {
     #[must_use]
     pub fn build(parts: Parts) -> Self {
         let access = Access::new(parts.db.clone(), parts.clock.clone());
+        let settings = Settings::new(parts.db.clone(), access.clone());
         let identity = Identity::new(
             parts.db.clone(),
             access.clone(),
             parts.clock.clone(),
-            Arc::new(FixedPolicies::default()),
+            Arc::new(SettingsPolicies::new(settings.clone())),
             parts.courier,
             parts.secret_key,
         );
@@ -141,6 +143,7 @@ impl Services {
             .with(enrol)
             .with(tasks)
             .with(events)
+            .with(settings)
             .with(HttpSettings {
                 api_url: format!(
                     "{}{}",

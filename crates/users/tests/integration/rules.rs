@@ -40,7 +40,7 @@ use kampus_access::{Access, Actor, PrincipalId, ScopeId, ScopeKind};
 use kampus_common::{ErrorKind, Result, SystemClock};
 use kampus_db::{Database, Prefix, Upgrader};
 use kampus_identity::{AccountId, FixedPolicies, Identity, MemoryCourier, Notice, PasswordCost, SecretKey};
-use kampus_module::{PreferenceDeclaration, PreferenceKind};
+use kampus_module::{PreferenceDeclaration, ValueKind};
 use kampus_users::{GroupKind, GroupRule, Member, Origin, ProfileFields, RuleField, Users};
 use serde_json::json;
 
@@ -49,7 +49,7 @@ const PREFERENCES: &[PreferenceDeclaration] = &[
     PreferenceDeclaration {
         key: "notify.digest",
         summary: "How often the digest arrives",
-        kind: PreferenceKind::Choice {
+        kind: ValueKind::Choice {
             options: &["daily", "weekly"],
             default: "weekly",
         },
@@ -57,7 +57,7 @@ const PREFERENCES: &[PreferenceDeclaration] = &[
     PreferenceDeclaration {
         key: "notify.enabled",
         summary: "Whether notifications arrive",
-        kind: PreferenceKind::Boolean { default: true },
+        kind: ValueKind::Boolean { default: true },
     },
 ];
 

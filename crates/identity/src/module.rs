@@ -50,6 +50,7 @@ pub const MODULE: Module = Module {
     plugin_types: &[],
     commands: crate::commands::COMMANDS,
     preferences: &[],
+    settings: crate::settings::SETTINGS,
     events: &[],
     listeners: &[],
     jobs: crate::jobs::JOBS,

@@ -45,6 +45,7 @@ pub mod module;
 pub mod permissions;
 pub mod ports;
 pub mod service;
+pub mod settings;
 pub mod support;
 
 use std::sync::Arc;
@@ -55,8 +56,8 @@ use kampus_db::Database;
 
 pub use model::{
     Category, CategoryFields, CategoryId, Course, CourseFields, CourseId, CourseState, Group, GroupFields,
-    GroupId, GroupSet, GroupSetId, GroupVisibility, Member, MemberOrigin, Place, Section, SectionFields,
-    SectionId, Visibility,
+    GroupId, GroupMode, GroupSet, GroupSetId, GroupVisibility, Member, MemberOrigin, Place, Section,
+    SectionFields, SectionId, Visibility,
 };
 pub use module::MODULE;
 pub use ports::participants::{CampusMembers, Participants};

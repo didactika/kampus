@@ -1789,6 +1789,7 @@ dependencies = [
  "kampus-events",
  "kampus-identity",
  "kampus-module",
+ "kampus-settings",
  "serde",
  "serde_json",
  "sqlx",
@@ -1864,6 +1865,7 @@ dependencies = [
  "kampus-common",
  "kampus-db",
  "kampus-module",
+ "kampus-settings",
  "openidconnect",
  "serde",
  "serde_json",
@@ -1915,6 +1917,7 @@ dependencies = [
  "kampus-events",
  "kampus-identity",
  "kampus-module",
+ "kampus-settings",
  "kampus-storage",
  "kampus-storage-opendal",
  "kampus-tasks",
@@ -1932,6 +1935,23 @@ dependencies = [
  "tower-http 0.7.1",
  "tracing",
  "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
+name = "kampus-settings"
+version = "0.1.0"
+dependencies = [
+ "kampus-access",
+ "kampus-common",
+ "kampus-db",
+ "kampus-events",
+ "kampus-module",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "time",
+ "tokio",
  "uuid",
 ]
 

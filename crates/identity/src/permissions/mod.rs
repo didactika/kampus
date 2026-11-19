@@ -55,6 +55,8 @@ pub const PROVIDER_MANAGE: &str = "identity.provider.manage";
 pub const TOKEN_MANAGE_OWN: &str = "identity.token.manage_own";
 /// Create and revoke the API tokens of any account, such as service accounts.
 pub const TOKEN_MANAGE_ANY: &str = "identity.token.manage_any";
+/// Change the identity policy of a campus, or of the platform: sign-up, passwords, sessions, tokens.
+pub const POLICY_MANAGE: &str = "identity.policy.manage";
 
 /// The permissions of this module.
 pub const PERMISSIONS: &[PermissionDeclaration] = &[
@@ -98,6 +100,12 @@ pub const PERMISSIONS: &[PermissionDeclaration] = &[
         code: TOKEN_MANAGE_ANY,
         kind: PermissionKind::Write,
         risks: &[Risk::TrustEscalation],
+        lowest_kind: ScopeKind::Campus,
+    },
+    PermissionDeclaration {
+        code: POLICY_MANAGE,
+        kind: PermissionKind::Write,
+        risks: &[Risk::Configuration, Risk::TrustEscalation],
         lowest_kind: ScopeKind::Campus,
     },
 ];

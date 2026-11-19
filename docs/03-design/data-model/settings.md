@@ -15,9 +15,9 @@ PostgreSQL schema `settings`, owned by `kampus-settings`, following DEC-014, DEC
 
 | Table | Columns | Constraints and indexes |
 | --- | --- | --- |
-| `definition` | `key` PK, `module`, `schema` jsonb, `default_value` jsonb, `levels` text[], `permission`, `sensitive` boolean, `restart_required` boolean | Synchronised from declarations (DEC-015, RN-162) |
-| `value` | `id`, `definition_key` FK → `definition` (`CASCADE`), `scope_id` FK → `access.scope` (`CASCADE`), `value` jsonb, `encrypted_value` bytea, `locked` boolean, `version` | `UNIQUE` (`definition_key`, `scope_id`); `CHECK` exactly one of `value` and `encrypted_value` (RN-167) |
-| `change` | `id`, `definition_key` FK → `definition`, `scope_id`, `actor_id` FK → `access.principal`, `before` jsonb, `after` jsonb, `at`, `request_id` | Append-only; sensitive values stored masked; index (`definition_key`, `at`) |
+| `definition` | `key` PK, `module`, `summary`, `kind` jsonb (type and bounds), `default_value` jsonb, `levels` jsonb, `permission`, `restart_required`, `retired_at` | Synchronised from declarations (DEC-015, RN-162); a key no module declares is retired and its values stay |
+| `value` | `id`, `definition_key` FK → `definition` (`CASCADE`), `scope_id` FK → `access.scope` (`CASCADE`), `value` jsonb, `locked`, `version`, `updated_at` | `UNIQUE` (`definition_key`, `scope_id`); index on `scope_id`. Sensitive settings, encrypted with the installation key (RN-167), arrive with the first module that declares one |
+| `change` | `id`, `definition_key` FK → `definition` (`CASCADE`), `scope_id` FK → `access.scope` (`CASCADE`), `actor` (the operator when absent; not a foreign key, it outlives the account), `before` jsonb, `after` jsonb, `locked`, `at` | Append-only; index (`definition_key`, `at`) |
 
 Values fixed by the deployment are not stored: they are read from the configuration at start-up and returned with their source (RN-166).
 

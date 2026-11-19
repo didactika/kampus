@@ -26,6 +26,7 @@ pub const MODULE: Module = Module {
     plugin_types: &[],
     commands: crate::commands::COMMANDS,
     preferences: crate::settings::PREFERENCES,
+    settings: crate::settings::SETTINGS,
     events: crate::events::EVENTS,
     listeners: crate::observers::LISTENERS,
     jobs: crate::jobs::JOBS,
@@ -39,6 +40,7 @@ pub const MODULE: Module = Module {
 | `name` | `src/module.rs` | Names the module's database schema and owns its grants |
 | `manifest` | `version.toml`, `Cargo.toml` and `assets/icon.svg`, read by `manifest!()` | Checks it and records the version (see [the version file](#the-version-file)) |
 | `commands` | `src/commands/mod.rs` | Offers them as `kampus-server <module> <command>` (see [commands](#commands-of-a-component)) |
+| `settings` | `src/settings/mod.rs` | Records the definitions; values are set per scope and resolved through the tree (see [settings](#settings)) |
 | `preferences` | `src/settings/preferences.rs` | Kept by users per person: only declared keys, each checked against its type, with its default when unset |
 | `plugin_types` | `src/module.rs` | Accepts plugins named `<type>_<name>` in `crates/<module>/<type>/<name>` |
 | `steps` | `src/db/steps.rs` | Applies the pending upgrade steps (DEC-082) |
@@ -65,7 +67,7 @@ pub const MODULE: Module = Module {
 | `src/commands/` | Its commands on the command line, `kampus-server <module> <command>` | when it has any |
 | `src/events/` | `mod.rs` with `EVENTS` and the codes of the events it publishes | when it has any |
 | `src/observers/` | `mod.rs` with `LISTENERS` and their handlers, which call the services | when it has any |
-| `src/settings/` | `preferences.rs`, the per-person preferences it declares (type and default); the campus settings arrive with the settings module | when it has any |
+| `src/settings/` | `mod.rs` with `SETTINGS`, kept per scope, and `preferences.rs` with the per-person preferences (type and default) | when it has any |
 | `src/http/` | `mod.rs` with `routes`, and one file per area of routes with their request and response types | when it has any |
 | `src/privacy/` | Its export and erase handlers (DEC-061) | from the privacy module (T-C.12) |
 | `tests/` | Integration tests against the real ports, one test per business rule or use case | yes |
@@ -151,6 +153,33 @@ Events::new(self.db.clone()).publish_in(&mut tx, event).await?;
 | Audit | An `audited` type writes an append-only entry of the audit log in the same transaction, with its `summary` |
 
 Payloads hold identifiers, not copies of personal data; the fields that do hold it are listed in `personal_fields` for the privacy handlers. The `worker` and `all` roles run the deliveries; operators see and replay them with `kampus-server events`.
+
+## Settings
+
+What a campus, a category, a course or a section may configure is a **setting** the module declares in `src/settings/mod.rs` and exposes through `settings` in its descriptor. Values are kept per scope and resolved by `kampus-settings`:
+
+```rust
+pub const SETTINGS: &[SettingDeclaration] = &[SettingDeclaration {
+    key: "courses.group_mode",
+    summary: "Whether people work in groups: none, separate or visible",
+    kind: ValueKind::Choice { options: &["none", "separate", "visible"], default: "none" },
+    levels: &[ScopeKind::Course, ScopeKind::Section, ScopeKind::Activity],
+    permission: GROUPS_MANAGE,
+    restart_required: false,
+}];
+```
+
+| Field | Meaning |
+| --- | --- |
+| `key` | `<module>.<name>`, unique in the build |
+| `kind` | `Boolean`, `Integer` with its bounds, `Text` with its length or `Choice` with its options, and the default; a value of another kind is refused |
+| `levels` | The kinds of scope where a value may be set; anywhere else it is refused |
+| `permission` | The permission, declared by the module, that sets it in a scope |
+| `restart_required` | The roles that read it apply a change only at their next start |
+
+Read a value with `Settings::resolve(key, scope)`, or every setting of a module at once with `Settings::resolve_prefix("<module>.", scope)`: the value of the nearest scope that sets it wins, unless a scope above set it **locked**; without any, the default. The answer says where the value came from. Every change records who made it with the value before and after, and publishes `settings.changed`.
+
+A module never reads a setting it does not declare, and never keeps its own table of options: identity, for example, reads the policy of a campus (`identity.*`) through its `Policies` port from settings.
 
 ## Background jobs
 

@@ -45,8 +45,8 @@ pub mod permission;
 pub use context::ServiceContext;
 pub use descriptor::{
     Argument, Command, CommandContext, CommandFuture, Event, EventDeclaration, EventRun, JobDeclaration,
-    JobFuture, JobRun, ListenerDeclaration, Module, PreferenceDeclaration, PreferenceKind,
-    ScheduleDeclaration,
+    JobFuture, JobRun, ListenerDeclaration, Module, PreferenceDeclaration, ScheduleDeclaration,
+    SettingDeclaration, ValueKind,
 };
 pub use permission::{
     PermissionDeclaration, PermissionKind, Risk, RoleTemplateDeclaration, ScopeKind, Value,
