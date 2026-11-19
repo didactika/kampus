@@ -6,6 +6,12 @@ skinparam linetype ortho
 title Schemas identity and users (PostgreSQL)
 
 package identity {
+  entity account_reference {
+    campus_id <<PK, FK>>
+    system <<PK>>
+    identifier <<PK>>
+    record_id <<FK>>
+  }
   entity account {
     * id : uuid <<PK, FK access.principal>>
     campus_id : uuid <<FK>>
@@ -94,4 +100,5 @@ profile ||--|| account
 account_field }o--|| account
 system_group_member }o--|| system_group
 system_group_member }o--|| account
+account_reference }o--|| account
 @enduml

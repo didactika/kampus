@@ -42,5 +42,6 @@
 
 mod lint;
 mod prefix;
+mod references;
 mod schema;
 mod step;

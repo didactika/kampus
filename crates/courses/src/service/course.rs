@@ -45,8 +45,9 @@ use crate::permissions::{COURSE_ARCHIVE, COURSE_CREATE, COURSE_DELETE, COURSE_UP
 use crate::support::sort_key;
 use crate::{
     CategoryId, Course, CourseFields, CourseId, CourseState, Courses, DEFAULT_LAYOUT, DELETION_GRACE, Place,
-    sql,
+    RecordKind, sql,
 };
+use kampus_db::references::ExternalReference;
 
 /// The columns of a course, as read.
 const COLUMNS: &str = "id, scope_id, campus_id, category_id, short_name, full_name, code, summary, layout_code, \
@@ -133,6 +134,19 @@ impl Courses {
         fields: CourseFields,
         place: Place<CourseId>,
     ) -> Result<Course> {
+        self.create_course_with(actor, category, fields, place, None)
+            .await
+    }
+
+    /// Creates a course, with the identifier a system gives it when one is given, in one transaction.
+    pub(crate) async fn create_course_with(
+        &self,
+        actor: &Actor,
+        category: CategoryId,
+        fields: CourseFields,
+        place: Place<CourseId>,
+        reference: Option<&ExternalReference>,
+    ) -> Result<Course> {
         let fields = checked(fields)?;
         let mut tx = self.db.begin().await?;
         let parent = self.read_category_in(&mut tx, category, false).await?;
@@ -199,6 +213,11 @@ impl Courses {
             serde_json::json!({ "course": created.id, "category": category }),
         )
         .await?;
+        if let Some(reference) = reference {
+            self.references(RecordKind::Course)
+                .set_in(&mut tx, created.campus.as_uuid(), created.id.as_uuid(), reference)
+                .await?;
+        }
         tx.commit().await.map_err(kampus_db::classify)?;
         Ok(created)
     }

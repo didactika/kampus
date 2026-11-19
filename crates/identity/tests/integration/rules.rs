@@ -1485,3 +1485,58 @@ async fn a_new_email_is_used_only_once_its_link_is_opened() {
     );
     w.drop().await;
 }
+
+#[tokio::test]
+async fn an_account_is_found_by_the_identifier_a_system_gives_it() {
+    let w = world().await;
+    let sis = |id: &str| kampus_db::references::ExternalReference::new("sis", id).unwrap();
+    let ana = w.person("ana@example.org").await;
+    let bea = w.person("bea@example.org").await;
+    let set = w
+        .identity
+        .set_account_reference(&w.admin, ana, &sis("S-001"))
+        .await
+        .unwrap();
+    assert_eq!(set, [sis("S-001")]);
+    let found = w
+        .identity
+        .account_by_reference(&w.admin, w.campus, &sis("S-001"))
+        .await
+        .unwrap();
+    assert_eq!(found.id, ana);
+    assert_eq!(
+        error(
+            w.identity
+                .set_account_reference(&w.admin, bea, &sis("S-001"))
+                .await
+        )
+        .1,
+        "references.taken"
+    );
+    w.identity
+        .set_account_reference(&w.admin, ana, &sis("S-002"))
+        .await
+        .unwrap();
+    assert_eq!(
+        w.identity.account_references(&w.admin, ana).await.unwrap(),
+        [sis("S-002")]
+    );
+    assert_eq!(
+        error(
+            w.identity
+                .account_by_reference(&w.admin, w.campus, &sis("S-001"))
+                .await
+        )
+        .1,
+        "references.not_found"
+    );
+    w.identity
+        .remove_account_reference(&w.admin, ana, "sis")
+        .await
+        .unwrap();
+    assert_eq!(
+        error(w.identity.remove_account_reference(&w.admin, ana, "sis").await).1,
+        "references.not_found"
+    );
+    w.drop().await;
+}

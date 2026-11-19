@@ -62,6 +62,15 @@ pub(super) fn routes() -> Router<Shared> {
         .route("/accounts/{id}", get(account))
         .route("/accounts/{id}/transitions", post(transition))
         .route("/accounts/{id}/tokens", post(create_token))
+        .route("/accounts/{id}/references", get(references))
+        .route(
+            "/accounts/{id}/references/{system}",
+            axum::routing::put(set_reference).delete(remove_reference),
+        )
+        .route(
+            "/campuses/{campus}/accounts/by-reference/{system}/{external_id}",
+            get(by_reference),
+        )
         .route("/tokens/{id}", delete(revoke_token))
 }
 
@@ -210,4 +219,70 @@ async fn revoke_token(
     let actor = caller.acting(identity, TOKEN_MANAGE_ANY, caller.campus).await?;
     identity.revoke_token(actor, token).await?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+/// The identifier a system gives an account.
+#[derive(Debug, Deserialize)]
+struct ExternalId {
+    /// The identifier.
+    external_id: String,
+}
+
+/// The identifiers systems give an account.
+async fn references(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(account): Path<String>,
+) -> ApiResult<Response> {
+    let references = shared
+        .identity()?
+        .account_references(&caller.actor, id(&account)?)
+        .await?;
+    Ok(Json(references).into_response())
+}
+
+/// Gives an account the identifier a system uses for it.
+async fn set_reference(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((account, system)): Path<(String, String)>,
+    Body(body): Body<ExternalId>,
+) -> ApiResult<Response> {
+    let reference = kampus_db::references::ExternalReference::new(&system, &body.external_id)?;
+    let identity = shared.identity()?;
+    let stored = identity.account(&caller.actor, id(&account)?).await?;
+    let actor = caller.acting(identity, ACCOUNT_INVITE, stored.campus).await?;
+    let references = identity
+        .set_account_reference(actor, stored.id, &reference)
+        .await?;
+    Ok(Json(references).into_response())
+}
+
+/// Removes the identifier a system gave an account.
+async fn remove_reference(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((account, system)): Path<(String, String)>,
+) -> ApiResult<StatusCode> {
+    let identity = shared.identity()?;
+    let stored = identity.account(&caller.actor, id(&account)?).await?;
+    let actor = caller.acting(identity, ACCOUNT_INVITE, stored.campus).await?;
+    identity
+        .remove_account_reference(actor, stored.id, &system)
+        .await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// The account a system knows by an identifier in a campus.
+async fn by_reference(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((campus, system, external_id)): Path<(String, String, String)>,
+) -> ApiResult<Response> {
+    let campus: ScopeId = id(&campus)?;
+    let reference = kampus_db::references::ExternalReference::new(&system, &external_id)?;
+    let identity = shared.identity()?;
+    let actor = caller.acting(identity, ACCOUNT_READ, campus).await?;
+    let account = identity.account_by_reference(actor, campus, &reference).await?;
+    Ok(Json(account).into_response())
 }

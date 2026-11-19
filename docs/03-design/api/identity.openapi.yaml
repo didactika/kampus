@@ -112,6 +112,13 @@ paths:
     delete: { summary: 'Remove a member added by hand; other origins keep theirs', responses: { '204': { description: Removed } } }
   /api/v1/users/system-groups/{group_id}/apply-rule:
     post: { summary: 'Apply the rule: add who matches, remove who no longer does', responses: { '200': { description: Members after the rule } } }
+  /api/v1/identity/accounts/{account_id}/references:
+    get: { summary: 'The identifiers systems give an account; needs identity.account.read (DEC-021)', responses: { '200': { description: References } } }
+  /api/v1/identity/accounts/{account_id}/references/{system}:
+    put: { summary: 'Give the account the identifier a system uses for it; needs identity.account.invite', responses: { '200': { description: References }, '409': { description: 'Another account of the campus has it (references.taken)' } } }
+    delete: { summary: Remove the identifier a system gave the account, responses: { '204': { description: Removed } } }
+  /api/v1/identity/campuses/{campus_id}/accounts/by-reference/{system}/{external_id}:
+    get: { summary: 'The account a system knows by an identifier in the campus', responses: { '200': { description: Account }, '404': { description: No account has it } } }
 components:
   parameters:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }

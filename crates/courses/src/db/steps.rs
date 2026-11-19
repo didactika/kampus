@@ -358,4 +358,16 @@ alter table {schema}.\"group_member\" add constraint \"group_member_origin_check
         ],
         ..Table::EMPTY
     })],
+}, Step {
+    sequence: 3,
+    name: "external references",
+    revert: &[],
+    action: None,
+    changes: &[
+        kampus_db::reference_table!("category_reference", "category"),
+        kampus_db::reference_table!("course_reference", "course"),
+        kampus_db::reference_table!("section_reference", "section"),
+        kampus_db::reference_table!("group_reference", "group"),
+        kampus_db::reference_table!("group_set_reference", "group_set"),
+    ],
 }];
