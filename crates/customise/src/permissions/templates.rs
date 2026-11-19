@@ -36,7 +36,9 @@
 
 use kampus_access::{RoleTemplateDeclaration, Value};
 
-use super::{FIELD_EDIT, FIELD_MANAGE, FIELD_VIEW, FLAG_MANAGE, TERM_MANAGE};
+use super::{
+    FIELD_EDIT, FIELD_MANAGE, FIELD_VIEW, FLAG_MANAGE, LAYOUT_MANAGE, MENU_MANAGE, TERM_MANAGE, THEME_MANAGE,
+};
 
 /// Every permission of this module, allowed: what an administrator holds.
 const ALL_ALLOWED: &[(&str, Value)] = &[
@@ -45,6 +47,9 @@ const ALL_ALLOWED: &[(&str, Value)] = &[
     (FIELD_MANAGE, Value::Allow),
     (FIELD_VIEW, Value::Allow),
     (FIELD_EDIT, Value::Allow),
+    (LAYOUT_MANAGE, Value::Allow),
+    (MENU_MANAGE, Value::Allow),
+    (THEME_MANAGE, Value::Allow),
 ];
 
 /// The values customisation gives in the default role templates; templates it leaves out give none of
@@ -72,6 +77,7 @@ pub const TEMPLATES: &[RoleTemplateDeclaration] = &[
             (TERM_MANAGE, Value::Allow),
             (FIELD_VIEW, Value::Allow),
             (FIELD_EDIT, Value::Allow),
+            (LAYOUT_MANAGE, Value::Allow),
         ],
     },
     RoleTemplateDeclaration {

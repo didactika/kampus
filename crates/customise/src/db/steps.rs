@@ -33,7 +33,8 @@
 // ------------------------------------------------------------------------------
 
 //! The upgrade steps of the `customise` schema, in the neutral schema: terms and their overrides, feature
-//! flags and their values, custom fields with their choices and typed values, and the record of changes.
+//! flags and their values, custom fields with their choices and typed values, the record of changes, and
+//! layouts with their placements, menus with their items, and themes.
 
 use kampus_db::Step;
 use kampus_db::schema::{Change, Check, Column, ColumnDefault, ForeignKey, Index, OnDelete, Table, Type};
@@ -256,5 +257,135 @@ alter table {schema}.\"field_choice\" alter column \"sort_key\" type text collat
 alter table {schema}.\"field_value\" add constraint \"field_value_at_most_one_check\" check (num_nonnulls(\"text_value\", \"integer_value\", \"date_value\", \"boolean_value\", \"choice_id\", \"account_id\") <= 1);",
             reason: "the neutral schema has no collation; a multiple-choice value keeps its choices in field_value_choice, so it sets none of the typed columns",
         },
+    ],
+}, Step {
+    sequence: 2,
+    name: "layouts, menus and themes",
+    revert: &[],
+    action: None,
+    changes: &[
+        Change::CreateTable(Table {
+            name: "page_kind",
+            columns: &[
+                Column::new("code", Type::Text),
+                Column::new("module", Type::Text),
+                Column::new("summary", Type::Text),
+                Column::new("regions", Type::Json("customise.page_regions")),
+                Column::new("retired_at", Type::Timestamptz).nullable(),
+            ],
+            primary_key: &["code"],
+            without_natural_key: Some("keyed by the code its module declares"),
+            ..Table::EMPTY
+        }),
+        Change::CreateTable(Table {
+            name: "widget",
+            columns: &[
+                Column::new("code", Type::Text),
+                Column::new("module", Type::Text),
+                Column::new("summary", Type::Text),
+                Column::new("page_kinds", Type::Json("customise.widget_page_kinds")),
+                Column::new("settings", Type::Json("customise.widget_settings")),
+                Column::new("retired_at", Type::Timestamptz).nullable(),
+            ],
+            primary_key: &["code"],
+            without_natural_key: Some("keyed by the code its module declares"),
+            ..Table::EMPTY
+        }),
+        Change::CreateTable(Table {
+            name: "menu_kind",
+            columns: &[
+                Column::new("code", Type::Text),
+                Column::new("module", Type::Text),
+                Column::new("summary", Type::Text),
+                Column::new("retired_at", Type::Timestamptz).nullable(),
+            ],
+            primary_key: &["code"],
+            without_natural_key: Some("keyed by the code its module declares"),
+            ..Table::EMPTY
+        }),
+        Change::CreateTable(Table {
+            name: "layout",
+            columns: &[
+                Column::new("id", Type::Uuid),
+                Column::new("page_kind_code", Type::Text),
+                Column::new("scope_id", Type::Uuid),
+                Column::new("locked", Type::Boolean).default(ColumnDefault::Bool(false)),
+                Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+            ],
+            primary_key: &["id"],
+            unique: &[&["page_kind_code", "scope_id"]],
+            foreign_keys: &[own(&["page_kind_code"], "page_kind", &["code"], OnDelete::Cascade), SCOPE],
+            ..Table::EMPTY
+        }),
+        Change::CreateTable(Table {
+            name: "placement",
+            columns: &[
+                Column::new("id", Type::Uuid),
+                Column::new("layout_id", Type::Uuid),
+                Column::new("region", Type::Text),
+                Column::new("widget_code", Type::Text),
+                Column::new("settings", Type::Json("customise.placement_settings")),
+                Column::new("permission", Type::Text).nullable(),
+                Column::new("position", Type::Integer),
+            ],
+            primary_key: &["id"],
+            unique: &[&["layout_id", "region", "position"]],
+            foreign_keys: &[
+                own(&["layout_id"], "layout", &["id"], OnDelete::Cascade),
+                own(&["widget_code"], "widget", &["code"], OnDelete::Cascade),
+            ],
+            ..Table::EMPTY
+        }),
+        Change::CreateTable(Table {
+            name: "menu",
+            columns: &[
+                Column::new("id", Type::Uuid),
+                Column::new("menu_kind_code", Type::Text),
+                Column::new("scope_id", Type::Uuid),
+                Column::new("locked", Type::Boolean).default(ColumnDefault::Bool(false)),
+                Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+            ],
+            primary_key: &["id"],
+            unique: &[&["menu_kind_code", "scope_id"]],
+            foreign_keys: &[own(&["menu_kind_code"], "menu_kind", &["code"], OnDelete::Cascade), SCOPE],
+            ..Table::EMPTY
+        }),
+        Change::CreateTable(Table {
+            name: "menu_item",
+            columns: &[
+                Column::new("id", Type::Uuid),
+                Column::new("menu_id", Type::Uuid),
+                Column::new("parent_id", Type::Uuid).nullable(),
+                Column::new("label", Type::Text),
+                Column::new("target", Type::Text),
+                Column::new("permission", Type::Text).nullable(),
+                Column::new("position", Type::Integer),
+            ],
+            primary_key: &["id"],
+            foreign_keys: &[
+                own(&["menu_id"], "menu", &["id"], OnDelete::Cascade),
+                own(&["parent_id"], "menu_item", &["id"], OnDelete::Cascade),
+            ],
+            indexes: &[Index {
+                columns: &["menu_id", "parent_id", "position"],
+                unique: false,
+            }],
+            without_natural_key: Some("an item of a menu, replaced with the whole menu"),
+            ..Table::EMPTY
+        }),
+        Change::CreateTable(Table {
+            name: "theme",
+            columns: &[
+                Column::new("id", Type::Uuid),
+                Column::new("scope_id", Type::Uuid),
+                Column::new("tokens", Type::Json("customise.theme_tokens")),
+                Column::new("locked", Type::Boolean).default(ColumnDefault::Bool(false)),
+                Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+            ],
+            primary_key: &["id"],
+            unique: &[&["scope_id"]],
+            foreign_keys: &[SCOPE],
+            ..Table::EMPTY
+        }),
     ],
 }];

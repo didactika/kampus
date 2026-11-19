@@ -32,8 +32,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The entities of customisation: resolved terms and flags with where they came from, and custom fields
-//! with their choices and types.
+//! The entities of customisation: resolved terms and flags with where they came from, custom fields with
+//! their choices and types, and in [`layout`] and [`theme`] layouts, menus and themes.
+
+pub mod layout;
+pub mod theme;
 
 use std::str::FromStr;
 

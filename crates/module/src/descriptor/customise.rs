@@ -33,7 +33,8 @@
 // ------------------------------------------------------------------------------
 
 //! What a module contributes to customisation: the words of its domain, which a campus may rename; the
-//! feature switches it offers; and the kinds of entity that accept custom fields.
+//! feature switches it offers; the kinds of entity that accept custom fields; and the pages, widgets and
+//! menus a campus arranges.
 
 /// The forms of a word in one language.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -72,5 +73,47 @@ pub struct FieldKindDeclaration {
     /// Its code, `<module>.<entity>` (`courses.course`).
     pub code: &'static str,
     /// What it is.
+    pub summary: &'static str,
+}
+
+/// A kind of page a module shows, with the regions a layout places widgets in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PageKindDeclaration {
+    /// `<module>.<page>`, unique in the build.
+    pub code: &'static str,
+    /// What the page is, for people who arrange it.
+    pub summary: &'static str,
+    /// Its regions, in the order they are shown.
+    pub regions: &'static [&'static str],
+}
+
+/// A setting of a widget, with the kind of value it takes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct WidgetSetting {
+    /// Its key, unique in the widget.
+    pub key: &'static str,
+    /// The kind of value, with its default.
+    pub kind: crate::ValueKind,
+}
+
+/// A widget a module offers for layouts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct WidgetDeclaration {
+    /// `<module>.<widget>`, unique in the build.
+    pub code: &'static str,
+    /// What it shows.
+    pub summary: &'static str,
+    /// The page kinds it may be placed in; every page kind when empty.
+    pub page_kinds: &'static [&'static str],
+    /// Its settings; a placement sets only these, each of its kind.
+    pub settings: &'static [WidgetSetting],
+}
+
+/// A kind of navigation menu a module shows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct MenuKindDeclaration {
+    /// `<module>.<menu>`, unique in the build.
+    pub code: &'static str,
+    /// Where it is shown.
     pub summary: &'static str,
 }

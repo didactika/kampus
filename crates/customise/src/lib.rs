@@ -43,10 +43,13 @@ pub mod model;
 pub mod module;
 pub mod permissions;
 pub mod service;
+pub mod settings;
 
 use kampus_access::Access;
 use kampus_db::Database;
 
+pub use model::layout::{Layout, Menu, MenuItem, Placement};
+pub use model::theme::Theme;
 pub use model::{
     Choice, Field, FieldEntry, FieldId, FieldSpec, FieldType, FieldValueId, FieldVisibility, Flag, Origin,
     Term,

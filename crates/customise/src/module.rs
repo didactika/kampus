@@ -43,7 +43,7 @@ pub const NAME: &str = "customise";
 pub const MODULE: Module = Module {
     name: NAME,
     manifest: kampus_common::manifest!(),
-    summary: "Terminology, feature flags and custom fields resolved through the scope tree",
+    summary: "Terminology, feature flags, custom fields, layouts, menus and themes resolved through the scope tree",
     steps: crate::db::STEPS,
     permissions: crate::permissions::PERMISSIONS,
     templates: crate::permissions::TEMPLATES,
@@ -54,6 +54,9 @@ pub const MODULE: Module = Module {
     terms: &[],
     flags: &[],
     field_kinds: &[],
+    page_kinds: &[],
+    widgets: crate::settings::customise::WIDGETS,
+    menu_kinds: crate::settings::customise::MENU_KINDS,
     events: crate::events::EVENTS,
     listeners: &[],
     jobs: &[],

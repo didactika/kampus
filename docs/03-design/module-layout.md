@@ -30,6 +30,9 @@ pub const MODULE: Module = Module {
     terms: &[],
     flags: &[],
     field_kinds: &[],
+    page_kinds: &[],
+    widgets: &[],
+    menu_kinds: &[],
     events: crate::events::EVENTS,
     listeners: crate::observers::LISTENERS,
     jobs: crate::jobs::JOBS,
@@ -44,7 +47,7 @@ pub const MODULE: Module = Module {
 | `manifest` | `version.toml`, `Cargo.toml` and `assets/icon.svg`, read by `manifest!()` | Checks it and records the version (see [the version file](#the-version-file)) |
 | `commands` | `src/commands/mod.rs` | Offers them as `kampus-server <module> <command>` (see [commands](#commands-of-a-component)) |
 | `settings` | `src/settings/mod.rs` | Records the definitions; values are set per scope and resolved through the tree (see [settings](#settings)) |
-| `terms`, `flags`, `field_kinds` | `src/settings/customise.rs` | Records the words, features and kinds of entity a campus customises (see [customisation](#customisation)) |
+| `terms`, `flags`, `field_kinds`, `page_kinds`, `widgets`, `menu_kinds` | `src/settings/customise.rs` | Records the words, features, kinds of entity, pages, widgets and menus a campus customises (see [customisation](#customisation)) |
 | `preferences` | `src/settings/preferences.rs` | Kept by users per person: only declared keys, each checked against its type, with its default when unset |
 | `plugin_types` | `src/module.rs` | Accepts plugins named `<type>_<name>` in `crates/<module>/<type>/<name>` |
 | `steps` | `src/db/steps.rs` | Applies the pending upgrade steps (DEC-082) |
@@ -187,7 +190,7 @@ A module never reads a setting it does not declare, and never keeps its own tabl
 
 ## Customisation
 
-What a campus changes without code beyond settings, a module offers in `src/settings/customise.rs` and exposes through `terms`, `flags` and `field_kinds` in its descriptor; `kampus-customise` keeps it per scope and resolves it like settings, from the nearest scope up to the platform, sections included, unless a scope above **locks** its value. Every answer says where it came from (declared, or the scope that set it), every change is recorded with before and after and publishes `customise.changed`.
+What a campus changes without code beyond settings, a module offers in `src/settings/customise.rs` and exposes through `terms`, `flags`, `field_kinds`, `page_kinds`, `widgets` and `menu_kinds` in its descriptor; `kampus-customise` keeps it per scope and resolves it like settings, from the nearest scope up to the platform, sections included, unless a scope above **locks** its value. Every answer says where it came from (declared, or the scope that set it), every change is recorded with before and after and publishes `customise.changed`.
 
 ```rust
 pub const TERMS: &[TermDeclaration] = &[TermDeclaration {
@@ -213,8 +216,13 @@ pub const FIELD_KINDS: &[FieldKindDeclaration] = &[FieldKindDeclaration {
 | A **term**, with its singular and plural per language | Renames it per language (`customise.term.manage`); a language the module does not declare falls back to its first | Shows `Customise::term(code, scope, language)` instead of a fixed word |
 | A **flag**, with its default | Turns the feature on or off (`customise.flag.manage`); its data stays | Guards what the feature offers with `Customise::require_flag(code, scope)`, which answers `conflict` (`customise.feature_off`) |
 | A **kind of entity** | Defines typed custom fields for it (`customise.field.manage`): text, integer, date, boolean, choice, choices or account, public or private (`customise.field.view`) | Keeps a link table `<entity>_field` (entity, field, value, all `CASCADE`), writes values with `Customise::write_value_in` inside its own transaction and reads them with `Customise::values` |
+| A **page kind**, with its regions | Arranges widgets in its regions (`customise.layout.manage`, which teachers hold in their courses), each with its settings and, optionally, the permission that shows it; the layout of the nearest scope applies whole | Shows the placements of `Customise::layout(actor, page_kind, scope)`, or its own arrangement when the origin is declared; a widget no module declares any more is left out, never breaks the page |
+| A **widget**, with the page kinds it fits and its typed settings (`WidgetSetting` with a `ValueKind`) | Places it; a setting it does not declare, or of another kind, is refused, and the defaults fill what is left out | Renders it from its settings |
+| A **kind of menu** | Sets its items (`customise.menu.manage`): a label, a path or web address, a permission, at most 3 levels | Shows `Customise::menu(actor, kind, scope)`: only the items the reader may see |
 
 Customisation never owns an entity of another module: the values of custom fields belong to their entity through the owning module's link table, so there is no polymorphic owner, and deleting the entity, the field or the value takes the link with it.
+
+The theme of a scope is not declared by modules: it is a fixed set of design tokens (colours, font, sizes, motion) that each scope may set over those above it, checked for WCAG 2.2 AA contrast (`customise.theme.manage`). Modules style their pages with the `--kampus-*` custom properties of `GET /scopes/{scope}/theme.css`, never with colours of their own.
 
 ## Background jobs
 

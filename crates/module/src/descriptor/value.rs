@@ -94,4 +94,38 @@ impl ValueKind {
             _ => false,
         }
     }
+
+    /// The kind as stored, so a value is checked against it without the declaration in hand.
+    #[must_use]
+    pub fn stored(self) -> Value {
+        match self {
+            Self::Boolean { .. } => serde_json::json!({ "type": "boolean" }),
+            Self::Choice { options, .. } => serde_json::json!({ "type": "choice", "options": options }),
+            Self::Integer { min, max, .. } => {
+                serde_json::json!({ "type": "integer", "min": min, "max": max })
+            }
+            Self::Text { max, .. } => serde_json::json!({ "type": "text", "max": max }),
+        }
+    }
+
+    /// Whether a value is of a kind as [`ValueKind::stored`] wrote it, and within its bounds.
+    #[must_use]
+    pub fn stored_accepts(kind: &Value, value: &Value) -> bool {
+        let bound = |name: &str| kind.get(name).and_then(Value::as_i64);
+        match (kind.get("type").and_then(Value::as_str), value) {
+            (Some("boolean"), Value::Bool(_)) => true,
+            (Some("integer"), Value::Number(n)) => match (n.as_i64(), bound("min"), bound("max")) {
+                (Some(n), Some(min), Some(max)) => (min..=max).contains(&n),
+                _ => false,
+            },
+            (Some("text"), Value::String(text)) => bound("max")
+                .and_then(|m| usize::try_from(m).ok())
+                .is_some_and(|m| text.chars().count() <= m),
+            (Some("choice"), Value::String(text)) => kind
+                .get("options")
+                .and_then(Value::as_array)
+                .is_some_and(|o| o.iter().any(|x| x.as_str() == Some(text))),
+            _ => false,
+        }
+    }
 }

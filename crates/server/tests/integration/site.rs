@@ -83,7 +83,7 @@ pub(crate) struct Answer {
     pub(crate) status: StatusCode,
     /// Its headers.
     pub(crate) headers: HeaderMap,
-    /// Its JSON body, `null` when empty.
+    /// Its JSON body, `null` when empty, or its text when it is not JSON.
     pub(crate) body: Value,
 }
 
@@ -197,7 +197,8 @@ impl Site {
         let body = if bytes.is_empty() {
             Value::Null
         } else {
-            serde_json::from_slice(&bytes).unwrap()
+            serde_json::from_slice(&bytes)
+                .unwrap_or_else(|_| Value::String(String::from_utf8_lossy(&bytes).into_owned()))
         };
         Answer {
             status,

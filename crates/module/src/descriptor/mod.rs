@@ -43,7 +43,10 @@ mod setting;
 mod value;
 
 pub use command::{Argument, Command, CommandContext, CommandFuture};
-pub use customise::{FieldKindDeclaration, FlagDeclaration, TermDeclaration, TermForms};
+pub use customise::{
+    FieldKindDeclaration, FlagDeclaration, MenuKindDeclaration, PageKindDeclaration, TermDeclaration,
+    TermForms, WidgetDeclaration, WidgetSetting,
+};
 pub use event::{Event, EventDeclaration, EventRun, ListenerDeclaration};
 pub use job::{JobDeclaration, JobFuture, JobRun, ScheduleDeclaration};
 pub use preference::PreferenceDeclaration;
@@ -80,12 +83,18 @@ pub struct Module {
     pub preferences: &'static [PreferenceDeclaration],
     /// The settings it declares, kept per scope, from `src/settings/mod.rs`.
     pub settings: &'static [SettingDeclaration],
-    /// The words of its domain a campus may rename, from `src/settings/`.
+    /// The words of its domain a campus may rename, from `src/settings/customise.rs`.
     pub terms: &'static [TermDeclaration],
-    /// The features a scope may turn off, from `src/settings/`.
+    /// The features a scope may turn off, from `src/settings/customise.rs`.
     pub flags: &'static [FlagDeclaration],
-    /// The kinds of entity that accept custom fields.
+    /// The kinds of entity that accept custom fields, from `src/settings/customise.rs`.
     pub field_kinds: &'static [FieldKindDeclaration],
+    /// The kinds of page it shows, with their regions, from `src/settings/customise.rs`.
+    pub page_kinds: &'static [PageKindDeclaration],
+    /// The widgets it offers for layouts, from `src/settings/customise.rs`.
+    pub widgets: &'static [WidgetDeclaration],
+    /// The kinds of navigation menu it shows, from `src/settings/customise.rs`.
+    pub menu_kinds: &'static [MenuKindDeclaration],
     /// The events it publishes, from `src/events/mod.rs`.
     pub events: &'static [EventDeclaration],
     /// Its reactions to events, from `src/observers/mod.rs`.

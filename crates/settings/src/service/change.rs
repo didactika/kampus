@@ -203,7 +203,7 @@ impl Settings {
         .map_err(kampus_db::classify)?
         .ok_or_else(|| Error::not_found("settings.unknown").with_param("key", write.key.to_owned()))?;
         if let Some(value) = &write.value
-            && !super::accepts(&definition.get::<Value, _>("kind"), value)
+            && !kampus_module::ValueKind::stored_accepts(&definition.get::<Value, _>("kind"), value)
         {
             return Err(Error::validation(
                 "settings.value_invalid",
