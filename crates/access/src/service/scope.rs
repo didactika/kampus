@@ -198,6 +198,38 @@ impl Access {
             .collect()
     }
 
+    /// The platform scope, once it exists.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn platform(&self) -> Result<Option<ScopeId>> {
+        let id: Option<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+            "select id from {} where kind = 'platform'",
+            self.table("scope")
+        )))
+        .fetch_optional(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(id.map(ScopeId::from_uuid))
+    }
+
+    /// The campuses of the installation, oldest first.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn campuses(&self) -> Result<Vec<ScopeId>> {
+        let ids: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+            "select id from {} where kind = 'campus' order by id",
+            self.table("scope")
+        )))
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(ids.into_iter().map(ScopeId::from_uuid).collect())
+    }
+
     /// The campus a scope belongs to, if it is at or below a campus.
     pub(crate) async fn campus_of(&self, conn: &mut PgConnection, scope: ScopeId) -> Result<Option<ScopeId>> {
         let campus: Option<Option<uuid::Uuid>> = sqlx::query_scalar(sql(format!(

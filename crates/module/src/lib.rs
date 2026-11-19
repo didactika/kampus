@@ -38,6 +38,7 @@
 //! declaration lives.
 
 pub mod descriptor;
+pub mod http;
 pub mod permission;
 
 pub use descriptor::{

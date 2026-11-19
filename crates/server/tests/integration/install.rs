@@ -135,7 +135,50 @@ async fn install_creates_the_installation_once_and_its_administrator_signs_in() 
         .await
         .unwrap();
     assert!(matches!(outcome, SignInOutcome::SignedIn(_)));
-    for module in ["identity", "access", "db"] {
+    for module in ["users", "identity", "access", "db"] {
+        sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
+            "drop schema if exists {} cascade",
+            db.prefix().schema(module)
+        )))
+        .execute(db.pool())
+        .await
+        .unwrap();
+    }
+}
+
+#[tokio::test]
+async fn an_installation_created_by_an_upgrade_gets_its_first_campus_from_install() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("config.toml");
+    let simple = uuid::Uuid::now_v7().simple().to_string();
+    let prefix = format!("u{}_", &simple[simple.len() - 6..]);
+    let files = format!("file://{}", dir.path().join("files").display());
+    let mut vars = variables(&prefix, &files);
+    vars.insert(
+        "KAMPUS_SECURITY_SECRET_KEY".to_owned(),
+        SecretKey::generate().unwrap().to_base64(),
+    );
+    let env = |name: &str| vars.get(name).cloned();
+    let config = Config::load(env, None).unwrap();
+    kampus_server::commands::upgrade(&config, true).await.unwrap();
+
+    let installed = install(&path, &env, false).await.unwrap();
+    assert!(
+        matches!(&installed, Installed::New { administrator, .. } if administrator == "admin"),
+        "an installation without a campus gets its first one: {installed:?}"
+    );
+    let again = install(&path, &env, false).await.unwrap();
+    assert!(matches!(again, Installed::Existing { current: true, .. }));
+
+    let db = Database::connect(&config.database_url, prefix.parse::<Prefix>().unwrap(), 2)
+        .await
+        .unwrap();
+    let campuses = Access::new(db.clone(), Arc::new(SystemClock))
+        .campuses()
+        .await
+        .unwrap();
+    assert_eq!(campuses.len(), 1);
+    for module in ["users", "identity", "access", "db"] {
         sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
             "drop schema if exists {} cascade",
             db.prefix().schema(module)

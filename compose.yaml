@@ -95,6 +95,9 @@ services:
       KAMPUS_DATABASE_URL: postgres://kampus:kampus@postgres:5432/kampus
       KAMPUS_SERVER_UPGRADE_ON_START: "true"
       KAMPUS_SECURITY_SECRET_KEY: a2FtcHVzIGRldmVsb3BtZW50IGtleSwgbm90IHJlYWw
+      KAMPUS_ADMIN_EMAIL: admin@kampus.localhost
+      KAMPUS_ADMIN_USERNAME: admin
+      KAMPUS_ADMIN_PASSWORD: kampus development password
       KAMPUS_LOG_FORMAT: text
       KAMPUS_STORAGE_URL: s3://kampus/files
       KAMPUS_STORAGE_S3_ENDPOINT: http://s3:8333

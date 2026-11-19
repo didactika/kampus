@@ -41,6 +41,7 @@
 
 pub mod commands;
 pub mod db;
+pub mod http;
 pub mod jobs;
 pub mod model;
 pub mod module;
@@ -60,7 +61,7 @@ pub use model::{
     ProviderId, SecondFactor, Session, SessionId, SessionSummary, TokenId,
 };
 pub use module::MODULE;
-pub use ports::courier::{Courier, MemoryCourier, Message, Notice};
+pub use ports::courier::{Courier, LogCourier, MemoryCourier, Message, Notice};
 pub use ports::policy::{CampusPolicy, FixedPolicies, Policies, Throttle};
 pub use support::secret::{PasswordCost, PasswordHasher, SecretKey};
 

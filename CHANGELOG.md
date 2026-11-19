@@ -17,6 +17,7 @@ All notable changes to Kampus are recorded here, following [Keep a Changelog](ht
 
 ### Upgrade
 
+- The `server` and `all` roles now need `KAMPUS_SITE_URL` and `KAMPUS_SECURITY_SECRET_KEY` to serve the API. Until a module delivers mail, the notices of identity (invitations, links, codes) are only logged as due, without their links.
 - The configuration file is `config.toml` (was `kampus.toml`), with one table per section; variables follow `KAMPUS_<SECTION>_<KEY>`: `KAMPUS_PUBLIC_URL` is now `KAMPUS_SITE_URL`, `KAMPUS_ROLE` `KAMPUS_SERVER_ROLE`, `KAMPUS_HTTP_ADDRESS` `KAMPUS_SERVER_HTTP_ADDRESS` and `KAMPUS_UPGRADE_ON_START` `KAMPUS_SERVER_UPGRADE_ON_START`. `KAMPUS_SECURITY_SECRET_KEY` (32 bytes in base64) is required by the server and worker roles; `kampus-server install` generates it.
 - The first start, or `kampus-server upgrade`, adds the registry of components (`db` step 2) and records every component of the build; from then on every upgrade, downgrade and uninstall is in `kampus-server history`.
 - `KAMPUS_STORAGE_URL` is now required for the `server`, `worker` and `all` roles (`file:///path` or `s3://bucket/prefix` with `KAMPUS_STORAGE_S3_ENDPOINT`, `_REGION`, `_ACCESS_KEY_ID`, `_SECRET_ACCESS_KEY`); `KAMPUS_CACHE_URL` turns on the shared cache.
@@ -24,6 +25,8 @@ All notable changes to Kampus are recorded here, following [Keep a Changelog](ht
 
 ### Added
 
+- The HTTP API of identity and users under `/api/v1`: sign-up, confirmation, invitations, sign-in with the second factor, step-up, sign-out, recovery, email change and providers (OIDC start and callback); the account signed in, its password, email, sessions, API tokens, second factors and recovery codes; invitations, service accounts, account transitions and other accounts' tokens for managers; profiles with `ETag` and a required `If-Match`, preferences and system groups. Browsers use the HttpOnly `kampus_session` cookie and send `X-Kampus` with every change; integrations send an API token as `Bearer`, limited to the permissions it carries. Errors are problem details with the request id.
+- Modules declare their routes in `src/http/` through `routes` in the descriptor; the server builds the services once, finds the campus of each request and authenticates it before any route (`kampus_module::http`: `HttpContext`, `ApiResult`, `Body`, `id`, `if_match`, `with_etag`).
 - `kampus-users` (`crates/users`): profiles (names, language, time zone) saved with `If-Match`, one's own or anyone's with its permission; preferences that modules declare with a type and a default (`preferences` in the descriptor); system groups of a campus or a category whose members are added by hand, by a rule over profiles or by a sync, a rule or a sync removing only what it added.
 - Changing the email of an account in `kampus-identity`: step-up, a link to the new address, a notice to the current one, the username following the email when they were equal (`identity` step 2).
 - Commands of components: a module declares them in `src/commands/` and the server runs them as `kampus-server <component> <command>`, with `kampus-server <component> --help`; identity offers `purge` and `run-deletions`.

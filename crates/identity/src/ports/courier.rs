@@ -166,3 +166,20 @@ impl Courier for MemoryCourier {
         Ok(())
     }
 }
+
+/// Records that a notice is due, without delivering it, until a module delivers mail; the log never
+/// holds the links or codes of a notice.
+#[derive(Debug, Default, Clone, Copy)]
+pub struct LogCourier;
+
+#[async_trait]
+impl Courier for LogCourier {
+    async fn send(&self, message: Message) -> Result<()> {
+        tracing::warn!(
+            account = %message.account,
+            notice = message.notice.name(),
+            "identity notice not delivered: no mail delivery is configured"
+        );
+        Ok(())
+    }
+}

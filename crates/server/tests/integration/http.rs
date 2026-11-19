@@ -65,11 +65,14 @@ async fn call(
     }
     let files = tempfile::tempdir().unwrap();
     let ports = Ports::for_tests(files.path().to_str().unwrap()).await.unwrap();
-    let response = router(AppState {
-        db: db.clone(),
-        modules: SCHEMAS.as_slice(),
-        ports,
-    })
+    let response = router(
+        AppState {
+            db: db.clone(),
+            modules: SCHEMAS.as_slice(),
+            ports,
+        },
+        None,
+    )
     .oneshot(request.body(Body::empty()).unwrap())
     .await
     .unwrap();

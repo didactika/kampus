@@ -26,6 +26,7 @@ pub const MODULE: Module = Module {
     plugin_types: &[],
     commands: crate::commands::COMMANDS,
     preferences: crate::settings::PREFERENCES,
+    routes: Some(crate::http::routes),
 };
 ```
 
@@ -39,6 +40,7 @@ pub const MODULE: Module = Module {
 | `steps` | `src/db/steps.rs` | Applies the pending upgrade steps (DEC-082) |
 | `permissions` | `src/permissions/mod.rs` | Synchronises them at start-up and retires those no module declares (RN-021) |
 | `templates` | `src/permissions/templates.rs` | Merges the values of every module for each role template |
+| `routes` | `src/http/mod.rs`, `None` without routes | Serves them under `/api/v1`, behind the campus of the request and its authentication (see [routes](#routes)) |
 
 ## The folders
 
@@ -58,7 +60,7 @@ pub const MODULE: Module = Module {
 | `src/events/` | One file per event it publishes | from the events module (T-C.06) |
 | `src/observers/` | One file per event of another module it handles | from the events module (T-C.06) |
 | `src/settings/` | `preferences.rs`, the per-person preferences it declares (type and default); the campus settings arrive with the settings module | when it has any |
-| `src/http/` | Its routes and their request and response types | from the API module (T-C.12) |
+| `src/http/` | `mod.rs` with `routes`, and one file per area of routes with their request and response types | when it has any |
 | `src/privacy/` | Its export and erase handlers (DEC-061) | from the privacy module (T-C.12) |
 | `tests/` | Integration tests against the real ports, one test per business rule or use case | yes |
 | `web/` | Its part of the web client (DEC-004) | from the web client (T-C.13) |
@@ -66,6 +68,42 @@ pub const MODULE: Module = Module {
 | `README.md` | Optional notes for developers | no |
 
 Nothing else may sit at the top of the crate or of `src/`; `tools/repo-check` reports any other file or folder, a missing descriptor, and a registry out of date.
+
+## Routes
+
+A module serves HTTP by exposing `routes` in its descriptor: a function that builds its `axum::Router` from the `HttpContext`, the services the server composed once per process. A handler reads the services it needs by type, never builds one itself.
+
+```rust
+pub fn routes(context: &HttpContext) -> Router {
+    let shared = Shared { users: context.service::<Users>().ok() };
+    Router::new()
+        .route("/me/profile", get(my_profile).put(update_my_profile))
+        .with_state(shared)
+}
+```
+
+The server serves every module's routes under `/api/v1`, and runs two layers before any handler:
+
+| Layer | Owner | What a handler finds |
+| --- | --- | --- |
+| Campus | `kampus-server` (`http/campus.rs`) | `CurrentCampus`: the campus of the installation, or of the request's domain with a campus per domain |
+| Authentication | `kampus-identity` (`http/mod.rs`) | `Caller`: the actor, the session or API token, the campus and where the request comes from |
+
+`Caller` gives what each kind of route needs: `session()` for routes that manage credentials, which API tokens never do; `account()` for the person signed in; and `acting(identity, permission, scope)` for an operation that needs a permission, which also limits an API token to the permissions it carries. The service still checks the permission itself.
+
+A browser authenticates with the `kampus_session` cookie (HttpOnly, SameSite=Lax, Secure over HTTPS), and every request that changes something with it carries the `X-Kampus` header, which other sites cannot send. An integration sends an API token as `Authorization: Bearer kmp_...`.
+
+`kampus_module::http` holds what every module's routes share:
+
+| Item | Use |
+| --- | --- |
+| `ApiResult<T>` and `ApiError` | Return a `kampus_common::Error` with `?`; it is answered as problem details (RFC 9457) with the request id |
+| `Body<T>` | A JSON body; one that does not parse is a `validation` problem (`module.body_invalid`) |
+| `id::<T>(segment)` | An identifier from the path; one that does not parse is `not_found`, as an unknown one |
+| `if_match(headers)` | The version an update was made on; required (DEC-026), `precondition_failed` without it |
+| `with_etag(response, version)` | Answers a resource with its version as `ETag` |
+
+The routes of a module live in `src/http/`: `mod.rs` with `routes` and what its handlers share, and one file per area (`auth.rs`, `me.rs`, `accounts.rs`). The OpenAPI fragment of the module in `docs/03-design/api/` lists every route. Tests of routes go through the server, in `crates/server/tests/integration/`, as a client sees them.
 
 ## Commands of a component
 
@@ -273,5 +311,5 @@ A new kind (events, settings, routes…) is introduced by the core module that o
 
 1. a field in `kampus_module::Module`, documented with the folder it comes from;
 2. the folder in `SRC_FOLDERS` of `tools/repo-check/modules.mjs`, and, when every module must have it, a line in `REQUIRED`;
-3. what the server does with it, in `crates/server/src/modules.rs`;
+3. what the server does with it, in `crates/server/src/wiring/`;
 4. its row in the tables above, and its section in the platform and plugin developer guides.
