@@ -45,7 +45,8 @@ use kampus_common::{Error, Result};
 use kampus_courses::{CourseId, Courses, GroupId};
 use kampus_identity::Identity;
 use kampus_identity::http::Caller;
-use kampus_module::http::{ApiResult, Body, HttpContext, id, if_match, with_etag};
+use kampus_module::ServiceContext;
+use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
 use serde::Deserialize;
 use serde_json::json;
 
@@ -53,7 +54,7 @@ use crate::permissions::{ENROLMENT_MANAGE, ENROLMENT_READ, INSTANCE_MANAGE, REQU
 use crate::{Enrol, EnrolmentChange, InstanceFields, InstanceId, Joined, Method, Period};
 
 /// The routes of enrolment.
-pub fn routes(context: &HttpContext) -> Router {
+pub fn routes(context: &ServiceContext) -> Router {
     let shared = Shared {
         enrol: context.service::<Enrol>().ok(),
         courses: context.service::<Courses>().ok(),

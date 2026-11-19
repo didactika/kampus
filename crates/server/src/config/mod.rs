@@ -68,6 +68,18 @@ impl Role {
         matches!(self, Self::Server | Self::All)
     }
 
+    /// Whether the role runs background jobs.
+    #[must_use]
+    pub const fn runs_jobs(self) -> bool {
+        matches!(self, Self::Worker | Self::All)
+    }
+
+    /// Whether the role fires schedules.
+    #[must_use]
+    pub const fn runs_schedules(self) -> bool {
+        matches!(self, Self::Scheduler | Self::All)
+    }
+
     /// The name of the role in the configuration.
     #[must_use]
     pub const fn as_str(self) -> &'static str {

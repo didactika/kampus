@@ -69,6 +69,10 @@ pub(crate) struct Site {
     pub(crate) campus: ScopeId,
     /// The roles of the campus, by template.
     pub(crate) roles: std::collections::BTreeMap<&'static str, kampus_access::RoleId>,
+    /// The services of the site.
+    pub(crate) context: kampus_module::ServiceContext,
+    /// The database of the site.
+    pub(crate) db: Database,
     /// Keeps the files of the storage port.
     pub(crate) _files: tempfile::TempDir,
 }
@@ -139,10 +143,11 @@ pub(crate) async fn site() -> Site {
     let files = tempfile::tempdir().unwrap();
     let ports = Ports::for_tests(files.path().to_str().unwrap()).await.unwrap();
     let campuses = Campuses::new(Tenancy::Single, access);
+    let context = services.context.clone();
     let api = Api { services, campuses };
     let router = router(
         AppState {
-            db,
+            db: db.clone(),
             modules: SCHEMAS.as_slice(),
             ports,
         },
@@ -153,6 +158,8 @@ pub(crate) async fn site() -> Site {
         courier,
         campus,
         roles,
+        context,
+        db,
         _files: files,
     }
 }

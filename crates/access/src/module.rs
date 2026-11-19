@@ -50,5 +50,7 @@ pub const MODULE: Module = Module {
     plugin_types: &[],
     commands: &[],
     preferences: &[],
+    jobs: &[],
+    schedules: &[],
     routes: None,
 };

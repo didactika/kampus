@@ -33,7 +33,7 @@
 // ------------------------------------------------------------------------------
 
 //! The services of the modules, built once per process and shared by their routes through the
-//! [`HttpContext`]: each module reads the services it needs by type.
+//! [`ServiceContext`]: each module reads the services it needs by type.
 
 use std::sync::Arc;
 
@@ -44,7 +44,8 @@ use kampus_db::Database;
 use kampus_enrol::{Enrol, Participation};
 use kampus_identity::http::HttpSettings;
 use kampus_identity::{Courier, FixedPolicies, Identity, PasswordCost, PasswordHasher, SecretKey};
-use kampus_module::http::HttpContext;
+use kampus_module::ServiceContext;
+use kampus_tasks::Tasks;
 use kampus_users::Users;
 
 use crate::wiring::registry::MODULES;
@@ -88,7 +89,7 @@ pub struct Services {
     /// Identity, which also authenticates every request.
     pub identity: Identity,
     /// What every module's routes read.
-    pub context: HttpContext,
+    pub context: ServiceContext,
 }
 
 impl Services {
@@ -120,6 +121,7 @@ impl Services {
             Arc::new(Participation::new(parts.db.clone())),
         );
         let hasher = PasswordHasher::new(parts.password_cost.unwrap_or_default());
+        let tasks = Tasks::new(parts.db.clone());
         let enrol = Enrol::new(
             parts.db,
             access.clone(),
@@ -129,12 +131,13 @@ impl Services {
             parts.clock,
             hasher,
         );
-        let context = HttpContext::default()
+        let context = ServiceContext::default()
             .with(access.clone())
             .with(identity.clone())
             .with(users)
             .with(courses)
             .with(enrol)
+            .with(tasks)
             .with(HttpSettings {
                 api_url: format!(
                     "{}{}",

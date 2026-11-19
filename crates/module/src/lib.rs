@@ -37,12 +37,15 @@
 //! declares. Nothing is discovered from file names; the standard layout only tells developers where each
 //! declaration lives.
 
+pub mod context;
 pub mod descriptor;
 pub mod http;
 pub mod permission;
 
+pub use context::ServiceContext;
 pub use descriptor::{
-    Argument, Command, CommandContext, CommandFuture, Module, PreferenceDeclaration, PreferenceKind,
+    Argument, Command, CommandContext, CommandFuture, JobDeclaration, JobFuture, JobRun, Module,
+    PreferenceDeclaration, PreferenceKind, ScheduleDeclaration,
 };
 pub use permission::{
     PermissionDeclaration, PermissionKind, Risk, RoleTemplateDeclaration, ScopeKind, Value,

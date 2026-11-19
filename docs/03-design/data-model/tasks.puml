@@ -8,10 +8,10 @@ title Schema tasks (PostgreSQL)
 entity job_type {
   code
   module
-  schema
+  summary
   max_attempts
-  backoff
-  timeout
+  backoff_seconds
+  timeout_seconds
   concurrency
 }
 entity job {

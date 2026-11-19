@@ -818,3 +818,54 @@ async fn a_hidden_section_hides_the_sections_inside_it() {
     assert_eq!(c.sections(&w.admin, physics.id).await.unwrap().len(), 3);
     w.drop().await;
 }
+
+#[tokio::test]
+async fn a_course_whose_deletion_is_due_goes_with_everything_it_owns() {
+    let w = world().await;
+    let c = &w.courses;
+    let science = c
+        .create_category(&w.admin, w.campus, None, category("Science"), Place::Last)
+        .await
+        .unwrap();
+    let physics = c
+        .create_course(&w.admin, science.id, course("PHY101"), Place::Last)
+        .await
+        .unwrap();
+    let kept = c
+        .create_course(&w.admin, science.id, course("PHY102"), Place::Last)
+        .await
+        .unwrap();
+    c.create_group(&w.admin, physics.id, group("Red", GroupVisibility::Everyone))
+        .await
+        .unwrap();
+    c.transition_course(&w.admin, physics.id, CourseState::DeletionScheduled, None)
+        .await
+        .unwrap();
+    assert_eq!(
+        c.run_due_deletions().await.unwrap(),
+        0,
+        "the grace period has not ended"
+    );
+    sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
+        "update {}.\"course\" set deletion_due_at = now() - interval '1 minute' where id = '{}'",
+        w.db.prefix().schema("courses"),
+        physics.id
+    )))
+    .execute(w.db.pool())
+    .await
+    .unwrap();
+    assert_eq!(c.run_due_deletions().await.unwrap(), 1);
+    assert_eq!(error(c.course(physics.id).await).0, ErrorKind::NotFound);
+    assert_eq!(
+        error(
+            w.access
+                .path(&mut w.db.pool().acquire().await.unwrap(), physics.scope)
+                .await
+        )
+        .0,
+        ErrorKind::NotFound,
+        "its scope went with it"
+    );
+    assert_eq!(c.course(kept.id).await.unwrap().short_name, "PHY102");
+    w.drop().await;
+}

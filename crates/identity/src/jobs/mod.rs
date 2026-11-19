@@ -37,3 +37,59 @@
 
 pub mod delete_account;
 pub mod purge;
+
+use kampus_module::{JobDeclaration, JobFuture, JobRun, ScheduleDeclaration};
+
+use crate::Identity;
+
+/// The jobs of identity.
+pub const JOBS: &[JobDeclaration] = &[
+    JobDeclaration {
+        code: "identity.purge",
+        summary: "Remove expired one-time tokens and sessions, and sign-in attempts past their retention",
+        max_attempts: 3,
+        backoff_seconds: 300,
+        timeout_seconds: 600,
+        concurrency: Some("all"),
+        run: run_purge,
+    },
+    JobDeclaration {
+        code: "identity.run_deletions",
+        summary: "Delete the accounts whose grace period ended, leaving their tombstones",
+        max_attempts: 5,
+        backoff_seconds: 300,
+        timeout_seconds: 1800,
+        concurrency: Some("all"),
+        run: run_deletions,
+    },
+];
+
+/// The schedules of identity.
+pub const SCHEDULES: &[ScheduleDeclaration] = &[
+    ScheduleDeclaration {
+        job: "identity.purge",
+        cron: "0 3 * * *",
+        time_zone: "UTC",
+    },
+    ScheduleDeclaration {
+        job: "identity.run_deletions",
+        cron: "15 * * * *",
+        time_zone: "UTC",
+    },
+];
+
+/// Runs the purge.
+fn run_purge(run: JobRun<'_>) -> JobFuture<'_> {
+    Box::pin(async move {
+        run.services.service::<Identity>()?.purge().await?;
+        Ok(())
+    })
+}
+
+/// Runs the deletions that are due.
+fn run_deletions(run: JobRun<'_>) -> JobFuture<'_> {
+    Box::pin(async move {
+        run.services.service::<Identity>()?.run_due_deletions().await?;
+        Ok(())
+    })
+}

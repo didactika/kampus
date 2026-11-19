@@ -35,9 +35,11 @@
 //! The descriptor of a module: what it adds to the platform, as the server reads it.
 
 mod command;
+mod job;
 mod preference;
 
 pub use command::{Argument, Command, CommandContext, CommandFuture};
+pub use job::{JobDeclaration, JobFuture, JobRun, ScheduleDeclaration};
 pub use preference::{PreferenceDeclaration, PreferenceKind};
 
 use kampus_db::{ModuleSteps, Step};
@@ -68,8 +70,12 @@ pub struct Module {
     pub commands: &'static [Command],
     /// The per-person preferences it declares, from `src/settings/preferences.rs`.
     pub preferences: &'static [PreferenceDeclaration],
+    /// The kinds of background job it runs, from `src/jobs/mod.rs`.
+    pub jobs: &'static [JobDeclaration],
+    /// The schedules it declares, with their default rules, from `src/jobs/mod.rs`.
+    pub schedules: &'static [ScheduleDeclaration],
     /// Its HTTP routes, from `src/http/mod.rs`, built with the services the server composed.
-    pub routes: Option<fn(&crate::http::HttpContext) -> axum::Router>,
+    pub routes: Option<fn(&crate::ServiceContext) -> axum::Router>,
 }
 
 impl Module {

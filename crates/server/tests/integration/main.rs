@@ -45,4 +45,5 @@ mod courses;
 mod enrol;
 mod http;
 mod install;
+mod jobs;
 mod site;

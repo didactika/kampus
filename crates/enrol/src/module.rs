@@ -50,5 +50,7 @@ pub const MODULE: Module = Module {
     plugin_types: &["method"],
     commands: crate::commands::COMMANDS,
     preferences: &[],
+    jobs: crate::jobs::JOBS,
+    schedules: crate::jobs::SCHEDULES,
     routes: Some(crate::http::routes),
 };
