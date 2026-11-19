@@ -1197,6 +1197,10 @@ async fn recovery_checks_the_second_factor_first_and_never_signs_in() {
 const REDIRECT: &str = "http://localhost/callback";
 
 /// Configures a test provider for the campus: its issuer gives the claims the test needs.
+/// Keeps the tests that sign in through the mock provider one at a time: it keeps the nonce of the last
+/// authorisation of an issuer, so two flows of the same issuer at once mix their nonces.
+static PROVIDER: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
 async fn provider(w: &World, issuer: &str, linking_policy: LinkingPolicy) -> ProviderId {
     let base = std::env::var("KAMPUS_TEST_OIDC_URL").expect("KAMPUS_TEST_OIDC_URL is set");
     let issuer = format!("{base}/{issuer}");
@@ -1243,6 +1247,7 @@ async fn through_provider(w: &World, provider: ProviderId) -> Result<OidcOutcome
 
 #[tokio::test]
 async fn a_verified_email_links_by_policy_and_then_by_subject() {
+    let _provider = PROVIDER.lock().await;
     let w = world().await;
     let ana = w.person("ana@example.org").await;
     let google = provider(&w, "verified", LinkingPolicy::VerifiedEmail).await;
@@ -1341,6 +1346,7 @@ async fn provider_again(w: &World) -> Result<ProviderId> {
 
 #[tokio::test]
 async fn an_unverified_or_unknown_email_never_links() {
+    let _provider = PROVIDER.lock().await;
     let not_linked = (
         ErrorKind::Unauthenticated,
         "identity.external_identity_not_linked".to_owned(),
@@ -1386,6 +1392,7 @@ async fn an_unverified_or_unknown_email_never_links() {
 
 #[tokio::test]
 async fn the_owner_can_confirm_a_link() {
+    let _provider = PROVIDER.lock().await;
     let w = world().await;
     let ana = w.person("ana@example.org").await;
     let provider = provider(&w, "verified", LinkingPolicy::Confirm).await;
