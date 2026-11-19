@@ -52,6 +52,7 @@ kampus-db.workspace = true
 kampus-module.workspace = true
 kampus-access.workspace = true
 kampus-identity = { path = "../identity" }
+kampus-events = { path = "../events" }
 async-trait.workspace = true
 axum.workspace = true
 serde.workspace = true

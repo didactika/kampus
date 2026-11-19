@@ -43,6 +43,7 @@ use std::sync::Arc;
 
 use kampus_common::{Error, PLATFORM_VERSION, Result};
 use kampus_db::{Database, UpgradePlan, Upgrader};
+use kampus_events::{Dispatcher, Events};
 use kampus_identity::LogCourier;
 use kampus_tasks::{Scheduler, Tasks, Worker};
 use tokio::net::TcpListener;
@@ -145,6 +146,12 @@ pub async fn serve(config: &Config) -> Result<()> {
             format!("{}-{}", config.role, std::process::id()),
         );
         background.push(tokio::spawn(worker.run(stopped.clone())));
+        let dispatcher = Dispatcher::new(
+            Events::new(db.clone()),
+            crate::wiring::registry::MODULES,
+            services.context.clone(),
+        );
+        background.push(tokio::spawn(dispatcher.run(stopped.clone())));
     }
     if config.role.runs_schedules() {
         background.push(tokio::spawn(

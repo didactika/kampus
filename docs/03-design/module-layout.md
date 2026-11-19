@@ -26,6 +26,8 @@ pub const MODULE: Module = Module {
     plugin_types: &[],
     commands: crate::commands::COMMANDS,
     preferences: crate::settings::PREFERENCES,
+    events: crate::events::EVENTS,
+    listeners: crate::observers::LISTENERS,
     jobs: crate::jobs::JOBS,
     schedules: crate::jobs::SCHEDULES,
     routes: Some(crate::http::routes),
@@ -42,6 +44,7 @@ pub const MODULE: Module = Module {
 | `steps` | `src/db/steps.rs` | Applies the pending upgrade steps (DEC-082) |
 | `permissions` | `src/permissions/mod.rs` | Synchronises them at start-up and retires those no module declares (RN-021) |
 | `templates` | `src/permissions/templates.rs` | Merges the values of every module for each role template |
+| `events`, `listeners` | `src/events/mod.rs`, `src/observers/mod.rs` | Publishes nothing itself: it records the types, and runs the listeners in the worker roles (see [events and listeners](#events-and-listeners)) |
 | `jobs`, `schedules` | `src/jobs/mod.rs` | Runs the jobs in the worker roles and fires the schedules in the scheduler roles (see [background jobs](#background-jobs)) |
 | `routes` | `src/http/mod.rs`, `None` without routes | Serves them under `/api/v1`, behind the campus of the request and its authentication (see [routes](#routes)) |
 
@@ -60,8 +63,8 @@ pub const MODULE: Module = Module {
 | `src/support/` | Internal helpers that are not part of the API (hashing, encodings) | when it has any |
 | `src/jobs/` | `mod.rs` with `JOBS`, `SCHEDULES` and their handlers, which call the services | when it has any |
 | `src/commands/` | Its commands on the command line, `kampus-server <module> <command>` | when it has any |
-| `src/events/` | One file per event it publishes | from the events module (T-C.06) |
-| `src/observers/` | One file per event of another module it handles | from the events module (T-C.06) |
+| `src/events/` | `mod.rs` with `EVENTS` and the codes of the events it publishes | when it has any |
+| `src/observers/` | `mod.rs` with `LISTENERS` and their handlers, which call the services | when it has any |
 | `src/settings/` | `preferences.rs`, the per-person preferences it declares (type and default); the campus settings arrive with the settings module | when it has any |
 | `src/http/` | `mod.rs` with `routes`, and one file per area of routes with their request and response types | when it has any |
 | `src/privacy/` | Its export and erase handlers (DEC-061) | from the privacy module (T-C.12) |
@@ -107,6 +110,47 @@ A browser authenticates with the `kampus_session` cookie (HttpOnly, SameSite=Lax
 | `with_etag(response, version)` | Answers a resource with its version as `ETag` |
 
 The routes of a module live in `src/http/`: `mod.rs` with `routes` and what its handlers share, and one file per area (`auth.rs`, `me.rs`, `accounts.rs`). The OpenAPI fragment of the module in `docs/03-design/api/` lists every route. Tests of routes go through the server, in `crates/server/tests/integration/`, as a client sees them.
+
+## Events and listeners
+
+A module tells the others what changed by **publishing events**, and reacts to theirs with **listeners**; no module reads another's tables to find out. Events are declared in `src/events/mod.rs` and listeners in `src/observers/mod.rs`, exposed through `events` and `listeners` in the descriptor:
+
+```rust
+pub const EVENTS: &[EventDeclaration] = &[EventDeclaration {
+    code: "enrol.enrolment_removed",
+    version: 1,
+    summary: "An enrolment was removed",
+    fields: &["enrolment", "course", "account"],
+    audited: true,
+    personal_fields: &[],
+}];
+
+pub const LISTENERS: &[ListenerDeclaration] = &[ListenerDeclaration {
+    event: "users.system_group_members_changed",
+    name: "sync_linked_instances",
+    run: sync_linked_instances,
+}];
+```
+
+Publish inside the transaction of the change, with `Events::publish_in`: the event exists only if the change commits.
+
+```rust
+let mut event = Publish::new(ENROLMENT_REMOVED, Some(enrolment.as_uuid()), json!({ "enrolment": id, "course": course, "account": account }));
+event.summary = Some(format!("enrolment {id} removed"));
+Events::new(self.db.clone()).publish_in(&mut tx, event).await?;
+```
+
+| Rule | What it means for a module |
+| --- | --- |
+| Declared payload | Every field of `fields` is in the payload, or publishing fails; a change that breaks listeners is a new `version` |
+| After commit | Listeners run after the transaction commits, never inside it, so a failing listener never undoes the change |
+| At least once | A listener may receive an event twice: it uses the event's id or the state it finds, and does nothing twice |
+| In order per object | Events about one `object` reach a listener in the order they happened; a delivery that keeps failing holds the next ones of that object until it is dead |
+| Retries and dead letters | A failing delivery is retried with a wait that doubles, eight times, then it is dead and an operator replays it |
+| Chains | A listener that publishes passes the event it handles as `cause`; a chain stops after ten events |
+| Audit | An `audited` type writes an append-only entry of the audit log in the same transaction, with its `summary` |
+
+Payloads hold identifiers, not copies of personal data; the fields that do hold it are listed in `personal_fields` for the privacy handlers. The `worker` and `all` roles run the deliveries; operators see and replay them with `kampus-server events`.
 
 ## Background jobs
 

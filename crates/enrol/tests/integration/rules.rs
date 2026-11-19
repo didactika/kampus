@@ -102,6 +102,44 @@ fn id(actor: &Actor) -> PrincipalId {
     }
 }
 
+/// The course of these tests, in its category.
+async fn first_course(courses: &Courses, admin: &Actor, campus: kampus_access::ScopeId) -> Course {
+    let category = courses
+        .create_category(
+            admin,
+            campus,
+            None,
+            CategoryFields {
+                name: "Science".to_owned(),
+                code: None,
+                description: None,
+                visibility: Visibility::Shown,
+            },
+            Place::Last,
+        )
+        .await
+        .unwrap();
+    courses
+        .create_course(
+            admin,
+            category.id,
+            CourseFields {
+                short_name: "PHY101".to_owned(),
+                full_name: "Physics I".to_owned(),
+                code: None,
+                summary: None,
+                layout: None,
+                language_code: None,
+                starts_at: None,
+                ends_at: None,
+                visibility: Visibility::Shown,
+            },
+            Place::Last,
+        )
+        .await
+        .unwrap()
+}
+
 /// Builds the world in an installation of its own prefix.
 async fn world() -> World {
     let url = std::env::var("KAMPUS_TEST_DATABASE_URL").expect("KAMPUS_TEST_DATABASE_URL is set");
@@ -109,6 +147,7 @@ async fn world() -> World {
     let prefix: Prefix = format!("e{}_", &simple[simple.len() - 6..]).parse().unwrap();
     let db = Database::connect(&url, prefix, 6).await.unwrap();
     let modules = [
+        &kampus_events::MODULE,
         &kampus_access::MODULE,
         &kampus_identity::MODULE,
         &kampus_users::MODULE,
@@ -120,6 +159,10 @@ async fn world() -> World {
     let clock = Arc::new(SystemClock);
     let access = Access::new(db.clone(), clock.clone());
     access.sync_modules(&modules).await.unwrap();
+    kampus_events::Events::new(db.clone())
+        .sync_declarations(&modules)
+        .await
+        .unwrap();
     let platform = access.create_platform().await.unwrap();
     let campus = access.create_scope(platform, ScopeKind::Campus).await.unwrap();
     let roles = access.install_campus_roles(campus).await.unwrap();
@@ -155,40 +198,7 @@ async fn world() -> World {
         clock,
         PasswordHasher::new(COST),
     );
-    let category = courses
-        .create_category(
-            &admin,
-            campus,
-            None,
-            CategoryFields {
-                name: "Science".to_owned(),
-                code: None,
-                description: None,
-                visibility: Visibility::Shown,
-            },
-            Place::Last,
-        )
-        .await
-        .unwrap();
-    let course = courses
-        .create_course(
-            &admin,
-            category.id,
-            CourseFields {
-                short_name: "PHY101".to_owned(),
-                full_name: "Physics I".to_owned(),
-                code: None,
-                summary: None,
-                layout: None,
-                language_code: None,
-                starts_at: None,
-                ends_at: None,
-                visibility: Visibility::Shown,
-            },
-            Place::Last,
-        )
-        .await
-        .unwrap();
+    let course = first_course(&courses, &admin, campus).await;
     World {
         enrol,
         courses,
@@ -245,7 +255,7 @@ impl World {
 
     /// Drops the installation.
     async fn drop(self) {
-        for module in ["enrol", "courses", "users", "identity", "access", "db"] {
+        for module in ["enrol", "courses", "users", "identity", "access", "events", "db"] {
             sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
                 "drop schema if exists {} cascade",
                 self.db.prefix().schema(module)
@@ -778,6 +788,54 @@ async fn courses_hear_who_takes_part() {
         .1,
         "courses.transition_invalid",
         "a course with participants does not go back to draft"
+    );
+    w.drop().await;
+}
+
+#[tokio::test]
+async fn a_change_in_a_system_group_reaches_its_enrolments_through_its_event() {
+    let w = world().await;
+    let cohort = w
+        .users
+        .create_group(&w.admin, w.campus, "C2026", "Cohort 2026", GroupKind::Manual)
+        .await
+        .unwrap();
+    let linked = w
+        .enrol
+        .create_instance(
+            &w.admin,
+            w.course.id,
+            Method::SystemGroup,
+            w.fields("Cohort", "learner"),
+            None,
+            Some(cohort),
+        )
+        .await
+        .unwrap();
+    assert_eq!(linked.source, Some(cohort));
+    let services = kampus_module::ServiceContext::default().with(w.enrol.clone());
+    let dispatcher = kampus_events::Dispatcher::new(
+        kampus_events::Events::new(w.db.clone()),
+        &[&kampus_users::MODULE, &kampus_enrol::MODULE],
+        services,
+    );
+    let ana = w.person("ana@example.org").await;
+    w.users.add_member(&w.admin, cohort, id(&ana)).await.unwrap();
+    while dispatcher.run_once().await.unwrap() {}
+    assert!(
+        w.enrol
+            .is_active_participant(w.course.id, id(&ana))
+            .await
+            .unwrap(),
+        "the listener enrolled the new member at once"
+    );
+    w.users.remove_member(&w.admin, cohort, id(&ana)).await.unwrap();
+    while dispatcher.run_once().await.unwrap() {}
+    assert!(
+        !w.enrol
+            .is_active_participant(w.course.id, id(&ana))
+            .await
+            .unwrap()
     );
     w.drop().await;
 }

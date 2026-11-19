@@ -35,10 +35,12 @@
 //! The descriptor of a module: what it adds to the platform, as the server reads it.
 
 mod command;
+mod event;
 mod job;
 mod preference;
 
 pub use command::{Argument, Command, CommandContext, CommandFuture};
+pub use event::{Event, EventDeclaration, EventRun, ListenerDeclaration};
 pub use job::{JobDeclaration, JobFuture, JobRun, ScheduleDeclaration};
 pub use preference::{PreferenceDeclaration, PreferenceKind};
 
@@ -70,6 +72,10 @@ pub struct Module {
     pub commands: &'static [Command],
     /// The per-person preferences it declares, from `src/settings/preferences.rs`.
     pub preferences: &'static [PreferenceDeclaration],
+    /// The events it publishes, from `src/events/mod.rs`.
+    pub events: &'static [EventDeclaration],
+    /// Its reactions to events, from `src/observers/mod.rs`.
+    pub listeners: &'static [ListenerDeclaration],
     /// The kinds of background job it runs, from `src/jobs/mod.rs`.
     pub jobs: &'static [JobDeclaration],
     /// The schedules it declares, with their default rules, from `src/jobs/mod.rs`.

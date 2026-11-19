@@ -168,16 +168,21 @@ impl Users {
     /// `permission_denied` without `users.system_group.manage` in the group's scope.
     pub async fn remove_member(&self, actor: &Actor, group: GroupId, account: AccountId) -> Result<()> {
         let group = self.managed(actor, group).await?;
-        sqlx::query(sql(format!(
+        let mut tx = self.db.begin().await?;
+        let removed = sqlx::query(sql(format!(
             "delete from {} where group_id = $1 and account_id = $2 and origin = 'manual'",
             self.table("system_group_member")
         )))
         .bind(group.id.as_uuid())
         .bind(account.as_uuid())
-        .execute(self.db.pool())
+        .execute(&mut *tx)
         .await
-        .map(drop)
-        .map_err(kampus_db::classify)
+        .map_err(kampus_db::classify)?
+        .rows_affected();
+        if removed > 0 {
+            self.members_changed_in(&mut tx, group.id).await?;
+        }
+        tx.commit().await.map_err(kampus_db::classify)
     }
 
     /// The accounts in a system group, whatever their origin, for a module that keeps something in step
@@ -297,23 +302,44 @@ impl Users {
         .execute(&mut *tx)
         .await
         .map_err(kampus_db::classify)?;
+        self.members_changed_in(&mut tx, group).await?;
         tx.commit().await.map_err(kampus_db::classify)
     }
 
     /// Adds memberships of one origin.
     async fn insert_members(&self, group: GroupId, accounts: &[AccountId], origin: Origin) -> Result<()> {
         let ids: Vec<uuid::Uuid> = accounts.iter().map(AccountId::as_uuid).collect();
-        sqlx::query(sql(format!(
+        let mut tx = self.db.begin().await?;
+        let added = sqlx::query(sql(format!(
             "insert into {} (group_id, account_id, origin) select $1, unnest($3::uuid[]), $2 on conflict do nothing",
             self.table("system_group_member")
         )))
         .bind(group.as_uuid())
         .bind(origin.as_str())
         .bind(&ids)
-        .execute(self.db.pool())
+        .execute(&mut *tx)
         .await
-        .map(drop)
-        .map_err(kampus_db::classify)
+        .map_err(kampus_db::classify)?
+        .rows_affected();
+        if added > 0 {
+            self.members_changed_in(&mut tx, group).await?;
+        }
+        tx.commit().await.map_err(kampus_db::classify)
+    }
+
+    /// Publishes that the members of a group changed, in the transaction of the change.
+    async fn members_changed_in(&self, conn: &mut sqlx::PgConnection, group: GroupId) -> Result<()> {
+        kampus_events::Events::new(self.db.clone())
+            .publish_in(
+                conn,
+                kampus_events::Publish::new(
+                    crate::events::MEMBERS_CHANGED,
+                    Some(group.as_uuid()),
+                    serde_json::json!({ "group": group }),
+                ),
+            )
+            .await
+            .map(drop)
     }
 
     /// A group, once the actor may manage it.

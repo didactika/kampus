@@ -47,7 +47,8 @@ pub static SCHEMAS: LazyLock<Vec<ModuleSteps>> =
     LazyLock::new(|| MODULES.iter().map(|m| m.schema()).collect());
 
 /// Brings what the modules of this build declare into the database at start-up: permissions and role
-/// templates, with the values of every module for each template merged, and job types and schedules.
+/// templates, with the values of every module for each template merged, event types and listeners, and job
+/// types and schedules.
 ///
 /// # Errors
 ///
@@ -56,6 +57,9 @@ pub async fn sync_declarations(db: &kampus_db::Database) -> kampus_common::Resul
     use kampus_common::Clock;
     kampus_access::Access::new(db.clone(), std::sync::Arc::new(kampus_common::SystemClock))
         .sync_modules(MODULES)
+        .await?;
+    kampus_events::Events::new(db.clone())
+        .sync_declarations(MODULES)
         .await?;
     kampus_tasks::Tasks::new(db.clone())
         .sync_declarations(MODULES, kampus_common::SystemClock.now())

@@ -218,6 +218,15 @@ impl Enrol {
                 .await?;
         }
         let updated = self.read_enrolment_in(&mut tx, id, false).await?;
+        self.publish_in(
+            &mut tx,
+            crate::events::ENROLMENT_UPDATED,
+            id,
+            updated.course,
+            updated.account,
+            serde_json::json!({ "status": updated.status }),
+        )
+        .await?;
         tx.commit().await.map_err(kampus_db::classify)?;
         Ok(updated)
     }
@@ -320,6 +329,15 @@ impl Enrol {
         })?;
         self.grant_in(&mut tx, id, &instance, account, starts_at, ends_at)
             .await?;
+        self.publish_in(
+            &mut tx,
+            crate::events::ENROLMENT_CREATED,
+            id,
+            instance.course,
+            account,
+            serde_json::json!({ "instance": instance.id }),
+        )
+        .await?;
         tx.commit().await.map_err(kampus_db::classify)?;
         Ok(id)
     }
@@ -348,6 +366,15 @@ impl Enrol {
         .execute(&mut *tx)
         .await
         .map_err(kampus_db::classify)?;
+        self.publish_in(
+            &mut tx,
+            crate::events::ENROLMENT_REMOVED,
+            stored.id,
+            stored.course,
+            stored.account,
+            serde_json::json!({}),
+        )
+        .await?;
         tx.commit().await.map_err(kampus_db::classify)?;
         self.release_memberships(&owned).await
     }
@@ -535,5 +562,29 @@ impl Enrol {
         .map_err(kampus_db::classify)?
         .ok_or_else(|| Error::not_found("enrol.enrolment_not_found"))?;
         Ok(enrolment(&row))
+    }
+}
+
+impl Enrol {
+    /// Publishes an event about an enrolment in the transaction of its change.
+    pub(crate) async fn publish_in(
+        &self,
+        conn: &mut PgConnection,
+        code: &str,
+        enrolment: EnrolmentId,
+        course: CourseId,
+        account: PrincipalId,
+        extra: serde_json::Value,
+    ) -> Result<()> {
+        let mut payload = serde_json::json!({ "enrolment": enrolment, "course": course, "account": account });
+        if let (Some(target), Some(more)) = (payload.as_object_mut(), extra.as_object()) {
+            target.extend(more.clone());
+        }
+        let mut event = kampus_events::Publish::new(code, Some(enrolment.as_uuid()), payload);
+        event.summary = Some(format!("{code} {enrolment}"));
+        kampus_events::Events::new(self.db.clone())
+            .publish_in(conn, event)
+            .await
+            .map(drop)
     }
 }

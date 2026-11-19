@@ -191,6 +191,14 @@ impl Courses {
         }
         self.insert_section_in(&mut tx, &created, None, None, &crate::SectionFields::first())
             .await?;
+        self.publish_in(
+            &mut tx,
+            crate::events::COURSE_CREATED,
+            &created,
+            principal(actor),
+            serde_json::json!({ "course": created.id, "category": category }),
+        )
+        .await?;
         tx.commit().await.map_err(kampus_db::classify)?;
         Ok(created)
     }
@@ -404,6 +412,14 @@ impl Courses {
         .fetch_one(&mut *tx)
         .await
         .map_err(kampus_db::classify)?;
+        self.publish_in(
+            &mut tx,
+            crate::events::COURSE_STATE_CHANGED,
+            &stored,
+            principal(actor),
+            serde_json::json!({ "course": id, "from": stored.state, "to": to }),
+        )
+        .await?;
         tx.commit().await.map_err(kampus_db::classify)?;
         course(&row)
     }
@@ -438,6 +454,14 @@ impl Courses {
                 .await
                 .map_err(kampus_db::classify)?;
             self.access.delete_scope_in(&mut tx, course.scope).await?;
+            self.publish_in(
+                &mut tx,
+                crate::events::COURSE_DELETED,
+                &course,
+                None,
+                serde_json::json!({ "course": course.id }),
+            )
+            .await?;
             tx.commit().await.map_err(kampus_db::classify)?;
             deleted += 1;
         }
@@ -505,5 +529,27 @@ impl Courses {
             .iter()
             .map(|r| (CourseId::from_uuid(r.get("id")), r.get("sort_key")))
             .collect())
+    }
+}
+
+impl Courses {
+    /// Publishes an event about a course in the transaction of its change.
+    async fn publish_in(
+        &self,
+        conn: &mut PgConnection,
+        code: &str,
+        course: &Course,
+        actor: Option<PrincipalId>,
+        payload: serde_json::Value,
+    ) -> Result<()> {
+        let mut event = kampus_events::Publish::new(code, Some(course.id.as_uuid()), payload);
+        event.scope = Some(course.scope.as_uuid());
+        event.campus = Some(course.campus.as_uuid());
+        event.actor = actor.map(|a| a.as_uuid());
+        event.summary = Some(format!("{code} {}", course.short_name));
+        kampus_events::Events::new(self.db.clone())
+            .publish_in(conn, event)
+            .await
+            .map(drop)
     }
 }

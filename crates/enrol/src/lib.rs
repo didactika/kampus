@@ -38,10 +38,12 @@
 
 pub mod commands;
 pub mod db;
+pub mod events;
 pub mod http;
 pub mod jobs;
 pub mod model;
 pub mod module;
+pub mod observers;
 pub mod permissions;
 pub mod service;
 

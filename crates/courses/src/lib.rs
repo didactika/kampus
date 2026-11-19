@@ -37,6 +37,7 @@
 //! and visibility is each node's own: what a learner sees is computed from the node and its ancestors.
 
 pub mod db;
+pub mod events;
 pub mod http;
 pub mod jobs;
 pub mod model;
