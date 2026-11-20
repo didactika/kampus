@@ -35,6 +35,7 @@
 //! The service API of activities, one file per area, and what they share: reading course modules from
 //! their rows, who sees one, and the types modules provide.
 
+pub mod exception;
 pub mod material;
 pub mod module;
 pub mod purge;

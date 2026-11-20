@@ -57,30 +57,30 @@ use serde_json::json;
 const PASSWORD: &str = "a long and quiet river";
 
 /// The modules whose areas and types these tests use.
-static MODULES: &[&kampus_module::Module] = &[&kampus_activities::MODULE];
+static MODULES: &[&kampus_module::Module] = &[&kampus_activities::MODULE, &crate::exceptions::QUIZ_MODULE];
 
 /// A campus with a course of two sections, its administrator and a learner.
-struct World {
+pub(crate) struct World {
     /// The service.
-    activities: Activities,
+    pub(crate) activities: Activities,
     /// Courses.
-    courses: Courses,
+    pub(crate) courses: Courses,
     /// Files.
-    files: Files,
+    pub(crate) files: Files,
     /// The services, for the readers of files.
-    services: ServiceContext,
+    pub(crate) services: ServiceContext,
     /// The database.
-    db: Database,
+    pub(crate) db: Database,
     /// The course.
-    course: Course,
+    pub(crate) course: Course,
     /// Its first section.
-    first: Section,
+    pub(crate) first: Section,
     /// Its second section.
-    second: Section,
+    pub(crate) second: Section,
     /// The administrator.
-    admin: Actor,
+    pub(crate) admin: Actor,
     /// Someone who may only read.
-    learner: Actor,
+    pub(crate) learner: Actor,
     /// Keeps the store.
     _store: tempfile::TempDir,
 }
@@ -107,7 +107,7 @@ fn material(title: &str) -> ModuleFields {
 
 /// Builds the world.
 #[allow(clippy::too_many_lines, reason = "one installation written top to bottom")]
-async fn world() -> World {
+pub(crate) async fn world() -> World {
     let url = std::env::var("KAMPUS_TEST_DATABASE_URL").expect("KAMPUS_TEST_DATABASE_URL is set");
     let simple = uuid::Uuid::now_v7().simple().to_string();
     let prefix: Prefix = format!("v{}_", &simple[simple.len() - 6..]).parse().unwrap();
@@ -154,7 +154,10 @@ async fn world() -> World {
     let courses = Courses::new(db.clone(), access.clone(), clock.clone(), Arc::new(CampusMembers));
     let activities =
         Activities::new(db.clone(), access.clone(), courses.clone(), files.clone()).with_modules(MODULES);
-    activities.sync_declarations(&modules).await.unwrap();
+    activities
+        .sync_declarations(&[&kampus_activities::MODULE, &crate::exceptions::QUIZ_MODULE])
+        .await
+        .unwrap();
     let platform = access.create_platform().await.unwrap();
     let campus = access.create_scope(platform, ScopeKind::Campus).await.unwrap();
     access.install_campus_roles(campus).await.unwrap();
@@ -253,7 +256,7 @@ async fn world() -> World {
 
 impl World {
     /// Drops the installation.
-    async fn drop(self) {
+    pub(crate) async fn drop(self) {
         for module in [
             "activities",
             "files",
@@ -277,7 +280,7 @@ impl World {
     }
 
     /// Adds a page at the end of a section.
-    async fn add_page(&self, section: &Section, title: &str) -> Module {
+    pub(crate) async fn add_page(&self, section: &Section, title: &str) -> Module {
         self.activities
             .create_module(
                 &self.admin,
@@ -427,7 +430,11 @@ async fn course_modules_are_added_in_order_with_the_settings_their_type_keeps() 
         .await
         .unwrap_err();
     assert_eq!(denied.kind(), ErrorKind::PermissionDenied);
-    assert_eq!(w.activities.types().await.unwrap().len(), 2);
+    assert_eq!(
+        w.activities.types().await.unwrap().len(),
+        3,
+        "the two of activities and the quiz"
+    );
     w.drop().await;
 }
 

@@ -52,8 +52,8 @@ use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::permissions::MODULE_MANAGE;
-use crate::{Activities, ModuleFields, ModuleId};
+use crate::permissions::{EXCEPTION_MANAGE, MODULE_MANAGE};
+use crate::{Activities, ExceptionId, ModuleFields, ModuleId, Target, Values};
 
 /// The routes of activities.
 pub fn routes(context: &ServiceContext) -> Router {
@@ -70,6 +70,20 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/course-modules/{id}/restore", post(restore))
         .route("/course-modules/{id}/file", get(file).put(set_file))
         .route("/courses/{id}/bin", get(bin))
+        .route("/course-modules/{id}/exceptions", get(exceptions))
+        .route(
+            "/course-modules/{id}/exceptions/accounts/{account}",
+            put(set_person_exception),
+        )
+        .route(
+            "/course-modules/{id}/exceptions/groups/{group}",
+            put(set_group_exception),
+        )
+        .route(
+            "/course-modules/{id}/effective-values/{account}",
+            get(effective_values),
+        )
+        .route("/exceptions/{id}", axum::routing::delete(remove_exception))
         .route("/course-modules/{id}/references", get(references))
         .route(
             "/course-modules/{id}/references/{system}",
@@ -104,12 +118,17 @@ impl Shared {
     }
 
     /// The actor of an operation that needs a permission in a scope.
-    async fn acting<'c>(&self, caller: &'c Caller, scope: ScopeId) -> Result<&'c kampus_access::Actor> {
+    async fn acting<'c>(
+        &self,
+        caller: &'c Caller,
+        permission: &str,
+        scope: ScopeId,
+    ) -> Result<&'c kampus_access::Actor> {
         let identity = self
             .identity
             .as_ref()
             .ok_or_else(|| Error::internal("activities.identity_missing"))?;
-        caller.acting(identity, MODULE_MANAGE, scope).await
+        caller.acting(identity, permission, scope).await
     }
 }
 
@@ -176,7 +195,7 @@ async fn create(
     let section: SectionId = id(&section)?;
     let activities = shared.activities()?;
     let scope = activities.section_scope(section).await?;
-    let actor = shared.acting(&caller, scope).await?;
+    let actor = shared.acting(&caller, MODULE_MANAGE, scope).await?;
     let created = activities
         .create_module(actor, section, &body.type_code, body.fields, body.place)
         .await?;
@@ -206,7 +225,9 @@ async fn update(
     let module: ModuleId = id(&module)?;
     let activities = shared.activities()?;
     let expected = Some(if_match(&headers)?);
-    let actor = shared.acting(&caller, activities.scope_of(module).await?).await?;
+    let actor = shared
+        .acting(&caller, MODULE_MANAGE, activities.scope_of(module).await?)
+        .await?;
     let updated = activities.update_module(actor, module, fields, expected).await?;
     let version = updated.version;
     Ok(with_etag(Json(updated), version))
@@ -220,7 +241,9 @@ async fn remove(
 ) -> ApiResult<StatusCode> {
     let module: ModuleId = id(&module)?;
     let activities = shared.activities()?;
-    let actor = shared.acting(&caller, activities.scope_of(module).await?).await?;
+    let actor = shared
+        .acting(&caller, MODULE_MANAGE, activities.scope_of(module).await?)
+        .await?;
     activities.delete_module(actor, module).await?;
     Ok(StatusCode::NO_CONTENT)
 }
@@ -234,7 +257,9 @@ async fn move_to(
 ) -> ApiResult<Response> {
     let module: ModuleId = id(&module)?;
     let activities = shared.activities()?;
-    let actor = shared.acting(&caller, activities.scope_of(module).await?).await?;
+    let actor = shared
+        .acting(&caller, MODULE_MANAGE, activities.scope_of(module).await?)
+        .await?;
     let moved = activities
         .move_module(actor, module, to.section, to.place)
         .await?;
@@ -252,7 +277,7 @@ async fn copy(
     let module: ModuleId = id(&module)?;
     let activities = shared.activities()?;
     let scope = activities.section_scope(to.section).await?;
-    let actor = shared.acting(&caller, scope).await?;
+    let actor = shared.acting(&caller, MODULE_MANAGE, scope).await?;
     let copied = activities
         .copy_module(actor, module, to.section, to.place)
         .await?;
@@ -267,7 +292,9 @@ async fn restore(
 ) -> ApiResult<Response> {
     let module: ModuleId = id(&module)?;
     let activities = shared.activities()?;
-    let actor = shared.acting(&caller, activities.scope_of(module).await?).await?;
+    let actor = shared
+        .acting(&caller, MODULE_MANAGE, activities.scope_of(module).await?)
+        .await?;
     Ok(Json(activities.restore_module(actor, module).await?).into_response())
 }
 
@@ -294,7 +321,9 @@ async fn set_file(
 ) -> ApiResult<Response> {
     let module: ModuleId = id(&module)?;
     let activities = shared.activities()?;
-    let actor = shared.acting(&caller, activities.scope_of(module).await?).await?;
+    let actor = shared
+        .acting(&caller, MODULE_MANAGE, activities.scope_of(module).await?)
+        .await?;
     let file = activities.set_module_file(actor, module, body.file).await?;
     Ok(Json(json!({ "file": file })).into_response())
 }
@@ -381,7 +410,7 @@ async fn upsert(
     let reference = ExternalReference::new(&system, &external_id)?;
     let activities = shared.activities()?;
     let scope = activities.section_scope(section).await?;
-    let actor = shared.acting(&caller, scope).await?;
+    let actor = shared.acting(&caller, MODULE_MANAGE, scope).await?;
     let (module, created) = activities
         .upsert_module_by_reference(actor, section, &body.type_code, &reference, body.fields)
         .await?;
@@ -391,4 +420,92 @@ async fn upsert(
         StatusCode::OK
     };
     Ok((status, Json(module)).into_response())
+}
+
+/// An exception to grant.
+#[derive(Debug, Deserialize)]
+struct ExceptionBody {
+    /// What it changes.
+    #[serde(flatten)]
+    values: Values,
+    /// Why it is granted.
+    #[serde(default)]
+    reason: Option<String>,
+}
+
+/// The exceptions of a course module.
+async fn exceptions(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(module): Path<String>,
+) -> ApiResult<Response> {
+    let module: ModuleId = id(&module)?;
+    let activities = shared.activities()?;
+    let scope = activities.scope_of(module).await?;
+    let actor = shared.acting(&caller, EXCEPTION_MANAGE, scope).await?;
+    Ok(Json(activities.exceptions(actor, module).await?).into_response())
+}
+
+/// Grants an exception to a person.
+async fn set_person_exception(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((module, account)): Path<(String, String)>,
+    Body(body): Body<ExceptionBody>,
+) -> ApiResult<Response> {
+    let module: ModuleId = id(&module)?;
+    let activities = shared.activities()?;
+    let scope = activities.scope_of(module).await?;
+    let actor = shared.acting(&caller, EXCEPTION_MANAGE, scope).await?;
+    let target = Target::Person(id(&account)?);
+    let granted = activities
+        .set_exception(actor, module, target, body.values, body.reason.as_deref())
+        .await?;
+    Ok(Json(granted).into_response())
+}
+
+/// Grants an exception to a group.
+async fn set_group_exception(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((module, group)): Path<(String, String)>,
+    Body(body): Body<ExceptionBody>,
+) -> ApiResult<Response> {
+    let module: ModuleId = id(&module)?;
+    let activities = shared.activities()?;
+    let scope = activities.scope_of(module).await?;
+    let actor = shared.acting(&caller, EXCEPTION_MANAGE, scope).await?;
+    let target = Target::Group(id(&group)?);
+    let granted = activities
+        .set_exception(actor, module, target, body.values, body.reason.as_deref())
+        .await?;
+    Ok(Json(granted).into_response())
+}
+
+/// Removes an exception.
+async fn remove_exception(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(exception): Path<String>,
+) -> ApiResult<StatusCode> {
+    let exception: ExceptionId = id(&exception)?;
+    let activities = shared.activities()?;
+    let scope = activities.exception_scope(exception).await?;
+    let actor = shared.acting(&caller, EXCEPTION_MANAGE, scope).await?;
+    activities.remove_exception(actor, exception).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// What applies to a person on a course module; a person asks for their own, a manager for anyone's.
+async fn effective_values(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((module, account)): Path<(String, String)>,
+) -> ApiResult<Response> {
+    let module: ModuleId = id(&module)?;
+    let activities = shared.activities()?;
+    let values = activities
+        .effective_values_for(&caller.actor, module, id(&account)?)
+        .await?;
+    Ok(Json(values).into_response())
 }

@@ -615,3 +615,26 @@ impl Courses {
         .ok_or_else(|| Error::not_found("courses.group_not_found"))
     }
 }
+
+impl Courses {
+    /// The groups of a course a person belongs to, by any origin; for modules that resolve what applies to a
+    /// person, which never show them to anyone.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn groups_of(&self, course: CourseId, account: PrincipalId) -> Result<Vec<GroupId>> {
+        let rows: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+            "select distinct g.id from {} g join {} m on m.group_id = g.id
+             where g.course_id = $1 and m.account_id = $2",
+            self.table("group"),
+            self.table("group_member")
+        )))
+        .bind(course.as_uuid())
+        .bind(account.as_uuid())
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(rows.into_iter().map(GroupId::from_uuid).collect())
+    }
+}

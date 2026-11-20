@@ -33,8 +33,8 @@
 // ------------------------------------------------------------------------------
 
 //! The upgrade steps of the `activities` schema: the types modules provide, course modules placed in
-//! sections with their settings and files, and the recycle bin; and the external references of course
-//! modules.
+//! sections with their settings and files, and the recycle bin; the external references of course
+//! modules; and the exceptions of dates, time limits and attempts.
 
 use kampus_db::Step;
 use kampus_db::schema::{Change, Check, Column, ColumnDefault, ForeignKey, Index, OnDelete, Table, Type};
@@ -206,5 +206,52 @@ pub const STEPS: &[Step] = &[
             "course_module_reference",
             "course_module"
         )],
+    },
+    Step {
+        sequence: 3,
+        name: "exceptions",
+        revert: &[],
+        action: None,
+        changes: &[Change::CreateTable(Table {
+            name: "exception",
+            columns: &[
+                Column::new("id", Type::Uuid),
+                Column::new("course_module_id", Type::Uuid),
+                Column::new("account_id", Type::Uuid).nullable(),
+                Column::new("group_id", Type::Uuid).nullable(),
+                Column::new("opens_at", Type::Timestamptz).nullable(),
+                Column::new("closes_at", Type::Timestamptz).nullable(),
+                Column::new("due_at", Type::Timestamptz).nullable(),
+                Column::new("cutoff_at", Type::Timestamptz).nullable(),
+                Column::new("time_limit_seconds", Type::Integer).nullable(),
+                Column::new("attempts", Type::Integer).nullable(),
+                Column::new("reason", Type::Text).nullable(),
+                Column::new("created_by", Type::Uuid).nullable(),
+                Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+                Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+            ],
+            primary_key: &["id"],
+            unique: &[
+                &["course_module_id", "account_id"],
+                &["course_module_id", "group_id"],
+            ],
+            foreign_keys: &[
+                own(&["course_module_id"], "course_module", OnDelete::Cascade),
+                other(&["account_id"], "identity", "account", OnDelete::Cascade),
+                other(&["group_id"], "courses", "group", OnDelete::Cascade),
+            ],
+            checks: &[
+                Check::ExactlyOne(&["account_id", "group_id"]),
+                Check::Positive("time_limit_seconds"),
+                Check::NonNegative("attempts"),
+            ],
+            indexes: &[Index {
+                columns: &["group_id"],
+                unique: false,
+            }],
+            without_natural_key: Some(
+                "one exception per course module and person, and one per course module and group",
+            ),
+        })],
     },
 ];

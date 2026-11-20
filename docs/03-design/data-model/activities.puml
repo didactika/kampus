@@ -69,7 +69,7 @@ entity exception {
   closes_at
   due_at
   cutoff_at
-  time_limit
+  time_limit_seconds
   attempts
   reason
   created_by
