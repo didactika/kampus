@@ -1,0 +1,84 @@
+# ------------------------------------------------------------------------------
+#
+#     _  __    _    __  __ ____  _   _ ____
+#    | |/ /   / \  |  \/  |  _ \| | | / ___|
+#    | ' /   / _ \ | |\/| | |_) | | | \___ \
+#    | . \  / ___ \| |  | |  __/| |_| |___) |
+#    |_|\_\/_/   \_\_|  |_|_|    \___/|____/
+#
+#    Knowledge Academic Modular Platform for Universal Study
+#
+# ------------------------------------------------------------------------------
+#
+# This file is part of Kampus - https://github.com/didactika/kampus
+#
+# Kampus is free software: you can redistribute it and/or modify it under the terms of the
+# GNU Affero General Public License as published by the Free Software Foundation, either
+# version 3 of the License, or (at your option) any later version.
+#
+# Kampus is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License along with Kampus.
+# If not, see <https://www.gnu.org/licenses/>.
+#
+# @package   kampus-records
+# @copyright 2026 Didactika
+# @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
+# @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
+# @since     0.1.0
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# ------------------------------------------------------------------------------
+
+
+[package]
+name = "kampus-records"
+description = "Academic records of Kampus: grade records, categories and the grades people get"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[package.metadata.kampus]
+kind = "module"
+
+[dependencies]
+kampus-common.workspace = true
+kampus-db.workspace = true
+kampus-module.workspace = true
+kampus-access.workspace = true
+kampus-activities = { path = "../activities" }
+kampus-courses = { path = "../courses" }
+kampus-events = { path = "../events" }
+kampus-identity = { path = "../identity" }
+axum.workspace = true
+rust_decimal.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sqlx.workspace = true
+time.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+kampus-events = { path = "../events" }
+kampus-tasks = { path = "../tasks" }
+kampus-settings = { path = "../settings" }
+kampus-customise = { path = "../customise" }
+kampus-identity = { path = "../identity" }
+kampus-files = { path = "../files" }
+kampus-common.workspace = true
+kampus-storage.workspace = true
+kampus-storage-opendal = { path = "../storage/adapters/opendal" }
+rust_decimal.workspace = true
+serde_json.workspace = true
+sqlx.workspace = true
+tempfile.workspace = true
+tokio.workspace = true
+uuid.workspace = true
+
+[lints]
+workspace = true

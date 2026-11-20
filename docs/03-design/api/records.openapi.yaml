@@ -5,34 +5,43 @@ info:
   description: >-
     Grade records, categories, grades, overrides, locks, scales and letters, reports and exports. Every read
     goes through the visibility service (RN-103). Conventions of DEC-025 and DEC-026; exact numbers as
-    strings (DEC-023).
+    strings (DEC-023). Scales, letters, formulas, aggregation and exports arrive after the first part.
 paths:
   /api/v1/records/courses/{course_id}/records:
-    get: { summary: The records tree of a course (categories and records), responses: { '200': { description: Tree } } }
+    get: { summary: The records tree of a course (categories and records the caller may see), responses: { '200': { description: Tree } } }
   /api/v1/records/courses/{course_id}/records/categories:
-    post: { summary: Add a category with its aggregation method, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Added } } }
+    post: { summary: Add a category with its aggregation method, responses: { '201': { description: Added } } }
   /api/v1/records/record-categories/{category_id}:
-    patch: { summary: 'Change method, drop lowest, keep highest, exclude empty', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated; a recalculation job is queued } } }
+    put: { summary: 'Change name, method, drop lowest, keep highest, exclude empty', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated }, '412': { description: Changed since it was read } } }
+    delete: { summary: Delete an empty category with its total, responses: { '204': { description: Deleted }, '409': { description: The category is the root or is not empty } } }
   /api/v1/records/courses/{course_id}/records/items:
-    post: { summary: Add a manual grade record or a formula, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Added } } }
+    post: { summary: Add a manual grade record, responses: { '201': { description: Added } } }
   /api/v1/records/records/{record_id}:
-    patch: { summary: 'Change settings; each attribute checked against its permission (RN-108)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
-    delete: { summary: 'Delete a manual record; refused while a formula depends on it (RN-107)', responses: { '204': { description: Deleted }, '409': { description: Used by a formula } } }
+    get: { summary: A grade record the caller may see, responses: { '200': { description: The record } } }
+    put: { summary: 'Change settings; hiding needs records.hide (RN-108); a locked record is not changed', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated }, '409': { description: Locked } } }
+    delete: { summary: Delete a manual record, responses: { '204': { description: Deleted }, '409': { description: Not a manual record } } }
   /api/v1/records/records/{record_id}/grades:
-    get: { summary: Grades of a record visible to the caller, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page of grades } } }
-    put: { summary: 'Set grades (idempotent upserts on record and person, RN-096)', responses: { '200': { description: Set; recalculation queued } } }
+    put: { summary: 'Set up to 500 grades, all or none (idempotent upserts on record and person, RN-096); each answer says whether it changed anything', responses: { '200': { description: Set }, '409': { description: Locked } } }
   /api/v1/records/records/{record_id}/grades/{account_id}:
     get: { summary: One grade with its entries (history), responses: { '200': { description: Grade and entries } } }
   /api/v1/records/records/{record_id}/grades/{account_id}/override:
-    put: { summary: 'Override (RN-098)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Overridden } } }
-    delete: { summary: Remove the override, responses: { '204': { description: Removed } } }
+    put: { summary: Override with a value that wins over later activity grades (RN-098), responses: { '200': { description: Overridden } } }
+    delete: { summary: Remove the override, responses: { '200': { description: Removed } } }
+  /api/v1/records/records/{record_id}/grades/{account_id}/lock:
+    put: { summary: Lock one grade, responses: { '200': { description: Locked } } }
+    delete: { summary: Unlock one grade, responses: { '200': { description: Unlocked } } }
+  /api/v1/records/records/{record_id}/grades/{account_id}/hidden:
+    put: { summary: Hide a grade until a date (records.hide), responses: { '200': { description: Hidden } } }
+    delete: { summary: Show a hidden grade, responses: { '200': { description: Shown } } }
   /api/v1/records/records/{record_id}/lock:
-    put: { summary: Lock a record, responses: { '204': { description: Locked } } }
-    delete: { summary: Unlock a record, responses: { '204': { description: Unlocked } } }
+    put: { summary: Lock a record, responses: { '200': { description: Locked } } }
+    delete: { summary: Unlock a record, responses: { '200': { description: Unlocked } } }
   /api/v1/records/courses/{course_id}/grader-report:
     get: { summary: 'Grader report, paginated on the server (RN-109)', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page of the report } } }
   /api/v1/records/courses/{course_id}/my-grades:
-    get: { summary: 'The caller''s grades and totals as they may see them', responses: { '200': { description: Grades } } }
+    get: { summary: 'The caller''s grades as they may see them', responses: { '200': { description: Grades } } }
+  /api/v1/records/courses/{course_id}/grades/{account_id}:
+    get: { summary: The grades of a person as the caller may see them, responses: { '200': { description: Grades } } }
   /api/v1/records/courses/{course_id}/records/export:
     post: { summary: Export grades (a job; the file is available when done), responses: { '202': { description: Export job accepted } } }
   /api/v1/records/scopes/{scope_id}/scales:
@@ -43,4 +52,3 @@ components:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
     After: { name: after, in: query, schema: { type: string } }
     IfMatch: { name: If-Match, in: header, required: true, schema: { type: string } }
-    IdempotencyKey: { name: Idempotency-Key, in: header, schema: { type: string } }

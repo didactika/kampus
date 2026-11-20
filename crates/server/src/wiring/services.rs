@@ -155,6 +155,12 @@ impl Services {
             files.clone(),
         )
         .with_modules(MODULES);
+        let records = kampus_records::Records::new(
+            parts.db.clone(),
+            access.clone(),
+            courses.clone(),
+            activities.clone(),
+        );
         let hasher = PasswordHasher::new(parts.password_cost.unwrap_or_default());
         let tasks = Tasks::new(parts.db.clone());
         let events = Events::new(parts.db.clone());
@@ -179,6 +185,7 @@ impl Services {
             .with(customise)
             .with(files)
             .with(activities)
+            .with(records)
             .with(HttpSettings {
                 api_url,
                 site_url: parts.site_url,

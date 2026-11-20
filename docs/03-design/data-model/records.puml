@@ -9,6 +9,7 @@ entity category {
   id <<PK>>
   course_id <<FK>>
   parent_id <<FK>>
+  root_course_id <<FK>>
   name
   method
   drop_lowest
@@ -24,6 +25,8 @@ entity record {
   course_module_id <<FK>>
   item_number
   category_id <<FK>>
+  total_of_id <<FK>>
+  title
   grade_type
   min
   max
@@ -32,10 +35,10 @@ entity record {
   weight
   extra_credit
   multiplier
-  offset
+  offset_value
   hidden_until
   locked_at
-  calc_version
+  sort_key
   version
 }
 entity entry {
@@ -46,7 +49,7 @@ entity entry {
   text
   feedback
   source
-  actor_id
+  actor
   at
 }
 entity grade {
@@ -54,6 +57,7 @@ entity grade {
   account_id <<FK>>
   raw
   final
+  text
   overridden
   excluded
   hidden_until
@@ -103,7 +107,8 @@ entity grade_condition {
 }
 
 category }o--o| category : parent
-record }o--|| category
+record }o--|| category : sits in
+record }o--o| category : totals
 record }o--|| scale
 entry }o--|| record
 grade }o--|| record
