@@ -41,9 +41,29 @@ use bytes::Bytes;
 use kampus_common::{Error, Result, Timestamp};
 use kampus_module::ServiceContext;
 use kampus_storage::StorageKey;
+use sqlx::Row;
 
 use crate::support::sign;
 use crate::{File, FileId, Files, LINK_LIFETIME, SignedUrl, sql};
+
+/// What a link reads: the original, or a conversion of it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Part<'a> {
+    /// The file as uploaded.
+    Original,
+    /// A conversion of it, such as `thumbnail`.
+    Conversion(&'a str),
+}
+
+impl Part<'_> {
+    /// The name the signature binds; empty for the original.
+    const fn name(&self) -> &str {
+        match self {
+            Self::Original => "",
+            Self::Conversion(kind) => kind,
+        }
+    }
+}
 
 impl Files {
     /// A link that reads a file for a few minutes, for a principal who may read it.
@@ -58,39 +78,54 @@ impl Files {
         services: &ServiceContext,
     ) -> Result<SignedUrl> {
         let found = self.file(principal, id, services).await?;
-        let expires = time::OffsetDateTime::now_utc() + LINK_LIFETIME;
-        let expires_at = Timestamp::from_offset_date_time(expires);
-        let unix = expires.unix_timestamp();
-        let signature = sign::signature(&self.signing_key, found.id.as_uuid(), unix);
-        Ok(SignedUrl {
-            url: format!(
-                "{}/{}/content/{}?expires={unix}&signature={signature}",
-                self.api_url.trim_end_matches('/'),
-                crate::module::NAME,
-                found.id
-            ),
-            expires_at,
-        })
+        Ok(self.link(found.id, Part::Original))
     }
 
-    /// The content of a file behind a link that is valid and has not expired.
+    /// A link to a part of a file, signed for a few minutes.
+    pub(crate) fn link(&self, id: FileId, part: Part<'_>) -> SignedUrl {
+        let expires = time::OffsetDateTime::now_utc() + LINK_LIFETIME;
+        let unix = expires.unix_timestamp();
+        let signature = sign::signature(&self.signing_key, id.as_uuid(), part.name(), unix);
+        let kind = match part {
+            Part::Original => String::new(),
+            Part::Conversion(kind) => format!("&kind={kind}"),
+        };
+        SignedUrl {
+            url: format!(
+                "{}/{}/content/{id}?expires={unix}&signature={signature}{kind}",
+                self.api_url.trim_end_matches('/'),
+                crate::module::NAME,
+            ),
+            expires_at: Timestamp::from_offset_date_time(expires),
+        }
+    }
+
+    /// The content behind a link that is valid and has not expired: the file, its media type and its
+    /// content, or those of the conversion the link names.
     ///
     /// # Errors
     ///
-    /// `not_found` (`files.link_invalid`) for a link that was changed or expired, or a file that is gone;
-    /// `unavailable` when storage fails.
-    pub async fn content(&self, id: FileId, expires: i64, signature: &str) -> Result<(File, Bytes)> {
+    /// `not_found` (`files.link_invalid`) for a link that was changed or expired, or a file or conversion
+    /// that is gone; `unavailable` when storage fails.
+    pub async fn content(
+        &self,
+        id: FileId,
+        part: Part<'_>,
+        expires: i64,
+        signature: &str,
+    ) -> Result<(File, String, Bytes)> {
         let now = time::OffsetDateTime::now_utc().unix_timestamp();
-        if expires < now || !sign::verify(&self.signing_key, id.as_uuid(), expires, signature) {
+        if expires < now || !sign::verify(&self.signing_key, id.as_uuid(), part.name(), expires, signature) {
             return Err(Error::not_found("files.link_invalid"));
         }
-        let found = self
-            .stored(id)
-            .await
-            .map_err(|_| Error::not_found("files.link_invalid"))?;
-        let key = self.key_of(id).await?;
+        let invalid = |_| Error::not_found("files.link_invalid");
+        let found = self.stored(id).await.map_err(invalid)?;
+        let (key, media_type) = match part {
+            Part::Original => (self.key_of(id).await?, found.media_type.clone()),
+            Part::Conversion(kind) => self.converted_key(id, kind).await.map_err(invalid)?,
+        };
         let data = self.storage()?.get(&key).await?;
-        Ok((found, data))
+        Ok((found, media_type, data))
     }
 
     /// The storage key of the content of a file.
@@ -106,5 +141,26 @@ impl Files {
         .map_err(kampus_db::classify)?
         .ok_or_else(|| Error::not_found("files.file_not_found"))?;
         StorageKey::new(key)
+    }
+
+    /// The storage key and media type of a finished conversion of a file.
+    async fn converted_key(&self, id: FileId, kind: &str) -> Result<(StorageKey, String)> {
+        let row = sqlx::query(sql(format!(
+            "select r.storage_key, r.media_type from {} f join {} c on c.source_blob_id = f.blob_id
+             join {} r on r.id = c.result_blob_id where f.id = $1 and c.kind = $2 and c.state = 'done'",
+            self.table("file"),
+            self.table("conversion"),
+            self.table("blob")
+        )))
+        .bind(id.as_uuid())
+        .bind(kind)
+        .fetch_optional(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?
+        .ok_or_else(|| Error::not_found("files.conversion_not_found"))?;
+        Ok((
+            StorageKey::new(row.get::<String, _>("storage_key"))?,
+            row.get("media_type"),
+        ))
     }
 }

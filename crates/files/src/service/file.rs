@@ -187,24 +187,7 @@ impl Files {
                 .await?;
         }
         let blob: uuid::Uuid = row.get("blob_id");
-        let left: i32 = sqlx::query_scalar(sql(format!(
-            "update {} set ref_count = ref_count - 1 where id = $1 returning ref_count",
-            self.table("blob")
-        )))
-        .bind(blob)
-        .fetch_one(&mut *conn)
-        .await
-        .map_err(kampus_db::classify)?;
-        if left == 0 {
-            sqlx::query(sql(format!(
-                "insert into {} (blob_id) values ($1) on conflict do nothing",
-                self.table("trash")
-            )))
-            .bind(blob)
-            .execute(&mut *conn)
-            .await
-            .map_err(kampus_db::classify)?;
-        }
+        self.release_blob_in(conn, blob).await?;
         let payload = json!({ "file": removed.id, "area": removed.area });
         self.publish_in(conn, crate::events::DETACHED, &removed, payload)
             .await

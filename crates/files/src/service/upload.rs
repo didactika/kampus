@@ -229,7 +229,7 @@ impl Files {
 
     /// The blob of some content: the one stored with its hash, whose scan status a fresh scan updates, or a
     /// new one in storage, which waits in the trash until a file uses it.
-    async fn store(&self, content: Bytes, media_type: &str, status: &str) -> Result<uuid::Uuid> {
+    pub(super) async fn store(&self, content: Bytes, media_type: &str, status: &str) -> Result<uuid::Uuid> {
         let hash = kampus_storage::sha256(&content);
         let existing: Option<uuid::Uuid> = sqlx::query_scalar(sql(format!(
             "update {} set scan_status = case when $2 = 'clean' then $2 else scan_status end

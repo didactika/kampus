@@ -35,6 +35,8 @@
 //! The service API of files, one file per area, and what they share: reading files from their rows, the
 //! principal behind an actor, publishing, and the areas modules declare.
 
+pub mod convert;
+pub mod copy;
 pub mod file;
 pub mod purge;
 pub mod quota;
@@ -136,5 +138,51 @@ impl Files {
         .await
         .map_err(kampus_db::classify)?;
         tx.commit().await.map_err(kampus_db::classify)
+    }
+}
+
+impl Files {
+    /// Counts one more use of a blob, which takes it out of the trash.
+    pub(crate) async fn use_blob_in(&self, conn: &mut PgConnection, blob: uuid::Uuid) -> Result<()> {
+        sqlx::query(sql(format!(
+            "update {} set ref_count = ref_count + 1 where id = $1",
+            self.table("blob")
+        )))
+        .bind(blob)
+        .execute(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
+        sqlx::query(sql(format!(
+            "delete from {} where blob_id = $1",
+            self.table("trash")
+        )))
+        .bind(blob)
+        .execute(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(())
+    }
+
+    /// Counts one use less of a blob; one no file uses any more goes to the trash.
+    pub(crate) async fn release_blob_in(&self, conn: &mut PgConnection, blob: uuid::Uuid) -> Result<()> {
+        let left: i32 = sqlx::query_scalar(sql(format!(
+            "update {} set ref_count = greatest(ref_count - 1, 0) where id = $1 returning ref_count",
+            self.table("blob")
+        )))
+        .bind(blob)
+        .fetch_one(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
+        if left == 0 {
+            sqlx::query(sql(format!(
+                "insert into {} (blob_id) values ($1) on conflict do nothing",
+                self.table("trash")
+            )))
+            .bind(blob)
+            .execute(&mut *conn)
+            .await
+            .map_err(kampus_db::classify)?;
+        }
+        Ok(())
     }
 }

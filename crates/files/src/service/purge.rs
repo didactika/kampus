@@ -33,7 +33,7 @@
 // ------------------------------------------------------------------------------
 
 //! Purging: uploads that expired, files nobody attached within a day, and content that stayed in the trash
-//! past its retention, which is deleted from storage.
+//! past its retention, which is deleted from storage with its conversions, whose results are used once less.
 
 use kampus_common::Result;
 use kampus_storage::StorageKey;
@@ -96,15 +96,30 @@ impl Files {
         .map_err(kampus_db::classify)?;
         for row in &expired {
             let id: uuid::Uuid = row.get("id");
+            let mut tx = self.db.begin().await?;
+            let results: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+                "select result_blob_id from {} where source_blob_id = $1 and result_blob_id is not null",
+                self.table("conversion")
+            )))
+            .bind(id)
+            .fetch_all(&mut *tx)
+            .await
+            .map_err(kampus_db::classify)?;
             let deleted = sqlx::query(sql(format!(
                 "delete from {} where id = $1 and ref_count = 0",
                 self.table("blob")
             )))
             .bind(id)
-            .execute(self.db.pool())
+            .execute(&mut *tx)
             .await
             .map_err(kampus_db::classify)?
             .rows_affected();
+            if deleted > 0 {
+                for result in results {
+                    self.release_blob_in(&mut tx, result).await?;
+                }
+            }
+            tx.commit().await.map_err(kampus_db::classify)?;
             if deleted > 0 {
                 self.storage()?
                     .delete(&StorageKey::new(row.get::<String, _>("storage_key"))?)

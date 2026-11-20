@@ -32,23 +32,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The jobs of files, run by the task runner: the hourly purge of expired uploads, files nobody attached
-//! and content past its time in the trash.
+//! The jobs of files, run by the task runner: conversions, and the hourly purge of expired uploads, files
+//! nobody attached and content past its time in the trash.
 
 use kampus_module::{JobDeclaration, JobFuture, JobRun, ScheduleDeclaration};
 
 use crate::Files;
 
 /// The jobs of this module.
-pub const JOBS: &[JobDeclaration] = &[JobDeclaration {
-    code: "files.purge",
-    summary: "Remove expired uploads, files nobody attached, and content past its time in the trash",
-    max_attempts: 3,
-    backoff_seconds: 300,
-    timeout_seconds: 1800,
-    concurrency: Some("all"),
-    run: purge,
-}];
+pub const JOBS: &[JobDeclaration] = &[
+    JobDeclaration {
+        code: "files.convert",
+        summary: "Make a conversion of some content, such as a thumbnail",
+        max_attempts: 5,
+        backoff_seconds: 30,
+        timeout_seconds: 600,
+        concurrency: None,
+        run: convert,
+    },
+    JobDeclaration {
+        code: "files.purge",
+        summary: "Remove expired uploads, files nobody attached, and content past its time in the trash",
+        max_attempts: 3,
+        backoff_seconds: 300,
+        timeout_seconds: 1800,
+        concurrency: Some("all"),
+        run: purge,
+    },
+];
 
 /// The schedules of this module.
 pub const SCHEDULES: &[ScheduleDeclaration] = &[ScheduleDeclaration {
@@ -56,6 +67,21 @@ pub const SCHEDULES: &[ScheduleDeclaration] = &[ScheduleDeclaration {
     cron: "20 * * * *",
     time_zone: "UTC",
 }];
+
+/// Makes the conversion of the payload; a payload without one has nothing to do.
+fn convert(run: JobRun<'_>) -> JobFuture<'_> {
+    Box::pin(async move {
+        let Some(conversion) = run
+            .payload
+            .get("conversion")
+            .and_then(serde_json::Value::as_str)
+            .and_then(|c| uuid::Uuid::parse_str(c).ok())
+        else {
+            return Ok(());
+        };
+        run.services.service::<Files>()?.convert(conversion).await
+    })
+}
 
 /// Runs the purge.
 fn purge(run: JobRun<'_>) -> JobFuture<'_> {

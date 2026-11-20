@@ -40,10 +40,11 @@ use kampus_files::support::sign::{signature, verify};
 fn a_link_is_bound_to_its_file_its_expiry_and_its_key() {
     let key = [7_u8; 32];
     let file = uuid::Uuid::now_v7();
-    let signed = signature(&key, file, 1_900_000_000);
-    assert!(verify(&key, file, 1_900_000_000, &signed));
-    assert!(!verify(&key, uuid::Uuid::now_v7(), 1_900_000_000, &signed));
-    assert!(!verify(&key, file, 1_900_000_001, &signed));
-    assert!(!verify(&[8_u8; 32], file, 1_900_000_000, &signed));
-    assert!(!verify(&key, file, 1_900_000_000, "not base64!"));
+    let signed = signature(&key, file, "", 1_900_000_000);
+    assert!(verify(&key, file, "", 1_900_000_000, &signed));
+    assert!(!verify(&key, uuid::Uuid::now_v7(), "", 1_900_000_000, &signed));
+    assert!(!verify(&key, file, "", 1_900_000_001, &signed));
+    assert!(!verify(&[8_u8; 32], file, "", 1_900_000_000, &signed));
+    assert!(!verify(&key, file, "", 1_900_000_000, "not base64!"));
+    assert!(!verify(&key, file, "thumbnail", 1_900_000_000, &signed));
 }

@@ -43,6 +43,7 @@ use kampus_access::{
 };
 use kampus_common::{AdapterSettings, ErrorKind, SystemClock};
 use kampus_db::{Database, Prefix, Upgrader};
+use kampus_files::service::serve::Part;
 use kampus_files::{File, Files};
 use kampus_module::{FileAreaDeclaration, FileRead, Module, ReadFuture, ServiceContext};
 
@@ -66,7 +67,7 @@ fn signed_in(read: FileRead<'_>) -> ReadFuture<'_> {
 const AREAS: &[FileAreaDeclaration] = &[FileAreaDeclaration {
     code: "testing.docs",
     summary: "Documents",
-    max_size: 128,
+    max_size: 4096,
     allowed_types: &["text/*", "image/png"],
     upload_permission: UPLOAD,
     readable: signed_in,
@@ -110,6 +111,7 @@ async fn world() -> World {
     let db = Database::connect(&url, prefix, 4).await.unwrap();
     let schemas: Vec<_> = [
         &kampus_events::MODULE,
+        &kampus_tasks::MODULE,
         &kampus_access::MODULE,
         &kampus_files::MODULE,
     ]
@@ -124,6 +126,10 @@ async fn world() -> World {
         .unwrap();
     kampus_events::Events::new(db.clone())
         .sync_declarations(&[&kampus_files::MODULE])
+        .await
+        .unwrap();
+    kampus_tasks::Tasks::new(db.clone())
+        .sync_declarations(&[&kampus_files::MODULE], kampus_common::Clock::now(&SystemClock))
         .await
         .unwrap();
     let store = tempfile::tempdir().unwrap();
@@ -179,7 +185,7 @@ async fn world() -> World {
 impl World {
     /// Drops the installation.
     async fn drop(self) {
-        for module in ["files", "access", "events", "db"] {
+        for module in ["files", "access", "tasks", "events", "db"] {
             sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
                 "drop schema if exists {} cascade",
                 self.db.prefix().schema(module)
@@ -251,7 +257,7 @@ async fn an_upload_keeps_to_its_area_and_the_content_decides_the_type() {
         .unwrap_err();
     assert_eq!(denied.kind(), ErrorKind::PermissionDenied);
     let large = f
-        .open_upload(&w.ana, ("testing.docs", w.campus), "a.txt", 129, None)
+        .open_upload(&w.ana, ("testing.docs", w.campus), "a.txt", 4097, None)
         .await
         .unwrap_err();
     assert_eq!(large.code(), "files.upload_invalid");
@@ -366,14 +372,23 @@ async fn a_signed_link_reads_one_file_until_it_expires() {
         link.url
             .starts_with(&format!("http://kampus.test/api/v1/files/content/{}", file.id))
     );
-    let (served, data) = f.content(file.id, expires, signature).await.unwrap();
+    let (served, _, data) = f
+        .content(file.id, Part::Original, expires, signature)
+        .await
+        .unwrap();
     assert_eq!(
         (served.name.as_str(), &data[..]),
         ("notes.txt", &b"the notes"[..])
     );
-    let changed = f.content(file.id, expires + 1, signature).await.unwrap_err();
+    let changed = f
+        .content(file.id, Part::Original, expires + 1, signature)
+        .await
+        .unwrap_err();
     assert_eq!(changed.code(), "files.link_invalid");
-    let past = f.content(file.id, 1_000, signature).await.unwrap_err();
+    let past = f
+        .content(file.id, Part::Original, 1_000, signature)
+        .await
+        .unwrap_err();
     assert_eq!(past.code(), "files.link_invalid");
     w.drop().await;
 }
@@ -527,5 +542,150 @@ async fn infected_content_is_never_kept_and_clean_content_is_marked_clean() {
         1
     );
     assert!(!unscanned.attached);
+    w.drop().await;
+}
+
+/// A PNG of a size, in one colour.
+fn png(width: u32, height: u32) -> Vec<u8> {
+    let picture = image::RgbImage::from_pixel(width, height, image::Rgb([30, 120, 200]));
+    let mut out = std::io::Cursor::new(Vec::new());
+    picture.write_to(&mut out, image::ImageFormat::Png).unwrap();
+    out.into_inner()
+}
+
+impl World {
+    /// Uploads content Ana owns, whatever it is.
+    async fn upload_owned(&self, name: &str, content: Vec<u8>) -> File {
+        let size = i64::try_from(content.len()).unwrap();
+        let upload = self
+            .files
+            .open_upload(&self.ana, ("testing.docs", self.campus), name, size, None)
+            .await
+            .unwrap();
+        self.files
+            .send_upload(&self.ana, upload.id, Bytes::from(content))
+            .await
+            .unwrap();
+        self.files.complete_upload(&self.ana, upload.id).await.unwrap()
+    }
+
+    /// Runs every queued conversion, as the job would.
+    async fn run_conversions(&self) {
+        let queued: Vec<uuid::Uuid> = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+            "select id from {}.conversion where state = 'queued'",
+            self.db.prefix().schema("files")
+        )))
+        .fetch_all(self.db.pool())
+        .await
+        .unwrap();
+        for conversion in queued {
+            self.files.convert(conversion).await.unwrap();
+        }
+    }
+}
+
+#[tokio::test]
+async fn a_thumbnail_is_made_once_by_a_job_and_read_through_its_own_link() {
+    let w = world().await;
+    let f = &w.files;
+    let picture = w.upload_owned("wide.png", png(600, 300)).await;
+    let queued = f
+        .conversion(who(&w.ana), picture.id, "thumbnail", &w.services)
+        .await
+        .unwrap();
+    assert_eq!((queued.state.as_str(), queued.url), ("queued", None));
+    assert_eq!(w.count("select count(*) from {s}.conversion").await, 1);
+    f.conversion(who(&w.ana), picture.id, "thumbnail", &w.services)
+        .await
+        .unwrap();
+    assert_eq!(
+        w.count("select count(*) from {s}.conversion").await,
+        1,
+        "asked twice, made once"
+    );
+    w.run_conversions().await;
+    let done = f
+        .conversion(who(&w.ana), picture.id, "thumbnail", &w.services)
+        .await
+        .unwrap();
+    assert_eq!(
+        (done.state.as_str(), done.media_type.as_deref()),
+        ("done", Some("image/png"))
+    );
+    let url = done.url.unwrap();
+    let query = url.split_once('?').unwrap().1;
+    let expires: i64 = query
+        .split('&')
+        .next()
+        .unwrap()
+        .trim_start_matches("expires=")
+        .parse()
+        .unwrap();
+    let signature = query
+        .split("signature=")
+        .nth(1)
+        .unwrap()
+        .split('&')
+        .next()
+        .unwrap();
+    let (_, media_type, data) = f
+        .content(picture.id, Part::Conversion("thumbnail"), expires, signature)
+        .await
+        .unwrap();
+    assert_eq!(media_type, "image/png");
+    let thumbnail = image::load_from_memory(&data).unwrap();
+    assert_eq!((thumbnail.width(), thumbnail.height()), (256, 128));
+    let original = f
+        .content(picture.id, Part::Original, expires, signature)
+        .await
+        .unwrap_err();
+    assert_eq!(
+        original.code(),
+        "files.link_invalid",
+        "a thumbnail link never reads the original"
+    );
+    let text = w.upload("notes.txt", b"not an image").await;
+    let unsupported = f
+        .conversion(who(&w.ana), text.id, "thumbnail", &w.services)
+        .await
+        .unwrap_err();
+    assert_eq!(unsupported.code(), "files.conversion_unsupported");
+    let broken = w
+        .upload_owned("broken.png", b"\x89PNG\r\n\x1a\nnot really".to_vec())
+        .await;
+    f.conversion(who(&w.ana), broken.id, "thumbnail", &w.services)
+        .await
+        .unwrap();
+    w.run_conversions().await;
+    let failed = f
+        .conversion(who(&w.ana), broken.id, "thumbnail", &w.services)
+        .await
+        .unwrap();
+    assert_eq!(failed.state, "failed");
+    assert!(failed.error.unwrap().starts_with("unreadable image"));
+    w.drop().await;
+}
+
+#[tokio::test]
+async fn content_is_copied_to_another_store_verified_and_only_once() {
+    let w = world().await;
+    w.upload("a.txt", b"first content").await;
+    w.upload("b.txt", b"second content").await;
+    let other = tempfile::tempdir().unwrap();
+    let target = kampus_storage::open(
+        &[kampus_storage_opendal::ADAPTER],
+        AdapterSettings {
+            url: format!("file://{}", other.path().to_str().unwrap()),
+            ..AdapterSettings::default()
+        },
+    )
+    .await
+    .unwrap();
+    let first = w.files.copy_to(target.as_ref()).await.unwrap();
+    assert_eq!((first.copied, first.present), (2, 0));
+    let again = w.files.copy_to(target.as_ref()).await.unwrap();
+    assert_eq!((again.copied, again.present), (0, 2));
+    let key = kampus_storage::StorageKey::for_hash(&kampus_storage::sha256(b"first content"));
+    assert_eq!(&target.get(&key).await.unwrap()[..], b"first content");
     w.drop().await;
 }

@@ -32,29 +32,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Signed links: an HMAC-SHA256 of the file and the moment the link stops working, with a key of its own,
-//! so a link reads one file until then and cannot be changed to read another.
+//! Signed links: an HMAC-SHA256 of the file, what of it is read (the original, or a conversion such as
+//! `thumbnail`) and the moment the link stops working, with a key of its own, so a link reads that until
+//! then and cannot be changed to read anything else.
 
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use hmac::{Hmac, KeyInit, Mac};
 use sha2::Sha256;
 
-/// The signature of a link to a file that expires at a Unix time.
+/// The signature of a link to a part of a file (empty for the original) that expires at a Unix time.
 #[must_use]
-pub fn signature(key: &[u8; 32], file: uuid::Uuid, expires: i64) -> String {
+pub fn signature(key: &[u8; 32], file: uuid::Uuid, part: &str, expires: i64) -> String {
     let Ok(mut mac) = Hmac::<Sha256>::new_from_slice(key) else {
         return String::new();
     };
     mac.update(file.as_bytes());
+    mac.update(part.as_bytes());
+    mac.update(&[0]);
     mac.update(&expires.to_be_bytes());
     URL_SAFE_NO_PAD.encode(mac.finalize().into_bytes())
 }
 
-/// Whether a signature is the one of a link to a file that expires at a Unix time, compared in constant
-/// time.
+/// Whether a signature is the one of a link to a part of a file that expires at a Unix time, compared in
+/// constant time.
 #[must_use]
-pub fn verify(key: &[u8; 32], file: uuid::Uuid, expires: i64, given: &str) -> bool {
+pub fn verify(key: &[u8; 32], file: uuid::Uuid, part: &str, expires: i64, given: &str) -> bool {
     let Ok(given) = URL_SAFE_NO_PAD.decode(given) else {
         return false;
     };
@@ -62,6 +65,8 @@ pub fn verify(key: &[u8; 32], file: uuid::Uuid, expires: i64, given: &str) -> bo
         return false;
     };
     mac.update(file.as_bytes());
+    mac.update(part.as_bytes());
+    mac.update(&[0]);
     mac.update(&expires.to_be_bytes());
     mac.verify_slice(&given).is_ok()
 }
