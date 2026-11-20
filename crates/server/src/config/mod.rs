@@ -160,6 +160,8 @@ pub struct Config {
     pub storage_options: BTreeMap<String, String>,
     /// The shared cache (`redis://`, `valkey://`); without it the cache is in-process and one instance runs.
     pub cache_url: Option<String>,
+    /// The malware scanner (`clamd://host:port`); without it uploads are kept unscanned.
+    pub scan_url: Option<String>,
     /// The key that seals secrets, for roles that run the services.
     pub secret_key: Option<SecretKey>,
     /// How campuses are served.
@@ -364,6 +366,7 @@ impl Config {
         let runs_services = matches!(role, Role::Server | Role::Worker | Role::All);
         let (database_url, database_prefix, database_pool_size) = reader.database();
         let (storage_url, storage_options, cache_url) = reader.storage(runs_services);
+        let scan_url = reader.value("scan.url");
         let (secret_key, tenancy) = reader.security(runs_services);
         let (log_level, log_format) = reader.log();
         if !reader.fields.is_empty() {
@@ -384,6 +387,7 @@ impl Config {
             storage_url,
             storage_options,
             cache_url,
+            scan_url,
             secret_key,
             tenancy,
         })

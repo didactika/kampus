@@ -61,6 +61,7 @@ kampus-enrol = { path = "../enrol" }
 # adapters:start
 kampus-cache-moka = { path = "../cache/adapters/moka" }
 kampus-cache-redis = { path = "../cache/adapters/redis" }
+kampus-scan-clamd = { path = "../scan/adapters/clamd" }
 kampus-storage-opendal = { path = "../storage/adapters/opendal" }
 # adapters:end
 kampus-common.workspace = true
@@ -68,6 +69,7 @@ kampus-db.workspace = true
 kampus-module.workspace = true
 kampus-cache.workspace = true
 kampus-storage.workspace = true
+kampus-scan.workspace = true
 axum.workspace = true
 clap.workspace = true
 rpassword.workspace = true

@@ -85,6 +85,8 @@ pub struct Files {
     api_url: String,
     /// The modules of the build, for their areas.
     modules: &'static [&'static Module],
+    /// The malware scanner, when one is configured.
+    scanner: Option<Arc<dyn kampus_scan::Scanner>>,
 }
 
 impl std::fmt::Debug for Files {
@@ -113,6 +115,7 @@ impl Files {
             signing_key,
             api_url,
             modules: &[],
+            scanner: None,
         }
     }
 
@@ -120,6 +123,12 @@ impl Files {
     #[must_use]
     pub fn with_modules(self, modules: &'static [&'static Module]) -> Self {
         Self { modules, ..self }
+    }
+
+    /// The files with the malware scanner every upload goes through, or none.
+    #[must_use]
+    pub fn with_scanner(self, scanner: Option<Arc<dyn kampus_scan::Scanner>>) -> Self {
+        Self { scanner, ..self }
     }
 
     /// The area a module of the build declares with a code.

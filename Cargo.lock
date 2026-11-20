@@ -1878,6 +1878,7 @@ dependencies = [
 name = "kampus-files"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
  "base64 0.23.1",
  "bytes",
@@ -1888,6 +1889,7 @@ dependencies = [
  "kampus-events",
  "kampus-identity",
  "kampus-module",
+ "kampus-scan",
  "kampus-storage",
  "kampus-storage-opendal",
  "serde",
@@ -1950,6 +1952,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "kampus-scan"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "kampus-common",
+]
+
+[[package]]
+name = "kampus-scan-clamd"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "kampus-common",
+ "kampus-scan",
+ "tokio",
+]
+
+[[package]]
 name = "kampus-server"
 version = "0.1.0"
 dependencies = [
@@ -1969,6 +1991,8 @@ dependencies = [
  "kampus-files",
  "kampus-identity",
  "kampus-module",
+ "kampus-scan",
+ "kampus-scan-clamd",
  "kampus-settings",
  "kampus-storage",
  "kampus-storage-opendal",

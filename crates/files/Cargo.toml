@@ -52,6 +52,7 @@ kampus-db.workspace = true
 kampus-module.workspace = true
 kampus-access.workspace = true
 kampus-storage.workspace = true
+kampus-scan.workspace = true
 kampus-events = { path = "../events" }
 kampus-identity = { path = "../identity" }
 axum.workspace = true
@@ -66,6 +67,7 @@ time.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
+async-trait.workspace = true
 bytes.workspace = true
 kampus-storage.workspace = true
 kampus-common.workspace = true

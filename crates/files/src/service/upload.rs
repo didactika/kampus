@@ -197,7 +197,8 @@ impl Files {
             )
             .with_param("media_type", media_type));
         }
-        let blob = self.store(content, &media_type).await?;
+        let status = self.scan(&content).await?;
+        let blob = self.store(content, &media_type, status).await?;
         let row = sqlx::query(sql(format!(
             "update {} set blob_id = $2 where id = $1 returning {UPLOAD_COLUMNS}",
             self.table("upload")
@@ -210,15 +211,33 @@ impl Files {
         Ok(upload(&row))
     }
 
-    /// The blob of some content: the one stored with its hash, or a new one in storage, which waits in the
-    /// trash until a file uses it.
-    async fn store(&self, content: Bytes, media_type: &str) -> Result<uuid::Uuid> {
+    /// The scan status of content: scanned by the scanner when one is configured, every time, since its
+    /// signatures change; `unscanned` without one.
+    async fn scan(&self, content: &Bytes) -> Result<&'static str> {
+        let Some(scanner) = &self.scanner else {
+            return Ok("unscanned");
+        };
+        match scanner.scan(content.clone()).await? {
+            kampus_scan::Verdict::Clean => Ok("clean"),
+            kampus_scan::Verdict::Infected(name) => Err(Error::validation(
+                "files.infected",
+                vec![FieldError::new("content", "infected")],
+            )
+            .with_param("signature", name)),
+        }
+    }
+
+    /// The blob of some content: the one stored with its hash, whose scan status a fresh scan updates, or a
+    /// new one in storage, which waits in the trash until a file uses it.
+    async fn store(&self, content: Bytes, media_type: &str, status: &str) -> Result<uuid::Uuid> {
         let hash = kampus_storage::sha256(&content);
         let existing: Option<uuid::Uuid> = sqlx::query_scalar(sql(format!(
-            "select id from {} where hash = $1",
+            "update {} set scan_status = case when $2 = 'clean' then $2 else scan_status end
+             where hash = $1 returning id",
             self.table("blob")
         )))
         .bind(hash.as_slice())
+        .bind(status)
         .fetch_optional(self.db.pool())
         .await
         .map_err(kampus_db::classify)?;
@@ -230,7 +249,7 @@ impl Files {
         self.storage()?.put(&key, content, hash).await?;
         let mut tx = self.db.begin().await?;
         let blob: uuid::Uuid = sqlx::query_scalar(sql(format!(
-            "insert into {t} (id, hash, size, media_type, storage_key) values ($1, $2, $3, $4, $5)
+            "insert into {t} (id, hash, size, media_type, storage_key, scan_status) values ($1, $2, $3, $4, $5, $6)
              on conflict (hash) do update set hash = excluded.hash returning id",
             t = self.table("blob")
         )))
@@ -239,6 +258,7 @@ impl Files {
         .bind(size)
         .bind(media_type)
         .bind(key.as_str())
+        .bind(status)
         .fetch_one(&mut *tx)
         .await
         .map_err(kampus_db::classify)?;

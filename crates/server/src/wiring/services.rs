@@ -70,6 +70,8 @@ pub struct Parts {
     pub password_cost: Option<PasswordCost>,
     /// Where files keep their content; none in a process that does not open storage.
     pub storage: Option<Arc<dyn kampus_storage::Storage>>,
+    /// The malware scanner uploads go through; none to keep them unscanned.
+    pub scanner: Option<Arc<dyn kampus_scan::Scanner>>,
 }
 
 impl Parts {
@@ -84,6 +86,7 @@ impl Parts {
             clock: Arc::new(SystemClock),
             password_cost: None,
             storage: None,
+            scanner: None,
         }
     }
 }
@@ -117,7 +120,8 @@ impl Services {
             parts.secret_key.derive("files.links"),
             api_url.clone(),
         )
-        .with_modules(MODULES);
+        .with_modules(MODULES)
+        .with_scanner(parts.scanner.clone());
         let customise = Customise::new(parts.db.clone(), access.clone()).with_modules(MODULES);
         let identity = Identity::new(
             parts.db.clone(),
