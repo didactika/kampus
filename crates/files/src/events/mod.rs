@@ -32,7 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The events files publishes: a file uploaded, attached to its owner, and detached from it.
+//! The events files publishes: a file uploaded, attached to its owner, and detached from it, and a
+//! conversion done.
 
 use kampus_module::EventDeclaration;
 
@@ -44,6 +45,9 @@ pub const ATTACHED: &str = "files.attached";
 
 /// A module detached a file from its owner, which deletes it.
 pub const DETACHED: &str = "files.detached";
+
+/// A conversion of some content finished.
+pub const CONVERTED: &str = "files.converted";
 
 /// The events of this module.
 pub const EVENTS: &[EventDeclaration] = &[
@@ -68,6 +72,14 @@ pub const EVENTS: &[EventDeclaration] = &[
         version: 1,
         summary: "A file was detached from its owner and deleted",
         fields: &["file", "area"],
+        audited: false,
+        personal_fields: &[],
+    },
+    EventDeclaration {
+        code: CONVERTED,
+        version: 1,
+        summary: "A conversion of some content, such as a thumbnail, finished",
+        fields: &["conversion", "kind", "blob"],
         audited: false,
         personal_fields: &[],
     },

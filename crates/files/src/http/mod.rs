@@ -52,6 +52,7 @@ use kampus_module::http::{ApiResult, Body, id};
 use serde::Deserialize;
 
 use crate::service::principal;
+use crate::service::serve::Part;
 use crate::support::sniff;
 use crate::{FileId, Files, UploadId};
 
@@ -66,6 +67,7 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/uploads/{id}", axum::routing::put(send).post(complete))
         .route("/files/{id}", get(read))
         .route("/files/{id}/url", post(url))
+        .route("/files/{id}/conversions/{kind}", get(conversion))
         .route("/content/{id}", get(content))
         .merge(quota::routes())
         .with_state(shared)
@@ -112,6 +114,9 @@ struct Link {
     expires: i64,
     /// Its signature.
     signature: String,
+    /// The conversion it reads, such as `thumbnail`; the original when absent.
+    #[serde(default)]
+    kind: Option<String>,
 }
 
 /// Opens an upload.
@@ -195,19 +200,20 @@ async fn content(
     Query(link): Query<Link>,
 ) -> ApiResult<Response> {
     let file: FileId = id(&file)?;
-    let (found, data) = shared
+    let part = link.kind.as_deref().map_or(Part::Original, Part::Conversion);
+    let (found, media_type, data) = shared
         .files()?
-        .content(file, link.expires, &link.signature)
+        .content(file, part, link.expires, &link.signature)
         .await?;
     let name = found.name.replace(['"', '\\'], "_");
-    let disposition = if sniff::active(&found.media_type) {
+    let disposition = if sniff::active(&media_type) {
         "attachment"
     } else {
         "inline"
     };
     Ok((
         [
-            (header::CONTENT_TYPE, found.media_type),
+            (header::CONTENT_TYPE, media_type),
             (
                 header::CONTENT_DISPOSITION,
                 format!("{disposition}; filename=\"{name}\""),
@@ -222,4 +228,23 @@ async fn content(
         data,
     )
         .into_response())
+}
+
+/// A conversion of a file the caller may read: `202` while it is made, and a link to it once done.
+async fn conversion(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((file, kind)): Path<(String, String)>,
+) -> ApiResult<Response> {
+    let file: FileId = id(&file)?;
+    let found = shared
+        .files()?
+        .conversion(principal(&caller.actor), file, &kind, &shared.services)
+        .await?;
+    let status = if found.state == "queued" {
+        StatusCode::ACCEPTED
+    } else {
+        StatusCode::OK
+    };
+    Ok((status, Json(found)).into_response())
 }

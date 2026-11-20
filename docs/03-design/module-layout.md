@@ -492,6 +492,7 @@ Step {
 | `kampus-server upgrade` | Applies the pending steps and registers the components |
 | `kampus-server downgrade --yes` | Goes back to the build's versions |
 | `kampus-server uninstall <component> --yes` | Removes a component no longer in the build |
+| `kampus-server copy-storage <url>` | Copies every stored file to another store, verifying each by its hash; a new run skips what is there. Switch `KAMPUS_STORAGE_URL` to it afterwards, then delete the old store |
 
 ## Registering a module
 

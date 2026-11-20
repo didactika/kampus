@@ -33,14 +33,20 @@
 // ------------------------------------------------------------------------------
 
 //! The upgrade steps of the `files` schema: blobs stored once by their hash with the count of the files
-//! that use them, the areas modules declare, files, uploads, the trash of blobs no file uses, and the
-//! quotas of scopes and people.
+//! that use them, the areas modules declare, files, uploads, the trash of blobs no file uses, the
+//! quotas of scopes and people, and conversions.
 
 use kampus_db::Step;
 use kampus_db::schema::{Change, Check, Column, ColumnDefault, ForeignKey, Index, OnDelete, Table, Type};
 
 /// Where the scanning of a blob stands; `unscanned` until a scanner is configured.
 pub const SCAN_STATUSES: &[&str] = &["unscanned", "pending", "clean", "infected", "failed"];
+
+/// What content can be converted into.
+pub const CONVERSION_KINDS: &[&str] = &["thumbnail"];
+
+/// Where a conversion stands.
+pub const CONVERSION_STATES: &[&str] = &["queued", "done", "failed"];
 
 /// A foreign key to a scope of access, which takes the row with it.
 const SCOPE: ForeignKey = ForeignKey {
@@ -231,5 +237,34 @@ pub const STEPS: &[Step] = &[
                 ..Table::EMPTY
             }),
         ],
+    },
+    Step {
+        sequence: 3,
+        name: "conversions",
+        revert: &[],
+        action: None,
+        changes: &[Change::CreateTable(Table {
+            name: "conversion",
+            columns: &[
+                Column::new("id", Type::Uuid),
+                Column::new("source_blob_id", Type::Uuid),
+                Column::new("kind", Type::Text),
+                Column::new("state", Type::Text).default(ColumnDefault::Text("queued")),
+                Column::new("result_blob_id", Type::Uuid).nullable(),
+                Column::new("error", Type::Text).nullable(),
+                Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+            ],
+            primary_key: &["id"],
+            unique: &[&["source_blob_id", "kind"]],
+            foreign_keys: &[
+                own(&["source_blob_id"], "blob", &["id"], OnDelete::Cascade),
+                own(&["result_blob_id"], "blob", &["id"], OnDelete::Restrict),
+            ],
+            checks: &[
+                Check::OneOf("kind", CONVERSION_KINDS),
+                Check::OneOf("state", CONVERSION_STATES),
+            ],
+            ..Table::EMPTY
+        })],
     },
 ];

@@ -92,6 +92,12 @@ enum Command {
         #[arg(long)]
         yes: bool,
     },
+    /// Copy every stored file to another store, verifying each, before switching `KAMPUS_STORAGE_URL` to it;
+    /// a new run skips what was already copied.
+    CopyStorage {
+        /// The other store (`file:///path` or `s3://bucket/prefix`), with the options of the current one.
+        url: String,
+    },
     /// A component and one of its commands: `kampus-server identity purge`.
     #[command(external_subcommand)]
     Component(Vec<String>),
@@ -204,6 +210,7 @@ async fn execute(command: Command, config: &Config) -> kampus_common::Result<()>
             Ok(())
         }
         Command::Check => check(config).await,
+        Command::CopyStorage { url } => copy_storage(config, &url).await,
         Command::Components { json } => {
             let statuses = statuses(config).await?;
             if json {
@@ -362,4 +369,28 @@ fn print_statuses(statuses: &[ComponentStatus]) {
             print(&format!("    {problem}"));
         }
     }
+}
+
+/// Copies every stored file to another store, verifying each.
+async fn copy_storage(config: &Config, url: &str) -> kampus_common::Result<()> {
+    let db = super::connect(config).await?;
+    let ports = crate::wiring::ports::Ports::open(config).await?;
+    let target = kampus_storage::open(
+        crate::wiring::adapters::STORAGE,
+        kampus_common::AdapterSettings {
+            url: url.to_owned(),
+            prefix: config.database_prefix.as_str().to_owned(),
+            options: config.storage_options.clone(),
+        },
+    )
+    .await?;
+    target.check().await?;
+    let access = kampus_access::Access::new(db.clone(), std::sync::Arc::new(kampus_common::SystemClock));
+    let files = kampus_files::Files::new(db, access, ports.storage, [0; 32], String::new());
+    let copied = files.copy_to(target.as_ref()).await?;
+    report(&format!(
+        "kampus-server: {} file(s) copied, {} already there; switch KAMPUS_STORAGE_URL to {url} when no process writes",
+        copied.copied, copied.present
+    ));
+    Ok(())
 }

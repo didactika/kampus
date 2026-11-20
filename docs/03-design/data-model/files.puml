@@ -58,6 +58,15 @@ entity principal_quota {
   limit_bytes
   used_bytes
 }
+entity conversion {
+  id <<PK>>
+  source_blob_id <<FK>>
+  kind
+  state
+  result_blob_id <<FK>>
+  error
+  created_at
+}
 entity trash {
   blob_id <<PK, FK>>
   since
@@ -69,4 +78,6 @@ upload }o--|| area
 upload }o--o| blob
 upload |o--o| file
 trash |o--|| blob
+conversion }o--|| blob : source
+conversion }o--o| blob : result
 @enduml
