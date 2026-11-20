@@ -55,6 +55,9 @@ pub const OVERRIDDEN: &str = "records.overridden";
 /// A record or a grade was locked or unlocked.
 pub const LOCKED: &str = "records.locked";
 
+/// A total of a person changed, because the grades it adds up changed.
+pub const TOTAL_CHANGED: &str = "records.total_changed";
+
 /// A declaration of an event about a grade record.
 const fn about_record(code: &'static str, summary: &'static str) -> EventDeclaration {
     EventDeclaration {
@@ -89,6 +92,11 @@ pub const EVENTS: &[EventDeclaration] = &[
         OVERRIDDEN,
         "The grade of a person was overridden, or its override removed",
         true,
+    ),
+    about_grade(
+        TOTAL_CHANGED,
+        "A total of a person changed with the grades it adds up",
+        false,
     ),
     EventDeclaration {
         code: LOCKED,

@@ -243,6 +243,7 @@ impl Records {
             principal(actor),
         )
         .await?;
+        self.queue_course_in(&mut tx, course.id).await?;
         tx.commit().await.map_err(kampus_db::classify)?;
         Ok(created)
     }
@@ -304,6 +305,7 @@ impl Records {
             principal(actor),
         )
         .await?;
+        self.queue_course_in(&mut tx, course.id).await?;
         tx.commit().await.map_err(kampus_db::classify)?;
         Ok(category(&row))
     }
@@ -366,6 +368,7 @@ impl Records {
         .execute(&mut *tx)
         .await
         .map_err(kampus_db::classify)?;
+        self.queue_course_in(&mut tx, course.id).await?;
         tx.commit().await.map_err(kampus_db::classify)
     }
 

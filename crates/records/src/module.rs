@@ -62,7 +62,7 @@ pub const MODULE: Module = Module {
     activity_types: &[],
     events: crate::events::EVENTS,
     listeners: &[],
-    jobs: &[],
-    schedules: &[],
+    jobs: crate::jobs::JOBS,
+    schedules: crate::jobs::SCHEDULES,
     routes: Some(crate::http::routes),
 };

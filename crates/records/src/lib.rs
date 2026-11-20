@@ -39,10 +39,12 @@
 pub mod db;
 pub mod events;
 pub mod http;
+pub mod jobs;
 pub mod model;
 pub mod module;
 pub mod permissions;
 pub mod service;
+pub mod support;
 
 use kampus_access::Access;
 use kampus_activities::Activities;
@@ -55,6 +57,8 @@ pub use model::{
 };
 pub use module::MODULE;
 pub use service::grade::{Detail, Report, ReportRow};
+pub use service::recalc::Recalculated;
+pub use support::aggregation;
 
 /// The records of an installation.
 #[derive(Clone)]

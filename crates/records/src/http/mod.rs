@@ -89,6 +89,10 @@ pub fn routes(context: &ServiceContext) -> Router {
             "/records/{id}/grades/{account}/hidden",
             put(hide_grade).delete(show_grade),
         )
+        .route(
+            "/records/{id}/grades/{account}/excluded",
+            put(exclude_grade).delete(include_grade),
+        )
         .route("/courses/{id}/grader-report", get(report))
         .route("/courses/{id}/my-grades", get(my_grades))
         .route("/courses/{id}/grades/{account}", get(grades_of))
@@ -528,6 +532,43 @@ async fn grades_of(
     let found = shared
         .records()?
         .grades_for(&caller.actor, id(&course)?, id(&account)?)
+        .await?;
+    Ok(Json(found).into_response())
+}
+
+/// Leaves a grade out of the totals.
+async fn exclude_grade(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((record, account)): Path<(String, String)>,
+) -> ApiResult<Response> {
+    excluding(&shared, &caller, &record, &account, true).await
+}
+
+/// Counts a grade in the totals again.
+async fn include_grade(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((record, account)): Path<(String, String)>,
+) -> ApiResult<Response> {
+    excluding(&shared, &caller, &record, &account, false).await
+}
+
+/// Leaves a grade out of the totals, or counts it again.
+async fn excluding(
+    shared: &Shared,
+    caller: &Caller,
+    record: &str,
+    account: &str,
+    excluded: bool,
+) -> ApiResult<Response> {
+    let record: RecordId = id(record)?;
+    let records = shared.records()?;
+    let actor = shared
+        .acting(caller, OVERRIDE, records.record_scope(record).await?)
+        .await?;
+    let found = records
+        .set_grade_excluded(actor, record, id(account)?, excluded)
         .await?;
     Ok(Json(found).into_response())
 }

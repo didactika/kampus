@@ -87,158 +87,185 @@ const fn other(
 }
 
 /// The upgrade steps of this module.
-pub const STEPS: &[Step] = &[Step {
-    sequence: 1,
-    name: "categories, grade records, entries and grades",
-    revert: &[],
-    action: None,
-    changes: &[
-        Change::CreateTable(Table {
-            name: "category",
-            columns: &[
-                Column::new("id", Type::Uuid),
-                Column::new("course_id", Type::Uuid),
-                Column::new("parent_id", Type::Uuid).nullable(),
-                Column::new("root_course_id", Type::Uuid).nullable(),
-                Column::new("name", Type::Text),
-                Column::new("method", Type::Text).default(ColumnDefault::Text("natural")),
-                Column::new("drop_lowest", Type::Integer).default(ColumnDefault::Int(0)),
-                Column::new("keep_highest", Type::Integer).default(ColumnDefault::Int(0)),
-                Column::new("exclude_empty", Type::Boolean).default(ColumnDefault::Bool(true)),
-                Column::new("sort_key", Type::Text),
-                Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
-                Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["id"],
-            unique: &[&["root_course_id"], &["parent_id", "sort_key"]],
-            foreign_keys: &[
-                other(&["course_id"], "courses", "course", OnDelete::Cascade),
-                own(&["parent_id"], "category", OnDelete::Cascade),
-                other(&["root_course_id"], "courses", "course", OnDelete::Cascade),
-            ],
-            checks: &[
-                Check::OneOf("method", METHODS),
-                Check::NonNegative("drop_lowest"),
-                Check::NonNegative("keep_highest"),
-            ],
-            indexes: &[Index {
-                columns: &["course_id"],
-                unique: false,
-            }],
-            without_natural_key: Some("a category is named by its place in the tree of a course"),
-        }),
-        Change::CreateTable(Table {
-            name: "record",
-            columns: &[
-                Column::new("id", Type::Uuid),
-                Column::new("course_id", Type::Uuid),
-                Column::new("kind", Type::Text),
-                Column::new("title", Type::Text),
-                Column::new("course_module_id", Type::Uuid).nullable(),
-                Column::new("item_number", Type::Integer).nullable(),
-                Column::new("category_id", Type::Uuid).nullable(),
-                Column::new("total_of_id", Type::Uuid).nullable(),
-                Column::new("grade_type", Type::Text).default(ColumnDefault::Text("value")),
-                Column::new("min", Type::Numeric(12, 5)),
-                Column::new("max", Type::Numeric(12, 5)),
-                Column::new("pass_grade", Type::Numeric(12, 5)).nullable(),
-                Column::new("weight", Type::Numeric(9, 5)),
-                Column::new("extra_credit", Type::Boolean).default(ColumnDefault::Bool(false)),
-                Column::new("multiplier", Type::Numeric(9, 5)),
-                Column::new("offset_value", Type::Numeric(12, 5)),
-                Column::new("hidden_until", Type::Timestamptz).nullable(),
-                Column::new("locked_at", Type::Timestamptz).nullable(),
-                Column::new("sort_key", Type::Text),
-                Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
-                Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["id"],
-            unique: &[
-                &["course_module_id", "item_number"],
-                &["total_of_id"],
-                &["category_id", "sort_key"],
-            ],
-            foreign_keys: &[
-                other(&["course_id"], "courses", "course", OnDelete::Cascade),
-                other(
-                    &["course_module_id"],
-                    "activities",
-                    "course_module",
-                    OnDelete::Cascade,
+pub const STEPS: &[Step] = &[
+    Step {
+        sequence: 1,
+        name: "categories, grade records, entries and grades",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::CreateTable(Table {
+                name: "category",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("course_id", Type::Uuid),
+                    Column::new("parent_id", Type::Uuid).nullable(),
+                    Column::new("root_course_id", Type::Uuid).nullable(),
+                    Column::new("name", Type::Text),
+                    Column::new("method", Type::Text).default(ColumnDefault::Text("natural")),
+                    Column::new("drop_lowest", Type::Integer).default(ColumnDefault::Int(0)),
+                    Column::new("keep_highest", Type::Integer).default(ColumnDefault::Int(0)),
+                    Column::new("exclude_empty", Type::Boolean).default(ColumnDefault::Bool(true)),
+                    Column::new("sort_key", Type::Text),
+                    Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                unique: &[&["root_course_id"], &["parent_id", "sort_key"]],
+                foreign_keys: &[
+                    other(&["course_id"], "courses", "course", OnDelete::Cascade),
+                    own(&["parent_id"], "category", OnDelete::Cascade),
+                    other(&["root_course_id"], "courses", "course", OnDelete::Cascade),
+                ],
+                checks: &[
+                    Check::OneOf("method", METHODS),
+                    Check::NonNegative("drop_lowest"),
+                    Check::NonNegative("keep_highest"),
+                ],
+                indexes: &[Index {
+                    columns: &["course_id"],
+                    unique: false,
+                }],
+                without_natural_key: Some("a category is named by its place in the tree of a course"),
+            }),
+            Change::CreateTable(Table {
+                name: "record",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("course_id", Type::Uuid),
+                    Column::new("kind", Type::Text),
+                    Column::new("title", Type::Text),
+                    Column::new("course_module_id", Type::Uuid).nullable(),
+                    Column::new("item_number", Type::Integer).nullable(),
+                    Column::new("category_id", Type::Uuid).nullable(),
+                    Column::new("total_of_id", Type::Uuid).nullable(),
+                    Column::new("grade_type", Type::Text).default(ColumnDefault::Text("value")),
+                    Column::new("min", Type::Numeric(12, 5)),
+                    Column::new("max", Type::Numeric(12, 5)),
+                    Column::new("pass_grade", Type::Numeric(12, 5)).nullable(),
+                    Column::new("weight", Type::Numeric(9, 5)),
+                    Column::new("extra_credit", Type::Boolean).default(ColumnDefault::Bool(false)),
+                    Column::new("multiplier", Type::Numeric(9, 5)),
+                    Column::new("offset_value", Type::Numeric(12, 5)),
+                    Column::new("hidden_until", Type::Timestamptz).nullable(),
+                    Column::new("locked_at", Type::Timestamptz).nullable(),
+                    Column::new("sort_key", Type::Text),
+                    Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                unique: &[
+                    &["course_module_id", "item_number"],
+                    &["total_of_id"],
+                    &["category_id", "sort_key"],
+                ],
+                foreign_keys: &[
+                    other(&["course_id"], "courses", "course", OnDelete::Cascade),
+                    other(
+                        &["course_module_id"],
+                        "activities",
+                        "course_module",
+                        OnDelete::Cascade,
+                    ),
+                    own(&["category_id"], "category", OnDelete::Cascade),
+                    own(&["total_of_id"], "category", OnDelete::Cascade),
+                ],
+                checks: &[
+                    Check::OneOf("kind", KINDS),
+                    Check::OneOf("grade_type", GRADE_TYPES),
+                    Check::After("max", "min"),
+                ],
+                indexes: &[Index {
+                    columns: &["course_id"],
+                    unique: false,
+                }],
+                without_natural_key: Some(
+                    "an activity record is unique by course module and item, a total by its category",
                 ),
-                own(&["category_id"], "category", OnDelete::Cascade),
-                own(&["total_of_id"], "category", OnDelete::Cascade),
-            ],
-            checks: &[
-                Check::OneOf("kind", KINDS),
-                Check::OneOf("grade_type", GRADE_TYPES),
-                Check::After("max", "min"),
-            ],
-            indexes: &[Index {
-                columns: &["course_id"],
-                unique: false,
-            }],
-            without_natural_key: Some(
-                "an activity record is unique by course module and item, a total by its category",
-            ),
-        }),
-        Change::CreateTable(Table {
-            name: "entry",
-            columns: &[
-                Column::new("id", Type::Uuid),
-                Column::new("record_id", Type::Uuid),
-                Column::new("account_id", Type::Uuid),
-                Column::new("raw", Type::Numeric(12, 5)).nullable(),
-                Column::new("text", Type::Text).nullable(),
-                Column::new("feedback", Type::Text).nullable(),
-                Column::new("source", Type::Text),
-                Column::new("actor", Type::Uuid).nullable(),
-                Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["id"],
-            foreign_keys: &[
-                own(&["record_id"], "record", OnDelete::Cascade),
-                other(&["account_id"], "identity", "account", OnDelete::Cascade),
-            ],
-            checks: &[Check::OneOf("source", SOURCES)],
-            indexes: &[Index {
-                columns: &["record_id", "account_id", "at"],
-                unique: false,
-            }],
-            without_natural_key: Some("append-only history: one row per change"),
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "grade",
-            columns: &[
-                Column::new("record_id", Type::Uuid),
-                Column::new("account_id", Type::Uuid),
-                Column::new("raw", Type::Numeric(12, 5)).nullable(),
-                Column::new("final", Type::Numeric(12, 5)).nullable(),
-                Column::new("text", Type::Text).nullable(),
-                Column::new("overridden", Type::Boolean).default(ColumnDefault::Bool(false)),
-                Column::new("excluded", Type::Boolean).default(ColumnDefault::Bool(false)),
-                Column::new("hidden_until", Type::Timestamptz).nullable(),
-                Column::new("locked_at", Type::Timestamptz).nullable(),
-                Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
-                Column::new("updated_at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["record_id", "account_id"],
-            foreign_keys: &[
-                own(&["record_id"], "record", OnDelete::Cascade),
-                other(&["account_id"], "identity", "account", OnDelete::Cascade),
-            ],
-            indexes: &[Index {
-                columns: &["account_id"],
-                unique: false,
-            }],
-            without_natural_key: Some("keyed by record and person, the target of the upsert"),
-            ..Table::EMPTY
-        }),
-        Change::Postgres {
-            sql: "alter table {schema}.\"category\" alter column \"sort_key\" type text collate \"C\";
+            }),
+            Change::CreateTable(Table {
+                name: "entry",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("record_id", Type::Uuid),
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("raw", Type::Numeric(12, 5)).nullable(),
+                    Column::new("text", Type::Text).nullable(),
+                    Column::new("feedback", Type::Text).nullable(),
+                    Column::new("source", Type::Text),
+                    Column::new("actor", Type::Uuid).nullable(),
+                    Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                foreign_keys: &[
+                    own(&["record_id"], "record", OnDelete::Cascade),
+                    other(&["account_id"], "identity", "account", OnDelete::Cascade),
+                ],
+                checks: &[Check::OneOf("source", SOURCES)],
+                indexes: &[Index {
+                    columns: &["record_id", "account_id", "at"],
+                    unique: false,
+                }],
+                without_natural_key: Some("append-only history: one row per change"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "grade",
+                columns: &[
+                    Column::new("record_id", Type::Uuid),
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("raw", Type::Numeric(12, 5)).nullable(),
+                    Column::new("final", Type::Numeric(12, 5)).nullable(),
+                    Column::new("text", Type::Text).nullable(),
+                    Column::new("overridden", Type::Boolean).default(ColumnDefault::Bool(false)),
+                    Column::new("excluded", Type::Boolean).default(ColumnDefault::Bool(false)),
+                    Column::new("hidden_until", Type::Timestamptz).nullable(),
+                    Column::new("locked_at", Type::Timestamptz).nullable(),
+                    Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+                    Column::new("updated_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["record_id", "account_id"],
+                foreign_keys: &[
+                    own(&["record_id"], "record", OnDelete::Cascade),
+                    other(&["account_id"], "identity", "account", OnDelete::Cascade),
+                ],
+                indexes: &[Index {
+                    columns: &["account_id"],
+                    unique: false,
+                }],
+                without_natural_key: Some("keyed by record and person, the target of the upsert"),
+                ..Table::EMPTY
+            }),
+            Change::Postgres {
+                sql: "alter table {schema}.\"category\" alter column \"sort_key\" type text collate \"C\";
 alter table {schema}.\"record\" alter column \"sort_key\" type text collate \"C\";",
-            reason: "the neutral schema has no collation; sort keys compare byte by byte",
-        },
-    ],
-}];
+                reason: "the neutral schema has no collation; sort keys compare byte by byte",
+            },
+        ],
+    },
+    Step {
+        sequence: 2,
+        name: "the queue of people whose totals are recalculated",
+        revert: &[],
+        action: None,
+        changes: &[Change::CreateTable(Table {
+            name: "recalculation",
+            columns: &[
+                Column::new("course_id", Type::Uuid),
+                Column::new("account_id", Type::Uuid),
+                Column::new("queued_at", Type::Timestamptz).default(ColumnDefault::Now),
+            ],
+            primary_key: &["course_id", "account_id"],
+            foreign_keys: &[
+                other(&["course_id"], "courses", "course", OnDelete::Cascade),
+                other(&["account_id"], "identity", "account", OnDelete::Cascade),
+            ],
+            indexes: &[Index {
+                columns: &["queued_at"],
+                unique: false,
+            }],
+            without_natural_key: Some("one row per person and course waiting to be recalculated"),
+            ..Table::EMPTY
+        })],
+    },
+];

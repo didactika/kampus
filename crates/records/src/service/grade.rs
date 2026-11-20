@@ -35,7 +35,7 @@
 //! Grades: written by idempotent upserts on a record and a person, each change kept as an entry, overridden
 //! and locked by those who may, and read through one visibility rule that every consumer shares.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use kampus_access::{Actor, PrincipalId};
 use kampus_common::{Error, Result, Timestamp};
@@ -44,11 +44,14 @@ use rust_decimal::Decimal;
 use serde::Serialize;
 use sqlx::PgConnection;
 
-use super::{GRADE_COLUMNS, RECORD_COLUMNS, entry, fits_grade, grade, principal, problem, record};
+use super::{
+    CATEGORY_COLUMNS, GRADE_COLUMNS, RECORD_COLUMNS, category, entry, fits_grade, grade, principal, problem,
+    record,
+};
 use crate::permissions::{GRADE, HIDE, LOCK, OVERRIDE, VIEW_ALL, VIEW_HIDDEN, VIEW_OWN};
 use crate::{
-    Entry, Grade, GradeChange, GradeType, GradeWrite, Record, RecordId, RecordKind, Records, Source, events,
-    sql,
+    Category, CategoryId, Entry, Grade, GradeChange, GradeType, GradeWrite, Record, RecordId, RecordKind,
+    Records, Source, events, sql,
 };
 
 /// The most grades one call sets.
@@ -274,6 +277,7 @@ impl Records {
                 actor,
             )
             .await?;
+            self.queue_in(conn, course.id, &[write.account]).await?;
             return Ok(GradeChange {
                 grade: grade(&row),
                 changed: true,
@@ -424,6 +428,7 @@ impl Records {
             principal(actor),
         )
         .await?;
+        self.queue_in(&mut tx, course.id, &[account]).await?;
         tx.commit().await.map_err(kampus_db::classify)?;
         Ok(GradeChange {
             grade: grade(&row),
@@ -491,6 +496,7 @@ impl Records {
             principal(actor),
         )
         .await?;
+        self.queue_in(&mut tx, course.id, &[account]).await?;
         tx.commit().await.map_err(kampus_db::classify)?;
         Ok(GradeChange {
             grade: grade(&row),
@@ -576,6 +582,108 @@ impl Records {
         Ok(grade(&row))
     }
 
+    /// Excludes the grade of a person from the totals, or counts it again; needs `records.override` in the
+    /// course.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` (`records.grade_not_found`), `permission_denied`.
+    pub async fn set_grade_excluded(
+        &self,
+        actor: &Actor,
+        record: RecordId,
+        account: PrincipalId,
+        excluded: bool,
+    ) -> Result<Grade> {
+        let stored = self.stored_record(record).await?;
+        let course = self.courses.course(stored.course).await?;
+        self.access.require(actor, OVERRIDE, course.scope).await?;
+        let mut tx = self.db.begin().await?;
+        let current = self
+            .grade_in(&mut tx, record, account, true)
+            .await?
+            .ok_or_else(|| Error::not_found("records.grade_not_found"))?;
+        if current.excluded == excluded {
+            return Ok(current);
+        }
+        let row = sqlx::query(sql(format!(
+            "update {} set excluded = $3, version = version + 1, updated_at = now()
+             where record_id = $1 and account_id = $2 returning {GRADE_COLUMNS}",
+            self.table("grade")
+        )))
+        .bind(record.as_uuid())
+        .bind(account.as_uuid())
+        .bind(excluded)
+        .fetch_one(&mut *tx)
+        .await
+        .map_err(kampus_db::classify)?;
+        self.publish_in(
+            &mut tx,
+            events::GRADE_CHANGED,
+            &course,
+            record,
+            Some(account),
+            principal(actor),
+        )
+        .await?;
+        self.queue_in(&mut tx, course.id, &[account]).await?;
+        tx.commit().await.map_err(kampus_db::classify)?;
+        Ok(grade(&row))
+    }
+
+    /// The grades of some people in a course, all of them.
+    async fn grades_in_course(&self, course: CourseId, accounts: &[uuid::Uuid]) -> Result<Vec<Grade>> {
+        let rows = sqlx::query(sql(format!(
+            "select g.record_id, g.account_id, g.raw, g.\"final\", g.\"text\", g.overridden, g.excluded,
+             g.hidden_until, g.locked_at, g.version from {} g join {} r on r.id = g.record_id
+             where r.course_id = $1 and g.account_id = any($2) order by g.account_id, r.sort_key, g.record_id",
+            self.table("grade"),
+            self.table("record")
+        )))
+        .bind(course.as_uuid())
+        .bind(accounts)
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(rows.iter().map(grade).collect())
+    }
+
+    /// The grades the viewer may see out of those of some people: what is hidden from them is left out, and
+    /// so is a total that adds up something hidden, so a hidden grade never leaks through a total. The
+    /// grades must be all those of each person in the course.
+    async fn visible_grades(&self, viewer: &Viewer, course: CourseId, all: Vec<Grade>) -> Result<Vec<Grade>> {
+        let rows = sqlx::query(sql(format!(
+            "select {RECORD_COLUMNS} from {} where course_id = $1",
+            self.table("record")
+        )))
+        .bind(course.as_uuid())
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        let records: HashMap<RecordId, Record> = rows.iter().map(record).map(|r| (r.id, r)).collect();
+        let hidden_totals = if viewer.hidden {
+            HashSet::new()
+        } else {
+            let categories = sqlx::query(sql(format!(
+                "select {CATEGORY_COLUMNS} from {} where course_id = $1",
+                self.table("category")
+            )))
+            .bind(course.as_uuid())
+            .fetch_all(self.db.pool())
+            .await
+            .map_err(kampus_db::classify)?;
+            let categories: Vec<Category> = categories.iter().map(category).collect();
+            totals_with_hidden(&categories, &records, &all)
+        };
+        Ok(all
+            .into_iter()
+            .filter(|g| {
+                records.get(&g.record).is_some_and(|r| viewer.sees(r, g))
+                    && !hidden_totals.contains(&(g.account, g.record))
+            })
+            .collect())
+    }
+
     /// One grade with its entries, as the actor may see it: their own when it is shown, anyone's with
     /// `records.view_all`, hidden ones only with `records.view_hidden`.
     ///
@@ -592,11 +700,12 @@ impl Records {
         let course = self.courses.course(stored.course).await?;
         self.require_view(actor, &course).await?;
         let viewer = self.viewer(actor, &course).await?;
-        let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
+        let all = self.grades_in_course(course.id, &[account.as_uuid()]).await?;
         let found = self
-            .grade_in(&mut conn, record, account, false)
+            .visible_grades(&viewer, course.id, all)
             .await?
-            .filter(|g| viewer.sees(&stored, g))
+            .into_iter()
+            .find(|g| g.record == record)
             .ok_or_else(|| Error::not_found("records.grade_not_found"))?;
         let rows = sqlx::query(sql(format!(
             "select id, record_id, account_id, raw, \"text\", feedback, source, actor, \"at\" from {}
@@ -605,26 +714,13 @@ impl Records {
         )))
         .bind(record.as_uuid())
         .bind(account.as_uuid())
-        .fetch_all(&mut *conn)
+        .fetch_all(self.db.pool())
         .await
         .map_err(kampus_db::classify)?;
         Ok(Detail {
             grade: found,
             entries: rows.iter().map(entry).collect(),
         })
-    }
-
-    /// The records of a course by id, for the visibility rule.
-    async fn records_by_id(&self, course: CourseId) -> Result<HashMap<RecordId, Record>> {
-        let rows = sqlx::query(sql(format!(
-            "select {RECORD_COLUMNS} from {} where course_id = $1",
-            self.table("record")
-        )))
-        .bind(course.as_uuid())
-        .fetch_all(self.db.pool())
-        .await
-        .map_err(kampus_db::classify)?;
-        Ok(rows.iter().map(record).map(|r| (r.id, r)).collect())
     }
 
     /// The grades of a person in a course that the actor may see; a person sees their own, and someone with
@@ -642,24 +738,8 @@ impl Records {
         let course = self.courses.course(course).await?;
         self.require_view(actor, &course).await?;
         let viewer = self.viewer(actor, &course).await?;
-        let records = self.records_by_id(course.id).await?;
-        let rows = sqlx::query(sql(format!(
-            "select g.record_id, g.account_id, g.raw, g.\"final\", g.\"text\", g.overridden, g.excluded,
-             g.hidden_until, g.locked_at, g.version from {} g join {} r on r.id = g.record_id
-             where r.course_id = $1 and g.account_id = $2 order by r.sort_key, g.record_id",
-            self.table("grade"),
-            self.table("record")
-        )))
-        .bind(course.id.as_uuid())
-        .bind(account.as_uuid())
-        .fetch_all(self.db.pool())
-        .await
-        .map_err(kampus_db::classify)?;
-        Ok(rows
-            .iter()
-            .map(grade)
-            .filter(|g| records.get(&g.record).is_some_and(|r| viewer.sees(r, g)))
-            .collect())
+        let all = self.grades_in_course(course.id, &[account.as_uuid()]).await?;
+        self.visible_grades(&viewer, course.id, all).await
     }
 
     /// A page of the grader report: the people with grades in a course, each with the grades the actor may
@@ -699,19 +779,7 @@ impl Records {
             .into_iter()
             .take(usize::try_from(limit).unwrap_or(usize::MAX))
             .collect();
-        let records = self.records_by_id(course.id).await?;
-        let rows = sqlx::query(sql(format!(
-            "select g.record_id, g.account_id, g.raw, g.\"final\", g.\"text\", g.overridden, g.excluded,
-             g.hidden_until, g.locked_at, g.version from {} g join {} r on r.id = g.record_id
-             where r.course_id = $1 and g.account_id = any($2) order by g.account_id, r.sort_key, g.record_id",
-            self.table("grade"),
-            self.table("record")
-        )))
-        .bind(course.id.as_uuid())
-        .bind(&page)
-        .fetch_all(self.db.pool())
-        .await
-        .map_err(kampus_db::classify)?;
+        let all = self.grades_in_course(course.id, &page).await?;
         let mut report: Vec<ReportRow> = page
             .iter()
             .map(|id| ReportRow {
@@ -719,10 +787,7 @@ impl Records {
                 grades: Vec::new(),
             })
             .collect();
-        for found in rows.iter().map(grade) {
-            if !records.get(&found.record).is_some_and(|r| viewer.sees(r, &found)) {
-                continue;
-            }
+        for found in self.visible_grades(&viewer, course.id, all).await? {
             if let Some(row) = report.iter_mut().find(|r| r.account == found.account) {
                 row.grades.push(found);
             }
@@ -734,4 +799,51 @@ impl Records {
         };
         Ok(Report { rows: report, next })
     }
+}
+
+/// The totals each person may not see because they add up a record or a grade that is hidden: a total
+/// contains every record of its category and of the categories below it.
+fn totals_with_hidden(
+    categories: &[Category],
+    records: &HashMap<RecordId, Record>,
+    grades: &[Grade],
+) -> HashSet<(PrincipalId, RecordId)> {
+    let now = Timestamp::from_offset_date_time(time::OffsetDateTime::now_utc());
+    let hidden_grades: HashSet<(PrincipalId, RecordId)> = grades
+        .iter()
+        .filter(|g| g.hidden_until.is_some_and(|until| until > now))
+        .map(|g| (g.account, g.record))
+        .collect();
+    let mut below: HashMap<CategoryId, Vec<CategoryId>> = HashMap::new();
+    for category in categories {
+        if let Some(parent) = category.parent {
+            below.entry(parent).or_default().push(category.id);
+        }
+    }
+    let people: HashSet<PrincipalId> = grades.iter().map(|g| g.account).collect();
+    let mut hidden = HashSet::new();
+    for total in records.values().filter(|r| r.total_of.is_some()) {
+        let Some(root) = total.total_of else { continue };
+        let mut inside = vec![root];
+        let mut next = 0;
+        while next < inside.len() {
+            if let Some(children) = below.get(&inside[next]) {
+                inside.extend(children.iter().copied());
+            }
+            next += 1;
+        }
+        let contained: Vec<&Record> = records
+            .values()
+            .filter(|r| r.category.is_some_and(|c| inside.contains(&c)))
+            .collect();
+        let hidden_for_all = contained
+            .iter()
+            .any(|r| r.hidden_until.is_some_and(|until| until > now));
+        for person in &people {
+            if hidden_for_all || contained.iter().any(|r| hidden_grades.contains(&(*person, r.id))) {
+                hidden.insert((*person, total.id));
+            }
+        }
+    }
+    hidden
 }

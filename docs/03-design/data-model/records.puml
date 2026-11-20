@@ -90,14 +90,9 @@ entity formula_dependency {
   depends_on_id <<FK>>
 }
 entity recalculation {
-  id <<PK>>
-  course_id
-  record_ids
-  account_ids
-  state
+  course_id <<FK>>
+  account_id <<FK>>
   queued_at
-  done_at
-  error
 }
 entity grade_condition {
   condition_id <<FK>>
