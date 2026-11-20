@@ -55,6 +55,8 @@ pub struct Ports {
     pub storage: Option<Arc<dyn Storage>>,
     /// The cache: in-process, in front of the shared one when there is one.
     pub cache: Arc<dyn Cache>,
+    /// The malware scanner, when one is configured.
+    pub scanner: Option<Arc<dyn kampus_scan::Scanner>>,
 }
 
 impl Ports {
@@ -74,6 +76,20 @@ impl Ports {
                 };
                 Some(kampus_storage::open(adapters::STORAGE, settings).await?)
             }
+            None => None,
+        };
+        let scanner = match &config.scan_url {
+            Some(url) => Some(
+                kampus_scan::open(
+                    adapters::SCAN,
+                    AdapterSettings {
+                        url: url.clone(),
+                        prefix: prefix.clone(),
+                        ..AdapterSettings::default()
+                    },
+                )
+                .await?,
+            ),
             None => None,
         };
         let local = kampus_cache::open(
@@ -100,7 +116,11 @@ impl Ports {
             }
             None => local,
         };
-        Ok(Self { storage, cache })
+        Ok(Self {
+            storage,
+            cache,
+            scanner,
+        })
     }
 
     /// The ports of a test: a store in a directory and an in-process cache.
@@ -125,6 +145,7 @@ impl Ports {
         Ok(Self {
             storage: Some(storage),
             cache,
+            scanner: None,
         })
     }
 }

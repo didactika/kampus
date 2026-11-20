@@ -52,6 +52,15 @@ Every piece of infrastructure is a **port** (a Rust trait in a foundation crate)
 | Extra operations | Counters with expiry (rate limits, RN-198) and short locks with a lease |
 | First adapters | in-process (`kampus-cache-moka`) and Redis or Valkey (`kampus-cache-redis`), composed in two levels by `Layered`. Next: Memcached |
 
+## Malware scanning (`kampus-scan`)
+
+| Aspect | Contract |
+| --- | --- |
+| Operation | `scan(content)` answers clean or infected with the name of what was found; `check()` answers readiness |
+| Use | Files scans every upload before keeping it, each time, since signatures change; infected content is refused and never stored (RN-129) |
+| Without a scanner | Uploads are kept and marked `unscanned` |
+| First adapter | ClamAV over TCP (`kampus-scan-clamd`, `clamd://host:port`, the `INSTREAM` command in chunks). Next: provider APIs |
+
 ## Sessions
 
 Server-side sessions checked on every request (DEC-031). Operations: `create`, `touch`, `get`, `revoke`, `revoke_all(account)`. First adapter: the database; next: Redis or Valkey. Revocation of all sessions of an account is atomic.

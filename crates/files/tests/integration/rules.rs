@@ -66,7 +66,7 @@ fn signed_in(read: FileRead<'_>) -> ReadFuture<'_> {
 const AREAS: &[FileAreaDeclaration] = &[FileAreaDeclaration {
     code: "testing.docs",
     summary: "Documents",
-    max_size: 64,
+    max_size: 128,
     allowed_types: &["text/*", "image/png"],
     upload_permission: UPLOAD,
     readable: signed_in,
@@ -251,7 +251,7 @@ async fn an_upload_keeps_to_its_area_and_the_content_decides_the_type() {
         .unwrap_err();
     assert_eq!(denied.kind(), ErrorKind::PermissionDenied);
     let large = f
-        .open_upload(&w.ana, ("testing.docs", w.campus), "a.txt", 65, None)
+        .open_upload(&w.ana, ("testing.docs", w.campus), "a.txt", 129, None)
         .await
         .unwrap_err();
     assert_eq!(large.code(), "files.upload_invalid");
@@ -453,5 +453,79 @@ async fn quotas_refuse_what_does_not_fit_and_count_only_attached_files() {
     assert_eq!(denied.kind(), ErrorKind::PermissionDenied);
     let negative = f.set_quota(&w.ana, w.campus, Some(-1)).await.unwrap_err();
     assert_eq!(negative.code(), "files.quota_invalid");
+    w.drop().await;
+}
+
+/// A scanner that finds the test file.
+#[derive(Debug)]
+struct FindsTheTestFile;
+
+#[async_trait::async_trait]
+impl kampus_scan::Scanner for FindsTheTestFile {
+    async fn scan(&self, content: Bytes) -> kampus_common::Result<kampus_scan::Verdict> {
+        let found = content
+            .windows(kampus_scan::EICAR.len())
+            .any(|w| w == kampus_scan::EICAR);
+        Ok(if found {
+            kampus_scan::Verdict::Infected("Eicar-Test-Signature".to_owned())
+        } else {
+            kampus_scan::Verdict::Clean
+        })
+    }
+
+    async fn check(&self) -> kampus_common::Result<()> {
+        Ok(())
+    }
+}
+
+#[tokio::test]
+async fn infected_content_is_never_kept_and_clean_content_is_marked_clean() {
+    let w = world().await;
+    let unscanned = w.upload("before.txt", b"kept before").await;
+    assert_eq!(
+        w.count("select count(*) from {s}.blob where scan_status = 'unscanned'")
+            .await,
+        1
+    );
+    let f = w.files.clone().with_scanner(Some(Arc::new(FindsTheTestFile)));
+    let upload = f
+        .open_upload(
+            &w.ana,
+            ("testing.docs", w.campus),
+            "eicar.txt",
+            68,
+            Some("text/plain"),
+        )
+        .await
+        .unwrap();
+    let infected = f
+        .send_upload(&w.ana, upload.id, Bytes::from_static(kampus_scan::EICAR))
+        .await
+        .unwrap_err();
+    assert_eq!(infected.code(), "files.infected");
+    assert_eq!(
+        w.count("select count(*) from {s}.blob").await,
+        1,
+        "nothing infected is stored"
+    );
+    let again = f
+        .open_upload(
+            &w.ana,
+            ("testing.docs", w.campus),
+            "again.txt",
+            11,
+            Some("text/plain"),
+        )
+        .await
+        .unwrap();
+    f.send_upload(&w.ana, again.id, Bytes::from_static(b"kept before"))
+        .await
+        .unwrap();
+    assert_eq!(
+        w.count("select count(*) from {s}.blob where scan_status = 'clean'")
+            .await,
+        1
+    );
+    assert!(!unscanned.attached);
     w.drop().await;
 }

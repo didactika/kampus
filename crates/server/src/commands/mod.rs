@@ -126,7 +126,7 @@ pub async fn serve(config: &Config) -> Result<()> {
     })?;
     tracing::info!(role = %config.role, address = %config.http_address, version = PLATFORM_VERSION, "kampus started");
     let ports = crate::wiring::ports::Ports::open(config).await?;
-    let services = services(config, &db, ports.storage.clone())?;
+    let services = services(config, &db, &ports)?;
     let api = match (&services, config.role.serves_api()) {
         (Some(services), true) => Some(Api {
             campuses: Campuses::new(config.tenancy.clone(), services.access.clone()),
@@ -191,11 +191,7 @@ pub async fn serve(config: &Config) -> Result<()> {
 /// # Errors
 ///
 /// `validation` when such a role has no secret key, or serves the API without a site address.
-fn services(
-    config: &Config,
-    db: &Database,
-    storage: Option<Arc<dyn kampus_storage::Storage>>,
-) -> Result<Option<Services>> {
+fn services(config: &Config, db: &Database, ports: &crate::wiring::ports::Ports) -> Result<Option<Services>> {
     if !config.role.serves_api() && !config.role.runs_jobs() {
         return Ok(None);
     }
@@ -215,7 +211,8 @@ fn services(
         .clone()
         .ok_or_else(|| missing("KAMPUS_SECURITY_SECRET_KEY"))?;
     Ok(Some(Services::build(Parts {
-        storage,
+        storage: ports.storage.clone(),
+        scanner: ports.scanner.clone(),
         ..Parts::new(db.clone(), site_url, secret_key, Arc::new(LogCourier))
     })))
 }

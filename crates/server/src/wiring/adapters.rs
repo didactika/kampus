@@ -38,6 +38,9 @@
 /// The cache adapters of this build.
 pub const CACHE: &[kampus_cache::Adapter] = &[kampus_cache_moka::ADAPTER, kampus_cache_redis::ADAPTER];
 
+/// The scan adapters of this build.
+pub const SCAN: &[kampus_scan::Adapter] = &[kampus_scan_clamd::ADAPTER];
+
 /// The storage adapters of this build.
 pub const STORAGE: &[kampus_storage::Adapter] = &[kampus_storage_opendal::ADAPTER];
 

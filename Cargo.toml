@@ -51,6 +51,7 @@ kampus-db = { path = "crates/db" }
 kampus-module = { path = "crates/module" }
 kampus-storage = { path = "crates/storage" }
 kampus-cache = { path = "crates/cache" }
+kampus-scan = { path = "crates/scan" }
 kampus-access = { path = "crates/access" }
 argon2 = { version = "0.6.0", default-features = false, features = ["alloc"] }
 async-trait = "0.1.92"

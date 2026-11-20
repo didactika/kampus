@@ -51,6 +51,9 @@ url = "file:///var/lib/kampus/files"
 [cache]
 url = "valkey://localhost:6379"
 
+[scan]
+url = "clamd://localhost:3310"
+
 [security]
 secret_key = "replace with: kampus-server install, which generates it"
 

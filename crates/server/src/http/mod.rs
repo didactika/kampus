@@ -174,6 +174,11 @@ async fn ready(State(state): State<AppState>) -> Response {
     if let Err(error) = state.ports.cache.check().await {
         reasons.push(format!("cache: {error}"));
     }
+    if let Some(scanner) = &state.ports.scanner
+        && let Err(error) = scanner.check().await
+    {
+        reasons.push(format!("scanner: {error}"));
+    }
     if reasons.is_empty() {
         axum::Json(json!({ "status": "ready", "version": PLATFORM_VERSION })).into_response()
     } else {
