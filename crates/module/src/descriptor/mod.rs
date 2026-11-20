@@ -34,6 +34,7 @@
 
 //! The descriptor of a module: what it adds to the platform, as the server reads it.
 
+mod activity;
 mod command;
 mod customise;
 mod event;
@@ -44,6 +45,7 @@ mod rule;
 mod setting;
 mod value;
 
+pub use activity::{ActivityKind, ActivitySetting, ActivityTypeDeclaration};
 pub use command::{Argument, Command, CommandContext, CommandFuture};
 pub use customise::{
     FieldKindDeclaration, FlagDeclaration, MenuKindDeclaration, PageKindDeclaration, TermDeclaration,
@@ -103,6 +105,8 @@ pub struct Module {
     pub rule_actions: &'static [RuleActionDeclaration],
     /// The areas where it keeps files, from `src/settings/files.rs`.
     pub file_areas: &'static [FileAreaDeclaration],
+    /// The types of activity and material it provides, from `src/settings/activities.rs`.
+    pub activity_types: &'static [ActivityTypeDeclaration],
     /// The events it publishes, from `src/events/mod.rs`.
     pub events: &'static [EventDeclaration],
     /// Its reactions to events, from `src/observers/mod.rs`.

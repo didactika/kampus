@@ -89,6 +89,7 @@ fn signature(content: &[u8]) -> Option<&'static str> {
 pub fn allowed(allowed: &[String], media_type: &str) -> bool {
     allowed.iter().any(|a| {
         a == media_type
+            || a == "*/*"
             || a.strip_suffix("/*")
                 .is_some_and(|family| media_type.split('/').next() == Some(family))
     })

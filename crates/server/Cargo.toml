@@ -57,6 +57,7 @@ kampus-customise = { path = "../customise" }
 kampus-users = { path = "../users" }
 kampus-courses = { path = "../courses" }
 kampus-enrol = { path = "../enrol" }
+kampus-activities = { path = "../activities" }
 # modules:end
 # adapters:start
 kampus-cache-moka = { path = "../cache/adapters/moka" }

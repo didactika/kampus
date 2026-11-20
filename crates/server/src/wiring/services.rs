@@ -148,6 +148,13 @@ impl Services {
             Arc::new(Participation::new(parts.db.clone())),
         )
         .with_customise(customise.clone());
+        let activities = kampus_activities::Activities::new(
+            parts.db.clone(),
+            access.clone(),
+            courses.clone(),
+            files.clone(),
+        )
+        .with_modules(MODULES);
         let hasher = PasswordHasher::new(parts.password_cost.unwrap_or_default());
         let tasks = Tasks::new(parts.db.clone());
         let events = Events::new(parts.db.clone());
@@ -171,6 +178,7 @@ impl Services {
             .with(settings)
             .with(customise)
             .with(files)
+            .with(activities)
             .with(HttpSettings {
                 api_url,
                 site_url: parts.site_url,
