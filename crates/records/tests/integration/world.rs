@@ -110,6 +110,10 @@ pub(crate) async fn world() -> World {
         .sync_declarations(&modules)
         .await
         .unwrap();
+    kampus_tasks::Tasks::new(db.clone())
+        .sync_declarations(&modules, kampus_common::Clock::now(&SystemClock))
+        .await
+        .unwrap();
     let store = tempfile::tempdir().unwrap();
     let storage = kampus_storage::open(
         &[kampus_storage_opendal::ADAPTER],

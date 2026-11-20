@@ -37,6 +37,7 @@
 
 pub mod category;
 pub mod grade;
+pub mod recalc;
 pub mod record;
 
 use kampus_access::{Actor, PrincipalId};

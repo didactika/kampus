@@ -55,6 +55,7 @@ kampus-activities = { path = "../activities" }
 kampus-courses = { path = "../courses" }
 kampus-events = { path = "../events" }
 kampus-identity = { path = "../identity" }
+kampus-tasks = { path = "../tasks" }
 axum.workspace = true
 rust_decimal.workspace = true
 serde.workspace = true

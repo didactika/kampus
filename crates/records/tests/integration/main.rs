@@ -42,4 +42,5 @@
 
 mod grades;
 mod structure;
+mod totals;
 mod world;
