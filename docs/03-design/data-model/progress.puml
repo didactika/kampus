@@ -9,8 +9,17 @@ entity rule {
   id <<PK>>
   course_module_id <<FK>>
   kind
-  type_rule_code
-  parameters
+  created_at
+}
+entity signal {
+  course_module_id <<FK>>
+  account_id <<FK>>
+  kind
+  at
+}
+entity pending {
+  course_module_id <<FK>>
+  queued_at
 }
 entity activity_state {
   course_module_id <<FK>>
@@ -25,13 +34,13 @@ entity activity_exception {
   account_id <<FK>>
   state
   reason
-  by
+  author
   at
 }
 entity activity_history {
   id <<PK>>
-  course_module_id
-  account_id
+  course_module_id <<FK>>
+  account_id <<FK>>
   from_state
   to_state
   cause
