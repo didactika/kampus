@@ -5,7 +5,7 @@ info:
   description: >-
     Grade records, categories, grades, overrides, locks, scales and letters, reports and exports. Every read
     goes through the visibility service (RN-103). Conventions of DEC-025 and DEC-026; exact numbers as
-    strings (DEC-023). Scales, letters, formulas, aggregation and exports arrive after the first part.
+    strings (DEC-023). Formulas, grade conditions and exports arrive in later parts.
 paths:
   /api/v1/records/courses/{course_id}/records:
     get: { summary: The records tree of a course (categories and records the caller may see), responses: { '200': { description: Tree } } }
@@ -48,8 +48,15 @@ paths:
   /api/v1/records/courses/{course_id}/records/export:
     post: { summary: Export grades (a job; the file is available when done), responses: { '202': { description: Export job accepted } } }
   /api/v1/records/scopes/{scope_id}/scales:
-    get: { summary: Scales available in a scope (inherited), responses: { '200': { description: Scales } } }
-    post: { summary: Add a scale or a new version of it, responses: { '201': { description: Added } } }
+    get: { summary: Scales available in a scope (the latest version of each code defined there or above), responses: { '200': { description: Scales } } }
+    post: { summary: Add a scale or the next version of one (records.manage), responses: { '201': { description: Added } } }
+  /api/v1/records/scopes/{scope_id}/letters:
+    get: { summary: The letter set that applies in a scope, responses: { '200': { description: The set or null } } }
+    post: { summary: Define the next version of the letter set of a scope (records.manage), responses: { '201': { description: Defined } } }
+  /api/v1/records/courses/{course_id}/scales:
+    get: { summary: Scales available in a course, responses: { '200': { description: Scales } } }
+  /api/v1/records/courses/{course_id}/letters:
+    get: { summary: The letter set that applies in a course, responses: { '200': { description: The set or null } } }
 components:
   parameters:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }

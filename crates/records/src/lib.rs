@@ -52,13 +52,13 @@ use kampus_courses::Courses;
 use kampus_db::Database;
 
 pub use model::{
-    Category, CategoryFields, CategoryId, Entry, EntryId, Grade, GradeChange, GradeType, GradeWrite, Method,
-    Record, RecordFields, RecordId, RecordKind, Source, Tree,
+    Band, Category, CategoryFields, CategoryId, Entry, EntryId, Grade, GradeChange, GradeType, GradeWrite,
+    LetterSet, LetterSetId, Method, Record, RecordFields, RecordId, RecordKind, Scale, ScaleId, Source, Tree,
 };
 pub use module::MODULE;
 pub use service::grade::{Detail, Report, ReportRow};
 pub use service::recalc::Recalculated;
-pub use support::aggregation;
+pub use support::{aggregation, letters};
 
 /// The records of an installation.
 #[derive(Clone)]
