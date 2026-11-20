@@ -55,6 +55,7 @@ use kampus_module::{ActivityTypeDeclaration, Module as Declared};
 
 pub use model::{ActivityType, BinItem, Module, ModuleFields, ModuleId, ModuleState};
 pub use module::MODULE;
+pub use service::exception::{Exception, ExceptionId, Target, Values};
 
 /// How long a course module stays in the recycle bin.
 pub const BIN_RETENTION: time::Duration = time::Duration::days(30);

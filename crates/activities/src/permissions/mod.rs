@@ -43,10 +43,21 @@ pub use templates::TEMPLATES;
 /// Add, change, move, copy, delete and restore the course modules of a section or a course.
 pub const MODULE_MANAGE: &str = "activities.module.manage";
 
+/// Grant and remove exceptions of dates, time limits and attempts.
+pub const EXCEPTION_MANAGE: &str = "activities.exception.manage";
+
 /// The permissions of this module.
-pub const PERMISSIONS: &[PermissionDeclaration] = &[PermissionDeclaration {
-    code: MODULE_MANAGE,
-    kind: PermissionKind::Write,
-    risks: &[Risk::DataLoss],
-    lowest_kind: ScopeKind::Activity,
-}];
+pub const PERMISSIONS: &[PermissionDeclaration] = &[
+    PermissionDeclaration {
+        code: MODULE_MANAGE,
+        kind: PermissionKind::Write,
+        risks: &[Risk::DataLoss],
+        lowest_kind: ScopeKind::Activity,
+    },
+    PermissionDeclaration {
+        code: EXCEPTION_MANAGE,
+        kind: PermissionKind::Write,
+        risks: &[],
+        lowest_kind: ScopeKind::Activity,
+    },
+];

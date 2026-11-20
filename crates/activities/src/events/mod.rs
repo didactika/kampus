@@ -55,6 +55,9 @@ pub const MODULE_RESTORED: &str = "activities.module_restored";
 /// A course module was removed for good when its time in the bin ended.
 pub const MODULE_PURGED: &str = "activities.module_purged";
 
+/// An exception of a course module was granted, changed or removed.
+pub const EXCEPTION_CHANGED: &str = "activities.exception_changed";
+
 /// A declaration of one of the events of a course module.
 const fn declared(code: &'static str, summary: &'static str) -> EventDeclaration {
     EventDeclaration {
@@ -75,4 +78,8 @@ pub const EVENTS: &[EventDeclaration] = &[
     declared(MODULE_DELETED, "A course module went to the recycle bin"),
     declared(MODULE_RESTORED, "A course module came back from the recycle bin"),
     declared(MODULE_PURGED, "A course module was removed for good"),
+    declared(
+        EXCEPTION_CHANGED,
+        "An exception of a course module was granted, changed or removed",
+    ),
 ];

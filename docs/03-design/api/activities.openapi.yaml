@@ -43,13 +43,15 @@ paths:
     get: { summary: The condition tree of a section, responses: { '200': { description: Conditions } } }
     put: { summary: 'Replace the condition tree of a section (RN-083)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
   /api/v1/activities/course-modules/{course_module_id}/exceptions:
-    get: { summary: Exceptions of a course module, responses: { '200': { description: Exceptions } } }
-    post: { summary: 'Add an exception for a person or a group (RN-084, RN-085)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Added }, '409': { description: An exception already exists for that person or group } } }
+    get: { summary: Exceptions of a course module, responses: { '200': { description: Exceptions }, '403': { description: Without activities.exception.manage } } }
+  /api/v1/activities/course-modules/{course_module_id}/exceptions/accounts/{account_id}:
+    put: { summary: 'Grant an exception to a person, replacing theirs (RN-084, RN-085)', responses: { '200': { description: Granted }, '422': { description: 'The type has no exceptions, nothing changes, dates out of order or numbers out of range' } } }
+  /api/v1/activities/course-modules/{course_module_id}/exceptions/groups/{group_id}:
+    put: { summary: 'Grant an exception to a group of the course, replacing its own (RN-084, RN-085)', responses: { '200': { description: Granted }, '422': { description: 'As for a person, or a group of another course' } } }
   /api/v1/activities/exceptions/{exception_id}:
-    patch: { summary: Change an exception, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
     delete: { summary: Remove an exception, responses: { '204': { description: Removed } } }
-  /api/v1/activities/course-modules/{course_module_id}/effective-values:
-    get: { summary: 'Effective dates, attempts and time limit for a person (RN-086)', parameters: [{ name: account_id, in: query, schema: { type: string, format: uuid } }], responses: { '200': { description: Effective values and where each comes from } } }
+  /api/v1/activities/course-modules/{course_module_id}/effective-values/{account_id}:
+    get: { summary: "What applies to a person (RN-086): their own exception, then the most generous of their groups, then the course module; a person reads their own", responses: { '200': { description: Effective values } } }
 components:
   parameters:
     IfMatch: { name: If-Match, in: header, required: true, schema: { type: string } }
