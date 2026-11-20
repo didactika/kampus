@@ -20,8 +20,10 @@ PostgreSQL schema `files`, owned by `kampus-files`, following DEC-014, DEC-021, 
 | `file` | `id`, `blob_id` FK → `blob` (`RESTRICT`), `area_code` FK → `area` (`RESTRICT`), `scope_id` FK → `access.scope` (`CASCADE`, the scope it was uploaded for), `name`, `media_type`, `size`, `uploader` (soft: outlives the account), `attached`, `created_at` | Owned through the owning module's link table (`<module>.<entity>_file`, with foreign keys and `CASCADE` from the owner, RN-127); until `attached`, only its uploader reads it; index on `blob_id` and (`attached`, `created_at`) for the purge |
 | `upload` | `id`, `area_code` FK → `area` (`CASCADE`), `scope_id` FK → `access.scope` (`CASCADE`), `uploader`, `name`, `declared_type` (a hint only, RN-130), `max_size`, `blob_id` FK → `blob` (`CASCADE`, once the content arrived), `file_id` FK → `file` (`CASCADE`, once completed), `expires_at` (one hour), `created_at` | Only its uploader sends to it; the purge job removes it after expiry |
 | `trash` | `blob_id` PK FK → `blob` (`CASCADE`), `since` | Content no file uses: new content waits here until a file uses it, and content whose last file is detached comes back; the purge job deletes it from storage after 7 days (RN-133) |
+| `quota` | `scope_id` PK FK → `access.scope` (`CASCADE`), `limit_bytes` (none: no limit), `used_bytes` (step 2) | `CHECK` both >= 0; an attached file counts in every scope of its path, from its own up to the platform, in the transaction that attaches or detaches it; the check rides in the same `UPDATE`, so two attachments at once cannot both pass a limit (RN-134) |
+| `principal_quota` | `principal_id` PK FK → `access.principal` (`CASCADE`), `limit_bytes`, `used_bytes` (step 2) | The same for the person who uploaded each file |
 
-Quotas (`quota`, RN-134), conversions (`conversion`, RN-135) and the scanning port (RN-129) arrive in later parts; until then their tables are not created and uploads are not scanned.
+Opening an upload checks that the file would fit every quota it would count in, and refuses it with `files.quota_exceeded`; files nobody attached never count, since they are removed within a day. Conversions (`conversion`, RN-135) and the scanning port (RN-129) arrive in later parts; until then their tables are not created and uploads are not scanned.
 
 ## Anti-patterns avoided (DEC-014)
 

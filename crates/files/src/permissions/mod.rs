@@ -32,14 +32,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The permissions files declares: none. Uploading into an area needs the permission its module
+//! The permissions files declares: setting quotas. Uploading into an area needs the permission its module
 //! declares for it, and reading a file needs what reading its owner needs.
 
-use kampus_module::PermissionDeclaration;
+use kampus_module::{PermissionDeclaration, PermissionKind, Risk, ScopeKind};
 
 pub mod templates;
 
 pub use templates::TEMPLATES;
 
+/// Set how much the files of a scope or of a person may take.
+pub const QUOTA_MANAGE: &str = "files.quota.manage";
+
 /// The permissions of this module.
-pub const PERMISSIONS: &[PermissionDeclaration] = &[];
+pub const PERMISSIONS: &[PermissionDeclaration] = &[PermissionDeclaration {
+    code: QUOTA_MANAGE,
+    kind: PermissionKind::Write,
+    risks: &[Risk::Configuration],
+    lowest_kind: ScopeKind::Course,
+}];

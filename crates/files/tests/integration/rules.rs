@@ -76,6 +76,7 @@ const AREAS: &[FileAreaDeclaration] = &[FileAreaDeclaration {
 const TESTING: Module = Module {
     name: "testing",
     permissions: PERMISSIONS,
+    templates: &[],
     file_areas: AREAS,
     ..kampus_files::MODULE
 };
@@ -118,7 +119,7 @@ async fn world() -> World {
     Upgrader::new(&db, &schemas, "0.1.0").apply(true).await.unwrap();
     let access = Access::new(db.clone(), Arc::new(SystemClock));
     access
-        .sync_modules(&[&kampus_access::MODULE, &TESTING])
+        .sync_modules(&[&kampus_access::MODULE, &kampus_files::MODULE, &TESTING])
         .await
         .unwrap();
     kampus_events::Events::new(db.clone())
@@ -208,6 +209,17 @@ impl World {
             .await
             .unwrap();
         self.files.complete_upload(&self.ana, upload.id).await.unwrap()
+    }
+
+    /// Attaches a file in a transaction of its own, kept only when it succeeds.
+    async fn attach(&self, file: &File) -> kampus_common::Result<File> {
+        let mut tx = self.db.begin().await.unwrap();
+        let attached = self
+            .files
+            .attach_in(&mut tx, file.id, "testing.docs", None)
+            .await?;
+        tx.commit().await.unwrap();
+        Ok(attached)
     }
 
     /// A number of a table of files.
@@ -395,5 +407,51 @@ async fn the_purge_removes_what_nobody_attached_and_content_past_its_trash() {
     assert_eq!(second.blobs, 1);
     assert_eq!(w.count("select count(*) from {s}.blob").await, 1);
     f.file(who(&w.bea), kept.id, &w.services).await.unwrap();
+    w.drop().await;
+}
+
+#[tokio::test]
+async fn quotas_refuse_what_does_not_fit_and_count_only_attached_files() {
+    let w = world().await;
+    let f = &w.files;
+    let quota = f.set_quota(&w.ana, w.campus, Some(20)).await.unwrap();
+    assert_eq!((quota.limit_bytes, quota.used_bytes), (Some(20), 0));
+    let first = w.upload("one.txt", b"ten bytes!").await;
+    assert_eq!(
+        f.quota(&w.ana, w.campus).await.unwrap().used_bytes,
+        0,
+        "only attached files count"
+    );
+    w.attach(&first).await.unwrap();
+    assert_eq!(f.quota(&w.ana, w.campus).await.unwrap().used_bytes, 10);
+    let too_big = f
+        .open_upload(&w.ana, ("testing.docs", w.campus), "big.txt", 11, None)
+        .await
+        .unwrap_err();
+    assert_eq!(too_big.code(), "files.quota_exceeded");
+    let second = w.upload("two.txt", b"eight b!").await;
+    let third = w.upload("three.txt", b"eight c!").await;
+    w.attach(&second).await.unwrap();
+    let refused = w.attach(&third).await.unwrap_err();
+    assert_eq!(refused.code(), "files.quota_exceeded");
+    assert_eq!(f.quota(&w.ana, w.campus).await.unwrap().used_bytes, 18);
+    let ana = PrincipalId::from_uuid(who(&w.ana).unwrap());
+    let personal = f.person_quota(&w.ana, ana).await.unwrap();
+    assert_eq!(personal.used_bytes, 18);
+    f.set_person_quota(&w.ana, ana, Some(19)).await.unwrap();
+    let person_full = f
+        .open_upload(&w.ana, ("testing.docs", w.campus), "two.txt", 2, None)
+        .await
+        .unwrap_err();
+    assert_eq!(person_full.code(), "files.quota_exceeded");
+    let mut tx = w.db.begin().await.unwrap();
+    f.detach_in(&mut tx, first.id).await.unwrap();
+    tx.commit().await.unwrap();
+    assert_eq!(f.quota(&w.ana, w.campus).await.unwrap().used_bytes, 8);
+    assert_eq!(f.person_quota(&w.ana, ana).await.unwrap().used_bytes, 8);
+    let denied = f.set_quota(&w.bea, w.campus, None).await.unwrap_err();
+    assert_eq!(denied.kind(), ErrorKind::PermissionDenied);
+    let negative = f.set_quota(&w.ana, w.campus, Some(-1)).await.unwrap_err();
+    assert_eq!(negative.code(), "files.quota_invalid");
     w.drop().await;
 }

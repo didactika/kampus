@@ -32,9 +32,31 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The values files gives in the default role templates: none, since it declares no permissions.
+//! The values files gives in the default role templates, version 1: administrators and managers set
+//! quotas.
 
-use kampus_module::RoleTemplateDeclaration;
+use kampus_module::{RoleTemplateDeclaration, Value};
+
+use super::QUOTA_MANAGE;
+
+/// Setting quotas, allowed.
+const QUOTAS: &[(&str, Value)] = &[(QUOTA_MANAGE, Value::Allow)];
 
 /// The values of this module in the role templates.
-pub const TEMPLATES: &[RoleTemplateDeclaration] = &[];
+pub const TEMPLATES: &[RoleTemplateDeclaration] = &[
+    RoleTemplateDeclaration {
+        code: "platform_administrator",
+        version: 1,
+        values: QUOTAS,
+    },
+    RoleTemplateDeclaration {
+        code: "campus_administrator",
+        version: 1,
+        values: QUOTAS,
+    },
+    RoleTemplateDeclaration {
+        code: "manager",
+        version: 1,
+        values: QUOTAS,
+    },
+];

@@ -36,6 +36,8 @@
 //! a link to it; and serving the content behind a link, with headers that never let it run in the
 //! platform's origin.
 
+mod quota;
+
 use axum::body::Bytes;
 use axum::extract::{Path, Query, State};
 use axum::http::{StatusCode, header};
@@ -65,6 +67,7 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/files/{id}", get(read))
         .route("/files/{id}/url", post(url))
         .route("/content/{id}", get(content))
+        .merge(quota::routes())
         .with_state(shared)
 }
 

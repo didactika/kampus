@@ -33,7 +33,8 @@
 // ------------------------------------------------------------------------------
 
 //! The upgrade steps of the `files` schema: blobs stored once by their hash with the count of the files
-//! that use them, the areas modules declare, files, uploads, and the trash of blobs no file uses.
+//! that use them, the areas modules declare, files, uploads, the trash of blobs no file uses, and the
+//! quotas of scopes and people.
 
 use kampus_db::Step;
 use kampus_db::schema::{Change, Check, Column, ColumnDefault, ForeignKey, Index, OnDelete, Table, Type};
@@ -67,120 +68,168 @@ const fn own(
 }
 
 /// The upgrade steps of this module.
-pub const STEPS: &[Step] = &[Step {
-    sequence: 1,
-    name: "blobs, areas, files, uploads and trash",
-    revert: &[],
-    action: None,
-    changes: &[
-        Change::CreateTable(Table {
-            name: "blob",
-            columns: &[
-                Column::new("id", Type::Uuid),
-                Column::new("hash", Type::Bytes),
-                Column::new("size", Type::BigInt),
-                Column::new("media_type", Type::Text),
-                Column::new("storage_key", Type::Text),
-                Column::new("ref_count", Type::Integer).default(ColumnDefault::Int(0)),
-                Column::new("scan_status", Type::Text).default(ColumnDefault::Text("unscanned")),
-                Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["id"],
-            unique: &[&["hash"]],
-            checks: &[
-                Check::NonNegative("ref_count"),
-                Check::NonNegative("size"),
-                Check::OneOf("scan_status", SCAN_STATUSES),
-            ],
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "area",
-            columns: &[
-                Column::new("code", Type::Text),
-                Column::new("module", Type::Text),
-                Column::new("summary", Type::Text),
-                Column::new("max_size", Type::BigInt),
-                Column::new("allowed_types", Type::Json("files.allowed_types")),
-                Column::new("upload_permission", Type::Text),
-                Column::new("retired_at", Type::Timestamptz).nullable(),
-            ],
-            primary_key: &["code"],
-            without_natural_key: Some("keyed by the code its module declares"),
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "file",
-            columns: &[
-                Column::new("id", Type::Uuid),
-                Column::new("blob_id", Type::Uuid),
-                Column::new("area_code", Type::Text),
-                Column::new("scope_id", Type::Uuid),
-                Column::new("name", Type::Text),
-                Column::new("media_type", Type::Text),
-                Column::new("size", Type::BigInt),
-                Column::new("uploader", Type::Uuid).nullable(),
-                Column::new("attached", Type::Boolean).default(ColumnDefault::Bool(false)),
-                Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["id"],
-            foreign_keys: &[
-                own(&["blob_id"], "blob", &["id"], OnDelete::Restrict),
-                own(&["area_code"], "area", &["code"], OnDelete::Restrict),
-                SCOPE,
-            ],
-            indexes: &[
-                Index {
-                    columns: &["blob_id"],
+pub const STEPS: &[Step] = &[
+    Step {
+        sequence: 1,
+        name: "blobs, areas, files, uploads and trash",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::CreateTable(Table {
+                name: "blob",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("hash", Type::Bytes),
+                    Column::new("size", Type::BigInt),
+                    Column::new("media_type", Type::Text),
+                    Column::new("storage_key", Type::Text),
+                    Column::new("ref_count", Type::Integer).default(ColumnDefault::Int(0)),
+                    Column::new("scan_status", Type::Text).default(ColumnDefault::Text("unscanned")),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                unique: &[&["hash"]],
+                checks: &[
+                    Check::NonNegative("ref_count"),
+                    Check::NonNegative("size"),
+                    Check::OneOf("scan_status", SCAN_STATUSES),
+                ],
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "area",
+                columns: &[
+                    Column::new("code", Type::Text),
+                    Column::new("module", Type::Text),
+                    Column::new("summary", Type::Text),
+                    Column::new("max_size", Type::BigInt),
+                    Column::new("allowed_types", Type::Json("files.allowed_types")),
+                    Column::new("upload_permission", Type::Text),
+                    Column::new("retired_at", Type::Timestamptz).nullable(),
+                ],
+                primary_key: &["code"],
+                without_natural_key: Some("keyed by the code its module declares"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "file",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("blob_id", Type::Uuid),
+                    Column::new("area_code", Type::Text),
+                    Column::new("scope_id", Type::Uuid),
+                    Column::new("name", Type::Text),
+                    Column::new("media_type", Type::Text),
+                    Column::new("size", Type::BigInt),
+                    Column::new("uploader", Type::Uuid).nullable(),
+                    Column::new("attached", Type::Boolean).default(ColumnDefault::Bool(false)),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                foreign_keys: &[
+                    own(&["blob_id"], "blob", &["id"], OnDelete::Restrict),
+                    own(&["area_code"], "area", &["code"], OnDelete::Restrict),
+                    SCOPE,
+                ],
+                indexes: &[
+                    Index {
+                        columns: &["blob_id"],
+                        unique: false,
+                    },
+                    Index {
+                        columns: &["attached", "created_at"],
+                        unique: false,
+                    },
+                ],
+                without_natural_key: Some("a file is known by its id; names repeat"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "upload",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("area_code", Type::Text),
+                    Column::new("scope_id", Type::Uuid),
+                    Column::new("uploader", Type::Uuid),
+                    Column::new("name", Type::Text),
+                    Column::new("declared_type", Type::Text).nullable(),
+                    Column::new("max_size", Type::BigInt),
+                    Column::new("blob_id", Type::Uuid).nullable(),
+                    Column::new("file_id", Type::Uuid).nullable(),
+                    Column::new("expires_at", Type::Timestamptz),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                foreign_keys: &[
+                    own(&["area_code"], "area", &["code"], OnDelete::Cascade),
+                    own(&["blob_id"], "blob", &["id"], OnDelete::Cascade),
+                    own(&["file_id"], "file", &["id"], OnDelete::Cascade),
+                    SCOPE,
+                ],
+                indexes: &[Index {
+                    columns: &["expires_at"],
                     unique: false,
-                },
-                Index {
-                    columns: &["attached", "created_at"],
-                    unique: false,
-                },
-            ],
-            without_natural_key: Some("a file is known by its id; names repeat"),
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "upload",
-            columns: &[
-                Column::new("id", Type::Uuid),
-                Column::new("area_code", Type::Text),
-                Column::new("scope_id", Type::Uuid),
-                Column::new("uploader", Type::Uuid),
-                Column::new("name", Type::Text),
-                Column::new("declared_type", Type::Text).nullable(),
-                Column::new("max_size", Type::BigInt),
-                Column::new("blob_id", Type::Uuid).nullable(),
-                Column::new("file_id", Type::Uuid).nullable(),
-                Column::new("expires_at", Type::Timestamptz),
-                Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["id"],
-            foreign_keys: &[
-                own(&["area_code"], "area", &["code"], OnDelete::Cascade),
-                own(&["blob_id"], "blob", &["id"], OnDelete::Cascade),
-                own(&["file_id"], "file", &["id"], OnDelete::Cascade),
-                SCOPE,
-            ],
-            indexes: &[Index {
-                columns: &["expires_at"],
-                unique: false,
-            }],
-            without_natural_key: Some("an upload session is known by its id"),
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "trash",
-            columns: &[
-                Column::new("blob_id", Type::Uuid),
-                Column::new("since", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["blob_id"],
-            foreign_keys: &[own(&["blob_id"], "blob", &["id"], OnDelete::Cascade)],
-            without_natural_key: Some("one entry per blob no file uses"),
-            ..Table::EMPTY
-        }),
-    ],
-}];
+                }],
+                without_natural_key: Some("an upload session is known by its id"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "trash",
+                columns: &[
+                    Column::new("blob_id", Type::Uuid),
+                    Column::new("since", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["blob_id"],
+                foreign_keys: &[own(&["blob_id"], "blob", &["id"], OnDelete::Cascade)],
+                without_natural_key: Some("one entry per blob no file uses"),
+                ..Table::EMPTY
+            }),
+        ],
+    },
+    Step {
+        sequence: 2,
+        name: "quotas",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::CreateTable(Table {
+                name: "quota",
+                columns: &[
+                    Column::new("scope_id", Type::Uuid),
+                    Column::new("limit_bytes", Type::BigInt).nullable(),
+                    Column::new("used_bytes", Type::BigInt).default(ColumnDefault::Int(0)),
+                ],
+                primary_key: &["scope_id"],
+                foreign_keys: &[SCOPE],
+                checks: &[
+                    Check::NonNegative("used_bytes"),
+                    Check::NonNegative("limit_bytes"),
+                ],
+                without_natural_key: Some("one quota per scope"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "principal_quota",
+                columns: &[
+                    Column::new("principal_id", Type::Uuid),
+                    Column::new("limit_bytes", Type::BigInt).nullable(),
+                    Column::new("used_bytes", Type::BigInt).default(ColumnDefault::Int(0)),
+                ],
+                primary_key: &["principal_id"],
+                foreign_keys: &[ForeignKey {
+                    columns: &["principal_id"],
+                    module: Some("access"),
+                    table: "principal",
+                    references: &["id"],
+                    on_delete: OnDelete::Cascade,
+                }],
+                checks: &[
+                    Check::NonNegative("used_bytes"),
+                    Check::NonNegative("limit_bytes"),
+                ],
+                without_natural_key: Some("one quota per person"),
+                ..Table::EMPTY
+            }),
+        ],
+    },
+];

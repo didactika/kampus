@@ -48,6 +48,16 @@ entity upload {
   file_id <<FK>>
   expires_at
 }
+entity quota {
+  scope_id <<PK, FK>>
+  limit_bytes
+  used_bytes
+}
+entity principal_quota {
+  principal_id <<PK, FK>>
+  limit_bytes
+  used_bytes
+}
 entity trash {
   blob_id <<PK, FK>>
   since

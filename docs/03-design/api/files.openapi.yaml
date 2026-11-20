@@ -20,8 +20,11 @@ paths:
   /api/v1/files/files/{file_id}/conversions/{kind}:
     get: { summary: State or result of a conversion (RN-135), responses: { '200': { description: Conversion }, '202': { description: Queued } } }
   /api/v1/files/scopes/{scope_id}/quota:
-    get: { summary: Quota and usage of a scope, responses: { '200': { description: Quota } } }
-    put: { summary: Set the quota, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Set } } }
+    get: { summary: 'The limit of a scope and what its attached files take, counting the scopes inside it; needs files.quota.manage there', responses: { '200': { description: Quota } } }
+    put: { summary: 'Set or lift (null) the limit in bytes (RN-134)', responses: { '200': { description: Quota }, '422': { description: 'A negative limit (files.quota_invalid)' } } }
+  /api/v1/files/people/{principal_id}/quota:
+    get: { summary: 'The limit of a person and what the attached files they uploaded take; needs files.quota.manage in their campus', responses: { '200': { description: Quota } } }
+    put: { summary: Set or lift the limit of a person, responses: { '200': { description: Quota } } }
 components:
   parameters:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }

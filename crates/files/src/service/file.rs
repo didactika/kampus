@@ -114,7 +114,8 @@ impl Files {
     /// # Errors
     ///
     /// `not_found` for an unknown file or one of someone else, `validation` (`files.area_mismatch`) for a
-    /// file of another area, `conflict` (`files.already_attached`).
+    /// file of another area, `conflict` (`files.already_attached`), or (`files.quota_exceeded`) when it no
+    /// longer fits a quota.
     pub async fn attach_in(
         &self,
         conn: &mut PgConnection,
@@ -152,6 +153,8 @@ impl Files {
         .execute(&mut *conn)
         .await
         .map_err(kampus_db::classify)?;
+        self.count_in(conn, found.scope, found.uploader, found.size)
+            .await?;
         let attached = File {
             attached: true,
             ..found
@@ -179,6 +182,10 @@ impl Files {
         .map_err(kampus_db::classify)?
         .ok_or_else(|| Error::not_found("files.file_not_found"))?;
         let removed = file(&row);
+        if removed.attached {
+            self.count_in(conn, removed.scope, removed.uploader, -removed.size)
+                .await?;
+        }
         let blob: uuid::Uuid = row.get("blob_id");
         let left: i32 = sqlx::query_scalar(sql(format!(
             "update {} set ref_count = ref_count - 1 where id = $1 returning ref_count",
