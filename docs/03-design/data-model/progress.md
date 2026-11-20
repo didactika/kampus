@@ -15,10 +15,12 @@ PostgreSQL schema `progress`, owned by `kampus-progress`, following DEC-014, DEC
 
 | Table | Columns | Constraints and indexes |
 | --- | --- | --- |
-| `rule` | `id`, `course_module_id` FK → `activities.course_module` (`CASCADE`), `kind` (`manual`, `view`, `submit`, `grade`, `pass`, `type_rule`), `type_rule_code`, `parameters` jsonb validated by the rule's schema | `UNIQUE` (`course_module_id`, `kind`, `type_rule_code`) |
-| `activity_state` | `course_module_id` FK (`CASCADE`), `account_id` FK → `identity.account`, `state`, `source` (`automatic`, `manual`), `at`, `version` | PK (`course_module_id`, `account_id`); `CHECK` state in the five values (RN-115) |
-| `activity_exception` | `course_module_id` FK (`CASCADE`), `account_id` FK, `state`, `reason`, `by`, `at` | PK (`course_module_id`, `account_id`) (RN-119) |
-| `activity_history` | `id`, `course_module_id`, `account_id`, `from_state`, `to_state`, `cause`, `at` | Append-only |
+| `rule` | `id`, `course_module_id` FK → `activities.course_module` (`CASCADE`), `kind` (`manual`, `view`, `submit`, `grade`, `pass`), `created_at`; `type_rule_code` and `parameters` arrive with the rules types declare | `UNIQUE` (`course_module_id`, `kind`) |
+| `activity_state` | `course_module_id` FK (`CASCADE`), `account_id` FK → `identity.account` (`CASCADE`), `state`, `source` (`automatic`, `exception`), `at`, `version` | PK (`course_module_id`, `account_id`); `CHECK` state in the five values (RN-115); a person who has not started has no row |
+| `activity_exception` | `course_module_id` FK (`CASCADE`), `account_id` FK (`CASCADE`), `state`, `reason`, `author` (soft reference to the account that decided it), `at` | PK (`course_module_id`, `account_id`) (RN-119) |
+| `activity_history` | `id`, `course_module_id` FK (`CASCADE`), `account_id` FK (`CASCADE`), `from_state`, `to_state`, `cause`, `at` | Append-only; index (`course_module_id`, `account_id`, `at`) |
+| `signal` | `course_module_id` FK (`CASCADE`), `account_id` FK (`CASCADE`), `kind` (`view`, `submit`, `manual`), `at` | PK (`course_module_id`, `account_id`, `kind`); what a person did, kept so the state can be re-evaluated when the rules change |
+| `pending` | `course_module_id` PK FK (`CASCADE`), `queued_at` | The course modules whose rules changed and wait for the job `progress.recalculate`, which takes them with `FOR UPDATE SKIP LOCKED` and re-evaluates everyone who did something or has a grade (RN-118) |
 | `criterion` | `id`, `course_id` FK → `courses.course` (`CASCADE`), `kind`, `aggregation` (`all`, `any`) | Leaves in typed tables below |
 | `criterion_activity` | `criterion_id` FK (`CASCADE`), `course_module_id` FK (`RESTRICT`), `required_state` | PK (`criterion_id`, `course_module_id`) |
 | `criterion_grade` | `criterion_id` PK FK (`CASCADE`), `record_id` FK → `records.record` (`RESTRICT`), `min_percent` | |
@@ -29,6 +31,8 @@ PostgreSQL schema `progress`, owned by `kampus-progress`, following DEC-014, DEC
 | `prerequisite` | `course_id` FK (`CASCADE`), `requires_course_id` FK (`CASCADE`) | PK (`course_id`, `requires_course_id`); `CHECK` differ; cycles refused on save (RN-122) |
 | `course_state` | `course_id` FK (`CASCADE`), `account_id` FK, `state`, `completed_at`, `revoked_at`, `version` | PK (`course_id`, `account_id`) |
 | `course_history` | `id`, `course_id`, `account_id`, `event` (`completed`, `revoked`), `at`, `cause` | Append-only |
+
+The tables of activity progress (step 1) exist. The criteria, course states, prerequisites and the course history arrive with the next part of progress. A pass rule ends `done_passed` or `done_failed` by the grade of the first grade record of the course module, and how it ended is shown only when that grade is shown to the viewer, through the records visibility service (RN-115).
 
 ## Anti-patterns avoided (DEC-014)
 

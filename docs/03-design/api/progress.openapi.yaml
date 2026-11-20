@@ -6,17 +6,25 @@ info:
     Progress rules, activity progress, progress exceptions, course criteria, prerequisites and course
     progress. States are shown as the requester may see them (RN-115). Conventions of DEC-025 and DEC-026.
 paths:
-  /api/v1/progress/course-modules/{course_module_id}/progress-rules:
-    get: { summary: Progress rules of a course module, responses: { '200': { description: Rules } } }
-    put: { summary: 'Replace the rules; a recalculation job is queued (RN-118)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
-  /api/v1/progress/course-modules/{course_module_id}/progress:
-    get: { summary: States of the tracked population (RN-123), parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page of states } } }
-  /api/v1/progress/course-modules/{course_module_id}/progress/me:
-    get: { summary: The caller's state, responses: { '200': { description: State } } }
-    put: { summary: Mark as done or not done when the rule is manual, responses: { '200': { description: Marked } } }
-  /api/v1/progress/course-modules/{course_module_id}/progress/{account_id}/exception:
-    put: { summary: 'Set a state with a reason (RN-119)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Set } } }
-    delete: { summary: Remove the exception; the rules apply again, responses: { '204': { description: Removed } } }
+  /api/v1/progress/course-modules/{course_module_id}/rules:
+    get: { summary: What a course module requires, responses: { '200': { description: Rules } } }
+    put: { summary: 'Replace the rules (progress.manage); a job re-evaluates the people who did something (RN-118)', responses: { '200': { description: Replaced } } }
+  /api/v1/progress/course-modules/{course_module_id}/views:
+    post: { summary: The caller opened the course module, responses: { '200': { description: The state of the caller } } }
+  /api/v1/progress/course-modules/{course_module_id}/mark:
+    put: { summary: Mark done when the course module asks for a mark (progress.mark_own), responses: { '200': { description: Marked }, '422': { description: The course module asks for no mark } } }
+    delete: { summary: Take the mark back, responses: { '200': { description: Unmarked } } }
+  /api/v1/progress/course-modules/{course_module_id}/states/{account_id}:
+    get: { summary: The state of a person as the caller may see it (RN-115), responses: { '200': { description: State } } }
+  /api/v1/progress/course-modules/{course_module_id}/exceptions:
+    get: { summary: The decisions of teachers about a course module, responses: { '200': { description: Exceptions } } }
+  /api/v1/progress/course-modules/{course_module_id}/exceptions/{account_id}:
+    put: { summary: 'Decide a state with a reason (RN-119)', responses: { '200': { description: Decided } } }
+    delete: { summary: Remove the decision; the rules apply again, responses: { '204': { description: Removed } } }
+  /api/v1/progress/courses/{course_id}/states/{account_id}:
+    get: { summary: The states of a person in a course as the caller may see them, responses: { '200': { description: States } } }
+  /api/v1/progress/courses/{course_id}/my-progress:
+    get: { summary: The states of the caller in a course, responses: { '200': { description: States } } }
   /api/v1/progress/courses/{course_id}/progress-criteria:
     get: { summary: Course criteria, responses: { '200': { description: Criteria } } }
     put: { summary: 'Replace the criteria (RN-120); re-evaluation queued', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }

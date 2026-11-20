@@ -161,6 +161,13 @@ impl Services {
             courses.clone(),
             activities.clone(),
         );
+        let progress = kampus_progress::Progress::new(
+            parts.db.clone(),
+            access.clone(),
+            courses.clone(),
+            activities.clone(),
+            records.clone(),
+        );
         let hasher = PasswordHasher::new(parts.password_cost.unwrap_or_default());
         let tasks = Tasks::new(parts.db.clone());
         let events = Events::new(parts.db.clone());
@@ -186,6 +193,7 @@ impl Services {
             .with(files)
             .with(activities)
             .with(records)
+            .with(progress)
             .with(HttpSettings {
                 api_url,
                 site_url: parts.site_url,

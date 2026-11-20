@@ -427,3 +427,123 @@ impl Records {
         self.course_scope(stored.course).await
     }
 }
+
+/// What a person has on the first grade a course module gives, for the modules that react to it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct ActivityGrade {
+    /// What counts of the grade; none when the person has none.
+    pub value: Option<Decimal>,
+    /// The lowest grade of the record.
+    pub min: Decimal,
+    /// The highest grade of the record.
+    pub max: Decimal,
+    /// The grade that passes, when the record has one.
+    pub pass_grade: Option<Decimal>,
+}
+
+impl Records {
+    /// What a person has on the first grade a course module gives; none when the course module has no
+    /// grade record. It is meant for modules that react to grades, which show what people may see through
+    /// [`Records::grades_for`].
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn activity_grade(
+        &self,
+        module: ModuleId,
+        account: kampus_access::PrincipalId,
+    ) -> Result<Option<ActivityGrade>> {
+        let row = sqlx::query(sql(format!(
+            "select r.\"min\", r.\"max\", r.pass_grade, g.\"final\" from {} r
+             left join {} g on g.record_id = r.id and g.account_id = $2 and not g.excluded
+             where r.course_module_id = $1 order by r.item_number limit 1",
+            self.table("record"),
+            self.table("grade")
+        )))
+        .bind(module.as_uuid())
+        .bind(account.as_uuid())
+        .fetch_optional(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(row.map(|r| ActivityGrade {
+            value: sqlx::Row::get::<Option<Decimal>, _>(&r, "final").map(|d| d.normalize()),
+            min: sqlx::Row::get::<Decimal, _>(&r, "min").normalize(),
+            max: sqlx::Row::get::<Decimal, _>(&r, "max").normalize(),
+            pass_grade: sqlx::Row::get::<Option<Decimal>, _>(&r, "pass_grade").map(|d| d.normalize()),
+        }))
+    }
+
+    /// The course module a grade record belongs to, when it is the record of an activity.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn module_of_record(&self, record: RecordId) -> Result<Option<ModuleId>> {
+        let module: Option<Option<uuid::Uuid>> = sqlx::query_scalar(sql(format!(
+            "select course_module_id from {} where id = $1",
+            self.table("record")
+        )))
+        .bind(record.as_uuid())
+        .fetch_optional(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(module.flatten().map(ModuleId::from_uuid))
+    }
+}
+
+impl Records {
+    /// The people with a grade on the first grade a course module gives.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn graded_accounts(&self, module: ModuleId) -> Result<Vec<kampus_access::PrincipalId>> {
+        let people: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+            "select g.account_id from {} g join {} r on r.id = g.record_id where r.course_module_id = $1",
+            self.table("grade"),
+            self.table("record")
+        )))
+        .bind(module.as_uuid())
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(people
+            .into_iter()
+            .map(kampus_access::PrincipalId::from_uuid)
+            .collect())
+    }
+
+    /// The course modules of a course whose grade a person may see, as the actor may see it: the same rule
+    /// as [`Records::grades_for`], so what depends on a grade is shown only when the grade is.
+    ///
+    /// # Errors
+    ///
+    /// `not_found`, `permission_denied`.
+    pub async fn modules_with_visible_grade(
+        &self,
+        actor: &Actor,
+        course: kampus_courses::CourseId,
+        account: kampus_access::PrincipalId,
+    ) -> Result<std::collections::HashSet<ModuleId>> {
+        let visible: std::collections::HashSet<RecordId> = self
+            .grades_for(actor, course, account)
+            .await?
+            .into_iter()
+            .map(|g| g.record)
+            .collect();
+        let rows = sqlx::query(sql(format!(
+            "select id, course_module_id from {} where course_id = $1 and course_module_id is not null",
+            self.table("record")
+        )))
+        .bind(course.as_uuid())
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(rows
+            .iter()
+            .filter(|r| visible.contains(&RecordId::from_uuid(sqlx::Row::get(*r, "id"))))
+            .map(|r| ModuleId::from_uuid(sqlx::Row::get(r, "course_module_id")))
+            .collect())
+    }
+}

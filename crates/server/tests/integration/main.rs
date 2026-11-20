@@ -49,6 +49,7 @@ mod files;
 mod http;
 mod install;
 mod jobs;
+mod progress;
 mod records;
 mod settings;
 mod site;

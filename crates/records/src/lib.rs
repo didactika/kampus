@@ -58,6 +58,7 @@ pub use model::{
 pub use module::MODULE;
 pub use service::grade::{Detail, Report, ReportRow};
 pub use service::recalc::Recalculated;
+pub use service::record::ActivityGrade;
 pub use support::{aggregation, letters};
 
 /// The records of an installation.
