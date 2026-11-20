@@ -193,3 +193,43 @@ impl Files {
             .await
     }
 }
+
+impl Files {
+    /// Copies an attached file as a file of its own, attached at once and counted in the quotas of a scope,
+    /// sharing the content: for a module that copies what owns the file.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown file, `conflict` (`files.not_attached`) for one nobody attached,
+    /// (`files.quota_exceeded`) when the copy no longer fits.
+    pub async fn copy_attached_in(
+        &self,
+        conn: &mut PgConnection,
+        id: FileId,
+        scope: kampus_access::ScopeId,
+    ) -> Result<File> {
+        let source = self.stored(id).await?;
+        if !source.attached {
+            return Err(Error::conflict("files.not_attached"));
+        }
+        let row = sqlx::query(sql(format!(
+            "insert into {t} as f (id, blob_id, area_code, scope_id, name, media_type, size, uploader, attached)
+             select $2, blob_id, area_code, $3, name, media_type, size, uploader, true from {t} where id = $1
+             returning {COLUMNS}, f.blob_id",
+            t = self.table("file")
+        )))
+        .bind(id.as_uuid())
+        .bind(FileId::generate().as_uuid())
+        .bind(scope.as_uuid())
+        .fetch_one(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
+        let copy = file(&row);
+        self.use_blob_in(conn, row.get("blob_id")).await?;
+        self.count_in(conn, copy.scope, copy.uploader, copy.size).await?;
+        let payload = json!({ "file": copy.id, "area": copy.area });
+        self.publish_in(conn, crate::events::ATTACHED, &copy, payload)
+            .await?;
+        Ok(copy)
+    }
+}

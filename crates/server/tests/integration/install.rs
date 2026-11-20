@@ -137,6 +137,7 @@ async fn install_creates_the_installation_once_and_its_administrator_signs_in() 
     assert!(matches!(outcome, SignInOutcome::SignedIn(_)));
     for module in [
         "enrol",
+        "activities",
         "courses",
         "customise",
         "users",
@@ -192,6 +193,7 @@ async fn an_installation_created_by_an_upgrade_gets_its_first_campus_from_instal
     assert_eq!(campuses.len(), 1);
     for module in [
         "enrol",
+        "activities",
         "courses",
         "customise",
         "users",

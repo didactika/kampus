@@ -35,6 +35,7 @@ pub const MODULE: Module = Module {
     menu_kinds: &[],
     rule_actions: &[],
     file_areas: &[],
+    activity_types: &[],
     events: crate::events::EVENTS,
     listeners: crate::observers::LISTENERS,
     jobs: crate::jobs::JOBS,
@@ -51,6 +52,7 @@ pub const MODULE: Module = Module {
 | `settings` | `src/settings/mod.rs` | Records the definitions; values are set per scope and resolved through the tree (see [settings](#settings)) |
 | `terms`, `flags`, `field_kinds`, `page_kinds`, `widgets`, `menu_kinds`, `rule_actions` | `src/settings/customise.rs` | Records the words, features, kinds of entity, pages, widgets, menus and rule actions a campus customises (see [customisation](#customisation)) |
 | `file_areas` | `src/settings/files.rs` | Records the places the module keeps files, with their limits and who reads them (see [file areas](#file-areas)) |
+| `activity_types` | `src/settings/` | Registers the types of activity and material the module provides (see [activity types](#activity-types)) |
 | `preferences` | `src/settings/preferences.rs` | Kept by users per person: only declared keys, each checked against its type, with its default when unset |
 | `plugin_types` | `src/module.rs` | Accepts plugins named `<type>_<name>` in `crates/<module>/<type>/<name>` |
 | `steps` | `src/db/steps.rs` | Applies the pending upgrade steps (DEC-082) |
@@ -240,6 +242,22 @@ Every record an integration touches carries the identifiers other systems give i
 | Sets and removes references | With the permission that manages the record, which also decides who reads them |
 | Finds a record by one | `GET /api/v1/<module>/campuses/{campus}/<records>/by-reference/{system}/{external_id}` |
 | Creates or updates by one, when integrations create the record | Sets the reference in the transaction that creates the record, so it never exists without it; `PUT …/by-reference/{system}/{external_id}` answers 201 or 200 |
+
+## Activity types
+
+A module that provides activities or materials declares their **types** in `src/settings/` and exposes them through `activity_types` in its descriptor; `kampus-activities` registers them, places course modules of them in sections, and never reads what a type keeps of its own:
+
+```rust
+pub const TYPES: &[ActivityTypeDeclaration] = &[ActivityTypeDeclaration {
+    code: "activities.page",
+    kind: ActivityKind::Material,
+    summary: "A page of text",
+    features: &["copy"],
+    settings: &[ActivitySetting { key: "content", kind: ValueKind::Text { max: 20_000, default: "" } }],
+}];
+```
+
+A course module is created, updated, copied and moved in one transaction with the settings its type declares, each checked against its kind with the defaults filled in. A type that keeps data of its own references `activities.course_module` with a foreign key and `CASCADE`, in its own table, and an activity that owns files declares a file area whose `readable` asks `Activities::visible_to`.
 
 ## File areas
 

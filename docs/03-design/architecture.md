@@ -43,7 +43,7 @@ Modules call **down** the ranking through service APIs, and learn about things *
 | 2 People | `kampus-users` | Profiles (language, custom fields of accounts), preferences, system groups | identity, access, i18n, files, customise |
 | 3 Learning | `kampus-courses` | Categories, courses, sections (nested), course layouts, groups and group sets | access, users, files, customise |
 | 4 Learning | `kampus-enrol` | Enrolment methods and enrolments | courses, users, access |
-| 4 Learning | `kampus-activities` | Activity registry, course modules, availability, exceptions (RF-054) | courses, access, files |
+| 4 Learning | `kampus-activities` | Activity registry, course modules, availability, exceptions (RF-054) | courses, access, files, identity, events |
 | 5 Learning | `kampus-records` | Academic records: grade records, categories, aggregation | activities, enrol |
 | 5 Learning | `kampus-progress` | Activity and course progress | activities, records, enrol |
 | 6 Services | `kampus-notify` | Notifications and messaging through channels | users, customise, tasks |

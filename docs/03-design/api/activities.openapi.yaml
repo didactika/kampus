@@ -7,19 +7,35 @@ info:
     DEC-025 and DEC-026; permissions checked inside every operation (DEC-017). Each activity type adds its
     own endpoints under /api/v1/activities/course-modules/{course_module_id}/{type}/... through the plugin SDK.
 paths:
-  /api/v1/activities/activity-types:
-    get: { summary: Enabled activity types with their features and settings schemas, responses: { '200': { description: Types } } }
+  /api/v1/activities/types:
+    get: { summary: 'The types of activity and material modules provide, with their features', responses: { '200': { description: Types } } }
   /api/v1/activities/sections/{section_id}/course-modules:
-    get: { summary: 'Course modules of a section the caller may see, with availability for the caller', responses: { '200': { description: Course modules } } }
-    post: { summary: 'Add a course module of a type, with its settings, between two siblings (RN-077, RN-078)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Added } } }
+    get: { summary: 'The course modules of a section the caller sees, in order (RN-092)', responses: { '200': { description: Course modules } } }
+    post: { summary: 'Add a course module of a type with its title, visibility, listing, settings and place, in one transaction (RN-076, RN-077)', responses: { '201': { description: 'Added, with its version as ETag' }, '403': { description: Without activities.module.manage }, '409': { description: Type turned off }, '422': { description: 'Title or settings that do not fit, or an unknown type' } } }
   /api/v1/activities/course-modules/{course_module_id}:
-    get: { summary: A course module with its common settings and the type settings, responses: { '200': { description: The course module } } }
-    patch: { summary: Update settings and visibility, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated } } }
-    delete: { summary: 'Move to the recycle bin (RN-088)', responses: { '202': { description: In the bin } } }
+    get: { summary: 'A course module the caller sees; one in the bin or hidden from them is 404', responses: { '200': { description: 'The course module, with its version as ETag' }, '404': { description: Not found or not visible } } }
+    put: { summary: 'Replace title, visibility, listing and settings', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated }, '412': { description: Changed since it was read } } }
+    delete: { summary: 'Move to the recycle bin of its course for 30 days (RN-088)', responses: { '204': { description: In the bin }, '409': { description: Already there } } }
   /api/v1/activities/course-modules/{course_module_id}/move:
-    post: { summary: Move to another section and position, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Moved } } }
+    post: { summary: 'Move to a place in a section of the same course, taking its scope with it (RN-076)', responses: { '200': { description: Moved }, '422': { description: A section of another course } } }
   /api/v1/activities/course-modules/{course_module_id}/copy:
-    post: { summary: 'Copy within the course or to another course (RN-090)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Copied } } }
+    post: { summary: 'Copy to a place in a section: settings and, for a file material, its file as a file of its own sharing the content (RN-090)', responses: { '201': { description: The copy } } }
+  /api/v1/activities/course-modules/{course_module_id}/restore:
+    post: { summary: 'Bring back from the recycle bin to its section and place (RN-088)', responses: { '200': { description: Restored }, '409': { description: 'Not in the bin, or its section was deleted' } } }
+  /api/v1/activities/course-modules/{course_module_id}/file:
+    get: { summary: 'The file of a material the caller sees; read it through files', responses: { '200': { description: The file id }, '404': { description: None } } }
+    put: { summary: 'Make a file the caller uploaded into activities.material the file of a file material, replacing the old one', responses: { '200': { description: Set }, '422': { description: Not a file material } } }
+  /api/v1/activities/courses/{course_id}/bin:
+    get: { summary: 'The recycle bin of a course, with the reason of a deletion that failed (RN-089)', responses: { '200': { description: Items } } }
+  /api/v1/activities/course-modules/{course_module_id}/references:
+    get: { summary: 'The identifiers systems give a course module (DEC-021)', responses: { '200': { description: References } } }
+  /api/v1/activities/course-modules/{course_module_id}/references/{system}:
+    put: { summary: Give the course module the identifier a system uses for it, responses: { '200': { description: References }, '409': { description: references.taken } } }
+    delete: { summary: Remove the identifier a system gave it, responses: { '204': { description: Removed } } }
+  /api/v1/activities/campuses/{campus_id}/course-modules/by-reference/{system}/{external_id}:
+    get: { summary: The course module a system knows by an identifier, responses: { '200': { description: Course module }, '404': { description: None } } }
+  /api/v1/activities/sections/{section_id}/course-modules/by-reference/{system}/{external_id}:
+    put: { summary: 'Update the course module a system knows by an identifier, or add it to the section with it', responses: { '200': { description: Updated }, '201': { description: Added } } }
   /api/v1/activities/course-modules/{course_module_id}/conditions:
     get: { summary: 'The condition tree, with any unknown or broken condition reported', responses: { '200': { description: Conditions } } }
     put: { summary: 'Replace the condition tree (RN-080)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
@@ -34,12 +50,6 @@ paths:
     delete: { summary: Remove an exception, responses: { '204': { description: Removed } } }
   /api/v1/activities/course-modules/{course_module_id}/effective-values:
     get: { summary: 'Effective dates, attempts and time limit for a person (RN-086)', parameters: [{ name: account_id, in: query, schema: { type: string, format: uuid } }], responses: { '200': { description: Effective values and where each comes from } } }
-  /api/v1/activities/courses/{course_id}/bin:
-    get: { summary: 'Recycle bin items, including failed deletions with their reason (RN-089)', responses: { '200': { description: Bin items } } }
-  /api/v1/activities/bin-items/{bin_item_id}/restore:
-    post: { summary: Restore to the original section and position when they still exist, responses: { '200': { description: Restored } } }
-  /api/v1/activities/bin-items/{bin_item_id}/retry:
-    post: { summary: Retry a failed deletion, responses: { '202': { description: Retried } } }
 components:
   parameters:
     IfMatch: { name: If-Match, in: header, required: true, schema: { type: string } }
