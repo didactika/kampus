@@ -42,6 +42,7 @@
 
 mod activities;
 mod api;
+mod calendar;
 mod courses;
 mod customise;
 mod enrol;

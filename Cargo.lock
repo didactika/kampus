@@ -1924,6 +1924,34 @@ dependencies = [
 ]
 
 [[package]]
+name = "kampus-calendar"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "kampus-access",
+ "kampus-activities",
+ "kampus-common",
+ "kampus-courses",
+ "kampus-customise",
+ "kampus-db",
+ "kampus-events",
+ "kampus-files",
+ "kampus-identity",
+ "kampus-module",
+ "kampus-settings",
+ "kampus-storage",
+ "kampus-storage-opendal",
+ "kampus-tasks",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tempfile",
+ "time",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "kampus-common"
 version = "0.1.0"
 dependencies = [
@@ -2205,6 +2233,7 @@ dependencies = [
  "kampus-cache",
  "kampus-cache-moka",
  "kampus-cache-redis",
+ "kampus-calendar",
  "kampus-common",
  "kampus-courses",
  "kampus-customise",

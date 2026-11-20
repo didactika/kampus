@@ -148,26 +148,7 @@ impl Services {
             Arc::new(Participation::new(parts.db.clone())),
         )
         .with_customise(customise.clone());
-        let activities = kampus_activities::Activities::new(
-            parts.db.clone(),
-            access.clone(),
-            courses.clone(),
-            files.clone(),
-        )
-        .with_modules(MODULES);
-        let records = kampus_records::Records::new(
-            parts.db.clone(),
-            access.clone(),
-            courses.clone(),
-            activities.clone(),
-        );
-        let progress = kampus_progress::Progress::new(
-            parts.db.clone(),
-            access.clone(),
-            courses.clone(),
-            activities.clone(),
-            records.clone(),
-        );
+        let learning = Learning::build(&parts.db, &access, &courses, &files);
         let hasher = PasswordHasher::new(parts.password_cost.unwrap_or_default());
         let tasks = Tasks::new(parts.db.clone());
         let events = Events::new(parts.db.clone());
@@ -191,9 +172,10 @@ impl Services {
             .with(settings)
             .with(customise)
             .with(files)
-            .with(activities)
-            .with(records)
-            .with(progress)
+            .with(learning.activities)
+            .with(learning.records)
+            .with(learning.progress)
+            .with(learning.calendar)
             .with(HttpSettings {
                 api_url,
                 site_url: parts.site_url,
@@ -214,5 +196,43 @@ impl Services {
                 Some(routes) => router.nest(&format!("/{}", module.name), routes(&self.context)),
                 None => router,
             })
+    }
+}
+
+/// The modules that build on courses: course modules and the grades, progress and calendar around them.
+struct Learning {
+    /// Course modules.
+    activities: kampus_activities::Activities,
+    /// Grades.
+    records: kampus_records::Records,
+    /// What people have done.
+    progress: kampus_progress::Progress,
+    /// Entries and dates.
+    calendar: kampus_calendar::Calendar,
+}
+
+impl Learning {
+    /// Builds them on the services they need.
+    fn build(db: &Database, access: &Access, courses: &Courses, files: &Files) -> Self {
+        let activities =
+            kampus_activities::Activities::new(db.clone(), access.clone(), courses.clone(), files.clone())
+                .with_modules(MODULES);
+        let records =
+            kampus_records::Records::new(db.clone(), access.clone(), courses.clone(), activities.clone());
+        let progress = kampus_progress::Progress::new(
+            db.clone(),
+            access.clone(),
+            courses.clone(),
+            activities.clone(),
+            records.clone(),
+        );
+        let calendar =
+            kampus_calendar::Calendar::new(db.clone(), access.clone(), courses.clone(), activities.clone());
+        Self {
+            activities,
+            records,
+            progress,
+            calendar,
+        }
     }
 }
