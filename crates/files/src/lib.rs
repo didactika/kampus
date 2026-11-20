@@ -56,6 +56,7 @@ use kampus_storage::Storage;
 
 pub use model::{File, FileId, SignedUrl, Upload, UploadId};
 pub use module::MODULE;
+pub use service::quota::Quota;
 
 /// How long an upload accepts content.
 pub const UPLOAD_LIFETIME: time::Duration = time::Duration::hours(1);

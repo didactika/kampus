@@ -403,6 +403,24 @@ impl Access {
             .map_err(kampus_db::classify)
     }
 
+    /// The campus of a principal.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` (`access.principal_not_found`) for an unknown principal.
+    pub async fn principal_campus(&self, id: PrincipalId) -> Result<ScopeId> {
+        let campus: uuid::Uuid = sqlx::query_scalar(sql(format!(
+            "select campus_id from {} where id = $1",
+            self.table("principal")
+        )))
+        .bind(id.as_uuid())
+        .fetch_optional(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?
+        .ok_or_else(|| Error::not_found("access.principal_not_found"))?;
+        Ok(ScopeId::from_uuid(campus))
+    }
+
     /// Creates a principal in a campus; identity creates one for every account, with the account's id.
     ///
     /// # Errors

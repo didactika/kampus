@@ -37,6 +37,7 @@
 
 pub mod file;
 pub mod purge;
+pub mod quota;
 pub mod serve;
 pub mod upload;
 

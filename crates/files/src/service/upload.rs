@@ -86,7 +86,7 @@ impl Files {
     ///
     /// `not_found` (`files.area_unknown`) for an area no module declares, `permission_denied` without the
     /// permission or for a visitor, `validation` (`files.upload_invalid`) for a name that is not one or a
-    /// size above what the area accepts.
+    /// size above what the area accepts, `conflict` (`files.quota_exceeded`) when it would not fit a quota.
     pub async fn open_upload(
         &self,
         actor: &Actor,
@@ -120,6 +120,9 @@ impl Files {
             return Err(Error::validation("files.upload_invalid", problems)
                 .with_param("max_size", max_size.to_string()));
         };
+        let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
+        self.require_room(&mut conn, scope, Some(uploader), size).await?;
+        drop(conn);
         let row = sqlx::query(sql(format!(
             "insert into {} (id, area_code, scope_id, uploader, name, declared_type, max_size, expires_at)
              values ($1, $2, $3, $4, $5, $6, $7, now() + interval '1 hour') returning {UPLOAD_COLUMNS}",
