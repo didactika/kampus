@@ -44,6 +44,7 @@ mod api;
 mod courses;
 mod customise;
 mod enrol;
+mod files;
 mod http;
 mod install;
 mod jobs;

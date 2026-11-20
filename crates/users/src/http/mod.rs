@@ -35,6 +35,7 @@
 //! The HTTP routes of users: profiles with `ETag` and `If-Match`, preferences, and system groups with their
 //! members and rules. Every route reads the caller identity authenticated.
 
+mod picture;
 mod references;
 
 use axum::extract::{Path, State};
@@ -75,6 +76,7 @@ pub fn routes(context: &ServiceContext) -> Router {
         )
         .route("/system-groups/{id}/apply-rule", post(apply_rule))
         .merge(references::routes())
+        .merge(picture::routes())
         .with_state(shared)
 }
 

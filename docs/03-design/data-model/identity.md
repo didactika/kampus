@@ -41,6 +41,7 @@ PostgreSQL schemas `identity` (owned by `kampus-identity`) and `users` (owned by
 | `preference` | `account_id` FK (`CASCADE`), `key` (declared by a module in its descriptor), `value` jsonb (checked against its declaration), `updated_at` | PK (`account_id`, `key`); undeclared keys are refused and a missing value reads its default |
 | `system_group` | `id`, `scope_id` FK → `access.scope` (a campus or a category), `code`, `name`, `kind` (`manual`, `rule`), `rule` jsonb (a profile field and the value it equals), `owner_module`, `created_at` | `UNIQUE` (`scope_id`, `code`); `CHECK` a rule exactly when the kind is `rule` |
 | `system_group_reference` | External references of system groups (`users` step 2), in the shape of the [conventions](conventions.md#external-references); the campus is the scope of the group or the campus above it | Read and set with `users.system_group.manage`; a group is created once by one |
+| `profile_picture` | `account_id` PK FK → `identity.account` (`CASCADE`), `file_id` FK → `files.file` (`CASCADE`) `UNIQUE` (step 3) | The link of a person to the file of their picture (area `users.picture`), so files keeps no polymorphic owner (RN-127); setting another detaches the old file in the same transaction, and detaching the file removes the link |
 | `system_group_member` | `group_id` FK (`CASCADE`), `account_id` FK (`CASCADE`), `origin` (`manual`, `rule`, `sync`), `added_at` | PK (`group_id`, `account_id`, `origin`) (RN-037) |
 
 ## Anti-patterns avoided (DEC-014)

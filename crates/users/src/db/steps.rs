@@ -154,4 +154,37 @@ pub const STEPS: &[Step] = &[
             "system_group"
         )],
     },
+    Step {
+        sequence: 3,
+        name: "profile pictures",
+        revert: &[],
+        action: None,
+        changes: &[Change::CreateTable(Table {
+            name: "profile_picture",
+            columns: &[
+                Column::new("account_id", Type::Uuid),
+                Column::new("file_id", Type::Uuid),
+            ],
+            primary_key: &["account_id"],
+            unique: &[&["file_id"]],
+            foreign_keys: &[
+                ForeignKey {
+                    columns: &["account_id"],
+                    module: Some("identity"),
+                    table: "account",
+                    references: &["id"],
+                    on_delete: OnDelete::Cascade,
+                },
+                ForeignKey {
+                    columns: &["file_id"],
+                    module: Some("files"),
+                    table: "file",
+                    references: &["id"],
+                    on_delete: OnDelete::Cascade,
+                },
+            ],
+            without_natural_key: Some("one picture per account"),
+            ..Table::EMPTY
+        })],
+    },
 ];

@@ -35,6 +35,7 @@
 //! The service API of users, one file per area.
 
 pub mod group;
+pub mod picture;
 pub mod preference;
 pub mod profile;
 pub mod reference;

@@ -117,8 +117,11 @@ pub(crate) async fn site() -> Site {
         .await
         .unwrap();
     sync_declarations(&db).await.unwrap();
+    let files = tempfile::tempdir().unwrap();
+    let ports = Ports::for_tests(files.path().to_str().unwrap()).await.unwrap();
     let courier = Arc::new(MemoryCourier::default());
     let services = Services::build(Parts {
+        storage: ports.storage.clone(),
         password_cost: Some(PasswordCost {
             memory_kib: 64,
             iterations: 1,
@@ -140,8 +143,6 @@ pub(crate) async fn site() -> Site {
         .install_administrator(campus, "admin@example.org", "admin", PASSWORD)
         .await
         .unwrap();
-    let files = tempfile::tempdir().unwrap();
-    let ports = Ports::for_tests(files.path().to_str().unwrap()).await.unwrap();
     let campuses = Campuses::new(Tenancy::Single, access);
     let context = services.context.clone();
     let api = Api { services, campuses };
@@ -190,6 +191,30 @@ impl Site {
             None => request.body(Body::empty()),
         }
         .unwrap();
+        self.exchange(request).await
+    }
+
+    /// Sends raw content, signed in with a session.
+    pub(crate) async fn send_bytes(
+        &self,
+        method: Method,
+        uri: &str,
+        session: &str,
+        content: &'static [u8],
+    ) -> Answer {
+        let request = Request::builder()
+            .method(method)
+            .uri(uri)
+            .header(header::COOKIE, format!("kampus_session={session}"))
+            .header("x-kampus", "1")
+            .header(header::CONTENT_TYPE, "application/octet-stream")
+            .body(Body::from(content))
+            .unwrap();
+        self.exchange(request).await
+    }
+
+    /// Sends a request to the router and reads its answer.
+    async fn exchange(&self, request: Request<Body>) -> Answer {
         let response = self.router.clone().oneshot(request).await.unwrap();
         let status = response.status();
         let headers = response.headers().clone();

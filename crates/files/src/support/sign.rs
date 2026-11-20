@@ -1,0 +1,67 @@
+// ------------------------------------------------------------------------------
+//
+//     _  __    _    __  __ ____  _   _ ____
+//    | |/ /   / \  |  \/  |  _ \| | | / ___|
+//    | ' /   / _ \ | |\/| | |_) | | | \___ \
+//    | . \  / ___ \| |  | |  __/| |_| |___) |
+//    |_|\_\/_/   \_\_|  |_|_|    \___/|____/
+//
+//    Knowledge Academic Modular Platform for Universal Study
+//
+// ------------------------------------------------------------------------------
+//
+// This file is part of Kampus - https://github.com/didactika/kampus
+//
+// Kampus is free software: you can redistribute it and/or modify it under the terms of the
+// GNU Affero General Public License as published by the Free Software Foundation, either
+// version 3 of the License, or (at your option) any later version.
+//
+// Kampus is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+// even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License along with Kampus.
+// If not, see <https://www.gnu.org/licenses/>.
+//
+// @package   kampus-files
+// @copyright 2026 Didactika
+// @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
+// @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
+// @since     0.1.0
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// ------------------------------------------------------------------------------
+
+//! Signed links: an HMAC-SHA256 of the file and the moment the link stops working, with a key of its own,
+//! so a link reads one file until then and cannot be changed to read another.
+
+use base64::Engine;
+use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use hmac::{Hmac, KeyInit, Mac};
+use sha2::Sha256;
+
+/// The signature of a link to a file that expires at a Unix time.
+#[must_use]
+pub fn signature(key: &[u8; 32], file: uuid::Uuid, expires: i64) -> String {
+    let Ok(mut mac) = Hmac::<Sha256>::new_from_slice(key) else {
+        return String::new();
+    };
+    mac.update(file.as_bytes());
+    mac.update(&expires.to_be_bytes());
+    URL_SAFE_NO_PAD.encode(mac.finalize().into_bytes())
+}
+
+/// Whether a signature is the one of a link to a file that expires at a Unix time, compared in constant
+/// time.
+#[must_use]
+pub fn verify(key: &[u8; 32], file: uuid::Uuid, expires: i64, given: &str) -> bool {
+    let Ok(given) = URL_SAFE_NO_PAD.decode(given) else {
+        return false;
+    };
+    let Ok(mut mac) = Hmac::<Sha256>::new_from_slice(key) else {
+        return false;
+    };
+    mac.update(file.as_bytes());
+    mac.update(&expires.to_be_bytes());
+    mac.verify_slice(&given).is_ok()
+}

@@ -73,6 +73,15 @@ pub async fn sync_declarations(db: &kampus_db::Database) -> kampus_common::Resul
     )
     .sync_declarations(MODULES)
     .await?;
+    kampus_files::Files::new(
+        db.clone(),
+        kampus_access::Access::new(db.clone(), std::sync::Arc::new(kampus_common::SystemClock)),
+        None,
+        [0; 32],
+        String::new(),
+    )
+    .sync_declarations(MODULES)
+    .await?;
     kampus_tasks::Tasks::new(db.clone())
         .sync_declarations(MODULES, kampus_common::SystemClock.now())
         .await
