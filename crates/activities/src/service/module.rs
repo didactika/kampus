@@ -538,6 +538,16 @@ impl Activities {
     pub async fn scope_of(&self, id: ModuleId) -> Result<ScopeId> {
         Ok(self.stored(id).await?.scope)
     }
+
+    /// The course a course module belongs to.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown course module.
+    pub async fn course_of_module(&self, id: ModuleId) -> Result<kampus_courses::CourseId> {
+        let module = self.stored(id).await?;
+        Ok(self.courses.section(module.section).await?.course)
+    }
 }
 
 impl Activities {
