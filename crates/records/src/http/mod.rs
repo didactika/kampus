@@ -51,7 +51,7 @@ use rust_decimal::Decimal;
 use serde::Deserialize;
 
 use crate::permissions::{GRADE, HIDE, LOCK, MANAGE, OVERRIDE};
-use crate::{CategoryFields, CategoryId, GradeWrite, RecordFields, RecordId, Records, Source};
+use crate::{Band, CategoryFields, CategoryId, GradeWrite, RecordFields, RecordId, Records, Source};
 
 /// The routes of records.
 pub fn routes(context: &ServiceContext) -> Router {
@@ -93,6 +93,10 @@ pub fn routes(context: &ServiceContext) -> Router {
             "/records/{id}/grades/{account}/excluded",
             put(exclude_grade).delete(include_grade),
         )
+        .route("/scopes/{id}/scales", get(scales_in).post(define_scale))
+        .route("/scopes/{id}/letters", get(letters_in).post(define_letters))
+        .route("/courses/{id}/scales", get(course_scales))
+        .route("/courses/{id}/letters", get(course_letters))
         .route("/courses/{id}/grader-report", get(report))
         .route("/courses/{id}/my-grades", get(my_grades))
         .route("/courses/{id}/grades/{account}", get(grades_of))
@@ -571,4 +575,97 @@ async fn excluding(
         .set_grade_excluded(actor, record, id(account)?, excluded)
         .await?;
     Ok(Json(found).into_response())
+}
+
+/// A scale to define.
+#[derive(Debug, Deserialize)]
+struct NewScale {
+    /// Its code.
+    code: String,
+    /// Its items, from the lowest to the highest.
+    items: Vec<String>,
+}
+
+/// A letter set to define.
+#[derive(Debug, Deserialize)]
+struct NewLetters {
+    /// Its bands.
+    bands: Vec<Band>,
+}
+
+/// The scales available in a scope.
+async fn scales_in(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(scope): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(shared.records()?.scales_in(&caller.actor, id(&scope)?).await?).into_response())
+}
+
+/// Defines a scale in a scope.
+async fn define_scale(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(scope): Path<String>,
+    Body(body): Body<NewScale>,
+) -> ApiResult<Response> {
+    let scope: ScopeId = id(&scope)?;
+    let actor = shared.acting(&caller, MANAGE, scope).await?;
+    let created = shared
+        .records()?
+        .define_scale(actor, scope, &body.code, body.items)
+        .await?;
+    Ok((StatusCode::CREATED, Json(created)).into_response())
+}
+
+/// The letter set that applies in a scope.
+async fn letters_in(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(scope): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(shared.records()?.letters_in(&caller.actor, id(&scope)?).await?).into_response())
+}
+
+/// Defines the letter set of a scope.
+async fn define_letters(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(scope): Path<String>,
+    Body(body): Body<NewLetters>,
+) -> ApiResult<Response> {
+    let scope: ScopeId = id(&scope)?;
+    let actor = shared.acting(&caller, MANAGE, scope).await?;
+    let created = shared.records()?.define_letters(actor, scope, body.bands).await?;
+    Ok((StatusCode::CREATED, Json(created)).into_response())
+}
+
+/// The scales available in a course.
+async fn course_scales(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(course): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .records()?
+            .scales_of_course(&caller.actor, id(&course)?)
+            .await?,
+    )
+    .into_response())
+}
+
+/// The letter set that applies in a course.
+async fn course_letters(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(course): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .records()?
+            .letters_of_course(&caller.actor, id(&course)?)
+            .await?,
+    )
+    .into_response())
 }

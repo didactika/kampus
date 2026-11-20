@@ -36,3 +36,4 @@
 //! children.
 
 pub mod aggregation;
+pub mod letters;

@@ -39,6 +39,7 @@ pub mod category;
 pub mod grade;
 pub mod recalc;
 pub mod record;
+pub mod scale;
 
 use kampus_access::{Actor, PrincipalId};
 use kampus_common::{Error, ErrorKind, FieldError, Result, Timestamp};
@@ -59,7 +60,7 @@ pub(crate) const CATEGORY_COLUMNS: &str =
 /// The columns of a grade record.
 pub(crate) const RECORD_COLUMNS: &str =
     "id, course_id, kind, title, course_module_id, item_number, category_id,
-    total_of_id, grade_type, \"min\", \"max\", pass_grade, weight, extra_credit, multiplier, offset_value,
+    total_of_id, grade_type, scale_id, \"min\", \"max\", pass_grade, weight, extra_credit, multiplier, offset_value,
     hidden_until, locked_at, sort_key, version";
 
 /// The columns of a grade.
@@ -119,6 +120,9 @@ pub(crate) fn record(row: &PgRow) -> Record {
             .get::<Option<uuid::Uuid>, _>("total_of_id")
             .map(CategoryId::from_uuid),
         grade_type: GradeType::from_code(&row.get::<String, _>("grade_type")),
+        scale: row
+            .get::<Option<uuid::Uuid>, _>("scale_id")
+            .map(crate::ScaleId::from_uuid),
         min: clean(row.get("min")),
         max: clean(row.get("max")),
         pass_grade: row.get::<Option<Decimal>, _>("pass_grade").map(clean),

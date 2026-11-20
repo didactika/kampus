@@ -57,9 +57,6 @@ fn checked(fields: &RecordFields) -> Result<String> {
     if title.is_empty() || title.chars().count() > TITLE_LIMIT {
         problems.push(problem("title", "length"));
     }
-    if fields.grade_type == GradeType::Scale {
-        problems.push(problem("grade_type", "unsupported"));
-    }
     if !fits_grade(fields.min) {
         problems.push(problem("min", "range"));
     }
@@ -116,6 +113,7 @@ impl Records {
         if fields.hidden_until.is_some() {
             self.access.require(actor, HIDE, course.scope).await?;
         }
+        let fields = self.prepared(&course, fields).await?;
         let title = checked(&fields)?;
         let mut tx = self.db.begin().await?;
         let root = self.ensure_root_in(&mut tx, &course).await?;
@@ -127,8 +125,8 @@ impl Records {
         let key = self.next_key_in(&mut tx, category).await?;
         let row = sqlx::query(sql(format!(
             "insert into {} (id, course_id, kind, title, category_id, grade_type, \"min\", \"max\", pass_grade,
-             weight, extra_credit, multiplier, offset_value, hidden_until, sort_key)
-             values ($1, $2, 'manual', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+             weight, extra_credit, multiplier, offset_value, hidden_until, sort_key, scale_id)
+             values ($1, $2, 'manual', $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
              returning {RECORD_COLUMNS}",
             self.table("record")
         )))
@@ -146,6 +144,7 @@ impl Records {
         .bind(fields.offset)
         .bind(fields.hidden_until.map(|t| t.as_offset_date_time()))
         .bind(key)
+        .bind(fields.scale.map(|s| s.as_uuid()))
         .fetch_one(&mut *tx)
         .await
         .map_err(kampus_db::classify)?;
@@ -177,6 +176,12 @@ impl Records {
         item_number: i32,
         fields: RecordFields,
     ) -> Result<Record> {
+        if fields.grade_type == GradeType::Scale {
+            return Err(Error::validation(
+                "records.record_invalid",
+                vec![problem("grade_type", "unsupported")],
+            ));
+        }
         let title = checked(&fields)?;
         let course = self
             .courses
@@ -289,11 +294,13 @@ impl Records {
         if expected_version.is_some_and(|v| v != stored.version) {
             return Err(changed("records.record_changed", stored.version));
         }
+        let fields = self.prepared(&course, fields).await?;
         let title = checked(&fields)?;
         let derived = matches!(stored.kind, RecordKind::CategoryTotal | RecordKind::CourseTotal);
         let row = sqlx::query(sql(format!(
             "update {} set title = $2, grade_type = $3, \"min\" = $4, \"max\" = $5, pass_grade = $6, weight = $7,
-             extra_credit = $8, multiplier = $9, offset_value = $10, hidden_until = $11, version = version + 1
+             extra_credit = $8, multiplier = $9, offset_value = $10, hidden_until = $11, scale_id = $12,
+             version = version + 1
              where id = $1 returning {RECORD_COLUMNS}",
             self.table("record")
         )))
@@ -308,6 +315,7 @@ impl Records {
         .bind(fields.multiplier)
         .bind(fields.offset)
         .bind(fields.hidden_until.map(|t| t.as_offset_date_time()))
+        .bind(fields.scale.map(|s| s.as_uuid()))
         .fetch_one(&mut *tx)
         .await
         .map_err(kampus_db::classify)?;

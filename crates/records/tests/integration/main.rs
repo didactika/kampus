@@ -41,6 +41,7 @@
 )]
 
 mod grades;
+mod scales;
 mod structure;
 mod totals;
 mod world;

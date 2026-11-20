@@ -268,4 +268,62 @@ alter table {schema}.\"record\" alter column \"sort_key\" type text collate \"C\
             ..Table::EMPTY
         })],
     },
+    Step {
+        sequence: 3,
+        name: "scales and letter sets",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::CreateTable(Table {
+                name: "scale",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("scope_id", Type::Uuid),
+                    Column::new("code", Type::Text),
+                    Column::new("version", Type::Integer),
+                    Column::new("items", Type::TextArray),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                unique: &[&["scope_id", "code", "version"]],
+                foreign_keys: &[other(&["scope_id"], "access", "scope", OnDelete::Cascade)],
+                without_natural_key: Some("a scale is named by its scope, code and version"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "letter_set",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("scope_id", Type::Uuid),
+                    Column::new("version", Type::Integer),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                unique: &[&["scope_id", "version"]],
+                foreign_keys: &[other(&["scope_id"], "access", "scope", OnDelete::Cascade)],
+                without_natural_key: Some("a letter set is named by its scope and version"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "letter_band",
+                columns: &[
+                    Column::new("letter_set_id", Type::Uuid),
+                    Column::new("min_percent", Type::Numeric(9, 5)),
+                    Column::new("letter", Type::Text),
+                ],
+                primary_key: &["letter_set_id", "min_percent"],
+                foreign_keys: &[own(&["letter_set_id"], "letter_set", OnDelete::Cascade)],
+                without_natural_key: Some("a band is named by its letter set and its lowest percentage"),
+                ..Table::EMPTY
+            }),
+            Change::AddColumn {
+                table: "record",
+                column: Column::new("scale_id", Type::Uuid).nullable(),
+            },
+            Change::AddForeignKey {
+                table: "record",
+                foreign_key: own(&["scale_id"], "scale", OnDelete::Restrict),
+            },
+        ],
+    },
 ];

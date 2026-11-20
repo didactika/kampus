@@ -57,6 +57,16 @@ kampus_common::define_id! {
     pub struct EntryId;
 }
 
+kampus_common::define_id! {
+    /// Identifies a version of a scale.
+    pub struct ScaleId;
+}
+
+kampus_common::define_id! {
+    /// Identifies a version of a letter set.
+    pub struct LetterSetId;
+}
+
 /// How a category aggregates its children.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -257,6 +267,8 @@ pub struct Record {
     pub total_of: Option<CategoryId>,
     /// What its grades are made of.
     pub grade_type: GradeType,
+    /// The version of the scale its grades are items of, for a scale record.
+    pub scale: Option<ScaleId>,
     /// The lowest grade.
     pub min: Decimal,
     /// The highest grade.
@@ -289,6 +301,9 @@ pub struct RecordFields {
     /// What its grades are made of.
     #[serde(default = "value")]
     pub grade_type: GradeType,
+    /// The scale its grades are items of; required for a scale record, whose range is the items.
+    #[serde(default)]
+    pub scale: Option<ScaleId>,
     /// The lowest grade.
     #[serde(default)]
     pub min: Decimal,
@@ -337,6 +352,7 @@ impl RecordFields {
         Self {
             title: title.to_owned(),
             grade_type: GradeType::Value,
+            scale: None,
             min: Decimal::ZERO,
             max,
             pass_grade: None,
@@ -466,4 +482,42 @@ pub struct Tree {
     pub categories: Vec<Category>,
     /// The grade records.
     pub records: Vec<Record>,
+}
+
+/// An ordered list of items used instead of numbers; a new version is a new row, and a record keeps the
+/// version it was graded with.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Scale {
+    /// The version of the scale.
+    pub id: ScaleId,
+    /// The scope it is defined in; it is available there and below.
+    pub scope: kampus_access::ScopeId,
+    /// Its code, the same across versions.
+    pub code: String,
+    /// Its version.
+    pub version: i32,
+    /// Its items, from the lowest to the highest.
+    pub items: Vec<String>,
+}
+
+/// One band of a letter set: from this percentage up, the grade is this letter.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Band {
+    /// The lowest percentage of the band.
+    pub min_percent: Decimal,
+    /// The letter.
+    pub letter: String,
+}
+
+/// Bands that turn a percentage into a letter.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct LetterSet {
+    /// The version of the set.
+    pub id: LetterSetId,
+    /// The scope it is defined in; it applies there and below.
+    pub scope: kampus_access::ScopeId,
+    /// Its version.
+    pub version: i32,
+    /// Its bands, from the highest percentage down.
+    pub bands: Vec<Band>,
 }

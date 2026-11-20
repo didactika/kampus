@@ -135,11 +135,16 @@ fn checked(record: &Record, write: &GradeWrite) -> Result<(Option<Decimal>, Opti
             }
             _ => problems.push(problem("raw", "range")),
         },
+        GradeType::Scale => match write.raw {
+            Some(value) if value.fract().is_zero() && value >= record.min && value <= record.max => {
+                raw = Some(value);
+            }
+            _ => problems.push(problem("raw", "item")),
+        },
         GradeType::Text => match write.text.as_deref().map(str::trim) {
             Some(t) if !t.is_empty() && t.chars().count() <= TEXT_LIMIT => text = Some(t.to_owned()),
             _ => problems.push(problem("text", "length")),
         },
-        GradeType::Scale => problems.push(problem("record", "unsupported")),
     }
     let feedback = write
         .feedback
