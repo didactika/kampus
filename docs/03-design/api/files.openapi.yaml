@@ -7,14 +7,16 @@ info:
     when its owner is readable (RN-128). Conventions of DEC-025 and DEC-026.
 paths:
   /api/v1/files/uploads:
-    post: { summary: 'Open an upload session for an area, checked against size, types and quota (RN-129, RN-130, RN-134)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Session with an upload URL }, '413': { description: Too large or over quota }, '415': { description: Type not allowed } } }
+    post: { summary: 'Open an upload into an area for a scope (area, scope, name, size, media_type as a hint); needs the upload permission of the area there (RN-129)', responses: { '201': { description: 'The upload, valid for an hour' }, '403': { description: Without the permission }, '404': { description: Unknown area }, '422': { description: 'Name or size the area does not accept (files.upload_invalid)' } } }
   /api/v1/files/uploads/{upload_id}:
-    put: { summary: Send the content; the hash is computed and the blob de-duplicated (RN-126), responses: { '200': { description: Received } } }
-    post: { summary: 'Complete the upload; the file is returned pending its scan (RN-129)', responses: { '201': { description: File } } }
+    put: { summary: 'Send the content as the raw body; the type is read from the content and checked against the area, and the content stored once by its hash (RN-126, RN-130)', responses: { '200': { description: Received }, '404': { description: Not your upload }, '409': { description: Expired or completed }, '422': { description: 'Too large or a type the area does not accept (files.too_large, files.type_not_allowed)' } } }
+    post: { summary: 'Complete the upload into a file, which waits for its owner to attach it; until then only the uploader reads it', responses: { '201': { description: File }, '409': { description: 'No content yet, expired or completed' } } }
   /api/v1/files/files/{file_id}:
-    get: { summary: File metadata when the owner is readable, responses: { '200': { description: Metadata }, '404': { description: Not found or not readable } } }
+    get: { summary: 'File metadata, when the caller may read its owner (RN-128)', responses: { '200': { description: Metadata }, '404': { description: Not found or not readable } } }
   /api/v1/files/files/{file_id}/url:
-    post: { summary: 'A signed URL valid for minutes, for this file only (RN-131)', responses: { '200': { description: URL and expiry } } }
+    post: { summary: 'A link that reads this file for 5 minutes, served by the API; links signed by the store wait for a setting of its public address (RN-131)', responses: { '200': { description: URL and expiry }, '404': { description: Not found or not readable } } }
+  /api/v1/files/content/{file_id}:
+    get: { summary: 'The content behind a signed link, without signing in: nosniff, a sandboxing content security policy, and an attachment for content that could run (RN-132)', parameters: [{ name: expires, in: query, required: true, schema: { type: integer } }, { name: signature, in: query, required: true, schema: { type: string } }], responses: { '200': { description: Content }, '404': { description: 'Link changed or expired (files.link_invalid)' } } }
   /api/v1/files/files/{file_id}/conversions/{kind}:
     get: { summary: State or result of a conversion (RN-135), responses: { '200': { description: Conversion }, '202': { description: Queued } } }
   /api/v1/files/scopes/{scope_id}/quota:

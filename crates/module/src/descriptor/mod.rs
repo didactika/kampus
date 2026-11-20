@@ -37,6 +37,7 @@
 mod command;
 mod customise;
 mod event;
+mod file;
 mod job;
 mod preference;
 mod rule;
@@ -49,6 +50,7 @@ pub use customise::{
     TermForms, WidgetDeclaration, WidgetSetting,
 };
 pub use event::{Event, EventDeclaration, EventRun, ListenerDeclaration};
+pub use file::{FileAreaDeclaration, FileRead, ReadFuture};
 pub use job::{JobDeclaration, JobFuture, JobRun, ScheduleDeclaration};
 pub use preference::PreferenceDeclaration;
 pub use rule::{RuleActionDeclaration, RuleActionRun, RuleParameter};
@@ -99,6 +101,8 @@ pub struct Module {
     pub menu_kinds: &'static [MenuKindDeclaration],
     /// The actions it offers to rules, from `src/settings/customise.rs`.
     pub rule_actions: &'static [RuleActionDeclaration],
+    /// The areas where it keeps files, from `src/settings/files.rs`.
+    pub file_areas: &'static [FileAreaDeclaration],
     /// The events it publishes, from `src/events/mod.rs`.
     pub events: &'static [EventDeclaration],
     /// Its reactions to events, from `src/observers/mod.rs`.

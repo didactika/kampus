@@ -317,6 +317,18 @@ impl SecretKey {
         Ok(out)
     }
 
+    /// A key of its own for one purpose, such as signing the links to files, derived from this key with
+    /// HMAC-SHA256: the same purpose always gives the same key, and no derived key reveals another.
+    #[must_use]
+    pub fn derive(&self, purpose: &str) -> [u8; 32] {
+        use hmac::{Hmac, KeyInit, Mac};
+        let mut block = [0_u8; 64];
+        block[..32].copy_from_slice(&self.0);
+        let mut mac = <Hmac<Sha256> as KeyInit>::new(&block.into());
+        mac.update(purpose.as_bytes());
+        mac.finalize().into_bytes().into()
+    }
+
     /// Opens a sealed secret.
     ///
     /// # Errors

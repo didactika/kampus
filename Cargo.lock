@@ -1846,6 +1846,7 @@ dependencies = [
  "kampus-customise",
  "kampus-db",
  "kampus-events",
+ "kampus-files",
  "kampus-identity",
  "kampus-module",
  "kampus-users",
@@ -1870,6 +1871,32 @@ dependencies = [
  "time",
  "tokio",
  "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "kampus-files"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "base64 0.23.1",
+ "bytes",
+ "hmac 0.13.0",
+ "kampus-access",
+ "kampus-common",
+ "kampus-db",
+ "kampus-events",
+ "kampus-identity",
+ "kampus-module",
+ "kampus-storage",
+ "kampus-storage-opendal",
+ "serde",
+ "serde_json",
+ "sha2 0.11.1",
+ "sqlx",
+ "tempfile",
+ "time",
+ "tokio",
  "uuid",
 ]
 
@@ -1939,6 +1966,7 @@ dependencies = [
  "kampus-db",
  "kampus-enrol",
  "kampus-events",
+ "kampus-files",
  "kampus-identity",
  "kampus-module",
  "kampus-settings",
@@ -2030,6 +2058,7 @@ dependencies = [
  "kampus-common",
  "kampus-db",
  "kampus-events",
+ "kampus-files",
  "kampus-identity",
  "kampus-module",
  "serde",

@@ -97,6 +97,7 @@ async fn world() -> World {
         &kampus_events::MODULE,
         &kampus_access::MODULE,
         &kampus_identity::MODULE,
+        &kampus_files::MODULE,
         &kampus_users::MODULE,
     ];
     let schemas: Vec<_> = modules.iter().map(|m| m.schema()).collect();
@@ -165,7 +166,7 @@ impl World {
 
     /// Drops the installation.
     async fn drop(self) {
-        for module in ["users", "identity", "access", "events", "db"] {
+        for module in ["users", "files", "identity", "access", "events", "db"] {
             sqlx::raw_sql(sqlx::AssertSqlSafe(format!(
                 "drop schema if exists {} cascade",
                 self.db.prefix().schema(module)

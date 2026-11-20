@@ -7,7 +7,7 @@ title Schema files (PostgreSQL)
 
 entity blob {
   id <<PK>>
-  hash
+  hash <<UNIQUE>>
   size
   media_type
   storage_key
@@ -16,53 +16,47 @@ entity blob {
   created_at
 }
 entity area {
-  code
+  code <<PK>>
   module
+  summary
   max_size
   allowed_types
-  quota_class
+  upload_permission
+  retired_at
 }
 entity file {
   id <<PK>>
   blob_id <<FK>>
   area_code <<FK>>
+  scope_id <<FK>>
   name
   media_type
   size
-  uploaded_by <<FK>>
+  uploader
+  attached
   created_at
 }
-entity upload_session {
+entity upload {
   id <<PK>>
   area_code <<FK>>
-  account_id <<FK>>
-  max_size
-  token_hash
-  expires_at
-  completed_file_id <<FK>>
-}
-entity quota {
   scope_id <<FK>>
-  limit_bytes
-  used_bytes
-}
-entity conversion {
-  id <<PK>>
-  source_blob_id <<FK>>
-  kind
-  result_blob_id <<FK>>
-  state
-  error
+  uploader
+  name
+  declared_type
+  max_size
+  blob_id <<FK>>
+  file_id <<FK>>
+  expires_at
 }
 entity trash {
-  blob_id <<FK>>
+  blob_id <<PK, FK>>
   since
 }
 
 file }o--|| blob
 file }o--|| area
-upload_session }o--|| area
-upload_session }o--|| file
-conversion }o--|| blob
-trash }o--|| blob
+upload }o--|| area
+upload }o--o| blob
+upload |o--o| file
+trash |o--|| blob
 @enduml

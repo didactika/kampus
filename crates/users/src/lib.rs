@@ -42,6 +42,7 @@ pub mod model;
 pub mod module;
 pub mod permissions;
 pub mod service;
+pub mod settings;
 
 use kampus_access::Access;
 use kampus_db::Database;
@@ -64,6 +65,8 @@ pub struct Users {
     identity: Identity,
     /// The preferences the modules of the build declare.
     preferences: Vec<PreferenceDeclaration>,
+    /// Files, for profile pictures; without it there are none.
+    files: Option<kampus_files::Files>,
 }
 
 impl std::fmt::Debug for Users {
@@ -88,6 +91,16 @@ impl Users {
             access,
             identity,
             preferences,
+            files: None,
+        }
+    }
+
+    /// The service with files, which keeps profile pictures.
+    #[must_use]
+    pub fn with_files(self, files: kampus_files::Files) -> Self {
+        Self {
+            files: Some(files),
+            ..self
         }
     }
 

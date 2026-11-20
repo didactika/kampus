@@ -52,6 +52,7 @@ kampus-tasks = { path = "../tasks" }
 kampus-access = { path = "../access" }
 kampus-settings = { path = "../settings" }
 kampus-identity = { path = "../identity" }
+kampus-files = { path = "../files" }
 kampus-customise = { path = "../customise" }
 kampus-users = { path = "../users" }
 kampus-courses = { path = "../courses" }

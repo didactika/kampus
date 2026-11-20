@@ -34,6 +34,7 @@ pub const MODULE: Module = Module {
     widgets: &[],
     menu_kinds: &[],
     rule_actions: &[],
+    file_areas: &[],
     events: crate::events::EVENTS,
     listeners: crate::observers::LISTENERS,
     jobs: crate::jobs::JOBS,
@@ -49,6 +50,7 @@ pub const MODULE: Module = Module {
 | `commands` | `src/commands/mod.rs` | Offers them as `kampus-server <module> <command>` (see [commands](#commands-of-a-component)) |
 | `settings` | `src/settings/mod.rs` | Records the definitions; values are set per scope and resolved through the tree (see [settings](#settings)) |
 | `terms`, `flags`, `field_kinds`, `page_kinds`, `widgets`, `menu_kinds`, `rule_actions` | `src/settings/customise.rs` | Records the words, features, kinds of entity, pages, widgets, menus and rule actions a campus customises (see [customisation](#customisation)) |
+| `file_areas` | `src/settings/files.rs` | Records the places the module keeps files, with their limits and who reads them (see [file areas](#file-areas)) |
 | `preferences` | `src/settings/preferences.rs` | Kept by users per person: only declared keys, each checked against its type, with its default when unset |
 | `plugin_types` | `src/module.rs` | Accepts plugins named `<type>_<name>` in `crates/<module>/<type>/<name>` |
 | `steps` | `src/db/steps.rs` | Applies the pending upgrade steps (DEC-082) |
@@ -238,6 +240,29 @@ Every record an integration touches carries the identifiers other systems give i
 | Sets and removes references | With the permission that manages the record, which also decides who reads them |
 | Finds a record by one | `GET /api/v1/<module>/campuses/{campus}/<records>/by-reference/{system}/{external_id}` |
 | Creates or updates by one, when integrations create the record | Sets the reference in the transaction that creates the record, so it never exists without it; `PUT …/by-reference/{system}/{external_id}` answers 201 or 200 |
+
+## File areas
+
+A module that keeps files declares its **areas** in `src/settings/files.rs` and exposes them through `file_areas` in its descriptor; `kampus-files` stores the content once and runs the one upload pipeline, and the module owns its files through a link table of its own:
+
+```rust
+pub const FILE_AREAS: &[FileAreaDeclaration] = &[FileAreaDeclaration {
+    code: "users.picture",
+    summary: "The profile picture of a person",
+    max_size: 5 * 1024 * 1024,
+    allowed_types: &["image/png", "image/jpeg", "image/gif", "image/webp"],
+    upload_permission: PROFILE_UPDATE_OWN,
+    readable: picture_readable,
+}];
+```
+
+| Field | Meaning |
+| --- | --- |
+| `max_size`, `allowed_types` | The largest file and the media types it accepts, exact or as a family (`image/*`); the type is read from the content, never taken from the sender |
+| `upload_permission` | The permission an uploader holds in the scope the upload is for |
+| `readable` | Whether a principal may read one of its files, given the file: when they may read the record that owns it. Files asks it, and has no other way to grant reading |
+
+The owning module keeps a table `<entity>_file` (or a column in a table of its own) with foreign keys to its record and to `files.file`, both `CASCADE`, and calls `Files::attach_in` and `Files::detach_in` inside the transaction that links or unlinks them: the count of the uses of the content moves with them, and a file nobody attaches is removed after a day. A file is read through `POST /api/v1/files/files/{id}/url`, a link of a few minutes that never runs content in the platform's origin.
 
 ## Background jobs
 

@@ -44,6 +44,7 @@ use kampus_customise::Customise;
 use kampus_db::Database;
 use kampus_enrol::{Enrol, Participation};
 use kampus_events::Events;
+use kampus_files::Files;
 use kampus_identity::http::HttpSettings;
 use kampus_identity::{Courier, Identity, PasswordCost, PasswordHasher, SecretKey, SettingsPolicies};
 use kampus_module::ServiceContext;
@@ -67,6 +68,8 @@ pub struct Parts {
     pub clock: Arc<dyn Clock>,
     /// The cost of new password hashes; the recommended one when absent.
     pub password_cost: Option<PasswordCost>,
+    /// Where files keep their content; none in a process that does not open storage.
+    pub storage: Option<Arc<dyn kampus_storage::Storage>>,
 }
 
 impl Parts {
@@ -80,6 +83,7 @@ impl Parts {
             courier,
             clock: Arc::new(SystemClock),
             password_cost: None,
+            storage: None,
         }
     }
 }
@@ -101,6 +105,19 @@ impl Services {
     pub fn build(parts: Parts) -> Self {
         let access = Access::new(parts.db.clone(), parts.clock.clone());
         let settings = Settings::new(parts.db.clone(), access.clone());
+        let api_url = format!(
+            "{}{}",
+            parts.site_url.trim_end_matches('/'),
+            crate::http::API_PREFIX
+        );
+        let files = Files::new(
+            parts.db.clone(),
+            access.clone(),
+            parts.storage.clone(),
+            parts.secret_key.derive("files.links"),
+            api_url.clone(),
+        )
+        .with_modules(MODULES);
         let customise = Customise::new(parts.db.clone(), access.clone()).with_modules(MODULES);
         let identity = Identity::new(
             parts.db.clone(),
@@ -118,7 +135,8 @@ impl Services {
             .iter()
             .flat_map(|m| m.preferences.iter().copied())
             .collect();
-        let users = Users::new(parts.db.clone(), access.clone(), identity.clone(), preferences);
+        let users = Users::new(parts.db.clone(), access.clone(), identity.clone(), preferences)
+            .with_files(files.clone());
         let courses = Courses::new(
             parts.db.clone(),
             access.clone(),
@@ -148,12 +166,9 @@ impl Services {
             .with(events)
             .with(settings)
             .with(customise)
+            .with(files)
             .with(HttpSettings {
-                api_url: format!(
-                    "{}{}",
-                    parts.site_url.trim_end_matches('/'),
-                    crate::http::API_PREFIX
-                ),
+                api_url,
                 site_url: parts.site_url,
             });
         Self {

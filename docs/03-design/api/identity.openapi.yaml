@@ -128,6 +128,11 @@ paths:
     get: { summary: The system group a system knows by an identifier in the campus, responses: { '200': { description: Group }, '404': { description: No group has it } } }
   /api/v1/users/scopes/{scope_id}/system-groups/by-reference/{system}/{external_id}:
     put: { summary: 'The group a system knows by an identifier, created in the scope with it when there is none; an existing group is left as it is', responses: { '200': { description: Existing }, '201': { description: Created } } }
+  /api/v1/users/me/picture:
+    put: { summary: 'Make a file the caller uploaded into users.picture their profile picture; the old one is detached', responses: { '204': { description: Set }, '404': { description: Not your file }, '422': { description: A file of another area } } }
+    delete: { summary: 'Remove the profile picture, which deletes its file', responses: { '204': { description: Removed } } }
+  /api/v1/users/accounts/{account_id}/picture:
+    get: { summary: 'The file of the profile picture of a person; read it through files', responses: { '200': { description: 'The file id' }, '404': { description: No picture } } }
 components:
   parameters:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }

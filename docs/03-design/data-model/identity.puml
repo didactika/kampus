@@ -67,6 +67,10 @@ package identity {
   }
 }
 package users {
+  entity profile_picture {
+    account_id <<PK, FK>>
+    file_id <<FK>>
+  }
   entity system_group_reference {
     campus_id <<PK, FK>>
     system <<PK>>
@@ -108,4 +112,5 @@ system_group_member }o--|| system_group
 system_group_member }o--|| account
 account_reference }o--|| account
 system_group_reference }o--|| system_group
+profile_picture ||--|| account
 @enduml
