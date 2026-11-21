@@ -43,6 +43,7 @@ pub mod model;
 pub mod module;
 pub mod observers;
 pub mod permissions;
+pub mod privacy;
 pub mod service;
 
 use kampus_db::Database;

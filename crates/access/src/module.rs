@@ -61,6 +61,7 @@ pub const MODULE: Module = Module {
     file_areas: &[],
     activity_types: &[],
     notification_types: &[],
+    privacy_handlers: &[],
     events: &[],
     listeners: &[],
     jobs: &[],

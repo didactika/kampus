@@ -62,6 +62,7 @@ kampus-records = { path = "../records" }
 kampus-progress = { path = "../progress" }
 kampus-notify = { path = "../notify" }
 kampus-calendar = { path = "../calendar" }
+kampus-privacy = { path = "../privacy" }
 # modules:end
 # adapters:start
 kampus-cache-moka = { path = "../cache/adapters/moka" }

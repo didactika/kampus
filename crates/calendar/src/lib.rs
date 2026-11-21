@@ -42,6 +42,7 @@ pub mod http;
 pub mod model;
 pub mod module;
 pub mod permissions;
+pub mod privacy;
 pub mod service;
 
 use kampus_access::Access;
