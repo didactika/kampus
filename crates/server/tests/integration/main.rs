@@ -43,6 +43,7 @@
 mod activities;
 mod api;
 mod calendar;
+mod completion;
 mod conditions;
 mod courses;
 mod customise;

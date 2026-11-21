@@ -480,6 +480,45 @@ impl Records {
         }))
     }
 
+    /// The course of a grade record, whoever asks.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown record.
+    pub async fn course_of_record(&self, record: RecordId) -> Result<kampus_courses::CourseId> {
+        Ok(self.stored_record(record).await?.course)
+    }
+
+    /// The grade of a person on a record as a share of its range, from 0 to 100, read as kept whatever the
+    /// person may see of it; none without a grade, or when it is excluded.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn grade_share(
+        &self,
+        record: RecordId,
+        account: kampus_access::PrincipalId,
+    ) -> Result<Option<Decimal>> {
+        let row = sqlx::query(sql(format!(
+            "select r.\"min\", r.\"max\", g.\"final\" from {} r
+             join {} g on g.record_id = r.id and g.account_id = $2 and not g.excluded where r.id = $1",
+            self.table("record"),
+            self.table("grade")
+        )))
+        .bind(record.as_uuid())
+        .bind(account.as_uuid())
+        .fetch_optional(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        let Some(row) = row else { return Ok(None) };
+        let (low, high): (Decimal, Decimal) = (sqlx::Row::get(&row, "min"), sqlx::Row::get(&row, "max"));
+        let value: Option<Decimal> = sqlx::Row::get(&row, "final");
+        Ok(value
+            .filter(|_| high > low)
+            .and_then(|v| ((v - low) * Decimal::ONE_HUNDRED).checked_div(high - low)))
+    }
+
     /// The course module a grade record belongs to, when it is the record of an activity.
     ///
     /// # Errors

@@ -39,10 +39,21 @@ use kampus_module::NotificationTypeDeclaration;
 /// A teacher decided the state of the person on a course module, or removed the decision.
 pub const STATE_DECIDED: &str = "progress.state_decided";
 
+/// A person completed a course.
+pub const COURSE_COMPLETED: &str = "progress.course_completed";
+
 /// The types of this module.
-pub const TYPES: &[NotificationTypeDeclaration] = &[NotificationTypeDeclaration {
-    code: STATE_DECIDED,
-    summary: "A teacher decided your progress on an activity",
-    channels: &["inbox"],
-    required: false,
-}];
+pub const TYPES: &[NotificationTypeDeclaration] = &[
+    NotificationTypeDeclaration {
+        code: STATE_DECIDED,
+        summary: "A teacher decided your progress on an activity",
+        channels: &["inbox"],
+        required: false,
+    },
+    NotificationTypeDeclaration {
+        code: COURSE_COMPLETED,
+        summary: "You completed a course",
+        channels: &["inbox"],
+        required: false,
+    },
+];

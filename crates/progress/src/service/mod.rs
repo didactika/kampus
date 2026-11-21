@@ -35,6 +35,7 @@
 //! The service API of progress, one file per area, and what they share: reading states from their rows,
 //! evaluating the state of a person on a course module, and the events.
 
+pub mod course;
 pub mod exception;
 pub mod read;
 pub mod recalc;

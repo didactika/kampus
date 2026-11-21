@@ -70,6 +70,11 @@ pub fn routes(context: &ServiceContext) -> Router {
         )
         .route("/courses/{id}/states/{account}", get(states_for))
         .route("/courses/{id}/my-progress", get(my_progress))
+        .route("/courses/{id}/criteria", get(criteria).put(define_criteria))
+        .route("/courses/{id}/course-progress", get(course_report))
+        .route("/courses/{id}/course-progress/{account}", get(course_progress))
+        .route("/courses/{id}/my-course-progress", get(my_course_progress))
+        .route("/criteria/{id}/approvals/{account}", put(approve))
         .with_state(shared)
 }
 
@@ -255,4 +260,104 @@ async fn my_progress(
         .states_for(&caller.actor, id(&course)?, account)
         .await?;
     Ok(Json(found).into_response())
+}
+
+/// The person of the caller.
+fn me(caller: &Caller) -> Result<PrincipalId> {
+    match &caller.actor {
+        Actor::Principal(p) | Actor::ViewAs(p, _) => Ok(*p),
+        Actor::Visitor(_) => Err(Error::permission_denied("access.denied")),
+    }
+}
+
+/// What a course requires.
+async fn criteria(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(course): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .progress()?
+            .course_criteria(&caller.actor, id(&course)?)
+            .await?,
+    )
+    .into_response())
+}
+
+/// Replaces what a course requires.
+async fn define_criteria(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(course): Path<String>,
+    Body(body): Body<crate::CourseCriteria>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .progress()?
+            .define_criteria(&caller.actor, id(&course)?, body)
+            .await?,
+    )
+    .into_response())
+}
+
+/// The progress of everyone a course follows.
+async fn course_report(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(course): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .progress()?
+            .course_report(&caller.actor, id(&course)?)
+            .await?,
+    )
+    .into_response())
+}
+
+/// The progress of a person in a course.
+async fn course_progress(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((course, account)): Path<(String, String)>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .progress()?
+            .course_progress(&caller.actor, id(&course)?, id(&account)?)
+            .await?,
+    )
+    .into_response())
+}
+
+/// The progress of the caller in a course.
+async fn my_course_progress(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(course): Path<String>,
+) -> ApiResult<Response> {
+    let account = me(&caller)?;
+    Ok(Json(
+        shared
+            .progress()?
+            .course_progress(&caller.actor, id(&course)?, account)
+            .await?,
+    )
+    .into_response())
+}
+
+/// Approves a person for a criterion.
+async fn approve(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((criterion, account)): Path<(String, String)>,
+) -> ApiResult<StatusCode> {
+    let criterion =
+        uuid::Uuid::parse_str(&criterion).map_err(|_| Error::not_found("progress.criterion_not_found"))?;
+    shared
+        .progress()?
+        .approve(&caller.actor, criterion, id(&account)?)
+        .await?;
+    Ok(StatusCode::NO_CONTENT)
 }

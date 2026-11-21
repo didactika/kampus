@@ -37,7 +37,7 @@
 
 use async_trait::async_trait;
 use kampus_access::PrincipalId;
-use kampus_common::Result;
+use kampus_common::{Result, Timestamp};
 
 use crate::CourseId;
 
@@ -49,6 +49,12 @@ pub trait Participants: Send + Sync {
 
     /// Whether anyone takes part in the course.
     async fn any(&self, course: CourseId) -> Result<bool>;
+
+    /// Everyone who takes part in the course now.
+    async fn accounts(&self, course: CourseId) -> Result<Vec<PrincipalId>>;
+
+    /// Since when the account takes part in the course without a break, when it does.
+    async fn since(&self, course: CourseId, account: PrincipalId) -> Result<Option<Timestamp>>;
 }
 
 /// Everyone of the course's campus takes part and nobody is counted, until enrolment answers.
@@ -63,5 +69,13 @@ impl Participants for CampusMembers {
 
     async fn any(&self, _course: CourseId) -> Result<bool> {
         Ok(false)
+    }
+
+    async fn accounts(&self, _course: CourseId) -> Result<Vec<PrincipalId>> {
+        Ok(Vec::new())
+    }
+
+    async fn since(&self, _course: CourseId, _account: PrincipalId) -> Result<Option<Timestamp>> {
+        Ok(None)
     }
 }
