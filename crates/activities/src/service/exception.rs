@@ -466,3 +466,23 @@ impl Activities {
         self.effective_values(module, account).await
     }
 }
+
+impl Activities {
+    /// The dates, time limit and attempts a course module has of its own, without any exception, for the
+    /// modules that show or project them, such as the calendar.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown course module.
+    pub async fn module_values(&self, module: ModuleId) -> Result<Values> {
+        let stored = self.stored(module).await?;
+        Ok(Values {
+            opens_at: setting_time(&stored, "opens_at"),
+            closes_at: setting_time(&stored, "closes_at"),
+            due_at: setting_time(&stored, "due_at"),
+            cutoff_at: setting_time(&stored, "cutoff_at"),
+            time_limit_seconds: setting_number(&stored, "time_limit_seconds"),
+            attempts: setting_number(&stored, "attempts"),
+        })
+    }
+}

@@ -6,13 +6,15 @@ info:
     Entries, the calendar view with recurrences expanded and activity dates (RN-156 to RN-158),
     subscriptions (RN-159) and personal feeds (RN-161). Conventions of DEC-025 and DEC-026.
 paths:
-  /api/v1/calendar/calendar:
-    get: { summary: 'Occurrences in a range for the caller, with activity dates and exceptions applied', parameters: [{ name: from, in: query, required: true, schema: { type: string, format: date-time } }, { name: to, in: query, required: true, schema: { type: string, format: date-time } }], responses: { '200': { description: Occurrences } } }
-  /api/v1/calendar/scopes/{scope_id}/calendar-entries:
-    post: { summary: Create an entry in a scope, parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created } } }
-  /api/v1/calendar/calendar-entries/{entry_id}:
-    patch: { summary: Change an entry, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }
+  /api/v1/calendar/entries:
+    get: { summary: 'The entries of a scope that touch a window, or the personal ones when no scope is given', parameters: [{ name: scope, in: query, schema: { type: string, format: uuid } }, { name: from, in: query, required: true, schema: { type: string, format: date-time } }, { name: to, in: query, required: true, schema: { type: string, format: date-time } }], responses: { '200': { description: Items }, '422': { description: Empty window or longer than a year } } }
+    post: { summary: 'Create an entry in a scope (calendar.manage) or a personal one when no scope is given', responses: { '201': { description: Created } } }
+  /api/v1/calendar/entries/{entry_id}:
+    get: { summary: An entry the caller sees, responses: { '200': { description: The entry } } }
+    put: { summary: Replace an entry on the version it was read at, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Changed } } }
     delete: { summary: Delete an entry, responses: { '204': { description: Deleted } } }
+  /api/v1/calendar/courses/{course_id}/calendar:
+    get: { summary: 'The entries of a course and the dates of its activities, with the exceptions of the caller applied (RN-157)', parameters: [{ name: from, in: query, required: true, schema: { type: string, format: date-time } }, { name: to, in: query, required: true, schema: { type: string, format: date-time } }], responses: { '200': { description: Items } } }
   /api/v1/calendar/calendar-entries/{entry_id}/exceptions/{occurrence_at}:
     put: { summary: Cancel or change one occurrence, responses: { '200': { description: Set } } }
   /api/v1/calendar/scopes/{scope_id}/calendar-subscriptions:

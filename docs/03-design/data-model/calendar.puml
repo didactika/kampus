@@ -10,6 +10,7 @@ entity entry {
   scope_id <<FK>>
   group_id <<FK>>
   owner_id <<FK>>
+  author
   title
   description
   starts_at
