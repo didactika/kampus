@@ -55,6 +55,7 @@ kampus-courses = { path = "../courses" }
 kampus-events = { path = "../events" }
 kampus-files = { path = "../files" }
 kampus-identity = { path = "../identity" }
+kampus-users = { path = "../users" }
 axum.workspace = true
 serde.workspace = true
 serde_json.workspace = true

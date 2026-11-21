@@ -36,10 +36,15 @@
 
 use kampus_module::{RoleTemplateDeclaration, Value};
 
-use super::{EXCEPTION_MANAGE, MODULE_MANAGE};
+use super::{CONDITIONS_IGNORE, CONDITIONS_MANAGE, EXCEPTION_MANAGE, MODULE_MANAGE};
 
 /// Managing course modules, allowed.
-const MANAGE: &[(&str, Value)] = &[(MODULE_MANAGE, Value::Allow), (EXCEPTION_MANAGE, Value::Allow)];
+const MANAGE: &[(&str, Value)] = &[
+    (MODULE_MANAGE, Value::Allow),
+    (EXCEPTION_MANAGE, Value::Allow),
+    (CONDITIONS_MANAGE, Value::Allow),
+    (CONDITIONS_IGNORE, Value::Allow),
+];
 
 /// The values of this module in the role templates.
 pub const TEMPLATES: &[RoleTemplateDeclaration] = &[

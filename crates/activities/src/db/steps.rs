@@ -254,4 +254,91 @@ pub const STEPS: &[Step] = &[
             ),
         })],
     },
+    Step {
+        sequence: 4,
+        name: "access conditions",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::CreateTable(Table {
+                name: "condition",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("course_module_id", Type::Uuid).nullable(),
+                    Column::new("section_id", Type::Uuid).nullable(),
+                    Column::new("parent_id", Type::Uuid).nullable(),
+                    Column::new("position", Type::Integer).default(ColumnDefault::Int(0)),
+                    Column::new("operator", Type::Text),
+                    Column::new("kind", Type::Text).nullable(),
+                    Column::new("show_when_unmet", Type::Boolean).default(ColumnDefault::Bool(true)),
+                ],
+                primary_key: &["id"],
+                unique: &[&["course_module_id"], &["section_id"]],
+                foreign_keys: &[
+                    own(&["course_module_id"], "course_module", OnDelete::Cascade),
+                    other(&["section_id"], "courses", "section", OnDelete::Cascade),
+                    own(&["parent_id"], "condition", OnDelete::Cascade),
+                ],
+                checks: &[
+                    Check::ExactlyOne(&["course_module_id", "section_id", "parent_id"]),
+                    Check::OneOf("operator", OPERATORS),
+                ],
+                indexes: &[Index {
+                    columns: &["parent_id", "position"],
+                    unique: false,
+                }],
+                without_natural_key: Some("a node of the tree of a course module or a section"),
+            }),
+            Change::CreateTable(Table {
+                name: "condition_date",
+                columns: &[
+                    Column::new("condition_id", Type::Uuid),
+                    Column::new("opens_at", Type::Timestamptz).nullable(),
+                    Column::new("closes_at", Type::Timestamptz).nullable(),
+                ],
+                primary_key: &["condition_id"],
+                foreign_keys: &[own(&["condition_id"], "condition", OnDelete::Cascade)],
+                checks: &[Check::After("closes_at", "opens_at")],
+                without_natural_key: Some("the parameters of one leaf"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "condition_group",
+                columns: &[
+                    Column::new("condition_id", Type::Uuid),
+                    Column::new("group_id", Type::Uuid).nullable(),
+                    Column::new("group_set_id", Type::Uuid).nullable(),
+                ],
+                primary_key: &["condition_id"],
+                foreign_keys: &[
+                    own(&["condition_id"], "condition", OnDelete::Cascade),
+                    other(&["group_id"], "courses", "group", OnDelete::Cascade),
+                    other(&["group_set_id"], "courses", "group_set", OnDelete::Cascade),
+                ],
+                without_natural_key: Some("the parameters of one leaf"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "condition_profile",
+                columns: &[
+                    Column::new("condition_id", Type::Uuid),
+                    Column::new("field", Type::Text),
+                    Column::new("operator", Type::Text),
+                    Column::new("value", Type::Text).nullable(),
+                ],
+                primary_key: &["condition_id"],
+                foreign_keys: &[own(&["condition_id"], "condition", OnDelete::Cascade)],
+                checks: &[
+                    Check::OneOf("field", crate::settings::conditions::PROFILE_FIELDS),
+                    Check::OneOf("operator", crate::settings::conditions::PROFILE_OPERATORS),
+                ],
+                without_natural_key: Some("the parameters of one leaf"),
+                ..Table::EMPTY
+            }),
+        ],
+    },
 ];
+
+/// How the nodes of a tree of conditions combine: every child, any child, the opposite of its only child, or
+/// a leaf of a kind.
+pub const OPERATORS: &[&str] = &["all", "any", "not", "leaf"];

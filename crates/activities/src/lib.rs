@@ -53,7 +53,10 @@ use kampus_db::Database;
 use kampus_files::Files;
 use kampus_module::{ActivityTypeDeclaration, Module as Declared};
 
-pub use model::{ActivityType, BinItem, Module, ModuleFields, ModuleId, ModuleState};
+pub use model::{
+    ActivityType, Availability, BinItem, ConditionNode, Conditions, Module, ModuleFields, ModuleId,
+    ModuleState, Operator, Restricted,
+};
 pub use module::MODULE;
 pub use service::exception::{Exception, ExceptionId, Target, Values};
 

@@ -517,6 +517,37 @@ impl Courses {
             .collect())
     }
 
+    /// A group set with its groups, whoever asks; for modules that resolve what applies to a person.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` (`courses.group_set_not_found`) for an unknown set.
+    pub async fn group_set(&self, id: GroupSetId) -> Result<GroupSet> {
+        let row = sqlx::query(sql(format!(
+            "select s.id, s.course_id, s.name, s.code, coalesce(array_agg(g.group_id order by g.group_id)
+             filter (where g.group_id is not null), '{{}}') as groups
+             from {} s left join {} g on g.set_id = s.id where s.id = $1 group by s.id",
+            self.table("group_set"),
+            self.table("group_set_group")
+        )))
+        .bind(id.as_uuid())
+        .fetch_optional(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?
+        .ok_or_else(|| Error::not_found("courses.group_set_not_found"))?;
+        Ok(GroupSet {
+            id,
+            course: CourseId::from_uuid(row.get("course_id")),
+            name: row.get("name"),
+            code: row.get("code"),
+            groups: row
+                .get::<Vec<uuid::Uuid>, _>("groups")
+                .into_iter()
+                .map(GroupId::from_uuid)
+                .collect(),
+        })
+    }
+
     /// Inserts a membership of a participant; one who is a member with that origin already stays.
     async fn insert_member(
         &self,

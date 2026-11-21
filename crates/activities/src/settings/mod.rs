@@ -34,6 +34,7 @@
 
 //! What activities offers to other modules: the types it provides itself, its words and its file area.
 
+pub mod conditions;
 pub mod customise;
 pub mod files;
 pub mod types;

@@ -94,7 +94,7 @@ entity recalculation {
   account_id <<FK>>
   queued_at
 }
-entity grade_condition {
+entity condition_grade {
   condition_id <<FK>>
   record_id <<FK>>
   min_percent
@@ -111,5 +111,5 @@ letter_band }o--|| letter_set
 formula }o--|| record
 formula_dependency }o--|| formula
 formula_dependency }o--|| record
-grade_condition }o--|| record
+condition_grade }o--|| record
 @enduml

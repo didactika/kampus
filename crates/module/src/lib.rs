@@ -44,8 +44,9 @@ pub mod permission;
 
 pub use context::ServiceContext;
 pub use descriptor::{
-    ActivityKind, ActivitySetting, ActivityTypeDeclaration, NotificationTypeDeclaration, PrivacyFuture,
-    PrivacyHandlerDeclaration, PrivacyRun,
+    ActivityKind, ActivitySetting, ActivityTypeDeclaration, ConditionCheck, ConditionFuture,
+    ConditionKindDeclaration, ConditionTarget, ConditionWrite, NotificationTypeDeclaration, PrivacyFuture,
+    PrivacyHandlerDeclaration, PrivacyRun, nothing_depends,
 };
 pub use descriptor::{
     Argument, Command, CommandContext, CommandFuture, Event, EventDeclaration, EventRun, JobDeclaration,

@@ -62,6 +62,7 @@ pub const MODULE: Module = Module {
     activity_types: crate::settings::types::TYPES,
     notification_types: &[],
     privacy_handlers: &[],
+    condition_kinds: crate::settings::conditions::KINDS,
     events: crate::events::EVENTS,
     listeners: &[],
     jobs: crate::jobs::JOBS,

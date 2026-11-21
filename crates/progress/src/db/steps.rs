@@ -80,124 +80,157 @@ const fn module_and_person() -> [ForeignKey; 2] {
 }
 
 /// The upgrade steps of this module.
-pub const STEPS: &[Step] = &[Step {
-    sequence: 1,
-    name: "rules, signals, states, exceptions, history and the queue of rule changes",
-    revert: &[],
-    action: None,
-    changes: &[
-        Change::CreateTable(Table {
-            name: "rule",
+pub const STEPS: &[Step] = &[
+    Step {
+        sequence: 1,
+        name: "rules, signals, states, exceptions, history and the queue of rule changes",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::CreateTable(Table {
+                name: "rule",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("course_module_id", Type::Uuid),
+                    Column::new("kind", Type::Text),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                unique: &[&["course_module_id", "kind"]],
+                foreign_keys: &[other(
+                    &["course_module_id"],
+                    "activities",
+                    "course_module",
+                    OnDelete::Cascade,
+                )],
+                checks: &[Check::OneOf("kind", RULE_KINDS)],
+                without_natural_key: Some("a rule is named by its course module and kind"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "signal",
+                columns: &[
+                    Column::new("course_module_id", Type::Uuid),
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("kind", Type::Text),
+                    Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["course_module_id", "account_id", "kind"],
+                foreign_keys: &module_and_person(),
+                checks: &[Check::OneOf("kind", SIGNAL_KINDS)],
+                indexes: &[Index {
+                    columns: &["account_id"],
+                    unique: false,
+                }],
+                without_natural_key: Some("what a person did on a course module, once per kind"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "activity_state",
+                columns: &[
+                    Column::new("course_module_id", Type::Uuid),
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("state", Type::Text),
+                    Column::new("source", Type::Text),
+                    Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
+                    Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+                ],
+                primary_key: &["course_module_id", "account_id"],
+                foreign_keys: &module_and_person(),
+                checks: &[Check::OneOf("state", STATES), Check::OneOf("source", SOURCES)],
+                indexes: &[Index {
+                    columns: &["account_id"],
+                    unique: false,
+                }],
+                without_natural_key: Some("the state of a person on a course module"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "activity_exception",
+                columns: &[
+                    Column::new("course_module_id", Type::Uuid),
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("state", Type::Text),
+                    Column::new("reason", Type::Text),
+                    Column::new("author", Type::Uuid).nullable(),
+                    Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["course_module_id", "account_id"],
+                foreign_keys: &module_and_person(),
+                checks: &[Check::OneOf("state", STATES)],
+                without_natural_key: Some("the decision of a teacher about a person on a course module"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "activity_history",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("course_module_id", Type::Uuid),
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("from_state", Type::Text).nullable(),
+                    Column::new("to_state", Type::Text),
+                    Column::new("cause", Type::Text),
+                    Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                foreign_keys: &module_and_person(),
+                checks: &[Check::OneOf("to_state", STATES)],
+                indexes: &[Index {
+                    columns: &["course_module_id", "account_id", "at"],
+                    unique: false,
+                }],
+                without_natural_key: Some("append-only history: one row per change of state"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "pending",
+                columns: &[
+                    Column::new("course_module_id", Type::Uuid),
+                    Column::new("queued_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["course_module_id"],
+                foreign_keys: &[other(
+                    &["course_module_id"],
+                    "activities",
+                    "course_module",
+                    OnDelete::Cascade,
+                )],
+                without_natural_key: Some(
+                    "one row per course module whose rules changed and waits to be re-evaluated",
+                ),
+                ..Table::EMPTY
+            }),
+        ],
+    },
+    Step {
+        sequence: 2,
+        name: "access conditions on the state of a course module",
+        revert: &[],
+        action: None,
+        changes: &[Change::CreateTable(Table {
+            name: "condition_state",
             columns: &[
-                Column::new("id", Type::Uuid),
+                Column::new("condition_id", Type::Uuid),
                 Column::new("course_module_id", Type::Uuid),
-                Column::new("kind", Type::Text),
-                Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                Column::new("required", Type::Text),
             ],
-            primary_key: &["id"],
-            unique: &[&["course_module_id", "kind"]],
-            foreign_keys: &[other(
-                &["course_module_id"],
-                "activities",
-                "course_module",
-                OnDelete::Cascade,
-            )],
-            checks: &[Check::OneOf("kind", RULE_KINDS)],
-            without_natural_key: Some("a rule is named by its course module and kind"),
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "signal",
-            columns: &[
-                Column::new("course_module_id", Type::Uuid),
-                Column::new("account_id", Type::Uuid),
-                Column::new("kind", Type::Text),
-                Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
+            primary_key: &["condition_id"],
+            foreign_keys: &[
+                other(&["condition_id"], "activities", "condition", OnDelete::Cascade),
+                other(
+                    &["course_module_id"],
+                    "activities",
+                    "course_module",
+                    OnDelete::Cascade,
+                ),
             ],
-            primary_key: &["course_module_id", "account_id", "kind"],
-            foreign_keys: &module_and_person(),
-            checks: &[Check::OneOf("kind", SIGNAL_KINDS)],
+            checks: &[Check::OneOf("required", crate::settings::conditions::REQUIRED)],
             indexes: &[Index {
-                columns: &["account_id"],
+                columns: &["course_module_id"],
                 unique: false,
             }],
-            without_natural_key: Some("what a person did on a course module, once per kind"),
+            without_natural_key: Some("the parameters of one leaf of a tree of activities"),
             ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "activity_state",
-            columns: &[
-                Column::new("course_module_id", Type::Uuid),
-                Column::new("account_id", Type::Uuid),
-                Column::new("state", Type::Text),
-                Column::new("source", Type::Text),
-                Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
-                Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
-            ],
-            primary_key: &["course_module_id", "account_id"],
-            foreign_keys: &module_and_person(),
-            checks: &[Check::OneOf("state", STATES), Check::OneOf("source", SOURCES)],
-            indexes: &[Index {
-                columns: &["account_id"],
-                unique: false,
-            }],
-            without_natural_key: Some("the state of a person on a course module"),
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "activity_exception",
-            columns: &[
-                Column::new("course_module_id", Type::Uuid),
-                Column::new("account_id", Type::Uuid),
-                Column::new("state", Type::Text),
-                Column::new("reason", Type::Text),
-                Column::new("author", Type::Uuid).nullable(),
-                Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["course_module_id", "account_id"],
-            foreign_keys: &module_and_person(),
-            checks: &[Check::OneOf("state", STATES)],
-            without_natural_key: Some("the decision of a teacher about a person on a course module"),
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "activity_history",
-            columns: &[
-                Column::new("id", Type::Uuid),
-                Column::new("course_module_id", Type::Uuid),
-                Column::new("account_id", Type::Uuid),
-                Column::new("from_state", Type::Text).nullable(),
-                Column::new("to_state", Type::Text),
-                Column::new("cause", Type::Text),
-                Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["id"],
-            foreign_keys: &module_and_person(),
-            checks: &[Check::OneOf("to_state", STATES)],
-            indexes: &[Index {
-                columns: &["course_module_id", "account_id", "at"],
-                unique: false,
-            }],
-            without_natural_key: Some("append-only history: one row per change of state"),
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "pending",
-            columns: &[
-                Column::new("course_module_id", Type::Uuid),
-                Column::new("queued_at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["course_module_id"],
-            foreign_keys: &[other(
-                &["course_module_id"],
-                "activities",
-                "course_module",
-                OnDelete::Cascade,
-            )],
-            without_natural_key: Some(
-                "one row per course module whose rules changed and waits to be re-evaluated",
-            ),
-            ..Table::EMPTY
-        }),
-    ],
-}];
+        })],
+    },
+];

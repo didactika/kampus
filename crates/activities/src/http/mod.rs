@@ -33,9 +33,10 @@
 // ------------------------------------------------------------------------------
 
 //! The HTTP routes of activities: the types, the course modules of a section and of one course module,
-//! their files, the recycle bin and the external references of course modules.
+//! their files, the recycle bin, the external references of course modules, and the access conditions of
+//! course modules and sections.
 
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post, put};
@@ -52,14 +53,15 @@ use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::permissions::{EXCEPTION_MANAGE, MODULE_MANAGE};
-use crate::{Activities, ExceptionId, ModuleFields, ModuleId, Target, Values};
+use crate::permissions::{CONDITIONS_MANAGE, EXCEPTION_MANAGE, MODULE_MANAGE};
+use crate::{Activities, Conditions, ExceptionId, ModuleFields, ModuleId, Restricted, Target, Values};
 
 /// The routes of activities.
 pub fn routes(context: &ServiceContext) -> Router {
     let shared = Shared {
         activities: context.service::<Activities>().ok(),
         identity: context.service::<Identity>().ok(),
+        context: context.clone(),
     };
     Router::new()
         .route("/types", get(types))
@@ -69,6 +71,14 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/course-modules/{id}/copy", post(copy))
         .route("/course-modules/{id}/restore", post(restore))
         .route("/course-modules/{id}/file", get(file).put(set_file))
+        .route(
+            "/course-modules/{id}/conditions",
+            get(module_conditions).put(set_module_conditions),
+        )
+        .route(
+            "/sections/{id}/conditions",
+            get(section_conditions).put(set_section_conditions),
+        )
         .route("/courses/{id}/bin", get(bin))
         .route("/course-modules/{id}/exceptions", get(exceptions))
         .route(
@@ -107,6 +117,8 @@ struct Shared {
     activities: Option<Activities>,
     /// Identity, for the permissions API tokens carry.
     identity: Option<Identity>,
+    /// The services, for the kinds of access condition.
+    context: ServiceContext,
 }
 
 impl Shared {
@@ -181,7 +193,10 @@ async fn list(
     Extension(caller): Extension<Caller>,
     Path(section): Path<String>,
 ) -> ApiResult<Response> {
-    let modules = shared.activities()?.modules(&caller.actor, id(&section)?).await?;
+    let modules = shared
+        .activities()?
+        .available_modules(&caller.actor, id(&section)?, &shared.context)
+        .await?;
     Ok(Json(modules).into_response())
 }
 
@@ -209,7 +224,10 @@ async fn read(
     Extension(caller): Extension<Caller>,
     Path(module): Path<String>,
 ) -> ApiResult<Response> {
-    let found = shared.activities()?.module(&caller.actor, id(&module)?).await?;
+    let found = shared
+        .activities()?
+        .available_module(&caller.actor, id(&module)?, &shared.context)
+        .await?;
     let version = found.version;
     Ok(with_etag(Json(found), version))
 }
@@ -238,14 +256,91 @@ async fn remove(
     State(shared): State<Shared>,
     Extension(caller): Extension<Caller>,
     Path(module): Path<String>,
+    Query(options): Query<RemoveOptions>,
 ) -> ApiResult<StatusCode> {
     let module: ModuleId = id(&module)?;
     let activities = shared.activities()?;
     let actor = shared
         .acting(&caller, MODULE_MANAGE, activities.scope_of(module).await?)
         .await?;
-    activities.delete_module(actor, module).await?;
+    activities
+        .delete_module_checked(actor, module, options.remove_conditions, &shared.context)
+        .await?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+/// How a course module is deleted.
+#[derive(Debug, Default, Deserialize)]
+struct RemoveOptions {
+    /// Removes the access conditions that depend on it instead of refusing.
+    #[serde(default)]
+    remove_conditions: bool,
+}
+
+/// The access conditions of a course module.
+async fn module_conditions(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(module): Path<String>,
+) -> ApiResult<Response> {
+    let found = shared
+        .activities()?
+        .conditions(&caller.actor, Restricted::Module(id(&module)?), &shared.context)
+        .await?;
+    Ok(Json(found).into_response())
+}
+
+/// Replaces or removes the access conditions of a course module.
+async fn set_module_conditions(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(module): Path<String>,
+    Body(body): Body<Option<Conditions>>,
+) -> ApiResult<Response> {
+    let module: ModuleId = id(&module)?;
+    let activities = shared.activities()?;
+    let actor = shared
+        .acting(&caller, CONDITIONS_MANAGE, activities.scope_of(module).await?)
+        .await?;
+    let set = activities
+        .set_conditions(actor, Restricted::Module(module), body, &shared.context)
+        .await?;
+    Ok(Json(set).into_response())
+}
+
+/// The access conditions of a section.
+async fn section_conditions(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(section): Path<String>,
+) -> ApiResult<Response> {
+    let found = shared
+        .activities()?
+        .conditions(&caller.actor, Restricted::Section(id(&section)?), &shared.context)
+        .await?;
+    Ok(Json(found).into_response())
+}
+
+/// Replaces or removes the access conditions of a section.
+async fn set_section_conditions(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(section): Path<String>,
+    Body(body): Body<Option<Conditions>>,
+) -> ApiResult<Response> {
+    let section: SectionId = id(&section)?;
+    let activities = shared.activities()?;
+    let actor = shared
+        .acting(
+            &caller,
+            CONDITIONS_MANAGE,
+            activities.section_scope(section).await?,
+        )
+        .await?;
+    let set = activities
+        .set_conditions(actor, Restricted::Section(section), body, &shared.context)
+        .await?;
+    Ok(Json(set).into_response())
 }
 
 /// Moves a course module.
@@ -304,9 +399,17 @@ async fn file(
     Extension(caller): Extension<Caller>,
     Path(module): Path<String>,
 ) -> ApiResult<Response> {
-    let found = shared
-        .activities()?
-        .module_file(&caller.actor, id(&module)?)
+    let module: ModuleId = id(&module)?;
+    let activities = shared.activities()?;
+    if !activities
+        .available_module(&caller.actor, module, &shared.context)
+        .await?
+        .available
+    {
+        return Err(Error::permission_denied("activities.module_unavailable").into());
+    }
+    let found = activities
+        .module_file(&caller.actor, module)
         .await?
         .ok_or_else(|| Error::not_found("activities.file_not_found"))?;
     Ok(Json(json!({ "file": found })).into_response())

@@ -326,4 +326,34 @@ alter table {schema}.\"record\" alter column \"sort_key\" type text collate \"C\
             },
         ],
     },
+    Step {
+        sequence: 4,
+        name: "access conditions on a grade",
+        revert: &[],
+        action: None,
+        changes: &[Change::CreateTable(Table {
+            name: "condition_grade",
+            columns: &[
+                Column::new("condition_id", Type::Uuid),
+                Column::new("record_id", Type::Uuid),
+                Column::new("min_percent", Type::Numeric(7, 4)).nullable(),
+                Column::new("max_percent", Type::Numeric(7, 4)).nullable(),
+            ],
+            primary_key: &["condition_id"],
+            foreign_keys: &[
+                other(&["condition_id"], "activities", "condition", OnDelete::Cascade),
+                own(&["record_id"], "record", OnDelete::Cascade),
+            ],
+            checks: &[
+                Check::NonNegative("min_percent"),
+                Check::After("max_percent", "min_percent"),
+            ],
+            indexes: &[Index {
+                columns: &["record_id"],
+                unique: false,
+            }],
+            without_natural_key: Some("the parameters of one leaf of a tree of activities"),
+            ..Table::EMPTY
+        })],
+    },
 ];
