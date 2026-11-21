@@ -32,7 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The permissions privacy declares: asking for the data of other people and seeing their requests.
+//! The permissions privacy declares: asking for the data of other people, seeing their requests, and
+//! publishing the policies of the campus.
 
 use kampus_module::{PermissionDeclaration, PermissionKind, Risk, ScopeKind};
 
@@ -43,10 +44,21 @@ pub use templates::TEMPLATES;
 /// Ask for the data of other people, and see and follow their requests.
 pub const REQUEST_MANAGE: &str = "privacy.request.manage";
 
+/// Publish new versions of the policies of the campus.
+pub const POLICY_MANAGE: &str = "privacy.policy.manage";
+
 /// The permissions of this module.
-pub const PERMISSIONS: &[PermissionDeclaration] = &[PermissionDeclaration {
-    code: REQUEST_MANAGE,
-    kind: PermissionKind::Read,
-    risks: &[Risk::PersonalData],
-    lowest_kind: ScopeKind::Campus,
-}];
+pub const PERMISSIONS: &[PermissionDeclaration] = &[
+    PermissionDeclaration {
+        code: REQUEST_MANAGE,
+        kind: PermissionKind::Read,
+        risks: &[Risk::PersonalData],
+        lowest_kind: ScopeKind::Campus,
+    },
+    PermissionDeclaration {
+        code: POLICY_MANAGE,
+        kind: PermissionKind::Write,
+        risks: &[Risk::Configuration],
+        lowest_kind: ScopeKind::Campus,
+    },
+];

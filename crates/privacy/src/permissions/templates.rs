@@ -37,10 +37,10 @@
 
 use kampus_module::{RoleTemplateDeclaration, Value};
 
-use super::REQUEST_MANAGE;
+use super::{POLICY_MANAGE, REQUEST_MANAGE};
 
-/// Handling the requests of others.
-const HANDLING: &[(&str, Value)] = &[(REQUEST_MANAGE, Value::Allow)];
+/// Handling the requests of others and publishing the policies.
+const HANDLING: &[(&str, Value)] = &[(REQUEST_MANAGE, Value::Allow), (POLICY_MANAGE, Value::Allow)];
 
 /// The values of this module in the role templates.
 pub const TEMPLATES: &[RoleTemplateDeclaration] = &[

@@ -35,7 +35,8 @@
 //! Privacy of Kampus: people ask for an export of the personal data of an account, and every module answers
 //! for its own data through the handler it declares, so privacy never depends on the modules it serves. A
 //! request is split into one part per data category, answered by a job; the package is available to the
-//! person who asked for a limited time.
+//! person who asked for a limited time. A campus also publishes its policies in versions, and people accept
+//! the version in force.
 
 pub mod db;
 pub mod events;
@@ -50,7 +51,7 @@ use kampus_access::Access;
 use kampus_db::Database;
 use kampus_module::Module as Declared;
 
-pub use model::{Item, Request, RequestId};
+pub use model::{Item, Policy, PolicyId, Request, RequestId};
 pub use module::MODULE;
 
 /// How long an exported package stays available.

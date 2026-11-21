@@ -44,6 +44,30 @@ kampus_common::define_id! {
     pub struct RequestId;
 }
 
+kampus_common::define_id! {
+    /// Identifies a policy.
+    pub struct PolicyId;
+}
+
+/// A policy of a campus, as of its latest version.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Policy {
+    /// The policy.
+    pub id: PolicyId,
+    /// What people refer to it by, unique in the campus.
+    pub code: String,
+    /// Its title.
+    pub title: String,
+    /// Its latest version.
+    pub version: i32,
+    /// What it says in that version.
+    pub body: String,
+    /// When that version was published.
+    pub published_at: Timestamp,
+    /// When the person accepted that version, when they did.
+    pub accepted_at: Option<Timestamp>,
+}
+
 /// One part of a request: a data category and where it stands.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Item {

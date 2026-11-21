@@ -42,6 +42,12 @@ pub const REQUEST_CREATED: &str = "privacy.request_created";
 /// Every part of a request was answered.
 pub const REQUEST_COMPLETED: &str = "privacy.request_completed";
 
+/// A new version of a policy was published.
+pub const POLICY_PUBLISHED: &str = "privacy.policy_published";
+
+/// A person accepted a version of a policy.
+pub const POLICY_ACCEPTED: &str = "privacy.policy_accepted";
+
 /// The events of this module.
 pub const EVENTS: &[EventDeclaration] = &[
     EventDeclaration {
@@ -57,6 +63,22 @@ pub const EVENTS: &[EventDeclaration] = &[
         version: 1,
         summary: "Every part of a request for personal data was answered",
         fields: &["request", "account"],
+        audited: true,
+        personal_fields: &["account"],
+    },
+    EventDeclaration {
+        code: POLICY_PUBLISHED,
+        version: 1,
+        summary: "A new version of a policy was published",
+        fields: &["policy", "code", "version"],
+        audited: true,
+        personal_fields: &[],
+    },
+    EventDeclaration {
+        code: POLICY_ACCEPTED,
+        version: 1,
+        summary: "A person accepted a version of a policy",
+        fields: &["policy", "version", "account"],
         audited: true,
         personal_fields: &["account"],
     },

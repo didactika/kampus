@@ -19,10 +19,13 @@ paths:
   /api/v1/privacy/privacy/retention-rules:
     get: { summary: Data categories and their retention per campus, responses: { '200': { description: Rules } } }
     put: { summary: Replace the rules, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
+  /api/v1/privacy/policies:
+    get: { summary: 'The policies of the campus of the caller in their latest version, with when the caller accepted each', responses: { '200': { description: Policies } } }
+    post: { summary: 'Publish a version of a policy (privacy.policy.manage); the first use of a code creates the policy', responses: { '201': { description: Published } } }
   /api/v1/privacy/policies/pending:
-    get: { summary: Required policy versions the caller has not accepted, responses: { '200': { description: Policies } } }
-  /api/v1/privacy/policies/{policy_id}/acceptance:
-    put: { summary: Accept a policy version, responses: { '204': { description: Accepted } } }
+    get: { summary: The policies whose latest version the caller has not accepted, responses: { '200': { description: Policies } } }
+  /api/v1/privacy/policies/{code}/acceptance:
+    post: { summary: 'Accept the latest version of a policy; accepting again changes nothing', responses: { '200': { description: Accepted }, '409': { description: The version is no longer the latest } } }
 components:
   parameters:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
