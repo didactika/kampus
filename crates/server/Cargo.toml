@@ -60,6 +60,7 @@ kampus-enrol = { path = "../enrol" }
 kampus-activities = { path = "../activities" }
 kampus-records = { path = "../records" }
 kampus-progress = { path = "../progress" }
+kampus-notify = { path = "../notify" }
 kampus-calendar = { path = "../calendar" }
 # modules:end
 # adapters:start

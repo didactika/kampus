@@ -95,6 +95,9 @@ pub async fn sync_declarations(db: &kampus_db::Database) -> kampus_common::Resul
             .sync_declarations(MODULES)
             .await?;
     }
+    kampus_notify::Notify::new(db.clone())
+        .sync_declarations(MODULES)
+        .await?;
     kampus_tasks::Tasks::new(db.clone())
         .sync_declarations(MODULES, kampus_common::SystemClock.now())
         .await
