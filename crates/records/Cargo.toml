@@ -56,6 +56,9 @@ kampus-courses = { path = "../courses" }
 kampus-events = { path = "../events" }
 kampus-identity = { path = "../identity" }
 kampus-tasks = { path = "../tasks" }
+kampus-files = { path = "../files" }
+kampus-users = { path = "../users" }
+bytes.workspace = true
 axum.workspace = true
 rust_decimal.workspace = true
 serde.workspace = true

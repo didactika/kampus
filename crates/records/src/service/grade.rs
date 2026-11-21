@@ -77,6 +77,9 @@ pub struct Detail {
 pub struct ReportRow {
     /// The person.
     pub account: PrincipalId,
+    /// Whether they take part in the course now; the grades of those who left stay, out of the report
+    /// unless asked for.
+    pub active: bool,
     /// Their grades, those the viewer may see.
     pub grades: Vec<Grade>,
 }
@@ -234,7 +237,9 @@ impl Records {
         source: Source,
         actor: Option<uuid::Uuid>,
     ) -> Result<GradeChange> {
-        if matches!(stored.kind, RecordKind::CategoryTotal | RecordKind::CourseTotal) {
+        if matches!(stored.kind, RecordKind::CategoryTotal | RecordKind::CourseTotal)
+            || self.has_formula_in(&mut *conn, stored.id).await?
+        {
             return Err(Error::validation(
                 "records.record_derived",
                 vec![problem("record", "derived")],
@@ -748,7 +753,8 @@ impl Records {
     }
 
     /// A page of the grader report: the people with grades in a course, each with the grades the actor may
-    /// see, ordered by person; needs `records.view_all`.
+    /// see, ordered by person; needs `records.view_all`. The grades of people who no longer take part stay,
+    /// and they are left out unless `include_inactive` asks for them, marked as not active.
     ///
     /// # Errors
     ///
@@ -759,6 +765,7 @@ impl Records {
         course: CourseId,
         limit: i64,
         after: Option<PrincipalId>,
+        include_inactive: bool,
     ) -> Result<Report> {
         let course = self.courses.course(course).await?;
         if !self.courses.sees(actor, course.scope).await? {
@@ -766,29 +773,44 @@ impl Records {
         }
         self.access.require(actor, VIEW_ALL, course.scope).await?;
         let viewer = self.viewer(actor, &course).await?;
-        let limit = limit.clamp(1, PAGE_LIMIT);
-        let people: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
-            "select distinct g.account_id from {} g join {} r on r.id = g.record_id
-             where r.course_id = $1 and ($2::uuid is null or g.account_id > $2) order by g.account_id limit $3",
-            self.table("grade"),
-            self.table("record")
-        )))
-        .bind(course.id.as_uuid())
-        .bind(after.map(|a| a.as_uuid()))
-        .bind(limit + 1)
-        .fetch_all(self.db.pool())
-        .await
-        .map_err(kampus_db::classify)?;
-        let more = i64::try_from(people.len()).unwrap_or(i64::MAX) > limit;
-        let page: Vec<uuid::Uuid> = people
-            .into_iter()
-            .take(usize::try_from(limit).unwrap_or(usize::MAX))
-            .collect();
+        let limit = usize::try_from(limit.clamp(1, PAGE_LIMIT)).unwrap_or(1);
+        let mut chosen: Vec<(uuid::Uuid, bool)> = Vec::new();
+        let mut cursor = after.map(|a| a.as_uuid());
+        let mut exhausted = false;
+        while chosen.len() <= limit && !exhausted {
+            let candidates: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+                "select distinct g.account_id from {} g join {} r on r.id = g.record_id
+                 where r.course_id = $1 and ($2::uuid is null or g.account_id > $2) order by g.account_id limit $3",
+                self.table("grade"),
+                self.table("record")
+            )))
+            .bind(course.id.as_uuid())
+            .bind(cursor)
+            .bind(i64::try_from(limit + 1).unwrap_or(PAGE_LIMIT))
+            .fetch_all(self.db.pool())
+            .await
+            .map_err(kampus_db::classify)?;
+            exhausted = candidates.len() <= limit;
+            cursor = candidates.last().copied();
+            for id in candidates {
+                let active = self
+                    .courses
+                    .takes_part(course.id, PrincipalId::from_uuid(id))
+                    .await?;
+                if active || include_inactive {
+                    chosen.push((id, active));
+                }
+            }
+        }
+        let more = chosen.len() > limit;
+        chosen.truncate(limit);
+        let page: Vec<uuid::Uuid> = chosen.iter().map(|(id, _)| *id).collect();
         let all = self.grades_in_course(course.id, &page).await?;
-        let mut report: Vec<ReportRow> = page
+        let mut report: Vec<ReportRow> = chosen
             .iter()
-            .map(|id| ReportRow {
+            .map(|(id, active)| ReportRow {
                 account: PrincipalId::from_uuid(*id),
+                active: *active,
                 grades: Vec::new(),
             })
             .collect();

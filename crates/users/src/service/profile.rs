@@ -172,6 +172,36 @@ impl Users {
         })
     }
 
+    /// The names people go by, for a module that lists the participants of a course to those who teach it:
+    /// the display name, or the given and family names; those without either are left out.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn names_of(
+        &self,
+        accounts: &[AccountId],
+    ) -> Result<std::collections::BTreeMap<AccountId, String>> {
+        let ids: Vec<uuid::Uuid> = accounts.iter().map(AccountId::as_uuid).collect();
+        let rows = sqlx::query(sql(format!(
+            "select account_id, coalesce(nullif(trim(display_name), ''),
+                 nullif(trim(concat_ws(' ', given_name, family_name)), '')) as name
+             from {} where account_id = any($1)",
+            self.table("profile")
+        )))
+        .bind(&ids)
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(rows
+            .iter()
+            .filter_map(|r| {
+                r.get::<Option<String>, _>("name")
+                    .map(|name| (AccountId::from_uuid(r.get("account_id")), name))
+            })
+            .collect())
+    }
+
     /// The stored profile, or an empty one.
     async fn read_profile(&self, account: AccountId) -> Result<Profile> {
         let row = sqlx::query(sql(format!(

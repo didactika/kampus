@@ -517,6 +517,16 @@ impl Courses {
             .collect())
     }
 
+    /// Whether a person takes part in a course now, by the enrolments the server knows; for modules that
+    /// keep something of a person beyond their participation.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the participants cannot be read.
+    pub async fn takes_part(&self, course: CourseId, account: PrincipalId) -> Result<bool> {
+        self.participants.takes_part(course, account).await
+    }
+
     /// A group set with its groups, whoever asks; for modules that resolve what applies to a person.
     ///
     /// # Errors

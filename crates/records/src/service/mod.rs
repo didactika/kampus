@@ -36,6 +36,8 @@
 //! grades from their rows, the numbers a record accepts, and the events.
 
 pub mod category;
+pub mod export;
+pub mod formula;
 pub mod grade;
 pub mod recalc;
 pub mod record;

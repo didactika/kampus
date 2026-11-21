@@ -75,6 +75,10 @@ pub fn routes(context: &ServiceContext) -> Router {
             get(read_record).put(update_record).delete(delete_record),
         )
         .route("/records/{id}/lock", put(lock_record).delete(unlock_record))
+        .route(
+            "/records/{id}/formula",
+            get(formula).put(set_formula).delete(remove_formula),
+        )
         .route("/records/{id}/grades", put(set_grades))
         .route("/records/{id}/grades/{account}", get(grade))
         .route(
@@ -98,6 +102,8 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/courses/{id}/scales", get(course_scales))
         .route("/courses/{id}/letters", get(course_letters))
         .route("/courses/{id}/grader-report", get(report))
+        .route("/courses/{id}/exports", get(exports).post(request_export))
+        .route("/exports/{id}", get(read_export))
         .route("/courses/{id}/my-grades", get(my_grades))
         .route("/courses/{id}/grades/{account}", get(grades_of))
         .with_state(shared)
@@ -196,6 +202,9 @@ struct Page {
     /// The last person of the page before.
     #[serde(default)]
     after: Option<PrincipalId>,
+    /// Also the people who no longer take part.
+    #[serde(default)]
+    include_inactive: bool,
 }
 
 /// The default size of a page.
@@ -505,7 +514,13 @@ async fn report(
 ) -> ApiResult<Response> {
     let found = shared
         .records()?
-        .grader_report(&caller.actor, id(&course)?, page.limit, page.after)
+        .grader_report(
+            &caller.actor,
+            id(&course)?,
+            page.limit,
+            page.after,
+            page.include_inactive,
+        )
         .await?;
     Ok(Json(found).into_response())
 }
@@ -665,6 +680,112 @@ async fn course_letters(
         shared
             .records()?
             .letters_of_course(&caller.actor, id(&course)?)
+            .await?,
+    )
+    .into_response())
+}
+
+/// The expression of a formula.
+#[derive(Debug, Deserialize)]
+struct FormulaBody {
+    /// The expression, with the records it reads written `[[<record id>]]`.
+    expression: String,
+}
+
+/// The formula of a record.
+async fn formula(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(record): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(shared.records()?.formula(&caller.actor, id(&record)?).await?).into_response())
+}
+
+/// Gives a record a formula.
+async fn set_formula(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(record): Path<String>,
+    Body(body): Body<FormulaBody>,
+) -> ApiResult<Response> {
+    let record: RecordId = id(&record)?;
+    let records = shared.records()?;
+    let actor = shared
+        .acting(&caller, MANAGE, records.record_scope(record).await?)
+        .await?;
+    Ok(Json(records.set_formula(actor, record, &body.expression).await?).into_response())
+}
+
+/// Removes the formula of a record.
+async fn remove_formula(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(record): Path<String>,
+) -> ApiResult<StatusCode> {
+    let record: RecordId = id(&record)?;
+    let records = shared.records()?;
+    let actor = shared
+        .acting(&caller, MANAGE, records.record_scope(record).await?)
+        .await?;
+    records.remove_formula(actor, record).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// An export to ask for.
+#[derive(Debug, Default, Deserialize)]
+struct NewExport {
+    /// Also the people who no longer take part.
+    #[serde(default)]
+    include_inactive: bool,
+}
+
+/// The exports the caller asked for in a course.
+async fn exports(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(course): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .records()?
+            .grades_exports(&caller.actor, id(&course)?)
+            .await?,
+    )
+    .into_response())
+}
+
+/// Asks for an export of the grades of a course.
+async fn request_export(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(course): Path<String>,
+    Body(body): Body<NewExport>,
+) -> ApiResult<Response> {
+    let course: CourseId = id(&course)?;
+    let records = shared.records()?;
+    let actor = shared
+        .acting(
+            &caller,
+            crate::permissions::EXPORT,
+            records.course_scope(course).await?,
+        )
+        .await?;
+    let asked = records
+        .request_grades_export(actor, course, body.include_inactive)
+        .await?;
+    Ok((StatusCode::ACCEPTED, Json(asked)).into_response())
+}
+
+/// An export the caller asked for.
+async fn read_export(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(export): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .records()?
+            .grades_export(&caller.actor, id(&export)?)
             .await?,
     )
     .into_response())
