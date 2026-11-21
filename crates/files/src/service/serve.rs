@@ -129,7 +129,7 @@ impl Files {
     }
 
     /// The storage key of the content of a file.
-    async fn key_of(&self, id: FileId) -> Result<StorageKey> {
+    pub(super) async fn key_of(&self, id: FileId) -> Result<StorageKey> {
         let key: String = sqlx::query_scalar(sql(format!(
             "select b.storage_key from {} f join {} b on b.id = f.blob_id where f.id = $1",
             self.table("file"),

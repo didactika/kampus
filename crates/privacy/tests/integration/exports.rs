@@ -176,3 +176,63 @@ async fn an_exported_package_is_forgotten_when_its_time_ends() {
     );
     w.drop().await;
 }
+
+/// The file of the package of a request, read from the database.
+async fn package_file(w: &World, request: kampus_privacy::RequestId) -> Option<uuid::Uuid> {
+    sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+        "select package_file_id from {}.\"request\" where id = $1",
+        w.db.prefix().schema("privacy")
+    )))
+    .bind(request.as_uuid())
+    .fetch_one(w.db.pool())
+    .await
+    .unwrap()
+}
+
+#[tokio::test]
+async fn the_package_is_a_file_only_the_person_who_asked_reads_and_it_goes_when_it_expires() {
+    let w = world().await;
+    something_to_export(&w).await;
+    let request = w.privacy.request_export(&w.lea, who(&w.lea)).await.unwrap();
+    assert!(
+        package_file(&w, request.id).await.is_none(),
+        "nothing before the parts are answered"
+    );
+    w.privacy.run(&services(&w)).await.unwrap();
+
+    let file = package_file(&w, request.id).await.expect("the package is a file");
+    assert!(
+        w.privacy
+            .package_readable(file, Some(who(&w.lea).as_uuid()))
+            .await
+            .unwrap()
+    );
+    assert!(
+        !w.privacy
+            .package_readable(file, Some(who(&w.max).as_uuid()))
+            .await
+            .unwrap()
+    );
+    assert!(!w.privacy.package_readable(file, None).await.unwrap());
+    let package = w.privacy.package(&w.lea, request.id).await.unwrap();
+    assert_eq!(package["data"]["records.grades"]["entry"][0]["feedback"], "good");
+
+    sqlx::query(sqlx::AssertSqlSafe(format!(
+        "update {}.\"request\" set expires_at = now() - interval '1 minute'",
+        w.db.prefix().schema("privacy")
+    )))
+    .execute(w.db.pool())
+    .await
+    .unwrap();
+    assert_eq!(w.privacy.expire().await.unwrap(), 1);
+    assert!(package_file(&w, request.id).await.is_none());
+    let left: i64 = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+        "select count(*) from {}.\"file\" where area_code = 'privacy.package'",
+        w.db.prefix().schema("files")
+    )))
+    .fetch_one(w.db.pool())
+    .await
+    .unwrap();
+    assert_eq!(left, 0, "the file is deleted with the request");
+    w.drop().await;
+}

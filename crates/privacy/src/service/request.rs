@@ -272,6 +272,24 @@ impl Privacy {
             "expired" => return Err(Error::conflict("privacy.package_expired")),
             _ => return Err(Error::conflict("privacy.package_not_ready")),
         }
+        let file: Option<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+            "select package_file_id from {} where id = $1",
+            self.table("request")
+        )))
+        .bind(id.as_uuid())
+        .fetch_one(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        if let (Some(file), Some(files)) = (file, &self.files) {
+            let content = files.read_content(kampus_files::FileId::from_uuid(file)).await?;
+            return serde_json::from_slice(&content)
+                .map_err(|_| Error::internal("privacy.package_unreadable"));
+        }
+        self.assemble(id, found.account).await
+    }
+
+    /// What the parts of a request answered, by data category.
+    pub(crate) async fn assemble(&self, id: RequestId, account: PrincipalId) -> Result<Value> {
         let rows = sqlx::query(sql(format!(
             "select category, data from {} where request_id = $1 order by category",
             self.table("request_item")
@@ -287,6 +305,26 @@ impl Privacy {
                 row.get::<Option<Value>, _>("data").unwrap_or(Value::Null),
             );
         }
-        Ok(json!({ "request": id, "account": found.account, "data": data }))
+        Ok(json!({ "request": id, "account": account, "data": data }))
+    }
+
+    /// Whether a person may read the file of a package: they asked for it and it has not expired.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn package_readable(&self, file: uuid::Uuid, principal: Option<uuid::Uuid>) -> Result<bool> {
+        let Some(principal) = principal else {
+            return Ok(false);
+        };
+        sqlx::query_scalar(sql(format!(
+            "select exists (select 1 from {} where package_file_id = $1 and requester = $2 and state = 'completed')",
+            self.table("request")
+        )))
+        .bind(file)
+        .bind(principal)
+        .fetch_one(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)
     }
 }

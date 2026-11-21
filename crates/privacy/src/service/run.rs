@@ -196,22 +196,50 @@ impl Privacy {
     /// Completes the requests whose parts are all answered.
     async fn complete_requests(&self, services: &ServiceContext) -> Result<()> {
         self.complete_deletions(services).await?;
-        let mut tx = self.db.begin().await?;
-        let rows = sqlx::query(sql(format!(
-            "update {r} set state = 'completed', completed_at = now(), expires_at = $1
-             where state = 'pending' and kind = 'export' and not exists
-                 (select 1 from {i} where request_id = {r}.id and state <> 'completed')
-             returning id, account_id",
+        let ready = sqlx::query(sql(format!(
+            "select id, account_id, requester from {r} r where state = 'pending' and kind = 'export'
+                 and not exists (select 1 from {i} where request_id = r.id and state <> 'completed')",
             r = self.table("request"),
             i = self.table("request_item")
         )))
-        .bind(time::OffsetDateTime::now_utc() + PACKAGE_LIFETIME)
-        .fetch_all(&mut *tx)
+        .fetch_all(self.db.pool())
         .await
         .map_err(kampus_db::classify)?;
-        for row in &rows {
+        for row in &ready {
             let id = RequestId::from_uuid(row.get("id"));
             let account = PrincipalId::from_uuid(row.get("account_id"));
+            let requester: Option<uuid::Uuid> = row.get("requester");
+            let file = self.store_package(id, account, requester).await?;
+            let mut tx = self.db.begin().await?;
+            let changed = sqlx::query(sql(format!(
+                "update {} set state = 'completed', completed_at = now(), expires_at = $2, package_file_id = $3
+                 where id = $1 and state = 'pending'",
+                self.table("request")
+            )))
+            .bind(id.as_uuid())
+            .bind(time::OffsetDateTime::now_utc() + PACKAGE_LIFETIME)
+            .bind(file.map(|f| f.as_uuid()))
+            .execute(&mut *tx)
+            .await
+            .map_err(kampus_db::classify)?
+            .rows_affected();
+            if changed == 0 {
+                tx.rollback().await.map_err(kampus_db::classify)?;
+                if let (Some(file), Some(files)) = (file, &self.files) {
+                    files.remove(file).await.ok();
+                }
+                continue;
+            }
+            if file.is_some() {
+                sqlx::query(sql(format!(
+                    "update {} set data = null where request_id = $1",
+                    self.table("request_item")
+                )))
+                .bind(id.as_uuid())
+                .execute(&mut *tx)
+                .await
+                .map_err(kampus_db::classify)?;
+            }
             let mut event = kampus_events::Publish::new(
                 events::REQUEST_COMPLETED,
                 Some(id.as_uuid()),
@@ -221,8 +249,38 @@ impl Privacy {
             kampus_events::Events::new(self.db.clone())
                 .publish_in(&mut tx, event)
                 .await?;
+            tx.commit().await.map_err(kampus_db::classify)?;
         }
-        tx.commit().await.map_err(kampus_db::classify)
+        Ok(())
+    }
+
+    /// Puts what the parts answered together as a file of the person who asked, when files are available; the
+    /// parts keep the data otherwise.
+    async fn store_package(
+        &self,
+        id: RequestId,
+        account: PrincipalId,
+        requester: Option<uuid::Uuid>,
+    ) -> Result<Option<kampus_files::FileId>> {
+        let (Some(files), Some(requester)) = (&self.files, requester) else {
+            return Ok(None);
+        };
+        let package = self.assemble(id, account).await?;
+        let campus = self.access.principal_campus(account).await?;
+        let content = bytes::Bytes::from(
+            serde_json::to_vec(&package)
+                .map_err(|_| kampus_common::Error::internal("privacy.package_unserialisable"))?,
+        );
+        let file = files
+            .store_for(
+                crate::PACKAGE_AREA,
+                campus,
+                PrincipalId::from_uuid(requester),
+                &format!("personal-data-{id}.json"),
+                (content, "application/json"),
+            )
+            .await?;
+        Ok(Some(file.id))
     }
 
     /// Forgets the data of the requests whose time ended; returns how many requests expired.
@@ -231,23 +289,40 @@ impl Privacy {
     ///
     /// `unavailable` when the database fails.
     pub async fn expire(&self) -> Result<u64> {
-        let mut tx = self.db.begin().await?;
-        let expired: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
-            "update {} set state = 'expired' where state = 'completed' and expires_at < now() returning id",
+        let due = sqlx::query(sql(format!(
+            "select id, package_file_id from {} where state = 'completed' and kind = 'export' and expires_at < now()",
             self.table("request")
         )))
-        .fetch_all(&mut *tx)
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        if let Some(files) = &self.files {
+            for file in due
+                .iter()
+                .filter_map(|r| r.get::<Option<uuid::Uuid>, _>("package_file_id"))
+            {
+                files.remove(kampus_files::FileId::from_uuid(file)).await.ok();
+            }
+        }
+        let ids: Vec<uuid::Uuid> = due.iter().map(|r| r.get("id")).collect();
+        let mut tx = self.db.begin().await?;
+        sqlx::query(sql(format!(
+            "update {} set state = 'expired', package_file_id = null where id = any($1)",
+            self.table("request")
+        )))
+        .bind(&ids)
+        .execute(&mut *tx)
         .await
         .map_err(kampus_db::classify)?;
         sqlx::query(sql(format!(
             "update {} set data = null where request_id = any($1)",
             self.table("request_item")
         )))
-        .bind(&expired)
+        .bind(&ids)
         .execute(&mut *tx)
         .await
         .map_err(kampus_db::classify)?;
         tx.commit().await.map_err(kampus_db::classify)?;
-        Ok(u64::try_from(expired.len()).unwrap_or(u64::MAX))
+        Ok(u64::try_from(ids.len()).unwrap_or(u64::MAX))
     }
 }

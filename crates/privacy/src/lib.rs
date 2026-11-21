@@ -46,6 +46,7 @@ pub mod model;
 pub mod module;
 pub mod permissions;
 pub mod service;
+pub mod settings;
 
 use kampus_access::Access;
 use kampus_db::Database;
@@ -56,6 +57,9 @@ pub use module::MODULE;
 
 /// How long an exported package stays available.
 pub const PACKAGE_LIFETIME: time::Duration = time::Duration::days(7);
+
+/// The file area where the packages of exports are kept.
+pub const PACKAGE_AREA: &str = "privacy.package";
 
 /// How long a campus has to answer a request.
 pub const ANSWER_WITHIN: time::Duration = time::Duration::days(30);
@@ -69,6 +73,8 @@ pub struct Privacy {
     access: Access,
     /// The modules of the build, whose handlers answer.
     modules: &'static [&'static Declared],
+    /// Files, where the packages of exports are kept.
+    files: Option<kampus_files::Files>,
 }
 
 impl std::fmt::Debug for Privacy {
@@ -87,6 +93,16 @@ impl Privacy {
             db,
             access,
             modules: &[],
+            files: None,
+        }
+    }
+
+    /// The same with files, where the package of an export is kept for the person who asked.
+    #[must_use]
+    pub fn with_files(self, files: kampus_files::Files) -> Self {
+        Self {
+            files: Some(files),
+            ..self
         }
     }
 

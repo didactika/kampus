@@ -213,7 +213,7 @@ impl Files {
 
     /// The scan status of content: scanned by the scanner when one is configured, every time, since its
     /// signatures change; `unscanned` without one.
-    async fn scan(&self, content: &Bytes) -> Result<&'static str> {
+    pub(super) async fn scan(&self, content: &Bytes) -> Result<&'static str> {
         let Some(scanner) = &self.scanner else {
             return Ok("unscanned");
         };

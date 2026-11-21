@@ -41,6 +41,7 @@ pub mod file;
 pub mod purge;
 pub mod quota;
 pub mod serve;
+pub mod system;
 pub mod upload;
 
 use kampus_access::Actor;

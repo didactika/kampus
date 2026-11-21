@@ -54,6 +54,8 @@ kampus-access.workspace = true
 kampus-events = { path = "../events" }
 kampus-identity = { path = "../identity" }
 kampus-tasks = { path = "../tasks" }
+kampus-files = { path = "../files" }
+bytes.workspace = true
 axum.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -69,7 +71,6 @@ kampus-activities = { path = "../activities" }
 kampus-records = { path = "../records" }
 kampus-progress = { path = "../progress" }
 kampus-tasks = { path = "../tasks" }
-kampus-files = { path = "../files" }
 kampus-storage.workspace = true
 kampus-storage-opendal = { path = "../storage/adapters/opendal" }
 rust_decimal.workspace = true

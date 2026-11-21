@@ -150,7 +150,9 @@ impl Services {
         .with_customise(customise.clone());
         let learning = Learning::build(&parts.db, &access, &courses, &files);
         let notify = kampus_notify::Notify::new(parts.db.clone());
-        let privacy = kampus_privacy::Privacy::new(parts.db.clone(), access.clone()).with_modules(MODULES);
+        let privacy = kampus_privacy::Privacy::new(parts.db.clone(), access.clone())
+            .with_modules(MODULES)
+            .with_files(files.clone());
         let hasher = PasswordHasher::new(parts.password_cost.unwrap_or_default());
         let tasks = Tasks::new(parts.db.clone());
         let events = Events::new(parts.db.clone());
