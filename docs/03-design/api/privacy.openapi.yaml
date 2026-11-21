@@ -22,9 +22,10 @@ paths:
     post: { summary: Place a hold on an account or on the whole campus (privacy.hold.manage), responses: { '201': { description: Placed } } }
   /api/v1/privacy/holds/{hold_id}/release:
     post: { summary: Release a hold; releasing one already released changes nothing, responses: { '200': { description: Released } } }
-  /api/v1/privacy/privacy/retention-rules:
-    get: { summary: Data categories and their retention per campus, responses: { '200': { description: Rules } } }
-    put: { summary: Replace the rules, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
+  /api/v1/privacy/retention:
+    get: { summary: 'The data categories the modules declare with the days the campus keeps each one after an account is deleted (privacy.retention.manage)', responses: { '200': { description: Categories } } }
+  /api/v1/privacy/retention/{category}:
+    put: { summary: 'Set the days a data category is kept; no days keeps it for ever', responses: { '200': { description: Categories }, '404': { description: Unknown category } } }
   /api/v1/privacy/policies:
     get: { summary: 'The policies of the campus of the caller in their latest version, with when the caller accepted each', responses: { '200': { description: Policies } } }
     post: { summary: 'Publish a version of a policy (privacy.policy.manage); the first use of a code creates the policy', responses: { '201': { description: Published } } }

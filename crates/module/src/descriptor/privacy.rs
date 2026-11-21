@@ -54,6 +54,9 @@ pub struct PrivacyRun<'p> {
     pub account: uuid::Uuid,
     /// The services of the process.
     pub services: &'p ServiceContext,
+    /// Set when the retention period of the data ended: even what an erasure keeps for the academic record
+    /// is deleted.
+    pub purge: bool,
 }
 
 /// A kind of personal data a module keeps and the handler that exports it.

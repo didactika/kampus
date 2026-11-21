@@ -238,4 +238,43 @@ alter table {schema}.\"request\" add constraint \"request_state_check\" check (\
             }),
         ],
     },
+    Step {
+        sequence: 4,
+        name: "retention rules and purges",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::CreateTable(Table {
+                name: "retention_rule",
+                columns: &[
+                    Column::new("campus_id", Type::Uuid),
+                    Column::new("category", Type::Text),
+                    Column::new("keep_days", Type::Integer),
+                ],
+                primary_key: &["campus_id", "category"],
+                foreign_keys: &[CAMPUS],
+                checks: &[Check::Positive("keep_days")],
+                without_natural_key: Some("one rule per campus and data category"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "purge",
+                columns: &[
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("category", Type::Text),
+                    Column::new("purged_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["account_id", "category"],
+                foreign_keys: &[ForeignKey {
+                    columns: &["account_id"],
+                    module: Some("identity"),
+                    table: "account",
+                    references: &["id"],
+                    on_delete: OnDelete::Cascade,
+                }],
+                without_natural_key: Some("one purge per account and data category, so it never repeats"),
+                ..Table::EMPTY
+            }),
+        ],
+    },
 ];

@@ -46,13 +46,22 @@ pub const HANDLERS: &[PrivacyHandlerDeclaration] = &[PrivacyHandlerDeclaration {
     code: "records.grades",
     purpose: "Grades and the history of the changes to them",
     export,
-    erase: keep,
+    erase,
 }];
 
-/// Keeps the data: it is part of the academic record, which survives pointing to the tombstone of the
-/// account.
-fn keep(_run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
-    Box::pin(async move { Ok(json!({ "kept": "academic record" })) })
+/// Keeps the data, which is part of the academic record and survives pointing to the tombstone of the
+/// account, until its retention period ends and it is purged.
+fn erase(run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
+    Box::pin(async move {
+        if run.purge {
+            run.services
+                .service::<Records>()?
+                .purge_personal_data(PrincipalId::from_uuid(run.account))
+                .await
+        } else {
+            Ok(json!({ "kept": "academic record" }))
+        }
+    })
 }
 
 /// Exports the data of the account of a request.
@@ -66,6 +75,35 @@ fn export(run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
 }
 
 impl Records {
+    /// Deletes what this module keeps about an account, once its retention period ended; returns how many
+    /// rows of each table.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn purge_personal_data(&self, account: PrincipalId) -> Result<Value> {
+        let mut tx = self.db.begin().await?;
+        let mut report = serde_json::Map::new();
+        for (table, column) in [
+            ("entry", "account_id"),
+            ("grade", "account_id"),
+            ("recalculation", "account_id"),
+        ] {
+            let deleted = sqlx::query(sql(format!(
+                "delete from {} where \"{column}\" = $1",
+                self.table(table)
+            )))
+            .bind(account.as_uuid())
+            .execute(&mut *tx)
+            .await
+            .map_err(kampus_db::classify)?
+            .rows_affected();
+            report.insert(table.to_owned(), json!(deleted));
+        }
+        tx.commit().await.map_err(kampus_db::classify)?;
+        Ok(json!({ "purged": report }))
+    }
+
     /// Everything this module keeps about an account, as JSON by table.
     ///
     /// # Errors

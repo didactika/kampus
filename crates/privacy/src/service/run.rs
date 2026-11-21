@@ -78,8 +78,22 @@ impl Privacy {
                 .flat_map(|m| m.privacy_handlers.iter())
                 .find(|h| h.code == category)
             {
-                Some(handler) if erasing => (handler.erase)(PrivacyRun { account, services }).await,
-                Some(handler) => (handler.export)(PrivacyRun { account, services }).await,
+                Some(handler) if erasing => {
+                    (handler.erase)(PrivacyRun {
+                        account,
+                        services,
+                        purge: false,
+                    })
+                    .await
+                }
+                Some(handler) => {
+                    (handler.export)(PrivacyRun {
+                        account,
+                        services,
+                        purge: false,
+                    })
+                    .await
+                }
                 None => Err(kampus_common::Error::not_found("privacy.handler_missing")),
             };
             let (state, data, error) = match outcome {
@@ -104,12 +118,12 @@ impl Privacy {
         Ok(answered)
     }
 
-    /// The condition of a deletion request (`r`) covered by an active hold, on its account or its campus.
-    fn held_condition(&self) -> String {
+    /// The condition of an account, named by an expression, covered by an active hold on it or on its campus.
+    pub(crate) fn held_on(&self, account: &str) -> String {
         format!(
             "exists (select 1 from {h} h where h.released_at is null and (h.until is null or h.until > now())
-                 and (h.account_id = r.account_id
-                      or h.campus_id = (select campus_id from {p} where id = r.account_id)))",
+                 and (h.account_id = {account}
+                      or h.campus_id = (select campus_id from {p} where id = {account})))",
             h = self.table("legal_hold"),
             p = self.principals()
         )
@@ -117,7 +131,7 @@ impl Privacy {
 
     /// Puts the deletions under a legal hold to wait, and lets the ones whose hold ended go on.
     async fn apply_holds(&self) -> Result<()> {
-        let held = self.held_condition();
+        let held = self.held_on("r.account_id");
         for (from, to, negate) in [("pending", "held", ""), ("held", "pending", "not ")] {
             sqlx::query(sql(format!(
                 "update {r} r set state = '{to}' where r.kind = 'deletion' and r.state = '{from}' and {negate}{held}",

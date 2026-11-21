@@ -38,4 +38,5 @@ pub mod deletion;
 pub mod hold;
 pub mod policy;
 pub mod request;
+pub mod retention;
 pub mod run;
