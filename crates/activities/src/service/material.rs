@@ -129,12 +129,18 @@ impl Activities {
         Ok(file)
     }
 
-    /// Whether an actor may read a file of a material: when they see the course module that owns it.
+    /// Whether an actor may read a file of a material: when they see the course module that owns it and meet
+    /// its access conditions.
     ///
     /// # Errors
     ///
     /// `unavailable` when the database fails.
-    pub async fn file_readable(&self, actor: &Actor, file: uuid::Uuid) -> Result<bool> {
+    pub async fn file_readable(
+        &self,
+        actor: &Actor,
+        file: uuid::Uuid,
+        services: &kampus_module::ServiceContext,
+    ) -> Result<bool> {
         let owner: Option<uuid::Uuid> = sqlx::query_scalar(sql(format!(
             "select course_module_id from {} where file_id = $1",
             self.table("module_file")
@@ -145,7 +151,10 @@ impl Activities {
         .map_err(kampus_db::classify)?;
         let Some(owner) = owner else { return Ok(false) };
         let module = self.stored(ModuleId::from_uuid(owner)).await?;
-        self.visible_to(actor, &module).await
+        if !self.visible_to(actor, &module).await? {
+            return Ok(false);
+        }
+        Ok(self.availability(actor, &module, services).await?.available)
     }
 
     /// Copies a course module the actor sees to a place in a section, with its settings and, for a file

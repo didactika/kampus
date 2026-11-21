@@ -35,19 +35,15 @@ entity condition {
   course_module_id <<FK>>
   section_id <<FK>>
   parent_id <<FK>>
+  position
   operator
   kind
   show_when_unmet
 }
 entity condition_date {
   condition_id <<FK>>
-  from
-  until
-}
-entity condition_progress {
-  condition_id <<FK>>
-  course_module_id <<FK>>
-  required_state
+  opens_at
+  closes_at
 }
 entity condition_group {
   condition_id <<FK>>
@@ -56,7 +52,7 @@ entity condition_group {
 }
 entity condition_profile {
   condition_id <<FK>>
-  field_id <<FK>>
+  field
   operator
   value
 }
@@ -92,8 +88,6 @@ module_setting }o--|| course_module
 condition }o--|| course_module
 condition }o--o| condition : parent
 condition_date }o--|| condition
-condition_progress }o--|| condition
-condition_progress }o--|| course_module
 condition_group }o--|| condition
 condition_profile }o--|| condition
 exception }o--|| course_module

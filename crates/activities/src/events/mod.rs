@@ -33,7 +33,7 @@
 // ------------------------------------------------------------------------------
 
 //! The events activities publishes: course modules created, changed, moved, deleted to the recycle bin,
-//! restored from it, and removed for good.
+//! restored from it, and removed for good; exceptions and access conditions changed.
 
 use kampus_module::EventDeclaration;
 
@@ -57,6 +57,9 @@ pub const MODULE_PURGED: &str = "activities.module_purged";
 
 /// An exception of a course module was granted, changed or removed.
 pub const EXCEPTION_CHANGED: &str = "activities.exception_changed";
+
+/// The access conditions of a course module or a section changed.
+pub const CONDITIONS_CHANGED: &str = "activities.conditions_changed";
 
 /// A declaration of one of the events of a course module.
 const fn declared(code: &'static str, summary: &'static str) -> EventDeclaration {
@@ -82,4 +85,12 @@ pub const EVENTS: &[EventDeclaration] = &[
         EXCEPTION_CHANGED,
         "An exception of a course module was granted, changed or removed",
     ),
+    EventDeclaration {
+        code: CONDITIONS_CHANGED,
+        version: 1,
+        summary: "The access conditions of a course module or a section changed",
+        fields: &["module", "section"],
+        audited: true,
+        personal_fields: &[],
+    },
 ];

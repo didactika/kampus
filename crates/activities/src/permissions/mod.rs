@@ -46,6 +46,12 @@ pub const MODULE_MANAGE: &str = "activities.module.manage";
 /// Grant and remove exceptions of dates, time limits and attempts.
 pub const EXCEPTION_MANAGE: &str = "activities.exception.manage";
 
+/// Restrict access to course modules and sections with conditions.
+pub const CONDITIONS_MANAGE: &str = "activities.conditions.manage";
+
+/// Open course modules whatever their access conditions say.
+pub const CONDITIONS_IGNORE: &str = "activities.conditions.ignore";
+
 /// The permissions of this module.
 pub const PERMISSIONS: &[PermissionDeclaration] = &[
     PermissionDeclaration {
@@ -57,6 +63,18 @@ pub const PERMISSIONS: &[PermissionDeclaration] = &[
     PermissionDeclaration {
         code: EXCEPTION_MANAGE,
         kind: PermissionKind::Write,
+        risks: &[],
+        lowest_kind: ScopeKind::Activity,
+    },
+    PermissionDeclaration {
+        code: CONDITIONS_MANAGE,
+        kind: PermissionKind::Write,
+        risks: &[],
+        lowest_kind: ScopeKind::Activity,
+    },
+    PermissionDeclaration {
+        code: CONDITIONS_IGNORE,
+        kind: PermissionKind::Read,
         risks: &[],
         lowest_kind: ScopeKind::Activity,
     },

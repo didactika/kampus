@@ -172,4 +172,5 @@ async fn a_teacher_adds_an_entry_to_a_course_and_a_learner_sees_it_with_the_pers
         StatusCode::FORBIDDEN,
         "someone who does not take part does not see it"
     );
+    site.drop().await;
 }

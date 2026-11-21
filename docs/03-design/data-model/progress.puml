@@ -21,6 +21,11 @@ entity pending {
   course_module_id <<FK>>
   queued_at
 }
+entity condition_state {
+  condition_id <<FK>>
+  course_module_id <<FK>>
+  required
+}
 entity activity_state {
   course_module_id <<FK>>
   account_id <<FK>>

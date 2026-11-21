@@ -182,4 +182,5 @@ async fn a_learner_opens_a_page_and_the_teacher_follows_their_progress() {
         )
         .await;
     assert_eq!(after.body["state"], "done");
+    site.drop().await;
 }

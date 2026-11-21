@@ -35,6 +35,7 @@
 //! The service API of activities, one file per area, and what they share: reading course modules from
 //! their rows, who sees one, and the types modules provide.
 
+pub mod condition;
 pub mod exception;
 pub mod material;
 pub mod module;
@@ -84,6 +85,7 @@ pub(crate) fn module(row: &PgRow) -> Module {
         on_course_page: row.get("on_course_page"),
         settings: serde_json::from_value::<BTreeMap<String, Value>>(row.get("settings")).unwrap_or_default(),
         state,
+        available: true,
         version: row.get("version"),
     }
 }

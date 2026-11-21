@@ -61,7 +61,11 @@ fn readable(read: FileRead<'_>) -> ReadFuture<'_> {
         };
         let activities = read.services.service::<Activities>()?;
         activities
-            .file_readable(&Actor::Principal(PrincipalId::from_uuid(principal)), read.file)
+            .file_readable(
+                &Actor::Principal(PrincipalId::from_uuid(principal)),
+                read.file,
+                read.services,
+            )
             .await
     })
 }

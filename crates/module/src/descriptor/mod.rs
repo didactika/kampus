@@ -36,6 +36,7 @@
 
 mod activity;
 mod command;
+mod condition;
 mod customise;
 mod event;
 mod file;
@@ -49,6 +50,10 @@ mod value;
 
 pub use activity::{ActivityKind, ActivitySetting, ActivityTypeDeclaration};
 pub use command::{Argument, Command, CommandContext, CommandFuture};
+pub use condition::{
+    ConditionCheck, ConditionFuture, ConditionKindDeclaration, ConditionTarget, ConditionWrite,
+    nothing_depends,
+};
 pub use customise::{
     FieldKindDeclaration, FlagDeclaration, MenuKindDeclaration, PageKindDeclaration, TermDeclaration,
     TermForms, WidgetDeclaration, WidgetSetting,
@@ -115,6 +120,8 @@ pub struct Module {
     pub notification_types: &'static [NotificationTypeDeclaration],
     /// The personal data it keeps and how to export it, from `src/privacy/mod.rs`.
     pub privacy_handlers: &'static [PrivacyHandlerDeclaration],
+    /// The kinds of access condition it provides, from `src/settings/conditions.rs`.
+    pub condition_kinds: &'static [ConditionKindDeclaration],
     /// The events it publishes, from `src/events/mod.rs`.
     pub events: &'static [EventDeclaration],
     /// Its reactions to events, from `src/observers/mod.rs`.

@@ -529,4 +529,5 @@ async fn the_api_describes_the_routes_it_really_serves() {
             .iter()
             .any(|t| t["name"] == "records")
     );
+    site.drop().await;
 }

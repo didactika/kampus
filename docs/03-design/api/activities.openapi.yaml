@@ -15,7 +15,7 @@ paths:
   /api/v1/activities/course-modules/{course_module_id}:
     get: { summary: 'A course module the caller sees; one in the bin or hidden from them is 404', responses: { '200': { description: 'The course module, with its version as ETag' }, '404': { description: Not found or not visible } } }
     put: { summary: 'Replace title, visibility, listing and settings', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Updated }, '412': { description: Changed since it was read } } }
-    delete: { summary: 'Move to the recycle bin of its course for 30 days (RN-088)', responses: { '204': { description: In the bin }, '409': { description: Already there } } }
+    delete: { summary: 'Move to the recycle bin of its course for 30 days (RN-088); refused while access conditions depend on it unless remove_conditions=true (RN-081)', parameters: [{ name: remove_conditions, in: query, schema: { type: boolean, default: false } }], responses: { '204': { description: In the bin }, '409': { description: 'Already there, or conditions depend on it' } } }
   /api/v1/activities/course-modules/{course_module_id}/move:
     post: { summary: 'Move to a place in a section of the same course, taking its scope with it (RN-076)', responses: { '200': { description: Moved }, '422': { description: A section of another course } } }
   /api/v1/activities/course-modules/{course_module_id}/copy:
@@ -38,10 +38,10 @@ paths:
     put: { summary: 'Update the course module a system knows by an identifier, or add it to the section with it', responses: { '200': { description: Updated }, '201': { description: Added } } }
   /api/v1/activities/course-modules/{course_module_id}/conditions:
     get: { summary: 'The condition tree, with any unknown or broken condition reported', responses: { '200': { description: Conditions } } }
-    put: { summary: 'Replace the condition tree (RN-080)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
+    put: { summary: 'Replace the condition tree (RN-080), or remove it with null; each leaf is checked by its kind', responses: { '200': { description: Replaced }, '422': { description: 'A tree of the wrong shape, an unknown kind or wrong parameters' } } }
   /api/v1/activities/sections/{section_id}/conditions:
     get: { summary: The condition tree of a section, responses: { '200': { description: Conditions } } }
-    put: { summary: 'Replace the condition tree of a section (RN-083)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
+    put: { summary: 'Replace the condition tree of a section (RN-083), or remove it with null', responses: { '200': { description: Replaced }, '422': { description: 'A tree of the wrong shape, an unknown kind or wrong parameters' } } }
   /api/v1/activities/course-modules/{course_module_id}/exceptions:
     get: { summary: Exceptions of a course module, responses: { '200': { description: Exceptions }, '403': { description: Without activities.exception.manage } } }
   /api/v1/activities/course-modules/{course_module_id}/exceptions/accounts/{account_id}:

@@ -82,6 +82,9 @@ pub struct Module {
     pub settings: BTreeMap<String, Value>,
     /// Where it stands.
     pub state: ModuleState,
+    /// Whether the person who asked meets its access conditions; when not, what the course module holds is
+    /// left out.
+    pub available: bool,
     /// The version, for `If-Match`.
     pub version: i32,
 }
@@ -143,4 +146,89 @@ pub struct BinItem {
     pub expires_at: Timestamp,
     /// Why removing it failed, which keeps it in the bin until someone retries or restores it.
     pub error: Option<String>,
+}
+
+/// How the children of a node of a tree of conditions combine.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Operator {
+    /// Every child holds.
+    All,
+    /// At least one child holds.
+    Any,
+    /// The only child does not hold.
+    Not,
+    /// A condition of a kind, with its parameters.
+    Leaf,
+}
+
+impl Operator {
+    /// The stored name.
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::All => "all",
+            Self::Any => "any",
+            Self::Not => "not",
+            Self::Leaf => "leaf",
+        }
+    }
+
+    /// The operator of a stored name; an unknown one reads as a leaf, which a tree treats as unmet.
+    #[must_use]
+    pub fn read(name: &str) -> Self {
+        match name {
+            "all" => Self::All,
+            "any" => Self::Any,
+            "not" => Self::Not,
+            _ => Self::Leaf,
+        }
+    }
+}
+
+/// A node of a tree of access conditions.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ConditionNode {
+    /// How it combines its children, or `leaf`.
+    pub operator: Operator,
+    /// Its children, for `all`, `any` and `not`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub children: Vec<ConditionNode>,
+    /// The kind of a leaf, such as `activities.date`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
+    /// The parameters of a leaf, as its kind takes them.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub params: Option<Value>,
+    /// Set on a leaf whose kind is unknown or that lost what it depends on: it never holds.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub broken: bool,
+}
+
+/// The access conditions of a course module or a section.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Conditions {
+    /// Whether people who do not meet them still see it listed, without its content.
+    #[serde(default = "listed")]
+    pub show_when_unmet: bool,
+    /// The tree.
+    pub tree: ConditionNode,
+}
+
+/// What access conditions are on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Restricted {
+    /// A course module.
+    Module(ModuleId),
+    /// A section, and everything in it and in its subsections.
+    Section(SectionId),
+}
+
+/// Whether a person may open a course module, and whether they see it at all.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+pub struct Availability {
+    /// They meet every condition on it and on the sections around it.
+    pub available: bool,
+    /// They see it listed: it is available, or every condition they miss shows it.
+    pub shown: bool,
 }
