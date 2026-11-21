@@ -37,6 +37,7 @@
 //! every module behind the campus of the request and its authentication.
 
 pub mod campus;
+pub mod openapi;
 
 use axum::Router;
 use axum::extract::{Request, State};
@@ -82,8 +83,21 @@ pub struct Api {
 impl Api {
     /// The routes of every module, behind the campus of the request and its authentication.
     fn router(&self) -> Router {
-        self.services
-            .routes()
+        let routes = self.services.routes();
+        let document = openapi::document(
+            &routes,
+            API_PREFIX,
+            crate::wiring::registry::MODULES,
+            kampus_common::PLATFORM_VERSION,
+        );
+        routes
+            .route(
+                "/openapi.json",
+                get(move || {
+                    let document = document.clone();
+                    async move { axum::Json(document) }
+                }),
+            )
             .layer(middleware::from_fn_with_state(
                 self.services.identity.clone(),
                 kampus_identity::http::authenticate,
