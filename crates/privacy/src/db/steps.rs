@@ -277,4 +277,26 @@ alter table {schema}.\"request\" add constraint \"request_state_check\" check (\
             }),
         ],
     },
+    Step {
+        sequence: 5,
+        name: "packages as files",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::AddColumn {
+                table: "request",
+                column: Column::new("package_file_id", Type::Uuid).nullable(),
+            },
+            Change::AddForeignKey {
+                table: "request",
+                foreign_key: ForeignKey {
+                    columns: &["package_file_id"],
+                    module: Some("files"),
+                    table: "file",
+                    references: &["id"],
+                    on_delete: OnDelete::SetNull,
+                },
+            },
+        ],
+    },
 ];

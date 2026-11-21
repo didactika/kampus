@@ -152,7 +152,7 @@ pub(crate) async fn world() -> World {
     files.sync_declarations(&modules).await.unwrap();
     let courses = Courses::new(db.clone(), access.clone(), clock.clone(), Arc::new(CampusMembers));
     let activities =
-        Activities::new(db.clone(), access.clone(), courses.clone(), files).with_modules(MODULES);
+        Activities::new(db.clone(), access.clone(), courses.clone(), files.clone()).with_modules(MODULES);
     activities.sync_declarations(&modules).await.unwrap();
     let records = Records::new(db.clone(), access.clone(), courses.clone(), activities.clone());
     let progress = Progress::new(
@@ -162,7 +162,9 @@ pub(crate) async fn world() -> World {
         activities.clone(),
         records.clone(),
     );
-    let privacy = Privacy::new(db.clone(), access.clone()).with_modules(HANDLER_MODULES);
+    let privacy = Privacy::new(db.clone(), access.clone())
+        .with_modules(HANDLER_MODULES)
+        .with_files(files);
     let platform = access.create_platform().await.unwrap();
     let campus = access.create_scope(platform, ScopeKind::Campus).await.unwrap();
     access.install_campus_roles(campus).await.unwrap();

@@ -2178,6 +2178,7 @@ name = "kampus-privacy"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "bytes",
  "kampus-access",
  "kampus-activities",
  "kampus-common",

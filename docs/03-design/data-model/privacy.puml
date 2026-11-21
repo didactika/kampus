@@ -25,6 +25,7 @@ entity request {
   created_at
   completed_at
   decided_at
+  package_file_id <<FK>>
 }
 entity request_item {
   request_id <<FK>>
@@ -73,13 +74,7 @@ entity acceptance {
   account_id <<FK>>
   accepted_at
 }
-entity export_package {
-  request_id <<FK>>
-  file_id <<FK>>
-  expires_at
-}
 
 request_item }o--|| request
 acceptance }o--|| policy
-export_package }o--|| request
 @enduml
