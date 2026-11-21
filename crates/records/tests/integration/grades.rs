@@ -415,14 +415,14 @@ async fn the_grader_report_pages_through_the_people_with_grades() {
 
     let first = w
         .records
-        .grader_report(&w.admin, w.course.id, 1, None)
+        .grader_report(&w.admin, w.course.id, 1, None, false)
         .await
         .unwrap();
     assert_eq!(first.rows.len(), 1);
     assert!(first.next.is_some());
     let second = w
         .records
-        .grader_report(&w.admin, w.course.id, 1, first.next)
+        .grader_report(&w.admin, w.course.id, 1, first.next, false)
         .await
         .unwrap();
     assert_eq!(second.rows.len(), 1);
@@ -437,7 +437,7 @@ async fn the_grader_report_pages_through_the_people_with_grades() {
     assert_ne!(first.rows[0].account, second.rows[0].account);
     assert_eq!(
         w.records
-            .grader_report(&w.lea, w.course.id, 10, None)
+            .grader_report(&w.lea, w.course.id, 10, None, false)
             .await
             .unwrap_err()
             .kind(),

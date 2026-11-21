@@ -36,4 +36,5 @@
 //! children.
 
 pub mod aggregation;
+pub mod formula;
 pub mod letters;

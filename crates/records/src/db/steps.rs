@@ -356,4 +356,85 @@ alter table {schema}.\"record\" alter column \"sort_key\" type text collate \"C\
             ..Table::EMPTY
         })],
     },
+    Step {
+        sequence: 5,
+        name: "formulas and their dependencies",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::CreateTable(Table {
+                name: "formula",
+                columns: &[
+                    Column::new("record_id", Type::Uuid),
+                    Column::new("expression", Type::Text),
+                    Column::new("updated_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["record_id"],
+                foreign_keys: &[own(&["record_id"], "record", OnDelete::Cascade)],
+                without_natural_key: Some("the formula of one record"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "formula_dependency",
+                columns: &[
+                    Column::new("record_id", Type::Uuid),
+                    Column::new("depends_on_id", Type::Uuid),
+                ],
+                primary_key: &["record_id", "depends_on_id"],
+                foreign_keys: &[
+                    ForeignKey {
+                        columns: &["record_id"],
+                        module: None,
+                        table: "formula",
+                        references: &["record_id"],
+                        on_delete: OnDelete::Cascade,
+                    },
+                    own(&["depends_on_id"], "record", OnDelete::Cascade),
+                ],
+                indexes: &[Index {
+                    columns: &["depends_on_id"],
+                    unique: false,
+                }],
+                without_natural_key: Some("one row per record a formula reads"),
+                ..Table::EMPTY
+            }),
+        ],
+    },
+    Step {
+        sequence: 6,
+        name: "exports of the grades of a course",
+        revert: &[],
+        action: None,
+        changes: &[Change::CreateTable(Table {
+            name: "export",
+            columns: &[
+                Column::new("id", Type::Uuid),
+                Column::new("course_id", Type::Uuid),
+                Column::new("requested_by", Type::Uuid),
+                Column::new("include_inactive", Type::Boolean).default(ColumnDefault::Bool(false)),
+                Column::new("state", Type::Text).default(ColumnDefault::Text("pending")),
+                Column::new("file_id", Type::Uuid).nullable(),
+                Column::new("error", Type::Text).nullable(),
+                Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                Column::new("completed_at", Type::Timestamptz).nullable(),
+                Column::new("expires_at", Type::Timestamptz).nullable(),
+            ],
+            primary_key: &["id"],
+            foreign_keys: &[
+                other(&["course_id"], "courses", "course", OnDelete::Cascade),
+                other(&["requested_by"], "identity", "account", OnDelete::Cascade),
+                other(&["file_id"], "files", "file", OnDelete::SetNull),
+            ],
+            checks: &[Check::OneOf("state", EXPORT_STATES)],
+            indexes: &[Index {
+                columns: &["course_id", "requested_by", "created_at"],
+                unique: false,
+            }],
+            without_natural_key: Some("a person may export the grades of a course as often as they need"),
+            ..Table::EMPTY
+        })],
+    },
 ];
+
+/// Where an export stands.
+pub const EXPORT_STATES: &[&str] = &["pending", "completed", "failed", "expired"];

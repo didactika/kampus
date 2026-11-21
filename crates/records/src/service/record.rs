@@ -347,6 +347,12 @@ impl Records {
         if stored.kind != RecordKind::Manual {
             return Err(Error::conflict("records.record_not_deletable"));
         }
+        let readers = self.read_by_formulas_in(&mut tx, id).await?;
+        if readers > 0 {
+            return Err(
+                Error::conflict("records.record_used_by_formula").with_param("formulas", readers.to_string())
+            );
+        }
         self.publish_in(
             &mut tx,
             events::RECORD_DELETED,

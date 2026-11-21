@@ -45,6 +45,7 @@ use rust_decimal::Decimal;
 use serde_json::json;
 use sqlx::{PgConnection, Row};
 
+use super::formula::derived_order;
 use super::{CATEGORY_COLUMNS, RECORD_COLUMNS, category, record};
 use crate::aggregation::{Child, Rule, aggregate, natural_range};
 use crate::{Category, CategoryId, GradeType, Method, Record, RecordId, Records, events, sql};
@@ -62,11 +63,11 @@ pub struct Recalculated {
 }
 
 /// The categories and records of a course.
-struct Layout {
+pub(crate) struct Layout {
     /// The categories.
-    categories: Vec<Category>,
+    pub(crate) categories: Vec<Category>,
     /// The records.
-    records: Vec<Record>,
+    pub(crate) records: Vec<Record>,
 }
 
 /// What a person has on a record, for the aggregation.
@@ -115,7 +116,7 @@ fn children_of(records: &[Record], category: CategoryId) -> impl Iterator<Item =
 
 impl Records {
     /// The categories and records of a course, whoever asks.
-    async fn layout_in(&self, conn: &mut PgConnection, course: CourseId) -> Result<Layout> {
+    pub(crate) async fn layout_in(&self, conn: &mut PgConnection, course: CourseId) -> Result<Layout> {
         let categories = sqlx::query(sql(format!(
             "select {CATEGORY_COLUMNS} from {} where course_id = $1",
             self.table("category")
@@ -306,36 +307,29 @@ impl Records {
                 },
             );
         }
+        let formulas = self.formulas_in(&mut *conn, course.id).await?;
+        let order = derived_order(&layout.records, &formulas);
         let mut changed = 0;
         for person in people {
-            for category in bottom_up(&layout.categories) {
-                let Some(total) = layout.records.iter().find(|r| r.total_of == Some(category.id)) else {
+            for id in &order {
+                let Some(total) = layout.records.iter().find(|r| r.id == *id) else {
                     continue;
                 };
-                let children: Vec<Child> = children_of(&layout.records, category.id)
-                    .map(|r| Child {
-                        grade: held
-                            .get(&(*person, r.id))
+                let value = if let Some(expr) = formulas.get(id) {
+                    expr.evaluate(&|read| {
+                        held.get(&(*person, RecordId::from_uuid(read)))
                             .filter(|h| !h.excluded)
-                            .and_then(|h| h.value),
-                        min: r.min,
-                        max: r.max,
-                        weight: r.weight,
-                        extra_credit: r.extra_credit,
+                            .and_then(|h| h.value)
                     })
-                    .collect();
-                let rule = Rule {
-                    method: category.method,
-                    drop_lowest: usize::try_from(category.drop_lowest).unwrap_or(0),
-                    keep_highest: usize::try_from(category.keep_highest).unwrap_or(0),
-                    exclude_empty: category.exclude_empty,
-                };
-                let range = if category.method == Method::Natural {
-                    natural_range(&children)
+                    .map(|v| v.round_dp(5).max(total.min).min(total.max))
+                } else if let Some(category) = total
+                    .total_of
+                    .and_then(|c| layout.categories.iter().find(|k| k.id == c))
+                {
+                    category_value(&layout, category, total, &held, *person)
                 } else {
-                    (total.min, total.max)
+                    continue;
                 };
-                let value = aggregate(rule, &children, range);
                 let (counted, did) = self
                     .store_total_in(
                         conn,
@@ -359,7 +353,43 @@ impl Records {
         }
         Ok(changed)
     }
+}
 
+/// The total of a category for a person, from the grades of its children.
+fn category_value(
+    layout: &Layout,
+    category: &Category,
+    total: &Record,
+    held: &HashMap<(PrincipalId, RecordId), Held>,
+    person: PrincipalId,
+) -> Option<Decimal> {
+    let children: Vec<Child> = children_of(&layout.records, category.id)
+        .map(|r| Child {
+            grade: held
+                .get(&(person, r.id))
+                .filter(|h| !h.excluded)
+                .and_then(|h| h.value),
+            min: r.min,
+            max: r.max,
+            weight: r.weight,
+            extra_credit: r.extra_credit,
+        })
+        .collect();
+    let rule = Rule {
+        method: category.method,
+        drop_lowest: usize::try_from(category.drop_lowest).unwrap_or(0),
+        keep_highest: usize::try_from(category.keep_highest).unwrap_or(0),
+        exclude_empty: category.exclude_empty,
+    };
+    let range = if category.method == Method::Natural {
+        natural_range(&children)
+    } else {
+        (total.min, total.max)
+    };
+    aggregate(rule, &children, range)
+}
+
+impl Records {
     /// Writes the total of a person when it differs from what is stored, and says what counts for the
     /// total above it: an override stays, and a total without grades has no row.
     async fn store_total_in(

@@ -84,6 +84,16 @@ entity letter_band {
 entity formula {
   record_id <<FK>>
   expression
+  updated_at
+}
+entity export {
+  id <<PK>>
+  course_id <<FK>>
+  requested_by <<FK>>
+  include_inactive
+  state
+  file_id <<FK>>
+  expires_at
 }
 entity formula_dependency {
   record_id <<FK>>

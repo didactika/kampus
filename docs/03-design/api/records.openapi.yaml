@@ -5,7 +5,7 @@ info:
   description: >-
     Grade records, categories, grades, overrides, locks, scales and letters, reports and exports. Every read
     goes through the visibility service (RN-103). Conventions of DEC-025 and DEC-026; exact numbers as
-    strings (DEC-023). Formulas, grade conditions and exports arrive in later parts.
+    strings (DEC-023).
 paths:
   /api/v1/records/courses/{course_id}/records:
     get: { summary: The records tree of a course (categories and records the caller may see), responses: { '200': { description: Tree } } }
@@ -40,13 +40,20 @@ paths:
     put: { summary: Lock a record, responses: { '200': { description: Locked } } }
     delete: { summary: Unlock a record, responses: { '200': { description: Unlocked } } }
   /api/v1/records/courses/{course_id}/grader-report:
-    get: { summary: 'Grader report, paginated on the server (RN-109)', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page of the report } } }
+    get: { summary: 'Grader report, paginated on the server (RN-109); people who no longer take part are left out unless include_inactive (RN-105)', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }, { name: include_inactive, in: query, schema: { type: boolean, default: false } }], responses: { '200': { description: A page of the report } } }
   /api/v1/records/courses/{course_id}/my-grades:
     get: { summary: 'The caller''s grades as they may see them', responses: { '200': { description: Grades } } }
   /api/v1/records/courses/{course_id}/grades/{account_id}:
     get: { summary: The grades of a person as the caller may see them, responses: { '200': { description: Grades } } }
-  /api/v1/records/courses/{course_id}/records/export:
-    post: { summary: Export grades (a job; the file is available when done), responses: { '202': { description: Export job accepted } } }
+  /api/v1/records/courses/{course_id}/exports:
+    get: { summary: 'The exports the caller asked for in the course, newest first', responses: { '200': { description: Exports } } }
+    post: { summary: 'Ask for an export of the grades as CSV (records.export and records.view_all); a job writes the file, which only the caller reads for 7 days', responses: { '202': { description: Accepted } } }
+  /api/v1/records/exports/{export_id}:
+    get: { summary: 'An export the caller asked for, with its file once completed', responses: { '200': { description: Export }, '404': { description: Not theirs } } }
+  /api/v1/records/records/{record_id}/formula:
+    get: { summary: 'The formula of a record (records.manage)', responses: { '200': { description: 'The formula, or null' } } }
+    put: { summary: 'Give a manual record or a total a formula; other records are written [[<record id>]]', responses: { '200': { description: Set }, '409': { description: 'The record of an activity' }, '422': { description: 'Wrong expression, unknown record or cycle' } } }
+    delete: { summary: 'Remove the formula of a record', responses: { '204': { description: Removed } } }
   /api/v1/records/scopes/{scope_id}/scales:
     get: { summary: Scales available in a scope (the latest version of each code defined there or above), responses: { '200': { description: Scales } } }
     post: { summary: Add a scale or the next version of one (records.manage), responses: { '201': { description: Added } } }

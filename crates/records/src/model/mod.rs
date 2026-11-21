@@ -521,3 +521,31 @@ pub struct LetterSet {
     /// Its bands, from the highest percentage down.
     pub bands: Vec<Band>,
 }
+
+kampus_common::define_id! {
+    /// Identifies an export of the grades of a course.
+    pub struct ExportId;
+}
+
+/// An export of the grades of a course, as a file for the person who asked.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Export {
+    /// The export.
+    pub id: ExportId,
+    /// The course.
+    pub course: CourseId,
+    /// Whether it also has the people who no longer take part.
+    pub include_inactive: bool,
+    /// `pending`, `completed`, `failed` or `expired`.
+    pub state: String,
+    /// The file, while it is available.
+    pub file: Option<uuid::Uuid>,
+    /// Why it failed.
+    pub error: Option<String>,
+    /// When it was asked for.
+    pub created_at: Timestamp,
+    /// When it was made.
+    pub completed_at: Option<Timestamp>,
+    /// When the file goes.
+    pub expires_at: Option<Timestamp>,
+}
