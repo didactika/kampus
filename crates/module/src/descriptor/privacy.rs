@@ -65,6 +65,9 @@ pub struct PrivacyHandlerDeclaration {
     pub purpose: &'static str,
     /// Exports the data of one account.
     pub export: for<'p> fn(PrivacyRun<'p>) -> PrivacyFuture<'p>,
+    /// Erases the data of one account, or says what it keeps and why (grades are kept, pointing to the
+    /// tombstone of the account); returns a report of what it did.
+    pub erase: for<'p> fn(PrivacyRun<'p>) -> PrivacyFuture<'p>,
 }
 
 impl fmt::Debug for PrivacyHandlerDeclaration {

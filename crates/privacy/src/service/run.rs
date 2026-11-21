@@ -55,8 +55,9 @@ impl Privacy {
     ///
     /// `unavailable` when the database fails.
     pub async fn run(&self, services: &ServiceContext) -> Result<u64> {
+        self.apply_holds().await?;
         let rows = sqlx::query(sql(format!(
-            "select i.request_id, i.category, r.account_id from {} i join {} r on r.id = i.request_id
+            "select i.request_id, i.category, r.account_id, r.kind from {} i join {} r on r.id = i.request_id
              where i.state <> 'completed' and r.state = 'pending' order by r.created_at, i.category limit $1",
             self.table("request_item"),
             self.table("request")
@@ -70,12 +71,14 @@ impl Privacy {
             let request: uuid::Uuid = row.get("request_id");
             let category: String = row.get("category");
             let account: uuid::Uuid = row.get("account_id");
+            let erasing = row.get::<String, _>("kind") == "deletion";
             let outcome = match self
                 .modules
                 .iter()
                 .flat_map(|m| m.privacy_handlers.iter())
                 .find(|h| h.code == category)
             {
+                Some(handler) if erasing => (handler.erase)(PrivacyRun { account, services }).await,
                 Some(handler) => (handler.export)(PrivacyRun { account, services }).await,
                 None => Err(kampus_common::Error::not_found("privacy.handler_missing")),
             };
@@ -97,16 +100,92 @@ impl Privacy {
             .map_err(kampus_db::classify)?;
             answered += u64::from(state == "completed");
         }
-        self.complete_requests().await?;
+        self.complete_requests(services).await?;
         Ok(answered)
     }
 
+    /// The condition of a deletion request (`r`) covered by an active hold, on its account or its campus.
+    fn held_condition(&self) -> String {
+        format!(
+            "exists (select 1 from {h} h where h.released_at is null and (h.until is null or h.until > now())
+                 and (h.account_id = r.account_id
+                      or h.campus_id = (select campus_id from {p} where id = r.account_id)))",
+            h = self.table("legal_hold"),
+            p = self.principals()
+        )
+    }
+
+    /// Puts the deletions under a legal hold to wait, and lets the ones whose hold ended go on.
+    async fn apply_holds(&self) -> Result<()> {
+        let held = self.held_condition();
+        for (from, to, negate) in [("pending", "held", ""), ("held", "pending", "not ")] {
+            sqlx::query(sql(format!(
+                "update {r} r set state = '{to}' where r.kind = 'deletion' and r.state = '{from}' and {negate}{held}",
+                r = self.table("request")
+            )))
+            .execute(self.db.pool())
+            .await
+            .map_err(kampus_db::classify)?;
+        }
+        Ok(())
+    }
+
+    /// Completes the deletions whose parts are all erased: the account becomes a tombstone.
+    async fn complete_deletions(&self, services: &ServiceContext) -> Result<()> {
+        let due = sqlx::query(sql(format!(
+            "select id, account_id from {r} r where kind = 'deletion' and state = 'pending' and not exists
+                 (select 1 from {i} where request_id = r.id and state <> 'completed')",
+            r = self.table("request"),
+            i = self.table("request_item")
+        )))
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        if due.is_empty() {
+            return Ok(());
+        }
+        let identity = services.service::<kampus_identity::Identity>()?;
+        for row in &due {
+            let id = RequestId::from_uuid(row.get("id"));
+            let account = PrincipalId::from_uuid(row.get("account_id"));
+            identity
+                .erase_account(kampus_identity::AccountId::from_uuid(account.as_uuid()))
+                .await?;
+            let mut tx = self.db.begin().await?;
+            let changed = sqlx::query(sql(format!(
+                "update {} set state = 'completed', completed_at = now() where id = $1 and state = 'pending'",
+                self.table("request")
+            )))
+            .bind(id.as_uuid())
+            .execute(&mut *tx)
+            .await
+            .map_err(kampus_db::classify)?
+            .rows_affected();
+            if changed > 0 {
+                for code in [events::REQUEST_COMPLETED, events::ACCOUNT_ERASED] {
+                    let mut event = kampus_events::Publish::new(
+                        code,
+                        Some(id.as_uuid()),
+                        json!({ "request": id, "account": account }),
+                    );
+                    event.summary = Some(format!("{code} {id}"));
+                    kampus_events::Events::new(self.db.clone())
+                        .publish_in(&mut tx, event)
+                        .await?;
+                }
+            }
+            tx.commit().await.map_err(kampus_db::classify)?;
+        }
+        Ok(())
+    }
+
     /// Completes the requests whose parts are all answered.
-    async fn complete_requests(&self) -> Result<()> {
+    async fn complete_requests(&self, services: &ServiceContext) -> Result<()> {
+        self.complete_deletions(services).await?;
         let mut tx = self.db.begin().await?;
         let rows = sqlx::query(sql(format!(
             "update {r} set state = 'completed', completed_at = now(), expires_at = $1
-             where state = 'pending' and not exists
+             where state = 'pending' and kind = 'export' and not exists
                  (select 1 from {i} where request_id = {r}.id and state <> 'completed')
              returning id, account_id",
             r = self.table("request"),

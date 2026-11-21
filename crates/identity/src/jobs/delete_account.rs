@@ -84,6 +84,18 @@ impl Identity {
         Ok(due.len())
     }
 
+    /// Erases the personal data of an account now and leaves its tombstone, without waiting for the grace
+    /// period: the deletion was approved through a privacy request.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn erase_account(&self, id: AccountId) -> Result<()> {
+        let mut tx = self.db.begin().await?;
+        self.erase_in(&mut tx, id).await?;
+        tx.commit().await.map_err(kampus_db::classify)
+    }
+
     /// Erases an account's personal data and leaves its tombstone.
     async fn erase_in(&self, conn: &mut PgConnection, id: AccountId) -> Result<()> {
         for table in PERSONAL {

@@ -32,7 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The HTTP routes of privacy: asking for an export, following the request and reading the package.
+//! The HTTP routes of privacy: asking for an export or a deletion, deciding on it, following the request and
+//! reading the package, the legal holds, and the policies of the campus.
 
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
@@ -56,7 +57,11 @@ pub fn routes(context: &ServiceContext) -> Router {
     Router::new()
         .route("/requests", get(list).post(create))
         .route("/requests/{id}", get(read))
+        .route("/requests/awaiting", get(awaiting))
         .route("/requests/{id}/package", get(package))
+        .route("/requests/{id}/decision", post(decide))
+        .route("/holds", get(holds).post(place))
+        .route("/holds/{id}/release", post(release))
         .route("/policies", get(policies).post(publish))
         .route("/policies/pending", get(pending))
         .route("/policies/{code}/acceptance", post(accept))
@@ -85,6 +90,12 @@ struct NewRequest {
     /// Whose data; the caller when left out.
     #[serde(default)]
     account: Option<PrincipalId>,
+    /// `export` (the default) or `deletion`.
+    #[serde(default)]
+    kind: Option<String>,
+    /// Why a deletion is asked for.
+    #[serde(default)]
+    reason: Option<String>,
 }
 
 /// The requests the caller made.
@@ -105,7 +116,22 @@ async fn create(
             return Err(Error::permission_denied("access.denied").into());
         }
     };
-    let created = shared.privacy()?.request_export(&caller.actor, account).await?;
+    let privacy = shared.privacy()?;
+    let created = match body.kind.as_deref().unwrap_or("export") {
+        "export" => privacy.request_export(&caller.actor, account).await?,
+        "deletion" => {
+            privacy
+                .request_deletion(&caller.actor, account, body.reason.as_deref().unwrap_or_default())
+                .await?
+        }
+        _ => {
+            return Err(Error::validation(
+                "privacy.kind_invalid",
+                vec![kampus_common::FieldError::new("kind", "format")],
+            )
+            .into());
+        }
+    };
     Ok((StatusCode::ACCEPTED, Json(created)).into_response())
 }
 
@@ -182,4 +208,72 @@ async fn accept(
             .await?,
     )
     .into_response())
+}
+
+/// The decision on a deletion.
+#[derive(Debug, Deserialize)]
+struct Decision {
+    /// Whether the deletion goes ahead.
+    approve: bool,
+}
+
+/// A hold to place.
+#[derive(Debug, Deserialize)]
+struct NewHold {
+    /// The account it protects; the whole campus of the caller when left out.
+    #[serde(default)]
+    account: Option<PrincipalId>,
+    /// Why deletion waits.
+    reason: String,
+    /// When it ends by itself.
+    #[serde(default)]
+    until: Option<kampus_common::Timestamp>,
+}
+
+/// The deletions waiting for a decision.
+async fn awaiting(State(shared): State<Shared>, Extension(caller): Extension<Caller>) -> ApiResult<Response> {
+    Ok(Json(shared.privacy()?.awaiting_approval(&caller.actor).await?).into_response())
+}
+
+/// Approves or rejects a deletion.
+async fn decide(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(request): Path<String>,
+    Body(body): Body<Decision>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .privacy()?
+            .decide(&caller.actor, id(&request)?, body.approve)
+            .await?,
+    )
+    .into_response())
+}
+
+/// The holds of the campus.
+async fn holds(State(shared): State<Shared>, Extension(caller): Extension<Caller>) -> ApiResult<Response> {
+    Ok(Json(shared.privacy()?.holds(&caller.actor).await?).into_response())
+}
+
+/// Places a hold.
+async fn place(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Body(body): Body<NewHold>,
+) -> ApiResult<Response> {
+    let placed = shared
+        .privacy()?
+        .place_hold(&caller.actor, body.account, &body.reason, body.until)
+        .await?;
+    Ok((StatusCode::CREATED, Json(placed)).into_response())
+}
+
+/// Releases a hold.
+async fn release(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(hold): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(shared.privacy()?.release_hold(&caller.actor, id(&hold)?).await?).into_response())
 }

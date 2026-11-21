@@ -8,14 +8,20 @@ info:
 paths:
   /api/v1/privacy/requests:
     get: { summary: The requests the caller made, responses: { '200': { description: Requests } } }
-    post: { summary: 'Ask for an export of the data of the caller, or of another account with privacy.request.manage', responses: { '202': { description: Accepted; a job asks each module for its part } } }
+    post: { summary: 'Ask for an export (the default) or a deletion with a reason, of the data of the caller or of another account with privacy.request.manage', responses: { '202': { description: Accepted; a job asks each module for its part } } }
   /api/v1/privacy/requests/{request_id}:
     get: { summary: A request with its parts per data category, responses: { '200': { description: Request } } }
   /api/v1/privacy/requests/{request_id}/package:
     get: { summary: 'The exported data for the person who asked, for 7 days (RN-183)', responses: { '200': { description: The data }, '409': { description: Not ready or expired } } }
-  /api/v1/privacy/privacy/holds:
-    get: { summary: Legal holds, responses: { '200': { description: Holds } } }
-    post: { summary: Place a hold, responses: { '201': { description: Placed } } }
+  /api/v1/privacy/requests/awaiting:
+    get: { summary: The deletions waiting for a decision in the campus of the caller (privacy.request.approve), responses: { '200': { description: Requests } } }
+  /api/v1/privacy/requests/{request_id}/decision:
+    post: { summary: Approve or reject a deletion that waits for it (privacy.request.approve), responses: { '200': { description: Decided }, '409': { description: Nothing waits for a decision } } }
+  /api/v1/privacy/holds:
+    get: { summary: 'The legal holds of the campus of the caller, active ones first', responses: { '200': { description: Holds } } }
+    post: { summary: Place a hold on an account or on the whole campus (privacy.hold.manage), responses: { '201': { description: Placed } } }
+  /api/v1/privacy/holds/{hold_id}/release:
+    post: { summary: Release a hold; releasing one already released changes nothing, responses: { '200': { description: Released } } }
   /api/v1/privacy/privacy/retention-rules:
     get: { summary: Data categories and their retention per campus, responses: { '200': { description: Rules } } }
     put: { summary: Replace the rules, parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
