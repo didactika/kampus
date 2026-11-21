@@ -219,4 +219,5 @@ async fn a_teacher_grades_and_a_learner_reads_only_their_own() {
         "{}",
         detail.body
     );
+    site.drop().await;
 }
