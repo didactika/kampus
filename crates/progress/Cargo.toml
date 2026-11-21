@@ -58,6 +58,7 @@ kampus-identity = { path = "../identity" }
 kampus-records = { path = "../records" }
 kampus-enrol = { path = "../enrol" }
 async-trait.workspace = true
+kampus-settings = { path = "../settings" }
 kampus-tasks = { path = "../tasks" }
 axum.workspace = true
 rust_decimal.workspace = true
@@ -68,7 +69,6 @@ time.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
-kampus-settings = { path = "../settings" }
 kampus-customise = { path = "../customise" }
 kampus-files = { path = "../files" }
 kampus-storage.workspace = true
