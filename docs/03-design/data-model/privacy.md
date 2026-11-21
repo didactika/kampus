@@ -24,6 +24,8 @@ PostgreSQL schema `privacy`, owned by `kampus-privacy`, following DEC-014, DEC-0
 | `acceptance` | `policy_id` FK, `account_id` FK (`CASCADE`), `accepted_at`, `on_behalf_of` FK → `identity.account` | PK (`policy_id`, `account_id`) |
 | `export_package` | `request_id` FK (`CASCADE`), `file_id` FK → `files.file`, `expires_at` | PK (`request_id`, `file_id`) |
 
+The first part of privacy (step 1) creates `request` (account, `requester` as a soft reference, kind, state `pending`, `completed`, `failed` or `expired`, `due_at`, `expires_at`) and `request_item` (one per data category, with the exported `data` as JSON until the package expires, the state and the error). Exports are answered by the handlers modules declare (`Module.privacy_handlers`: category, purpose, `export`); today records, progress, notify and calendar declare one each. Deletion, retention rules, legal holds, policies and acceptances, and packages as files arrive in later parts.
+
 ## Anti-patterns avoided (DEC-014)
 
 | Avoided | How |

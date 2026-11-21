@@ -6,17 +6,13 @@ info:
     Data requests (RN-179 to RN-183), legal holds (RN-182), retention rules (RN-184) and policies with
     acceptances (RN-185). Conventions of DEC-025 and DEC-026.
 paths:
-  /api/v1/privacy/privacy/requests:
-    get: { summary: 'Requests the caller may handle, with due dates (RN-186)', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
-    post: { summary: 'Request an export or a deletion, for oneself or on behalf', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created }, '409': { description: An open request of that kind exists } } }
-  /api/v1/privacy/privacy/requests/{request_id}:
-    get: { summary: A request with its items per module, responses: { '200': { description: Request } } }
-  /api/v1/privacy/privacy/requests/{request_id}/approve:
-    post: { summary: 'Approve a deletion (RN-180)', responses: { '202': { description: Running }, '409': { description: Held } } }
-  /api/v1/privacy/privacy/requests/{request_id}/reject:
-    post: { summary: Reject with a reason, responses: { '200': { description: Rejected } } }
-  /api/v1/privacy/privacy/requests/{request_id}/package:
-    get: { summary: 'Signed links to the export files (RN-183)', responses: { '200': { description: Links }, '410': { description: Expired } } }
+  /api/v1/privacy/requests:
+    get: { summary: The requests the caller made, responses: { '200': { description: Requests } } }
+    post: { summary: 'Ask for an export of the data of the caller, or of another account with privacy.request.manage', responses: { '202': { description: Accepted; a job asks each module for its part } } }
+  /api/v1/privacy/requests/{request_id}:
+    get: { summary: A request with its parts per data category, responses: { '200': { description: Request } } }
+  /api/v1/privacy/requests/{request_id}/package:
+    get: { summary: 'The exported data for the person who asked, for 7 days (RN-183)', responses: { '200': { description: The data }, '409': { description: Not ready or expired } } }
   /api/v1/privacy/privacy/holds:
     get: { summary: Legal holds, responses: { '200': { description: Holds } } }
     post: { summary: Place a hold, responses: { '201': { description: Placed } } }
