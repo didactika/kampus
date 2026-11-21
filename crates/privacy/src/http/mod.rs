@@ -37,7 +37,7 @@
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Extension, Json, Router};
 use kampus_access::PrincipalId;
 use kampus_common::{Error, Result};
@@ -57,6 +57,9 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/requests", get(list).post(create))
         .route("/requests/{id}", get(read))
         .route("/requests/{id}/package", get(package))
+        .route("/policies", get(policies).post(publish))
+        .route("/policies/pending", get(pending))
+        .route("/policies/{code}/acceptance", post(accept))
         .with_state(shared)
 }
 
@@ -122,4 +125,61 @@ async fn package(
     Path(request): Path<String>,
 ) -> ApiResult<Response> {
     Ok(Json(shared.privacy()?.package(&caller.actor, id(&request)?).await?).into_response())
+}
+
+/// A version to publish.
+#[derive(Debug, Deserialize)]
+struct NewPolicy {
+    /// The code of the policy.
+    code: String,
+    /// Its title.
+    title: String,
+    /// What it says.
+    body: String,
+}
+
+/// The version being accepted.
+#[derive(Debug, Deserialize)]
+struct Acceptance {
+    /// The version.
+    version: i32,
+}
+
+/// The policies of the campus of the caller.
+async fn policies(State(shared): State<Shared>, Extension(caller): Extension<Caller>) -> ApiResult<Response> {
+    Ok(Json(shared.privacy()?.policies(&caller.actor).await?).into_response())
+}
+
+/// The policies the caller has not accepted.
+async fn pending(State(shared): State<Shared>, Extension(caller): Extension<Caller>) -> ApiResult<Response> {
+    Ok(Json(shared.privacy()?.pending_policies(&caller.actor).await?).into_response())
+}
+
+/// Publishes a version of a policy.
+async fn publish(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Body(body): Body<NewPolicy>,
+) -> ApiResult<Response> {
+    let published = shared
+        .privacy()?
+        .publish_policy(&caller.actor, &body.code, &body.title, &body.body)
+        .await?;
+    Ok((StatusCode::CREATED, Json(published)).into_response())
+}
+
+/// Accepts a version of a policy.
+async fn accept(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(code): Path<String>,
+    Body(body): Body<Acceptance>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .privacy()?
+            .accept_policy(&caller.actor, &code, body.version)
+            .await?,
+    )
+    .into_response())
 }

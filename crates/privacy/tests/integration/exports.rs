@@ -92,14 +92,17 @@ async fn a_person_exports_their_data_and_every_module_answers_for_its_own() {
     let request = w.privacy.request_export(&w.lea, who(&w.lea)).await.unwrap();
     assert_eq!(request.state, "pending");
     let categories: Vec<_> = request.items.iter().map(|i| i.category.as_str()).collect();
-    assert_eq!(categories, ["progress.activity", "records.grades"]);
+    assert_eq!(
+        categories,
+        ["privacy.acceptances", "progress.activity", "records.grades"]
+    );
     assert_eq!(
         w.privacy.package(&w.lea, request.id).await.unwrap_err().code(),
         "privacy.package_not_ready"
     );
 
     let answered = w.privacy.run(&services(&w)).await.unwrap();
-    assert_eq!(answered, 2);
+    assert_eq!(answered, 3);
     let done = w.privacy.request(&w.lea, request.id).await.unwrap();
     assert_eq!(done.state, "completed");
     assert!(done.expires_at.is_some());

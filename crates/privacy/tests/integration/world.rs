@@ -55,7 +55,11 @@ const PASSWORD: &str = "a long and quiet river";
 static MODULES: &[&kampus_module::Module] = &[&kampus_activities::MODULE];
 
 /// The modules whose handlers answer requests in these tests.
-static HANDLER_MODULES: &[&kampus_module::Module] = &[&kampus_records::MODULE, &kampus_progress::MODULE];
+static HANDLER_MODULES: &[&kampus_module::Module] = &[
+    &kampus_records::MODULE,
+    &kampus_progress::MODULE,
+    &kampus_privacy::MODULE,
+];
 
 /// A campus with a course, its administrator and two learners.
 pub(crate) struct World {

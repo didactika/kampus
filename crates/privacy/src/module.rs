@@ -43,7 +43,7 @@ pub const NAME: &str = "privacy";
 pub const MODULE: Module = Module {
     name: NAME,
     manifest: kampus_common::manifest!(),
-    summary: "Privacy: requests to export the personal data of an account, answered by each module",
+    summary: "Privacy: exports of personal data answered by each module, and the policies of a campus",
     steps: crate::db::STEPS,
     permissions: crate::permissions::PERMISSIONS,
     templates: crate::permissions::TEMPLATES,
@@ -61,7 +61,7 @@ pub const MODULE: Module = Module {
     file_areas: &[],
     activity_types: &[],
     notification_types: &[],
-    privacy_handlers: &[],
+    privacy_handlers: crate::service::policy::HANDLERS,
     events: crate::events::EVENTS,
     listeners: &[],
     jobs: crate::jobs::JOBS,

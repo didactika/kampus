@@ -34,5 +34,6 @@
 
 //! The service API of privacy: asking for an export, answering the parts of requests, and reading the result.
 
+pub mod policy;
 pub mod request;
 pub mod run;

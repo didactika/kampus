@@ -1,3 +1,5 @@
+policy_version }o--|| policy
+acceptance }o--|| policy_version
 @startuml
 !theme plain
 hide empty members
@@ -46,17 +48,23 @@ entity legal_hold {
 }
 entity policy {
   id <<PK>>
+  campus_id <<FK>>
   code
+  title
+  created_at
+}
+entity policy_version {
+  policy_id <<FK>>
   version
-  text
-  required
+  body
   published_at
+  published_by
 }
 entity acceptance {
   policy_id <<FK>>
+  version
   account_id <<FK>>
   accepted_at
-  on_behalf_of <<FK>>
 }
 entity export_package {
   request_id <<FK>>
