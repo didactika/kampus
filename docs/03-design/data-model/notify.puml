@@ -11,48 +11,53 @@ entity notification_type {
   required
   default_channels
 }
-entity channel {
-  code
-  enabled
-}
 entity preference {
   account_id <<FK>>
   type_code <<FK>>
-  channel_code <<FK>>
+  channel
   enabled
-  digest
 }
 entity campus_default {
-  campus_id
+  campus_id <<FK>>
   type_code <<FK>>
-  channel_code <<FK>>
+  channel
   enabled
   locked
 }
 entity template {
   id <<PK>>
+  campus_id <<FK>>
   type_code <<FK>>
-  channel_code <<FK>>
+  channel
   locale
-  scope_id <<FK>>
+  subject
   body
 }
 entity notification {
   id <<PK>>
   type_code <<FK>>
   recipient_id <<FK>>
-  object_id
+  dedupe
   payload
+  in_inbox
   created_at
   read_at
 }
 entity delivery {
   notification_id <<FK>>
-  channel_code <<FK>>
+  channel
   state
   attempts
   next_attempt_at
   last_error
+  sent_at
+}
+entity push_subscription {
+  id <<PK>>
+  account_id <<FK>>
+  endpoint
+  p256dh
+  auth
 }
 entity conversation {
   id <<PK>>
@@ -86,7 +91,8 @@ entity block {
 }
 
 preference }o--|| notification_type
-preference }o--|| channel
+campus_default }o--|| notification_type
+template }o--|| notification_type
 delivery }o--|| notification
 member }o--|| conversation
 message }o--|| conversation

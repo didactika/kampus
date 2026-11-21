@@ -36,7 +36,7 @@
 //! what each person chose to receive.
 
 use kampus_db::Step;
-use kampus_db::schema::{Change, Column, ColumnDefault, ForeignKey, Index, OnDelete, Table, Type};
+use kampus_db::schema::{Change, Check, Column, ColumnDefault, ForeignKey, Index, OnDelete, Table, Type};
 
 /// A foreign key to a table of another module, by its `id`.
 const fn other(
@@ -55,79 +55,199 @@ const fn other(
 }
 
 /// The upgrade steps of this module.
-pub const STEPS: &[Step] = &[Step {
-    sequence: 1,
-    name: "notification types, notifications and preferences",
-    revert: &[],
-    action: None,
-    changes: &[
-        Change::CreateTable(Table {
-            name: "notification_type",
-            columns: &[
-                Column::new("code", Type::Text),
-                Column::new("module", Type::Text),
-                Column::new("summary", Type::Text),
-                Column::new("channels", Type::Json("notify.channels")),
-                Column::new("required", Type::Boolean).default(ColumnDefault::Bool(false)),
-                Column::new("retired_at", Type::Timestamptz).nullable(),
-            ],
-            primary_key: &["code"],
-            without_natural_key: Some("keyed by the code its module declares"),
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "notification",
-            columns: &[
-                Column::new("id", Type::Uuid),
-                Column::new("type_code", Type::Text),
-                Column::new("recipient_id", Type::Uuid),
-                Column::new("dedupe", Type::Text).nullable(),
-                Column::new("payload", Type::Json("notify.payload")),
-                Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
-                Column::new("read_at", Type::Timestamptz).nullable(),
-            ],
-            primary_key: &["id"],
-            unique: &[&["recipient_id", "type_code", "dedupe"]],
-            foreign_keys: &[
-                ForeignKey {
-                    columns: &["type_code"],
-                    module: None,
-                    table: "notification_type",
-                    references: &["code"],
-                    on_delete: OnDelete::Restrict,
-                },
-                other(&["recipient_id"], "identity", "account", OnDelete::Cascade),
-            ],
-            indexes: &[Index {
-                columns: &["recipient_id", "created_at"],
-                unique: false,
-            }],
-            without_natural_key: Some(
-                "a notification is identified by the event that caused it when there is one",
-            ),
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "preference",
-            columns: &[
-                Column::new("account_id", Type::Uuid),
-                Column::new("type_code", Type::Text),
-                Column::new("channel", Type::Text),
-                Column::new("enabled", Type::Boolean),
-            ],
-            primary_key: &["account_id", "type_code", "channel"],
-            foreign_keys: &[
-                other(&["account_id"], "identity", "account", OnDelete::Cascade),
-                ForeignKey {
-                    columns: &["type_code"],
-                    module: None,
-                    table: "notification_type",
-                    references: &["code"],
-                    on_delete: OnDelete::Cascade,
-                },
-            ],
-            without_natural_key: Some("one choice per person, type and channel"),
-            ..Table::EMPTY
-        }),
-    ],
-}];
+pub const STEPS: &[Step] = &[
+    Step {
+        sequence: 1,
+        name: "notification types, notifications and preferences",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::CreateTable(Table {
+                name: "notification_type",
+                columns: &[
+                    Column::new("code", Type::Text),
+                    Column::new("module", Type::Text),
+                    Column::new("summary", Type::Text),
+                    Column::new("channels", Type::Json("notify.channels")),
+                    Column::new("required", Type::Boolean).default(ColumnDefault::Bool(false)),
+                    Column::new("retired_at", Type::Timestamptz).nullable(),
+                ],
+                primary_key: &["code"],
+                without_natural_key: Some("keyed by the code its module declares"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "notification",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("type_code", Type::Text),
+                    Column::new("recipient_id", Type::Uuid),
+                    Column::new("dedupe", Type::Text).nullable(),
+                    Column::new("payload", Type::Json("notify.payload")),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                    Column::new("read_at", Type::Timestamptz).nullable(),
+                ],
+                primary_key: &["id"],
+                unique: &[&["recipient_id", "type_code", "dedupe"]],
+                foreign_keys: &[
+                    ForeignKey {
+                        columns: &["type_code"],
+                        module: None,
+                        table: "notification_type",
+                        references: &["code"],
+                        on_delete: OnDelete::Restrict,
+                    },
+                    other(&["recipient_id"], "identity", "account", OnDelete::Cascade),
+                ],
+                indexes: &[Index {
+                    columns: &["recipient_id", "created_at"],
+                    unique: false,
+                }],
+                without_natural_key: Some(
+                    "a notification is identified by the event that caused it when there is one",
+                ),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "preference",
+                columns: &[
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("type_code", Type::Text),
+                    Column::new("channel", Type::Text),
+                    Column::new("enabled", Type::Boolean),
+                ],
+                primary_key: &["account_id", "type_code", "channel"],
+                foreign_keys: &[
+                    other(&["account_id"], "identity", "account", OnDelete::Cascade),
+                    ForeignKey {
+                        columns: &["type_code"],
+                        module: None,
+                        table: "notification_type",
+                        references: &["code"],
+                        on_delete: OnDelete::Cascade,
+                    },
+                ],
+                without_natural_key: Some("one choice per person, type and channel"),
+                ..Table::EMPTY
+            }),
+        ],
+    },
+    Step {
+        sequence: 2,
+        name: "channels: deliveries, templates, campus defaults and push subscriptions",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::AddColumn {
+                table: "notification",
+                column: Column::new("in_inbox", Type::Boolean).default(ColumnDefault::Bool(true)),
+            },
+            Change::CreateTable(Table {
+                name: "delivery",
+                columns: &[
+                    Column::new("notification_id", Type::Uuid),
+                    Column::new("channel", Type::Text),
+                    Column::new("state", Type::Text).default(ColumnDefault::Text("pending")),
+                    Column::new("attempts", Type::Integer).default(ColumnDefault::Int(0)),
+                    Column::new("next_attempt_at", Type::Timestamptz).default(ColumnDefault::Now),
+                    Column::new("last_error", Type::Text).nullable(),
+                    Column::new("sent_at", Type::Timestamptz).nullable(),
+                ],
+                primary_key: &["notification_id", "channel"],
+                foreign_keys: &[TYPE_NOTIFICATION],
+                checks: &[
+                    Check::OneOf("state", DELIVERY_STATES),
+                    Check::OneOf("channel", SENT_CHANNELS),
+                ],
+                indexes: &[Index {
+                    columns: &["state", "next_attempt_at"],
+                    unique: false,
+                }],
+                without_natural_key: Some("one delivery per notification and channel"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "template",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("campus_id", Type::Uuid),
+                    Column::new("type_code", Type::Text),
+                    Column::new("channel", Type::Text),
+                    Column::new("locale", Type::Text),
+                    Column::new("subject", Type::Text),
+                    Column::new("body", Type::Text),
+                    Column::new("updated_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                unique: &[&["campus_id", "type_code", "channel", "locale"]],
+                foreign_keys: &[
+                    other(&["campus_id"], "access", "scope", OnDelete::Cascade),
+                    TYPE_OF,
+                ],
+                checks: &[Check::OneOf("channel", SENT_CHANNELS)],
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "campus_default",
+                columns: &[
+                    Column::new("campus_id", Type::Uuid),
+                    Column::new("type_code", Type::Text),
+                    Column::new("channel", Type::Text),
+                    Column::new("enabled", Type::Boolean),
+                    Column::new("locked", Type::Boolean).default(ColumnDefault::Bool(false)),
+                ],
+                primary_key: &["campus_id", "type_code", "channel"],
+                foreign_keys: &[
+                    other(&["campus_id"], "access", "scope", OnDelete::Cascade),
+                    TYPE_OF,
+                ],
+                checks: &[Check::OneOf("channel", crate::CHANNELS)],
+                without_natural_key: Some("one default per campus, type and channel"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "push_subscription",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("endpoint", Type::Text),
+                    Column::new("p256dh", Type::Text),
+                    Column::new("auth", Type::Text),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                unique: &[&["endpoint"]],
+                foreign_keys: &[other(&["account_id"], "identity", "account", OnDelete::Cascade)],
+                indexes: &[Index {
+                    columns: &["account_id"],
+                    unique: false,
+                }],
+                ..Table::EMPTY
+            }),
+        ],
+    },
+];
+
+/// Where a delivery stands: waiting, sent, or given up after its attempts.
+pub const DELIVERY_STATES: &[&str] = &["pending", "sent", "dead"];
+
+/// The channels a delivery job sends through: every channel but the inbox.
+pub const SENT_CHANNELS: &[&str] = &[crate::EMAIL, crate::PUSH];
+
+/// The foreign key of a delivery to its notification.
+const TYPE_NOTIFICATION: ForeignKey = ForeignKey {
+    columns: &["notification_id"],
+    module: None,
+    table: "notification",
+    references: &["id"],
+    on_delete: OnDelete::Cascade,
+};
+
+/// The foreign key to the type of notification.
+const TYPE_OF: ForeignKey = ForeignKey {
+    columns: &["type_code"],
+    module: None,
+    table: "notification_type",
+    references: &["code"],
+    on_delete: OnDelete::Cascade,
+};

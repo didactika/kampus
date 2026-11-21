@@ -202,6 +202,15 @@ impl Users {
             .collect())
     }
 
+    /// The language a person chose, for a module that writes to them; none when they chose none.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn language_of(&self, account: AccountId) -> Result<Option<String>> {
+        Ok(self.read_profile(account).await?.language_code)
+    }
+
     /// The stored profile, or an empty one.
     async fn read_profile(&self, account: AccountId) -> Result<Profile> {
         let row = sqlx::query(sql(format!(

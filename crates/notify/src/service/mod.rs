@@ -35,6 +35,8 @@
 //! The service API of notify, one file per area: the types modules declare, the notifications of an inbox
 //! and the preferences of a person.
 
+pub mod channel;
+pub mod delivery;
 pub mod inbox;
 pub mod preference;
 pub mod types;

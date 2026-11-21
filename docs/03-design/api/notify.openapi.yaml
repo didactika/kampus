@@ -13,9 +13,22 @@ paths:
   /api/v1/notify/inbox/read-all:
     post: { summary: Mark every notification read, responses: { '200': { description: How many changed } } }
   /api/v1/notify/preferences:
-    get: { summary: What the caller receives of each declared type (RN-148), responses: { '200': { description: Preferences } } }
+    get: { summary: 'What the caller receives of each declared type on each channel, inbox, email and push, with what the campus locked (RN-148)', responses: { '200': { description: Preferences } } }
   /api/v1/notify/preferences/{type}/{channel}:
-    put: { summary: Turn a type on or off through a channel; a required type cannot be turned off, responses: { '200': { description: Set } } }
+    put: { summary: 'Turn a type on or off on a channel; the inbox of a required type and what the campus locked cannot change', responses: { '200': { description: Set }, '409': { description: Locked by the campus } } }
+  /api/v1/notify/campuses/{campus_id}/templates:
+    get: { summary: 'The templates of email and push of a campus (notify.template.manage)', responses: { '200': { description: Templates } } }
+    put: { summary: 'Write the template of a type, a channel and a language (RN-150)', responses: { '200': { description: Written } } }
+  /api/v1/notify/campuses/{campus_id}/templates/{type}/{channel}/{locale}:
+    delete: { summary: 'Remove a template; the summary of the type is sent again', responses: { '204': { description: Removed } } }
+  /api/v1/notify/campuses/{campus_id}/defaults:
+    get: { summary: 'What the campus gives by default for each type and channel (notify.defaults.manage)', responses: { '200': { description: Defaults } } }
+    put: { summary: 'Set the default of a type on a channel, locked or not', responses: { '200': { description: Set } } }
+  /api/v1/notify/push-subscriptions:
+    get: { summary: 'The browsers and phones of the caller that receive push notifications', responses: { '200': { description: Subscriptions } } }
+    post: { summary: 'Register a browser or phone, by the endpoint and keys its push service gives', responses: { '201': { description: Registered } } }
+  /api/v1/notify/push-subscriptions/{subscription_id}:
+    delete: { summary: 'Remove a browser or phone', responses: { '204': { description: Removed } } }
   /api/v1/notify/conversations:
     get: { summary: The caller's conversations, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
     post: { summary: 'Open a direct or group conversation; a direct one is unique per pair (RN-152)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created }, '200': { description: Already exists } } }

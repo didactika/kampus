@@ -35,6 +35,7 @@
 //! The HTTP routes of notify: the inbox of the caller and their preferences.
 
 use axum::extract::{Path, Query, State};
+use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post, put};
 use axum::{Extension, Json, Router};
@@ -58,6 +59,14 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/inbox/{id}/read", post(read))
         .route("/preferences", get(preferences))
         .route("/preferences/{type_code}/{channel}", put(set_preference))
+        .route("/campuses/{id}/templates", get(templates).put(set_template))
+        .route(
+            "/campuses/{id}/templates/{type_code}/{channel}/{locale}",
+            axum::routing::delete(remove_template),
+        )
+        .route("/campuses/{id}/defaults", get(defaults).put(set_default))
+        .route("/push-subscriptions", get(push_subscriptions).post(register_push))
+        .route("/push-subscriptions/{id}", axum::routing::delete(remove_push))
         .with_state(shared)
 }
 
@@ -155,4 +164,103 @@ async fn set_preference(
         .set_preference(&caller.actor, &type_code, &channel, body.enabled)
         .await?;
     Ok(Json(found).into_response())
+}
+
+/// The templates of a campus.
+async fn templates(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(campus): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(shared.notify()?.templates(&caller.actor, id(&campus)?).await?).into_response())
+}
+
+/// Writes a template of a campus.
+async fn set_template(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(campus): Path<String>,
+    Body(body): Body<crate::service::channel::Template>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .notify()?
+            .set_template(&caller.actor, id(&campus)?, body)
+            .await?,
+    )
+    .into_response())
+}
+
+/// Removes a template of a campus.
+async fn remove_template(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((campus, type_code, channel, locale)): Path<(String, String, String, String)>,
+) -> ApiResult<StatusCode> {
+    shared
+        .notify()?
+        .remove_template(&caller.actor, id(&campus)?, &type_code, &channel, &locale)
+        .await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// The defaults of a campus.
+async fn defaults(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(campus): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .notify()?
+            .campus_defaults(&caller.actor, id(&campus)?)
+            .await?,
+    )
+    .into_response())
+}
+
+/// Sets a default of a campus.
+async fn set_default(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(campus): Path<String>,
+    Body(body): Body<crate::service::channel::CampusDefault>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .notify()?
+            .set_campus_default(&caller.actor, id(&campus)?, body)
+            .await?,
+    )
+    .into_response())
+}
+
+/// The push subscriptions of the caller.
+async fn push_subscriptions(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+) -> ApiResult<Response> {
+    Ok(Json(shared.notify()?.push_subscriptions(&caller.actor).await?).into_response())
+}
+
+/// Registers a browser or phone of the caller for push notifications.
+async fn register_push(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Body(body): Body<crate::service::channel::PushSubscription>,
+) -> ApiResult<Response> {
+    let made = shared.notify()?.register_push(&caller.actor, body).await?;
+    Ok((StatusCode::CREATED, Json(made)).into_response())
+}
+
+/// Removes a push subscription of the caller.
+async fn remove_push(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(subscription): Path<String>,
+) -> ApiResult<StatusCode> {
+    let subscription = uuid::Uuid::parse_str(&subscription)
+        .map_err(|_| kampus_common::Error::not_found("notify.push_not_found"))?;
+    shared.notify()?.remove_push(&caller.actor, subscription).await?;
+    Ok(StatusCode::NO_CONTENT)
 }

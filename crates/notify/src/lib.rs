@@ -39,14 +39,20 @@
 pub mod db;
 pub mod events;
 pub mod http;
+pub mod jobs;
 pub mod model;
 pub mod module;
 pub mod observers;
 pub mod permissions;
+pub mod ports;
 pub mod privacy;
 pub mod service;
 
+use std::sync::Arc;
+
 use kampus_db::Database;
+
+use crate::ports::transport::{LogTransport, Transport};
 
 pub use model::{Inbox, Notification, NotificationId, Preference};
 pub use module::MODULE;
@@ -54,11 +60,24 @@ pub use module::MODULE;
 /// The channel every notification reaches: the inbox of the person.
 pub const INBOX: &str = "inbox";
 
+/// The channel of email.
+pub const EMAIL: &str = "email";
+
+/// The channel of push notifications to the devices of a person.
+pub const PUSH: &str = "push";
+
+/// Every channel a notification can reach a person through.
+pub const CHANNELS: &[&str] = &[INBOX, EMAIL, PUSH];
+
 /// The notifications of an installation.
 #[derive(Clone)]
 pub struct Notify {
     /// The database of the installation.
     db: Database,
+    /// The transport of email.
+    email: Arc<dyn Transport>,
+    /// The transport of push notifications.
+    push: Arc<dyn Transport>,
 }
 
 impl std::fmt::Debug for Notify {
@@ -72,8 +91,18 @@ impl std::fmt::Debug for Notify {
 impl Notify {
     /// The notifications of an installation.
     #[must_use]
-    pub const fn new(db: Database) -> Self {
-        Self { db }
+    pub fn new(db: Database) -> Self {
+        Self {
+            db,
+            email: Arc::new(LogTransport),
+            push: Arc::new(LogTransport),
+        }
+    }
+
+    /// The same with the transports of email and push.
+    #[must_use]
+    pub fn with_transports(self, email: Arc<dyn Transport>, push: Arc<dyn Transport>) -> Self {
+        Self { email, push, ..self }
     }
 
     /// The quoted name of a table of this module.

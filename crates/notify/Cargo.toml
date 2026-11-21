@@ -56,6 +56,10 @@ kampus-events = { path = "../events" }
 kampus-identity = { path = "../identity" }
 kampus-progress = { path = "../progress" }
 kampus-records = { path = "../records" }
+kampus-tasks = { path = "../tasks" }
+kampus-users = { path = "../users" }
+async-trait.workspace = true
+tracing.workspace = true
 axum.workspace = true
 serde.workspace = true
 serde_json.workspace = true

@@ -32,9 +32,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The values notify gives in the default role templates: none, since everyone has an inbox.
+//! The values notify gives in the default role templates, version 1: whoever administers a campus writes its
+//! templates and sets its defaults.
 
-use kampus_module::RoleTemplateDeclaration;
+use kampus_module::{RoleTemplateDeclaration, Value};
+
+use super::{DEFAULTS_MANAGE, TEMPLATE_MANAGE};
+
+/// Running the notifications of a campus.
+const RUNNING: &[(&str, Value)] = &[(TEMPLATE_MANAGE, Value::Allow), (DEFAULTS_MANAGE, Value::Allow)];
 
 /// The values of this module in the role templates.
-pub const TEMPLATES: &[RoleTemplateDeclaration] = &[];
+pub const TEMPLATES: &[RoleTemplateDeclaration] = &[
+    RoleTemplateDeclaration {
+        code: "platform_administrator",
+        version: 1,
+        values: RUNNING,
+    },
+    RoleTemplateDeclaration {
+        code: "campus_administrator",
+        version: 1,
+        values: RUNNING,
+    },
+];
