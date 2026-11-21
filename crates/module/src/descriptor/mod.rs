@@ -40,6 +40,7 @@ mod customise;
 mod event;
 mod file;
 mod job;
+mod notification;
 mod preference;
 mod rule;
 mod setting;
@@ -54,6 +55,7 @@ pub use customise::{
 pub use event::{Event, EventDeclaration, EventRun, ListenerDeclaration};
 pub use file::{FileAreaDeclaration, FileRead, ReadFuture};
 pub use job::{JobDeclaration, JobFuture, JobRun, ScheduleDeclaration};
+pub use notification::NotificationTypeDeclaration;
 pub use preference::PreferenceDeclaration;
 pub use rule::{RuleActionDeclaration, RuleActionRun, RuleParameter};
 pub use setting::SettingDeclaration;
@@ -107,6 +109,8 @@ pub struct Module {
     pub file_areas: &'static [FileAreaDeclaration],
     /// The types of activity and material it provides, from `src/settings/activities.rs`.
     pub activity_types: &'static [ActivityTypeDeclaration],
+    /// The types of notification it declares, from `src/settings/notifications.rs`.
+    pub notification_types: &'static [NotificationTypeDeclaration],
     /// The events it publishes, from `src/events/mod.rs`.
     pub events: &'static [EventDeclaration],
     /// Its reactions to events, from `src/observers/mod.rs`.

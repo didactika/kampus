@@ -43,7 +43,7 @@ pub mod http;
 pub mod permission;
 
 pub use context::ServiceContext;
-pub use descriptor::{ActivityKind, ActivitySetting, ActivityTypeDeclaration};
+pub use descriptor::{ActivityKind, ActivitySetting, ActivityTypeDeclaration, NotificationTypeDeclaration};
 pub use descriptor::{
     Argument, Command, CommandContext, CommandFuture, Event, EventDeclaration, EventRun, JobDeclaration,
     JobFuture, JobRun, ListenerDeclaration, Module, PreferenceDeclaration, ScheduleDeclaration,

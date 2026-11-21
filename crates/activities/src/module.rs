@@ -60,6 +60,7 @@ pub const MODULE: Module = Module {
     rule_actions: &[],
     file_areas: crate::settings::files::FILE_AREAS,
     activity_types: crate::settings::types::TYPES,
+    notification_types: &[],
     events: crate::events::EVENTS,
     listeners: &[],
     jobs: crate::jobs::JOBS,
