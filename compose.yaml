@@ -118,6 +118,15 @@ services:
       timeout: 3s
       retries: 6
 
+  web:
+    build: web
+    image: kampus-web:0.1.0-dev
+    ports:
+      - "8101:80"
+    depends_on:
+      server:
+        condition: service_healthy
+
   oidc:
     image: ghcr.io/navikt/mock-oauth2-server:2.1.10
     ports:
