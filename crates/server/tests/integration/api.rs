@@ -509,3 +509,24 @@ async fn a_provider_signs_a_person_in_through_the_browser_flow() {
     assert_eq!(me.body["email"], "ana@example.org");
     site.drop().await;
 }
+
+#[tokio::test]
+async fn the_api_describes_the_routes_it_really_serves() {
+    let site = site().await;
+    let answer = site
+        .call(Method::GET, "/api/v1/openapi.json", None, &[], None)
+        .await;
+    assert_eq!(answer.status, StatusCode::OK);
+    assert_eq!(answer.body["openapi"], "3.1.0");
+    let privacy = &answer.body["paths"]["/privacy/requests"];
+    assert!(privacy["get"].is_object() && privacy["post"].is_object());
+    assert!(answer.body["paths"]["/privacy/holds/{id}/release"]["post"].is_object());
+    assert!(answer.body["paths"]["/privacy/nothing"].is_null());
+    assert!(
+        answer.body["tags"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|t| t["name"] == "records")
+    );
+}
