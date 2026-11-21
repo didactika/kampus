@@ -34,10 +34,14 @@ entity request_item {
   error
 }
 entity retention_rule {
-  category_code <<FK>>
-  campus_id
-  keep_for
-  action
+  campus_id <<FK>>
+  category
+  keep_days
+}
+entity purge {
+  account_id <<FK>>
+  category
+  purged_at
 }
 entity legal_hold {
   id <<PK>>
@@ -76,7 +80,6 @@ entity export_package {
 }
 
 request_item }o--|| request
-retention_rule }o--|| data_category
 acceptance }o--|| policy
 export_package }o--|| request
 @enduml

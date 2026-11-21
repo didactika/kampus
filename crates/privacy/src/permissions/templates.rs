@@ -37,13 +37,14 @@
 
 use kampus_module::{RoleTemplateDeclaration, Value};
 
-use super::{HOLD_MANAGE, POLICY_MANAGE, REQUEST_APPROVE, REQUEST_MANAGE};
+use super::{HOLD_MANAGE, POLICY_MANAGE, REQUEST_APPROVE, REQUEST_MANAGE, RETENTION_MANAGE};
 
 /// Handling and approving the requests of others, placing legal holds and publishing the policies.
 const HANDLING: &[(&str, Value)] = &[
     (REQUEST_MANAGE, Value::Allow),
     (REQUEST_APPROVE, Value::Allow),
     (HOLD_MANAGE, Value::Allow),
+    (RETENTION_MANAGE, Value::Allow),
     (POLICY_MANAGE, Value::Allow),
 ];
 

@@ -33,12 +33,12 @@
 // ------------------------------------------------------------------------------
 
 //! The HTTP routes of privacy: asking for an export or a deletion, deciding on it, following the request and
-//! reading the package, the legal holds, and the policies of the campus.
+//! reading the package, the legal holds, the retention of each kind of data, and the policies of the campus.
 
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use axum::routing::{get, post};
+use axum::routing::{get, post, put};
 use axum::{Extension, Json, Router};
 use kampus_access::PrincipalId;
 use kampus_common::{Error, Result};
@@ -62,6 +62,8 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/requests/{id}/decision", post(decide))
         .route("/holds", get(holds).post(place))
         .route("/holds/{id}/release", post(release))
+        .route("/retention", get(retention))
+        .route("/retention/{category}", put(set_retention))
         .route("/policies", get(policies).post(publish))
         .route("/policies/pending", get(pending))
         .route("/policies/{code}/acceptance", post(accept))
@@ -276,4 +278,36 @@ async fn release(
     Path(hold): Path<String>,
 ) -> ApiResult<Response> {
     Ok(Json(shared.privacy()?.release_hold(&caller.actor, id(&hold)?).await?).into_response())
+}
+
+/// The days to keep a data category.
+#[derive(Debug, Deserialize)]
+struct KeepDays {
+    /// Days after the account is deleted; none keeps the data for ever.
+    #[serde(default)]
+    keep_days: Option<i32>,
+}
+
+/// The data categories and their retention.
+async fn retention(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+) -> ApiResult<Response> {
+    Ok(Json(shared.privacy()?.retention(&caller.actor).await?).into_response())
+}
+
+/// Sets the retention of a data category.
+async fn set_retention(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(category): Path<String>,
+    Body(body): Body<KeepDays>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .privacy()?
+            .set_retention(&caller.actor, &category, body.keep_days)
+            .await?,
+    )
+    .into_response())
 }

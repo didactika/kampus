@@ -58,6 +58,15 @@ pub const JOBS: &[JobDeclaration] = &[
         concurrency: Some("all"),
         run: expire,
     },
+    JobDeclaration {
+        code: "privacy.retain",
+        summary: "Purge the data of deleted accounts whose retention period ended",
+        max_attempts: 3,
+        backoff_seconds: 300,
+        timeout_seconds: 900,
+        concurrency: Some("all"),
+        run: retain,
+    },
 ];
 
 /// The schedules of this module.
@@ -70,6 +79,11 @@ pub const SCHEDULES: &[ScheduleDeclaration] = &[
     ScheduleDeclaration {
         job: "privacy.expire",
         cron: "15 4 * * *",
+        time_zone: "UTC",
+    },
+    ScheduleDeclaration {
+        job: "privacy.retain",
+        cron: "30 3 * * *",
         time_zone: "UTC",
     },
 ];
@@ -87,6 +101,15 @@ fn run_requests(run: JobRun<'_>) -> JobFuture<'_> {
 fn expire(run: JobRun<'_>) -> JobFuture<'_> {
     Box::pin(async move {
         run.services.service::<Privacy>()?.expire().await?;
+        Ok(())
+    })
+}
+
+/// Purges what the retention rules say.
+fn retain(run: JobRun<'_>) -> JobFuture<'_> {
+    Box::pin(async move {
+        let privacy = run.services.service::<Privacy>()?;
+        while privacy.retain(run.services).await? > 0 {}
         Ok(())
     })
 }

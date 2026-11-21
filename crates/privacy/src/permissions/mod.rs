@@ -50,6 +50,9 @@ pub const REQUEST_APPROVE: &str = "privacy.request.approve";
 /// Place and release legal holds, which stop deletion.
 pub const HOLD_MANAGE: &str = "privacy.hold.manage";
 
+/// Set how long each kind of personal data is kept after an account is deleted.
+pub const RETENTION_MANAGE: &str = "privacy.retention.manage";
+
 /// Publish new versions of the policies of the campus.
 pub const POLICY_MANAGE: &str = "privacy.policy.manage";
 
@@ -71,6 +74,12 @@ pub const PERMISSIONS: &[PermissionDeclaration] = &[
         code: HOLD_MANAGE,
         kind: PermissionKind::Write,
         risks: &[Risk::PersonalData],
+        lowest_kind: ScopeKind::Campus,
+    },
+    PermissionDeclaration {
+        code: RETENTION_MANAGE,
+        kind: PermissionKind::Write,
+        risks: &[Risk::DataLoss],
         lowest_kind: ScopeKind::Campus,
     },
     PermissionDeclaration {

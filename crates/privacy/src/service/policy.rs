@@ -50,12 +50,22 @@ pub const HANDLERS: &[PrivacyHandlerDeclaration] = &[PrivacyHandlerDeclaration {
     code: "privacy.acceptances",
     purpose: "Which version of each policy the person accepted, and when",
     export,
-    erase: keep,
+    erase,
 }];
 
-/// Keeps the acceptances: they show what the person agreed to, and point to the tombstone of the account.
-fn keep(_run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
-    Box::pin(async move { Ok(json!({ "kept": "proof of acceptance" })) })
+/// Keeps the acceptances, which show what the person agreed to and point to the tombstone of the account,
+/// until their retention period ends and they are purged.
+fn erase(run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
+    Box::pin(async move {
+        if run.purge {
+            run.services
+                .service::<Privacy>()?
+                .purge_acceptances(PrincipalId::from_uuid(run.account))
+                .await
+        } else {
+            Ok(json!({ "kept": "proof of acceptance" }))
+        }
+    })
 }
 
 /// Exports the acceptances of the account of a request.
@@ -251,6 +261,24 @@ impl Privacy {
         }
         tx.commit().await.map_err(kampus_db::classify)?;
         self.policy_of(me, &current.code).await
+    }
+
+    /// Deletes the acceptances of an account, once their retention period ended.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn purge_acceptances(&self, account: PrincipalId) -> Result<Value> {
+        let deleted = sqlx::query(sql(format!(
+            "delete from {} where account_id = $1",
+            self.table("acceptance")
+        )))
+        .bind(account.as_uuid())
+        .execute(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?
+        .rows_affected();
+        Ok(json!({ "purged": { "acceptance": deleted } }))
     }
 
     /// Everything this module keeps about an account: what they accepted and when.

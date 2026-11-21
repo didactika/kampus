@@ -61,6 +61,9 @@ pub const HOLD_PLACED: &str = "privacy.hold_placed";
 /// A legal hold was released.
 pub const HOLD_RELEASED: &str = "privacy.hold_released";
 
+/// The data of a deleted account was purged when its retention period ended.
+pub const DATA_PURGED: &str = "privacy.data_purged";
+
 /// The events of this module.
 pub const EVENTS: &[EventDeclaration] = &[
     EventDeclaration {
@@ -126,5 +129,13 @@ pub const EVENTS: &[EventDeclaration] = &[
         fields: &["hold"],
         audited: true,
         personal_fields: &[],
+    },
+    EventDeclaration {
+        code: DATA_PURGED,
+        version: 1,
+        summary: "The data of a deleted account was purged when its retention period ended",
+        fields: &["account", "category"],
+        audited: true,
+        personal_fields: &["account"],
     },
 ];

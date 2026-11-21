@@ -127,3 +127,14 @@ pub struct Hold {
     /// When it was released by hand.
     pub released_at: Option<Timestamp>,
 }
+
+/// A kind of personal data and how long the campus keeps it after the account is deleted.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Retention {
+    /// The data category, `<module>.<what>`.
+    pub category: String,
+    /// Why the data is kept.
+    pub purpose: String,
+    /// Days it is kept after the account is deleted; none keeps it for ever.
+    pub keep_days: Option<i32>,
+}
