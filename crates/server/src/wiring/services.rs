@@ -164,7 +164,10 @@ impl Services {
             users.clone(),
             parts.clock,
             hasher,
-        );
+        )
+        .with_gate(Arc::new(kampus_progress::PrerequisiteGate::new(
+            learning.progress.clone(),
+        )));
         let context = ServiceContext::default()
             .with(access.clone())
             .with(identity.clone())

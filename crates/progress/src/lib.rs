@@ -60,6 +60,7 @@ pub use model::{
     State,
 };
 pub use module::MODULE;
+pub use service::prerequisite::{PrerequisiteGate, Prerequisites};
 pub use support::evaluate;
 
 /// The progress of an installation.

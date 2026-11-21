@@ -45,6 +45,7 @@ pub mod model;
 pub mod module;
 pub mod observers;
 pub mod permissions;
+pub mod ports;
 pub mod service;
 
 use std::sync::Arc;
@@ -80,6 +81,8 @@ pub struct Enrol {
     clock: Arc<dyn Clock>,
     /// Hashes self-enrolment keys.
     hasher: PasswordHasher,
+    /// What a person must have done before enrolling themselves, when a module says.
+    gate: Option<Arc<dyn ports::gate::JoiningGate>>,
 }
 
 impl std::fmt::Debug for Enrol {
@@ -110,6 +113,16 @@ impl Enrol {
             users,
             clock,
             hasher,
+            gate: None,
+        }
+    }
+
+    /// The same with a gate that says what a person must have done before enrolling themselves.
+    #[must_use]
+    pub fn with_gate(self, gate: Arc<dyn ports::gate::JoiningGate>) -> Self {
+        Self {
+            gate: Some(gate),
+            ..self
         }
     }
 

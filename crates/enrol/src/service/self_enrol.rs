@@ -66,7 +66,8 @@ impl Enrol {
     ///
     /// `permission_denied` without the permission or for a visitor, `validation` for a wrong key or an
     /// instance that is not a self one, `rate_limited` after too many wrong keys, `conflict` for a closed
-    /// or full instance, an enrolment or a request that exists.
+    /// or full instance, an enrolment or a request that exists, and (`enrol.prerequisites_missing`) while courses the
+    /// course requires first are not completed.
     pub async fn self_enrol(
         &self,
         actor: &Actor,
@@ -86,6 +87,15 @@ impl Enrol {
                 "enrol.method_not_self",
                 vec![kampus_common::FieldError::new("instance", "self")],
             ));
+        }
+        if let Some(gate) = &self.gate {
+            let missing = gate.missing(stored.course, *account).await?;
+            if !missing.is_empty() {
+                let courses: Vec<String> = missing.iter().map(ToString::to_string).collect();
+                return Err(
+                    Error::conflict("enrol.prerequisites_missing").with_param("courses", courses.join(","))
+                );
+            }
         }
         self.throttle(instance, *account).await?;
         let group = if stored.has_key {

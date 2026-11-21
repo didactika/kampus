@@ -199,8 +199,7 @@ impl Progress {
             self.check_criterion(&found, criterion).await?;
         }
         let mut tx = self.db.begin().await?;
-        let mut graph = self.required_courses_in(&mut tx).await?;
-        graph.remove(&course.as_uuid());
+        let mut graph = self.requirement_graph_in(&mut tx, Some(course), None).await?;
         for criterion in &criteria.criteria {
             if let Criterion::Course { course: other } = criterion {
                 if Self::requires(&graph, other.as_uuid(), course.as_uuid()) {

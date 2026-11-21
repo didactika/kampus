@@ -34,7 +34,7 @@
 
 //! The events progress publishes: the state of a person on a course module changed, the rules of a course
 //! module changed, a teacher decided or removed a state, a course was completed or its completion revoked,
-//! what a course requires changed, and someone of a role approved a person.
+//! what a course requires or requires first changed, and someone of a role approved a person.
 
 use kampus_module::EventDeclaration;
 
@@ -58,6 +58,9 @@ pub const CRITERIA_CHANGED: &str = "progress.criteria_changed";
 
 /// Someone of a role approved a person for a criterion.
 pub const APPROVED: &str = "progress.approved";
+
+/// The courses a course requires first changed.
+pub const PREREQUISITES_CHANGED: &str = "progress.prerequisites_changed";
 
 /// The events of this module.
 pub const EVENTS: &[EventDeclaration] = &[
@@ -116,5 +119,13 @@ pub const EVENTS: &[EventDeclaration] = &[
         fields: &["course", "criterion", "account"],
         audited: true,
         personal_fields: &["account"],
+    },
+    EventDeclaration {
+        code: PREREQUISITES_CHANGED,
+        version: 1,
+        summary: "The courses a course requires first changed",
+        fields: &["course"],
+        audited: true,
+        personal_fields: &[],
     },
 ];
