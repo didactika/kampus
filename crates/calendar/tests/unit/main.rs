@@ -40,4 +40,5 @@
     reason = "a failing test stops on the first error"
 )]
 
+mod ical;
 mod recurrence;

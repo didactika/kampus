@@ -18,14 +18,20 @@ paths:
   /api/v1/calendar/entries/{entry_id}/occurrences/{occurrence_at}:
     put: { summary: 'Cancel or change one occurrence of a recurring entry, named by when its rule starts it', responses: { '204': { description: Set }, '422': { description: 'Not one of its occurrences' } } }
     delete: { summary: 'Take back the change of one occurrence', responses: { '204': { description: Restored } } }
-  /api/v1/calendar/scopes/{scope_id}/calendar-subscriptions:
-    post: { summary: 'Subscribe to an external calendar (RN-159)', responses: { '201': { description: Subscribed } } }
-  /api/v1/calendar/calendar-subscriptions/{subscription_id}/refresh:
-    post: { summary: Queue a refresh, responses: { '202': { description: Queued } } }
-  /api/v1/calendar/calendar-feeds:
-    post: { summary: 'Create a personal feed token; shown once (RN-161)', responses: { '201': { description: Token and feed URL } } }
-  /api/v1/calendar/calendar-feeds/{feed_id}:
-    delete: { summary: Revoke a feed token, responses: { '204': { description: Revoked } } }
+  /api/v1/calendar/scopes/{scope_id}/subscriptions:
+    get: { summary: 'The calendars a scope subscribes to (calendar.manage)', responses: { '200': { description: Subscriptions } } }
+    post: { summary: 'Subscribe a scope to a calendar of another system, over http or https at a public address (RN-159)', responses: { '201': { description: Subscribed }, '422': { description: 'An address, a title or a refresh that does not fit' } } }
+  /api/v1/calendar/subscriptions/{subscription_id}:
+    delete: { summary: 'Remove a subscription with its events', responses: { '204': { description: Removed } } }
+  /api/v1/calendar/subscriptions/{subscription_id}/refresh:
+    post: { summary: 'Read the calendar again now, with how many events were added, changed and removed', responses: { '200': { description: Read } } }
+  /api/v1/calendar/feeds:
+    get: { summary: 'The personal feeds of the caller', responses: { '200': { description: Feeds } } }
+    post: { summary: 'Make a personal feed; its secret address is shown once (RN-161)', responses: { '201': { description: 'The feed, its secret and its address' } } }
+  /api/v1/calendar/feeds/{feed_id}:
+    delete: { summary: 'Revoke a personal feed', responses: { '204': { description: Revoked } } }
+  /api/v1/calendar/feed/{secret}:
+    get: { summary: 'The calendar of a feed, as iCalendar, for the application that holds its secret address', responses: { '200': { description: 'text/calendar' }, '404': { description: 'Unknown or revoked' } } }
 components:
   parameters:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }

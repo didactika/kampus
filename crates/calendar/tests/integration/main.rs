@@ -41,5 +41,6 @@
 )]
 
 mod entries;
+mod feeds;
 mod recurrence;
 mod world;

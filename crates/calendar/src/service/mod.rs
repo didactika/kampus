@@ -35,7 +35,9 @@
 //! The service API of calendar, one file per area: the entries people create, and what a calendar shows.
 
 pub mod entry;
+pub mod feed;
 pub mod read;
+pub mod subscription;
 
 use kampus_access::{Actor, PrincipalId};
 
