@@ -9,12 +9,20 @@ entity rule {
   id <<PK>>
   course_module_id <<FK>>
   kind
+  type_rule_code
   created_at
 }
 entity signal {
   course_module_id <<FK>>
   account_id <<FK>>
   kind
+  at
+}
+entity type_signal {
+  course_module_id <<FK>>
+  account_id <<FK>>
+  code
+  met
   at
 }
 entity pending {

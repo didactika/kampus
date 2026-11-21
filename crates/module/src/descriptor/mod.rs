@@ -44,6 +44,7 @@ mod job;
 mod notification;
 mod preference;
 mod privacy;
+mod progress;
 mod rule;
 mod setting;
 mod value;
@@ -64,6 +65,7 @@ pub use job::{JobDeclaration, JobFuture, JobRun, ScheduleDeclaration};
 pub use notification::NotificationTypeDeclaration;
 pub use preference::PreferenceDeclaration;
 pub use privacy::{PrivacyFuture, PrivacyHandlerDeclaration, PrivacyRun};
+pub use progress::ProgressRuleDeclaration;
 pub use rule::{RuleActionDeclaration, RuleActionRun, RuleParameter};
 pub use setting::SettingDeclaration;
 pub use value::ValueKind;
@@ -122,6 +124,8 @@ pub struct Module {
     pub privacy_handlers: &'static [PrivacyHandlerDeclaration],
     /// The kinds of access condition it provides, from `src/settings/conditions.rs`.
     pub condition_kinds: &'static [ConditionKindDeclaration],
+    /// The rules of progress its activity types offer, from `src/settings/activities.rs`.
+    pub progress_rules: &'static [ProgressRuleDeclaration],
     /// The events it publishes, from `src/events/mod.rs`.
     pub events: &'static [EventDeclaration],
     /// Its reactions to events, from `src/observers/mod.rs`.

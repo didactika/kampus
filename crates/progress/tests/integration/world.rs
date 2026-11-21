@@ -53,6 +53,20 @@ const PASSWORD: &str = "a long and quiet river";
 /// The modules whose types these tests use.
 static MODULES: &[&kampus_module::Module] = &[&kampus_activities::MODULE];
 
+/// A module whose rule of progress applies to pages, for the tests of rules of types.
+pub(crate) static READING: kampus_module::Module = kampus_module::Module {
+    name: "reading",
+    progress_rules: &[kampus_module::ProgressRuleDeclaration {
+        code: "reading.to_the_end",
+        activity_type: "activities.page",
+        summary: "Read the page to its end",
+    }],
+    ..kampus_progress::MODULE
+};
+
+/// The modules whose types declare rules of progress in these tests.
+static RULE_MODULES: &[&kampus_module::Module] = &[&READING];
+
 /// A campus with a course, its administrator and two learners.
 pub(crate) struct World {
     /// The service.
@@ -148,7 +162,8 @@ pub(crate) async fn world() -> World {
         courses.clone(),
         activities.clone(),
         records.clone(),
-    );
+    )
+    .with_modules(RULE_MODULES);
     let platform = access.create_platform().await.unwrap();
     let campus = access.create_scope(platform, ScopeKind::Campus).await.unwrap();
     access.install_campus_roles(campus).await.unwrap();

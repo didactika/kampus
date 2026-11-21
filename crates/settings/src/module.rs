@@ -63,6 +63,7 @@ pub const MODULE: Module = Module {
     notification_types: &[],
     privacy_handlers: &[],
     condition_kinds: &[],
+    progress_rules: &[],
     events: crate::events::EVENTS,
     listeners: &[],
     jobs: &[],

@@ -295,3 +295,67 @@ async fn changing_the_rules_re_evaluates_the_people_who_did_something() {
     assert_eq!(w.progress.recalculate().await.unwrap(), 0);
     w.drop().await;
 }
+
+#[tokio::test]
+async fn a_rule_of_the_type_is_required_and_reported_by_its_module() {
+    let w = world().await;
+    let page = w.page("Long read").await;
+    let (none, offered) = w.progress.type_rules(&w.admin, page.id).await.unwrap();
+    assert_eq!(none.len(), 0);
+    assert_eq!(offered.len(), 1);
+    assert_eq!(
+        w.progress
+            .define_type_rules(&w.admin, page.id, vec!["nobody.knows".to_owned()])
+            .await
+            .unwrap_err()
+            .code(),
+        "progress.type_rule_unknown"
+    );
+    assert_eq!(
+        w.progress
+            .define_type_rules(&w.lea, page.id, vec!["reading.to_the_end".to_owned()])
+            .await
+            .unwrap_err()
+            .kind(),
+        ErrorKind::PermissionDenied
+    );
+    w.progress
+        .define_type_rules(&w.admin, page.id, vec!["reading.to_the_end".to_owned()])
+        .await
+        .unwrap();
+    w.progress
+        .define_rules(&w.admin, page.id, vec![RuleKind::View])
+        .await
+        .unwrap();
+    assert_eq!(
+        w.progress.type_rules(&w.admin, page.id).await.unwrap().0,
+        ["reading.to_the_end"],
+        "the rules of the course module do not touch those of its type"
+    );
+    let lea = who(&w.lea);
+    assert_eq!(
+        w.progress.view(&w.lea, page.id).await.unwrap().state,
+        State::InProgress
+    );
+    let halfway = w
+        .progress
+        .report_type_rule(page.id, lea, "reading.to_the_end", false)
+        .await
+        .unwrap();
+    assert_eq!(halfway.state, State::InProgress);
+    let read = w
+        .progress
+        .report_type_rule(page.id, lea, "reading.to_the_end", true)
+        .await
+        .unwrap();
+    assert_eq!(read.state, State::Done);
+    assert_eq!(
+        w.progress
+            .report_type_rule(page.id, lea, "nobody.knows", true)
+            .await
+            .unwrap_err()
+            .code(),
+        "progress.type_rule_unknown"
+    );
+    w.drop().await;
+}

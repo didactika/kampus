@@ -76,6 +76,8 @@ pub struct Progress {
     activities: Activities,
     /// Records, for the grades that some rules depend on.
     records: Records,
+    /// The modules of the build, whose activity types may declare rules of their own.
+    modules: &'static [&'static kampus_module::Module],
 }
 
 impl std::fmt::Debug for Progress {
@@ -102,7 +104,14 @@ impl Progress {
             courses,
             activities,
             records,
+            modules: &[],
         }
+    }
+
+    /// The same with the modules of the build, whose activity types may declare rules of their own.
+    #[must_use]
+    pub fn with_modules(self, modules: &'static [&'static kampus_module::Module]) -> Self {
+        Self { modules, ..self }
     }
 
     /// The quoted name of a table of this module.

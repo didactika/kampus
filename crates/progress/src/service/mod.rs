@@ -41,6 +41,7 @@ pub mod prerequisite;
 pub mod read;
 pub mod recalc;
 pub mod rule;
+pub mod type_rule;
 
 use kampus_access::{Actor, PrincipalId};
 use kampus_activities::ModuleId;
@@ -79,7 +80,7 @@ impl Progress {
     /// The rules of a course module, whoever asks.
     pub(crate) async fn rules_in(&self, conn: &mut PgConnection, module: ModuleId) -> Result<Vec<RuleKind>> {
         let codes: Vec<String> = sqlx::query_scalar(sql(format!(
-            "select kind from {} where course_module_id = $1 order by kind",
+            "select kind from {} where course_module_id = $1 and kind <> 'type' order by kind",
             self.table("rule")
         )))
         .bind(module.as_uuid())
@@ -106,12 +107,27 @@ impl Progress {
         .await
         .map_err(kampus_db::classify)?;
         let grade = self.records.activity_grade(module, account).await?;
+        let typed = sqlx::query(sql(format!(
+            "select r.type_rule_code as code, coalesce(s.met, false) as met, s.code is not null as said
+             from {} r left join {} s on s.course_module_id = r.course_module_id and s.code = r.type_rule_code
+                 and s.account_id = $2
+             where r.course_module_id = $1 and r.kind = 'type'",
+            self.table("rule"),
+            self.table("type_signal")
+        )))
+        .bind(module.as_uuid())
+        .bind(account.as_uuid())
+        .fetch_all(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
         Ok(Facts {
             viewed: kinds.iter().any(|k| k == "view"),
             submitted: kinds.iter().any(|k| k == "submit"),
             marked: kinds.iter().any(|k| k == "manual"),
             grade: grade.and_then(|g| g.value),
             pass_grade: grade.and_then(|g| g.pass_grade),
+            type_rules: (!typed.is_empty()).then(|| typed.iter().all(|r| r.get::<bool, _>("met"))),
+            type_signal: typed.iter().any(|r| r.get::<bool, _>("said")),
         })
     }
 
