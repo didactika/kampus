@@ -530,6 +530,15 @@ impl Activities {
             .collect())
     }
 
+    /// The type of a course module, whoever asks, in the bin or not.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown course module.
+    pub async fn type_of(&self, id: ModuleId) -> Result<String> {
+        Ok(self.stored(id).await?.type_code)
+    }
+
     /// The scope of a course module, for checks of modules that add to it.
     ///
     /// # Errors

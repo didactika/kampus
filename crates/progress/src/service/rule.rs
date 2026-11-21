@@ -96,7 +96,7 @@ impl Progress {
         wanted.dedup();
         let mut tx = self.db.begin().await?;
         sqlx::query(sql(format!(
-            "delete from {} where course_module_id = $1",
+            "delete from {} where course_module_id = $1 and kind <> 'type'",
             self.table("rule")
         )))
         .bind(module.as_uuid())

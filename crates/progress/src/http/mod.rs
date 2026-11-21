@@ -60,6 +60,10 @@ pub fn routes(context: &ServiceContext) -> Router {
     };
     Router::new()
         .route("/course-modules/{id}/rules", get(rules).put(define_rules))
+        .route(
+            "/course-modules/{id}/type-rules",
+            get(type_rules).put(define_type_rules),
+        )
         .route("/course-modules/{id}/views", post(view))
         .route("/course-modules/{id}/mark", put(mark).delete(unmark))
         .route("/course-modules/{id}/states/{account}", get(state_of))
@@ -399,6 +403,45 @@ async fn set_prerequisites(
         shared
             .progress()?
             .set_prerequisites(&caller.actor, id(&course)?, body.requires)
+            .await?,
+    )
+    .into_response())
+}
+
+/// The rules of its type a course module requires.
+#[derive(Debug, Deserialize)]
+struct TypeRules {
+    /// Their codes.
+    rules: Vec<String>,
+}
+
+/// The rules of its type a course module requires, and those its type offers.
+async fn type_rules(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(module): Path<String>,
+) -> ApiResult<Response> {
+    let (required, offered) = shared.progress()?.type_rules(&caller.actor, id(&module)?).await?;
+    let offered: Vec<serde_json::Value> = offered
+        .iter()
+        .map(|r| serde_json::json!({ "code": r.code, "summary": r.summary }))
+        .collect();
+    Ok(Json(serde_json::json!({ "required": required, "offered": offered })).into_response())
+}
+
+/// Replaces the rules of its type a course module requires.
+async fn define_type_rules(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(module): Path<String>,
+    Body(body): Body<TypeRules>,
+) -> ApiResult<Response> {
+    let module: ModuleId = id(&module)?;
+    let actor = shared.acting(&caller, MANAGE, module).await?;
+    Ok(Json(
+        shared
+            .progress()?
+            .define_type_rules(actor, module, body.rules)
             .await?,
     )
     .into_response())

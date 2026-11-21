@@ -234,7 +234,8 @@ impl Learning {
             courses.clone(),
             activities.clone(),
             records.clone(),
-        );
+        )
+        .with_modules(MODULES);
         let calendar =
             kampus_calendar::Calendar::new(db.clone(), access.clone(), courses.clone(), activities.clone());
         Self {

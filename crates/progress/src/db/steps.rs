@@ -264,6 +264,41 @@ pub const STEPS: &[Step] = &[
             ..Table::EMPTY
         })],
     },
+    Step {
+        sequence: 5,
+        name: "rules of progress declared by activity types",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::AddColumn {
+                table: "rule",
+                column: Column::new("type_rule_code", Type::Text).nullable(),
+            },
+            Change::Postgres {
+                sql: "alter table {schema}.\"rule\" drop constraint \"rule_kind_check\";
+alter table {schema}.\"rule\" add constraint \"rule_kind_check\" check (\"kind\" in ('manual', 'view', 'submit', 'grade', 'pass', 'type'));
+alter table {schema}.\"rule\" add constraint \"rule_type_code_check\" check ((\"kind\" = 'type') = (\"type_rule_code\" is not null));
+alter table {schema}.\"rule\" drop constraint \"rule_course_module_id_kind_key\";
+create unique index \"rule_course_module_id_kind_code_key\" on {schema}.\"rule\" (\"course_module_id\", \"kind\", \"type_rule_code\") nulls not distinct;",
+                reason: "the neutral schema cannot replace the list of values of a check, tie two columns in one, \
+                         or make a unique key treat empty codes as equal",
+            },
+            Change::CreateTable(Table {
+                name: "type_signal",
+                columns: &[
+                    Column::new("course_module_id", Type::Uuid),
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("code", Type::Text),
+                    Column::new("met", Type::Boolean),
+                    Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["course_module_id", "account_id", "code"],
+                foreign_keys: &module_and_person(),
+                without_natural_key: Some("what the module of a type said about a person on a rule of its own"),
+                ..Table::EMPTY
+            }),
+        ],
+    },
 ];
 
 /// The kinds of a criterion of a course.

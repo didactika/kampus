@@ -38,7 +38,8 @@
 //! A course module with no rules asks for nothing, so its state is `not_started` until someone sets it with
 //! an exception. With rules, the person is `in_progress` once any of them is met or any signal exists, and
 //! done when all are met. A pass rule decides how it ends: a grade at or above the passing grade is
-//! `done_passed` and a grade below it is `done_failed`, whatever else is left to do.
+//! `done_passed` and a grade below it is `done_failed`, whatever else is left to do. A rule
+//! of the type of the course module counts like the others, as the module of the type reports it.
 
 use rust_decimal::Decimal;
 
@@ -46,6 +47,10 @@ use crate::{RuleKind, State};
 
 /// What a person has done on a course module.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[allow(
+    clippy::struct_excessive_bools,
+    reason = "each flag is one independent thing a person did, read together by the rules"
+)]
 pub struct Facts {
     /// They viewed it.
     pub viewed: bool,
@@ -57,6 +62,11 @@ pub struct Facts {
     pub grade: Option<Decimal>,
     /// The grade that passes; without one, any grade passes.
     pub pass_grade: Option<Decimal>,
+    /// The rules of its type the course module requires: none when it requires none, and otherwise whether
+    /// the person meets every one of them.
+    pub type_rules: Option<bool>,
+    /// The module of the type said something about the person on one of its rules.
+    pub type_signal: bool,
 }
 
 /// Whether a rule is met by the facts.
@@ -79,8 +89,9 @@ fn passed(facts: &Facts) -> Option<bool> {
 /// The state of a person from the rules of a course module and what they have done.
 #[must_use]
 pub fn evaluate(rules: &[RuleKind], facts: &Facts) -> State {
-    let anything = facts.viewed || facts.submitted || facts.marked || facts.grade.is_some();
-    if rules.is_empty() {
+    let anything =
+        facts.viewed || facts.submitted || facts.marked || facts.grade.is_some() || facts.type_signal;
+    if rules.is_empty() && facts.type_rules.is_none() {
         return if anything {
             State::InProgress
         } else {
@@ -90,7 +101,7 @@ pub fn evaluate(rules: &[RuleKind], facts: &Facts) -> State {
     if rules.contains(&RuleKind::Pass) && passed(facts) == Some(false) {
         return State::DoneFailed;
     }
-    if rules.iter().all(|rule| met(*rule, facts)) {
+    if rules.iter().all(|rule| met(*rule, facts)) && facts.type_rules != Some(false) {
         return if rules.contains(&RuleKind::Pass) {
             State::DonePassed
         } else {

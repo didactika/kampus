@@ -91,9 +91,11 @@ impl Progress {
             let mut people: HashSet<PrincipalId> = HashSet::new();
             let known: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
                 "select account_id from {} where course_module_id = $1
+                 union select account_id from {} where course_module_id = $1
                  union select account_id from {} where course_module_id = $1",
                 self.table("signal"),
-                self.table("activity_state")
+                self.table("activity_state"),
+                self.table("type_signal")
             )))
             .bind(module.as_uuid())
             .fetch_all(&mut *tx)

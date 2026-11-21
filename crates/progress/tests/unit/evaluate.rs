@@ -145,3 +145,34 @@ fn a_state_without_its_outcome_is_just_done() {
     assert_eq!(State::DoneFailed.without_outcome(), State::Done);
     assert_eq!(State::InProgress.without_outcome(), State::InProgress);
 }
+
+#[test]
+fn a_rule_of_the_type_counts_like_the_others() {
+    let waiting = Facts {
+        type_rules: Some(false),
+        ..facts()
+    };
+    assert_eq!(
+        evaluate(&[], &waiting),
+        State::NotStarted,
+        "only rules of the type"
+    );
+    let said = Facts {
+        type_signal: true,
+        ..waiting
+    };
+    assert_eq!(evaluate(&[], &said), State::InProgress);
+    let met = Facts {
+        type_rules: Some(true),
+        type_signal: true,
+        ..facts()
+    };
+    assert_eq!(evaluate(&[], &met), State::Done);
+    assert_eq!(
+        evaluate(&[RuleKind::View], &met),
+        State::InProgress,
+        "the other rules still count"
+    );
+    let viewed = Facts { viewed: true, ..met };
+    assert_eq!(evaluate(&[RuleKind::View], &viewed), State::Done);
+}

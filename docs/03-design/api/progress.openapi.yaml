@@ -25,6 +25,9 @@ paths:
     get: { summary: The states of a person in a course as the caller may see them, responses: { '200': { description: States } } }
   /api/v1/progress/courses/{course_id}/my-progress:
     get: { summary: The states of the caller in a course, responses: { '200': { description: States } } }
+  /api/v1/progress/course-modules/{course_module_id}/type-rules:
+    get: { summary: 'The rules of its type a course module requires, and those its type offers', responses: { '200': { description: Rules } } }
+    put: { summary: 'Replace the rules of its type a course module requires (progress.manage)', responses: { '200': { description: Replaced }, '422': { description: 'A rule its type does not declare' } } }
   /api/v1/progress/courses/{course_id}/criteria:
     get: { summary: 'What the course requires, with how the criteria combine and whether completion is final', responses: { '200': { description: Criteria } } }
     put: { summary: 'Replace the criteria (RN-120, progress.manage); a criterion that stays keeps its approvals, and everyone followed is evaluated again', responses: { '200': { description: Replaced }, '422': { description: 'A criterion that does not fit the course, or a course that would require itself' } } }

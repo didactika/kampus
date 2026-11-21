@@ -50,8 +50,8 @@ pub use descriptor::{
 };
 pub use descriptor::{
     Argument, Command, CommandContext, CommandFuture, Event, EventDeclaration, EventRun, JobDeclaration,
-    JobFuture, JobRun, ListenerDeclaration, Module, PreferenceDeclaration, ScheduleDeclaration,
-    SettingDeclaration, ValueKind,
+    JobFuture, JobRun, ListenerDeclaration, Module, PreferenceDeclaration, ProgressRuleDeclaration,
+    ScheduleDeclaration, SettingDeclaration, ValueKind,
 };
 pub use descriptor::{
     FieldKindDeclaration, FlagDeclaration, MenuKindDeclaration, PageKindDeclaration, TermDeclaration,
