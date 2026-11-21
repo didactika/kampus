@@ -28,6 +28,8 @@ PostgreSQL schema `notify`, owned by `kampus-notify`, following DEC-014, DEC-021
 | `message_deletion` | `message_id` FK (`CASCADE`), `account_id` FK, `at` | PK (`message_id`, `account_id`); a job purges messages deleted by every member (RN-154) |
 | `block` | `account_id` FK (`CASCADE`), `blocked_id` FK (`CASCADE`) | PK (`account_id`, `blocked_id`) |
 
+The first part of notify (step 1) creates `notification_type` (code, module, summary, `channels`, `required`, `retired_at`), `notification` (with a `dedupe` key so a listener that runs twice for one event notifies once: `UNIQUE` (`recipient_id`, `type_code`, `dedupe`)) and `preference` (PK `account_id`, `type_code`, `channel`); the inbox is the only channel. Channels, campus defaults, templates, deliveries, conversations, messages and blocks arrive in later parts. Types are declared by modules (`Module.notification_types`) and created by listeners after the change commits; a grade is announced only when the person may see it, decided by the records visibility service.
+
 ## Anti-patterns avoided (DEC-014)
 
 | Avoided | How |

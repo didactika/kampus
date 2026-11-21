@@ -44,6 +44,7 @@ pub mod model;
 pub mod module;
 pub mod permissions;
 pub mod service;
+pub mod settings;
 pub mod support;
 
 use kampus_access::Access;

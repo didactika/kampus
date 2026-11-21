@@ -2143,6 +2143,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "kampus-notify"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "kampus-access",
+ "kampus-activities",
+ "kampus-common",
+ "kampus-courses",
+ "kampus-customise",
+ "kampus-db",
+ "kampus-events",
+ "kampus-files",
+ "kampus-identity",
+ "kampus-module",
+ "kampus-progress",
+ "kampus-records",
+ "kampus-settings",
+ "kampus-storage",
+ "kampus-storage-opendal",
+ "kampus-tasks",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tempfile",
+ "time",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "kampus-progress"
 version = "0.1.0"
 dependencies = [
@@ -2243,6 +2274,7 @@ dependencies = [
  "kampus-files",
  "kampus-identity",
  "kampus-module",
+ "kampus-notify",
  "kampus-progress",
  "kampus-records",
  "kampus-scan",
