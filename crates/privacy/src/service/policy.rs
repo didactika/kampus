@@ -50,7 +50,13 @@ pub const HANDLERS: &[PrivacyHandlerDeclaration] = &[PrivacyHandlerDeclaration {
     code: "privacy.acceptances",
     purpose: "Which version of each policy the person accepted, and when",
     export,
+    erase: keep,
 }];
+
+/// Keeps the acceptances: they show what the person agreed to, and point to the tombstone of the account.
+fn keep(_run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
+    Box::pin(async move { Ok(json!({ "kept": "proof of acceptance" })) })
+}
 
 /// Exports the acceptances of the account of a request.
 fn export(run: PrivacyRun<'_>) -> PrivacyFuture<'_> {

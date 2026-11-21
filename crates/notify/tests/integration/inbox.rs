@@ -200,3 +200,37 @@ async fn a_person_turns_types_off_except_the_required_ones() {
     assert_eq!(unknown.kind(), ErrorKind::NotFound);
     w.drop().await;
 }
+
+#[tokio::test]
+async fn erasing_the_data_of_a_person_deletes_only_their_notifications() {
+    let w = world().await;
+    w.notify
+        .notify("records.grade_posted", who(&w.lea), json!({ "n": 1 }), None)
+        .await
+        .unwrap();
+    w.notify
+        .notify("records.grade_posted", who(&w.max), json!({ "n": 1 }), None)
+        .await
+        .unwrap();
+    let report = w.notify.erase_personal_data(who(&w.lea)).await.unwrap();
+    assert_eq!(report["deleted"]["notification"], 1);
+    assert_eq!(
+        w.notify
+            .inbox(&w.lea, false, 10, None)
+            .await
+            .unwrap()
+            .notifications
+            .len(),
+        0
+    );
+    assert_eq!(
+        w.notify
+            .inbox(&w.max, false, 10, None)
+            .await
+            .unwrap()
+            .notifications
+            .len(),
+        1
+    );
+    w.drop().await;
+}

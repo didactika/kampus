@@ -46,7 +46,18 @@ pub const HANDLERS: &[PrivacyHandlerDeclaration] = &[PrivacyHandlerDeclaration {
     code: "calendar.entries",
     purpose: "Personal calendar entries",
     export,
+    erase,
 }];
+
+/// Erases the data of the account of a request.
+fn erase(run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
+    Box::pin(async move {
+        run.services
+            .service::<Calendar>()?
+            .erase_personal_data(PrincipalId::from_uuid(run.account))
+            .await
+    })
+}
 
 /// Exports the data of the account of a request.
 fn export(run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
@@ -59,6 +70,24 @@ fn export(run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
 }
 
 impl Calendar {
+    /// Deletes the personal entries of an account; returns how many.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn erase_personal_data(&self, account: PrincipalId) -> Result<Value> {
+        let deleted = sqlx::query(sql(format!(
+            "delete from {} where owner_id = $1",
+            self.table("entry")
+        )))
+        .bind(account.as_uuid())
+        .execute(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?
+        .rows_affected();
+        Ok(json!({ "deleted": { "entry": deleted } }))
+    }
+
     /// Everything this module keeps about an account, as JSON by table.
     ///
     /// # Errors

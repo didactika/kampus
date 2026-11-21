@@ -32,7 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The events privacy publishes: a request was made, and a request was completed.
+//! The events privacy publishes: requests made, decided and completed, accounts erased, policies published and
+//! accepted, and legal holds placed and released.
 
 use kampus_module::EventDeclaration;
 
@@ -47,6 +48,18 @@ pub const POLICY_PUBLISHED: &str = "privacy.policy_published";
 
 /// A person accepted a version of a policy.
 pub const POLICY_ACCEPTED: &str = "privacy.policy_accepted";
+
+/// A deletion was approved or rejected.
+pub const REQUEST_DECIDED: &str = "privacy.request_decided";
+
+/// The personal data of an account was erased and the account left as a tombstone.
+pub const ACCOUNT_ERASED: &str = "privacy.account_erased";
+
+/// A legal hold was placed.
+pub const HOLD_PLACED: &str = "privacy.hold_placed";
+
+/// A legal hold was released.
+pub const HOLD_RELEASED: &str = "privacy.hold_released";
 
 /// The events of this module.
 pub const EVENTS: &[EventDeclaration] = &[
@@ -81,5 +94,37 @@ pub const EVENTS: &[EventDeclaration] = &[
         fields: &["policy", "version", "account"],
         audited: true,
         personal_fields: &["account"],
+    },
+    EventDeclaration {
+        code: REQUEST_DECIDED,
+        version: 1,
+        summary: "A deletion of personal data was approved or rejected",
+        fields: &["request", "account", "approved"],
+        audited: true,
+        personal_fields: &["account"],
+    },
+    EventDeclaration {
+        code: ACCOUNT_ERASED,
+        version: 1,
+        summary: "The personal data of an account was erased",
+        fields: &["request", "account"],
+        audited: true,
+        personal_fields: &["account"],
+    },
+    EventDeclaration {
+        code: HOLD_PLACED,
+        version: 1,
+        summary: "A legal hold was placed",
+        fields: &["hold", "account", "campus"],
+        audited: true,
+        personal_fields: &["account"],
+    },
+    EventDeclaration {
+        code: HOLD_RELEASED,
+        version: 1,
+        summary: "A legal hold was released",
+        fields: &["hold"],
+        audited: true,
+        personal_fields: &[],
     },
 ];

@@ -51,7 +51,7 @@ use kampus_access::Access;
 use kampus_db::Database;
 use kampus_module::Module as Declared;
 
-pub use model::{Item, Policy, PolicyId, Request, RequestId};
+pub use model::{Hold, HoldId, Item, Policy, PolicyId, Request, RequestId};
 pub use module::MODULE;
 
 /// How long an exported package stays available.
@@ -94,6 +94,11 @@ impl Privacy {
     #[must_use]
     pub fn with_modules(self, modules: &'static [&'static Declared]) -> Self {
         Self { modules, ..self }
+    }
+
+    /// The quoted name of the principals of access, to find the campus of an account.
+    fn principals(&self) -> String {
+        format!("{}.\"principal\"", self.db.prefix().schema("access"))
     }
 
     /// The quoted name of a table of this module.

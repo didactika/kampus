@@ -69,6 +69,8 @@ pub(crate) struct World {
     pub(crate) progress: Progress,
     /// Privacy.
     pub(crate) privacy: Privacy,
+    /// Identity, whose accounts become tombstones.
+    pub(crate) identity: Identity,
     /// Courses, to find the sections of the course.
     pub(crate) courses: Courses,
     /// Activities, to place the activities that give grades.
@@ -243,6 +245,7 @@ pub(crate) async fn world() -> World {
         records,
         progress,
         privacy,
+        identity,
         courses,
         activities,
         db,

@@ -79,7 +79,7 @@ pub struct Item {
     pub error: Option<String>,
 }
 
-/// A request for the personal data of an account.
+/// A request to export or to delete the personal data of an account.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct Request {
     /// The request.
@@ -88,7 +88,7 @@ pub struct Request {
     pub account: PrincipalId,
     /// What it asks for.
     pub kind: String,
-    /// `pending`, `completed`, `failed` or `expired`.
+    /// `pending`, `awaiting_approval`, `held`, `completed`, `failed`, `expired` or `rejected`.
     pub state: String,
     /// When it was made.
     pub created_at: Timestamp,
@@ -98,6 +98,32 @@ pub struct Request {
     pub completed_at: Option<Timestamp>,
     /// When the data stops being available.
     pub expires_at: Option<Timestamp>,
+    /// Why a deletion was asked for.
+    pub reason: Option<String>,
+    /// Who approved a deletion.
+    pub approved_by: Option<PrincipalId>,
     /// Its parts.
     pub items: Vec<Item>,
+}
+
+kampus_common::define_id! {
+    /// Identifies a legal hold.
+    pub struct HoldId;
+}
+
+/// A suspension of deletion for an account, or for a whole campus.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Hold {
+    /// The hold.
+    pub id: HoldId,
+    /// The account it protects; none for a hold on the whole campus.
+    pub account: Option<PrincipalId>,
+    /// Why deletion waits.
+    pub reason: String,
+    /// When it ends by itself, when it does.
+    pub until: Option<Timestamp>,
+    /// When it was placed.
+    pub created_at: Timestamp,
+    /// When it was released by hand.
+    pub released_at: Option<Timestamp>,
 }

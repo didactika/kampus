@@ -344,3 +344,34 @@ async fn the_calendar_of_a_course_shows_the_dates_of_its_activities_as_they_appl
     assert_eq!(june_first_week.len(), 1, "only what falls in the window");
     w.drop().await;
 }
+
+#[tokio::test]
+async fn erasing_the_data_of_a_person_deletes_their_personal_entries_only() {
+    let w = world().await;
+    let course = w
+        .calendar
+        .create_entry(
+            &w.admin,
+            Some(w.course.scope),
+            fields("Midterm", "2030-03-01T09:00:00Z", "2030-03-01T11:00:00Z"),
+        )
+        .await
+        .unwrap();
+    for (actor, title) in [(&w.lea, "Study"), (&w.max, "Sleep")] {
+        w.calendar
+            .create_entry(
+                actor,
+                None,
+                fields(title, "2030-05-01T18:00:00Z", "2030-05-01T20:00:00Z"),
+            )
+            .await
+            .unwrap();
+    }
+    let report = w.calendar.erase_personal_data(who(&w.lea)).await.unwrap();
+    assert_eq!(report["deleted"]["entry"], 1);
+    assert_eq!(
+        w.calendar.entry(&w.admin, course.id).await.unwrap().title,
+        "Midterm"
+    );
+    w.drop().await;
+}

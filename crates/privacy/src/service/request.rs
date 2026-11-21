@@ -45,7 +45,7 @@ use crate::permissions::REQUEST_MANAGE;
 use crate::{ANSWER_WITHIN, Item, Privacy, Request, RequestId, events, sql};
 
 /// The person behind an actor.
-fn person(actor: &Actor) -> Result<PrincipalId> {
+pub(crate) fn person(actor: &Actor) -> Result<PrincipalId> {
     match actor {
         Actor::Principal(p) | Actor::ViewAs(p, _) => Ok(*p),
         Actor::Visitor(_) => Err(Error::permission_denied("access.denied")),
@@ -67,17 +67,46 @@ fn request(row: &PgRow) -> Request {
         due_at: Timestamp::from_offset_date_time(row.get("due_at")),
         completed_at: stamp("completed_at"),
         expires_at: stamp("expires_at"),
+        reason: row.get("reason"),
+        approved_by: row
+            .get::<Option<uuid::Uuid>, _>("approved_by")
+            .map(PrincipalId::from_uuid),
         items: Vec::new(),
     }
 }
 
+/// What a request is opened with.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct Opening<'a> {
+    /// `export` or `deletion`.
+    pub kind: &'static str,
+    /// Where it starts: `pending` or `awaiting_approval`.
+    pub state: &'static str,
+    /// Why a deletion was asked for.
+    pub reason: Option<&'a str>,
+    /// Who approved it already.
+    pub approved_by: Option<PrincipalId>,
+}
+
+impl Opening<'_> {
+    /// An export, which needs no approval.
+    pub(crate) const fn export() -> Self {
+        Self {
+            kind: "export",
+            state: "pending",
+            reason: None,
+            approved_by: None,
+        }
+    }
+}
+
 /// The columns of a request.
-const COLUMNS: &str = "id, account_id, requester, kind, state, created_at, due_at, completed_at, expires_at";
+const COLUMNS: &str = "id, account_id, requester, kind, state, created_at, due_at, completed_at, expires_at, reason, approved_by";
 
 impl Privacy {
     /// Whether the actor may act on the requests about an account: it is their own, or the actor holds
     /// `privacy.request.manage` in the campus of the account.
-    async fn may_handle(&self, actor: &Actor, account: PrincipalId) -> Result<bool> {
+    pub(crate) async fn may_handle(&self, actor: &Actor, account: PrincipalId) -> Result<bool> {
         if person(actor)? == account {
             return Ok(true);
         }
@@ -93,20 +122,36 @@ impl Privacy {
     ///
     /// `permission_denied` for a request about someone else without the permission.
     pub async fn request_export(&self, actor: &Actor, account: PrincipalId) -> Result<Request> {
-        let by = person(actor)?;
         if !self.may_handle(actor, account).await? {
             return Err(Error::permission_denied("access.denied").with_param("permission", REQUEST_MANAGE));
         }
+        self.open_request(actor, account, Opening::export()).await
+    }
+
+    /// Opens a request of any kind: the request, one part per data category, the event and, when it can
+    /// start, the job that answers it.
+    pub(crate) async fn open_request(
+        &self,
+        actor: &Actor,
+        account: PrincipalId,
+        opening: Opening<'_>,
+    ) -> Result<Request> {
+        let by = person(actor)?;
         let id = RequestId::generate();
         let due = Timestamp::from_offset_date_time(time::OffsetDateTime::now_utc() + ANSWER_WITHIN);
         let mut tx = self.db.begin().await?;
         sqlx::query(sql(format!(
-            "insert into {} (id, account_id, requester, kind, due_at) values ($1, $2, $3, 'export', $4)",
+            "insert into {} (id, account_id, requester, kind, state, reason, approved_by, due_at)
+             values ($1, $2, $3, $4, $5, $6, $7, $8)",
             self.table("request")
         )))
         .bind(id.as_uuid())
         .bind(account.as_uuid())
         .bind(by.as_uuid())
+        .bind(opening.kind)
+        .bind(opening.state)
+        .bind(opening.reason)
+        .bind(opening.approved_by.map(|a| a.as_uuid()))
         .bind(due.as_offset_date_time())
         .execute(&mut *tx)
         .await
@@ -132,9 +177,11 @@ impl Privacy {
         kampus_events::Events::new(self.db.clone())
             .publish_in(&mut tx, event)
             .await?;
-        kampus_tasks::Tasks::new(self.db.clone())
-            .enqueue_in(&mut tx, "privacy.run", &json!({}), None)
-            .await?;
+        if opening.state == "pending" {
+            kampus_tasks::Tasks::new(self.db.clone())
+                .enqueue_in(&mut tx, "privacy.run", &json!({}), None)
+                .await?;
+        }
         tx.commit().await.map_err(kampus_db::classify)?;
         self.request(actor, id).await
     }
@@ -216,6 +263,9 @@ impl Privacy {
         .map_err(kampus_db::classify)?;
         if requester != Some(me.as_uuid()) {
             return Err(Error::not_found("privacy.request_not_found"));
+        }
+        if found.kind != "export" {
+            return Err(Error::conflict("privacy.no_package"));
         }
         match found.state.as_str() {
             "completed" => {}

@@ -46,7 +46,18 @@ pub const HANDLERS: &[PrivacyHandlerDeclaration] = &[PrivacyHandlerDeclaration {
     code: "notify.notifications",
     purpose: "Notifications and choices about them",
     export,
+    erase,
 }];
+
+/// Erases the data of the account of a request.
+fn erase(run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
+    Box::pin(async move {
+        run.services
+            .service::<Notify>()?
+            .erase_personal_data(PrincipalId::from_uuid(run.account))
+            .await
+    })
+}
 
 /// Exports the data of the account of a request.
 fn export(run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
@@ -59,6 +70,30 @@ fn export(run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
 }
 
 impl Notify {
+    /// Deletes the notifications and choices of an account; returns how many of each.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn erase_personal_data(&self, account: PrincipalId) -> Result<Value> {
+        let mut tx = self.db.begin().await?;
+        let mut report = serde_json::Map::new();
+        for (table, column) in [("notification", "recipient_id"), ("preference", "account_id")] {
+            let deleted = sqlx::query(sql(format!(
+                "delete from {} where \"{column}\" = $1",
+                self.table(table)
+            )))
+            .bind(account.as_uuid())
+            .execute(&mut *tx)
+            .await
+            .map_err(kampus_db::classify)?
+            .rows_affected();
+            report.insert(table.to_owned(), json!(deleted));
+        }
+        tx.commit().await.map_err(kampus_db::classify)?;
+        Ok(json!({ "deleted": report }))
+    }
+
     /// Everything this module keeps about an account, as JSON by table.
     ///
     /// # Errors

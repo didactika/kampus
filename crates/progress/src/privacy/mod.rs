@@ -46,7 +46,14 @@ pub const HANDLERS: &[PrivacyHandlerDeclaration] = &[PrivacyHandlerDeclaration {
     code: "progress.activity",
     purpose: "What the person has done on course modules and decisions about it",
     export,
+    erase: keep,
 }];
+
+/// Keeps the data: it is part of the academic record, which survives pointing to the tombstone of the
+/// account.
+fn keep(_run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
+    Box::pin(async move { Ok(json!({ "kept": "academic record" })) })
+}
 
 /// Exports the data of the account of a request.
 fn export(run: PrivacyRun<'_>) -> PrivacyFuture<'_> {

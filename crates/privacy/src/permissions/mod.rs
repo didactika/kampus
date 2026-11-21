@@ -44,6 +44,12 @@ pub use templates::TEMPLATES;
 /// Ask for the data of other people, and see and follow their requests.
 pub const REQUEST_MANAGE: &str = "privacy.request.manage";
 
+/// Approve or reject the deletion of personal data, and see the requests waiting.
+pub const REQUEST_APPROVE: &str = "privacy.request.approve";
+
+/// Place and release legal holds, which stop deletion.
+pub const HOLD_MANAGE: &str = "privacy.hold.manage";
+
 /// Publish new versions of the policies of the campus.
 pub const POLICY_MANAGE: &str = "privacy.policy.manage";
 
@@ -52,6 +58,18 @@ pub const PERMISSIONS: &[PermissionDeclaration] = &[
     PermissionDeclaration {
         code: REQUEST_MANAGE,
         kind: PermissionKind::Read,
+        risks: &[Risk::PersonalData],
+        lowest_kind: ScopeKind::Campus,
+    },
+    PermissionDeclaration {
+        code: REQUEST_APPROVE,
+        kind: PermissionKind::Write,
+        risks: &[Risk::DataLoss, Risk::PersonalData],
+        lowest_kind: ScopeKind::Campus,
+    },
+    PermissionDeclaration {
+        code: HOLD_MANAGE,
+        kind: PermissionKind::Write,
         risks: &[Risk::PersonalData],
         lowest_kind: ScopeKind::Campus,
     },

@@ -24,6 +24,7 @@ entity request {
   due_by
   created_at
   completed_at
+  decided_at
 }
 entity request_item {
   request_id <<FK>>
@@ -41,10 +42,12 @@ entity retention_rule {
 entity legal_hold {
   id <<PK>>
   account_id <<FK>>
-  scope_id <<FK>>
+  campus_id <<FK>>
   reason
   until
   created_by
+  created_at
+  released_at
 }
 entity policy {
   id <<PK>>

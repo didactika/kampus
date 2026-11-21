@@ -186,4 +186,56 @@ pub const STEPS: &[Step] = &[
             }),
         ],
     },
+    Step {
+        sequence: 3,
+        name: "deletion requests and legal holds",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::Postgres {
+                sql: "alter table {schema}.\"request\" drop constraint \"request_state_check\";
+alter table {schema}.\"request\" add constraint \"request_state_check\" check (\"state\" in ('pending', 'awaiting_approval', 'held', 'completed', 'failed', 'expired', 'rejected'));",
+                reason: "the neutral schema cannot replace the list of values of an existing check",
+            },
+            Change::AddColumn {
+                table: "request",
+                column: Column::new("reason", Type::Text).nullable(),
+            },
+            Change::AddColumn {
+                table: "request",
+                column: Column::new("approved_by", Type::Uuid).nullable(),
+            },
+            Change::AddColumn {
+                table: "request",
+                column: Column::new("decided_at", Type::Timestamptz).nullable(),
+            },
+            Change::CreateTable(Table {
+                name: "legal_hold",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("account_id", Type::Uuid).nullable(),
+                    Column::new("campus_id", Type::Uuid).nullable(),
+                    Column::new("reason", Type::Text),
+                    Column::new("until", Type::Timestamptz).nullable(),
+                    Column::new("created_by", Type::Uuid).nullable(),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                    Column::new("released_at", Type::Timestamptz).nullable(),
+                ],
+                primary_key: &["id"],
+                foreign_keys: &[
+                    ForeignKey {
+                        columns: &["account_id"],
+                        module: Some("identity"),
+                        table: "account",
+                        references: &["id"],
+                        on_delete: OnDelete::Cascade,
+                    },
+                    CAMPUS,
+                ],
+                checks: &[Check::ExactlyOne(&["account_id", "campus_id"])],
+                without_natural_key: Some("a hold is placed for a reason and may overlap with others"),
+                ..Table::EMPTY
+            }),
+        ],
+    },
 ];
