@@ -58,6 +58,10 @@ fn fields(title: &str, from: &str, to: &str) -> EntryFields {
         description: None,
         starts_at: at(from),
         ends_at: at(to),
+        time_zone: None,
+        all_day: false,
+        recurrence: None,
+        group: None,
     }
 }
 

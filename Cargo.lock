@@ -1929,6 +1929,7 @@ name = "kampus-calendar"
 version = "0.1.0"
 dependencies = [
  "axum",
+ "jiff 1.0.1",
  "kampus-access",
  "kampus-activities",
  "kampus-common",

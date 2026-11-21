@@ -15,8 +15,9 @@ paths:
     delete: { summary: Delete an entry, responses: { '204': { description: Deleted } } }
   /api/v1/calendar/courses/{course_id}/calendar:
     get: { summary: 'The entries of a course and the dates of its activities, with the exceptions of the caller applied (RN-157)', parameters: [{ name: from, in: query, required: true, schema: { type: string, format: date-time } }, { name: to, in: query, required: true, schema: { type: string, format: date-time } }], responses: { '200': { description: Items } } }
-  /api/v1/calendar/calendar-entries/{entry_id}/exceptions/{occurrence_at}:
-    put: { summary: Cancel or change one occurrence, responses: { '200': { description: Set } } }
+  /api/v1/calendar/entries/{entry_id}/occurrences/{occurrence_at}:
+    put: { summary: 'Cancel or change one occurrence of a recurring entry, named by when its rule starts it', responses: { '204': { description: Set }, '422': { description: 'Not one of its occurrences' } } }
+    delete: { summary: 'Take back the change of one occurrence', responses: { '204': { description: Restored } } }
   /api/v1/calendar/scopes/{scope_id}/calendar-subscriptions:
     post: { summary: 'Subscribe to an external calendar (RN-159)', responses: { '201': { description: Subscribed } } }
   /api/v1/calendar/calendar-subscriptions/{subscription_id}/refresh:

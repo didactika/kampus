@@ -54,45 +54,97 @@ const fn other(
 }
 
 /// The upgrade steps of this module.
-pub const STEPS: &[Step] = &[Step {
-    sequence: 1,
-    name: "entries",
-    revert: &[],
-    action: None,
-    changes: &[Change::CreateTable(Table {
-        name: "entry",
-        columns: &[
-            Column::new("id", Type::Uuid),
-            Column::new("scope_id", Type::Uuid).nullable(),
-            Column::new("owner_id", Type::Uuid).nullable(),
-            Column::new("author", Type::Uuid).nullable(),
-            Column::new("title", Type::Text),
-            Column::new("description", Type::Text).nullable(),
-            Column::new("starts_at", Type::Timestamptz),
-            Column::new("ends_at", Type::Timestamptz),
-            Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
-            Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
-        ],
-        primary_key: &["id"],
-        foreign_keys: &[
-            other(&["scope_id"], "access", "scope", OnDelete::Cascade),
-            other(&["owner_id"], "identity", "account", OnDelete::Cascade),
-        ],
-        checks: &[
-            Check::ExactlyOne(&["scope_id", "owner_id"]),
-            Check::After("ends_at", "starts_at"),
-        ],
-        indexes: &[
-            Index {
-                columns: &["scope_id", "starts_at"],
-                unique: false,
+pub const STEPS: &[Step] = &[
+    Step {
+        sequence: 1,
+        name: "entries",
+        revert: &[],
+        action: None,
+        changes: &[Change::CreateTable(Table {
+            name: "entry",
+            columns: &[
+                Column::new("id", Type::Uuid),
+                Column::new("scope_id", Type::Uuid).nullable(),
+                Column::new("owner_id", Type::Uuid).nullable(),
+                Column::new("author", Type::Uuid).nullable(),
+                Column::new("title", Type::Text),
+                Column::new("description", Type::Text).nullable(),
+                Column::new("starts_at", Type::Timestamptz),
+                Column::new("ends_at", Type::Timestamptz),
+                Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+                Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+            ],
+            primary_key: &["id"],
+            foreign_keys: &[
+                other(&["scope_id"], "access", "scope", OnDelete::Cascade),
+                other(&["owner_id"], "identity", "account", OnDelete::Cascade),
+            ],
+            checks: &[
+                Check::ExactlyOne(&["scope_id", "owner_id"]),
+                Check::After("ends_at", "starts_at"),
+            ],
+            indexes: &[
+                Index {
+                    columns: &["scope_id", "starts_at"],
+                    unique: false,
+                },
+                Index {
+                    columns: &["owner_id", "starts_at"],
+                    unique: false,
+                },
+            ],
+            without_natural_key: Some("an entry has no key of its own: people create as many as they need"),
+            ..Table::EMPTY
+        })],
+    },
+    Step {
+        sequence: 2,
+        name: "recurrence, time zones, all-day and group entries, and exceptions of occurrences",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::AddColumn {
+                table: "entry",
+                column: Column::new("time_zone", Type::Text).default(ColumnDefault::Text("UTC")),
             },
-            Index {
-                columns: &["owner_id", "starts_at"],
-                unique: false,
+            Change::AddColumn {
+                table: "entry",
+                column: Column::new("all_day", Type::Boolean).default(ColumnDefault::Bool(false)),
             },
+            Change::AddColumn {
+                table: "entry",
+                column: Column::new("recurrence", Type::Text).nullable(),
+            },
+            Change::AddColumn {
+                table: "entry",
+                column: Column::new("group_id", Type::Uuid).nullable(),
+            },
+            Change::AddForeignKey {
+                table: "entry",
+                foreign_key: other(&["group_id"], "courses", "group", OnDelete::Cascade),
+            },
+            Change::CreateTable(Table {
+                name: "entry_exception",
+                columns: &[
+                    Column::new("entry_id", Type::Uuid),
+                    Column::new("occurrence_at", Type::Timestamptz),
+                    Column::new("cancelled", Type::Boolean).default(ColumnDefault::Bool(false)),
+                    Column::new("title", Type::Text).nullable(),
+                    Column::new("starts_at", Type::Timestamptz).nullable(),
+                    Column::new("ends_at", Type::Timestamptz).nullable(),
+                ],
+                primary_key: &["entry_id", "occurrence_at"],
+                foreign_keys: &[ForeignKey {
+                    columns: &["entry_id"],
+                    module: None,
+                    table: "entry",
+                    references: &["id"],
+                    on_delete: OnDelete::Cascade,
+                }],
+                checks: &[Check::After("ends_at", "starts_at")],
+                without_natural_key: Some("one change per occurrence of a recurring entry"),
+                ..Table::EMPTY
+            }),
         ],
-        without_natural_key: Some("an entry has no key of its own: people create as many as they need"),
-        ..Table::EMPTY
-    })],
-}];
+    },
+];
