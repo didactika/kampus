@@ -68,6 +68,9 @@ pub const LISTENERS: &[ListenerDeclaration] = &[
 fn notify_course_completed(run: EventRun<'_>) -> JobFuture<'_> {
     Box::pin(async move {
         let account: PrincipalId = payload(&run, "account")?;
+        if !course_notifies(&run).await? {
+            return Ok(());
+        }
         run.services
             .service::<Notify>()?
             .notify(
@@ -79,6 +82,17 @@ fn notify_course_completed(run: EventRun<'_>) -> JobFuture<'_> {
             .await
             .map(drop)
     })
+}
+
+/// Whether the course of a progress event tells its people about their progress (`progress.notify`).
+async fn course_notifies(run: &EventRun<'_>) -> Result<bool, Error> {
+    let Some(scope) = run.event.scope else {
+        return Ok(true);
+    };
+    run.services
+        .service::<kampus_progress::Progress>()?
+        .notifies(kampus_access::ScopeId::from_uuid(scope))
+        .await
 }
 
 /// The person and the course of an event, and what else its payload names.
@@ -118,6 +132,9 @@ fn notify_grade_posted(run: EventRun<'_>) -> JobFuture<'_> {
 fn notify_state_decided(run: EventRun<'_>) -> JobFuture<'_> {
     Box::pin(async move {
         let account: PrincipalId = payload(&run, "account")?;
+        if !course_notifies(&run).await? {
+            return Ok(());
+        }
         run.services
             .service::<Notify>()?
             .notify(

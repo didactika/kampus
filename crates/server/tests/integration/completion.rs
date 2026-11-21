@@ -399,3 +399,65 @@ async fn a_learner_enrols_in_a_course_only_after_completing_the_one_it_requires(
     assert_eq!(accepted.status, StatusCode::CREATED, "{}", accepted.body);
     site.drop().await;
 }
+
+#[tokio::test]
+async fn a_course_can_keep_its_people_from_being_told_about_their_progress() {
+    let site = site().await;
+    let admin = site.session("admin").await;
+    let (_, course) = site.course(&admin).await;
+    let (_, lea) = site.learner(&admin, "lea@example.org").await;
+    let join = format!(
+        "/api/v1/enrol/enrolment-instances/{}/self",
+        self_instance(&site, &admin, &course).await
+    );
+    site.call(Method::POST, &join, Some(&lea), &[], Some(json!({})))
+        .await;
+    site.call(
+        Method::PUT,
+        &format!("/api/v1/progress/courses/{course}/criteria"),
+        Some(&admin),
+        &[],
+        Some(json!({ "criteria": [{ "kind": "date", "on_or_after": "2000-01-01T00:00:00Z" }] })),
+    )
+    .await;
+    let found = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/courses/courses/{course}"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    let scope: kampus_access::ScopeId = serde_json::from_value(found.body["scope"].clone()).unwrap();
+    let me = site
+        .call(Method::GET, "/api/v1/identity/me", Some(&admin), &[], None)
+        .await;
+    let admin_id: kampus_access::PrincipalId = serde_json::from_value(me.body["id"].clone()).unwrap();
+    site.context
+        .service::<kampus_settings::Settings>()
+        .unwrap()
+        .set(
+            &kampus_access::Actor::Principal(admin_id),
+            "progress.notify",
+            scope,
+            json!(false),
+            false,
+            None,
+        )
+        .await
+        .unwrap();
+    run_queue(&site).await;
+    assert_eq!(mine(&site, &lea, &course).await["state"], "completed");
+    let dispatcher = Dispatcher::new(Events::new(site.db.clone()), MODULES, site.context.clone());
+    while dispatcher.run_once().await.unwrap() {}
+    let inbox = site
+        .call(Method::GET, "/api/v1/notify/inbox", Some(&lea), &[], None)
+        .await;
+    assert!(
+        !inbox.body.to_string().contains("progress.course_completed"),
+        "{}",
+        inbox.body
+    );
+    site.drop().await;
+}
