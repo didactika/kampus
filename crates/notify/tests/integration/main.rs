@@ -40,6 +40,7 @@
     reason = "a failing test stops on the first error"
 )]
 
+mod channels;
 mod inbox;
 mod listeners;
 mod world;

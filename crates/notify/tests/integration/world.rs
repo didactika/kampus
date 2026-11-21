@@ -44,6 +44,7 @@ use kampus_db::{Database, Prefix, Upgrader};
 use kampus_files::Files;
 use kampus_identity::{FixedPolicies, Identity, MemoryCourier, Notice, PasswordCost, SecretKey};
 use kampus_notify::Notify;
+use kampus_notify::ports::transport::MemoryTransport;
 use kampus_progress::Progress;
 use kampus_records::Records;
 use serde_json::json;
@@ -62,6 +63,14 @@ pub(crate) struct World {
     pub(crate) progress: Progress,
     /// Notifications.
     pub(crate) notify: Notify,
+    /// The email that would have been sent.
+    pub(crate) email: Arc<MemoryTransport>,
+    /// The push notifications that would have been sent.
+    pub(crate) push: Arc<MemoryTransport>,
+    /// Identity, for the addresses of the people.
+    pub(crate) identity: Identity,
+    /// The campus.
+    pub(crate) campus: kampus_access::ScopeId,
     /// Courses, to find the sections of the course.
     pub(crate) courses: Courses,
     /// Activities, to place the activities that give grades.
@@ -153,7 +162,9 @@ pub(crate) async fn world() -> World {
         activities.clone(),
         records.clone(),
     );
-    let notify = Notify::new(db.clone());
+    let email = Arc::new(MemoryTransport::default());
+    let push = Arc::new(MemoryTransport::default());
+    let notify = Notify::new(db.clone()).with_transports(email.clone(), push.clone());
     notify
         .sync_declarations(&[
             &kampus_records::MODULE,
@@ -244,6 +255,10 @@ pub(crate) async fn world() -> World {
         records,
         progress,
         notify,
+        email,
+        push,
+        identity,
+        campus,
         courses,
         activities,
         db,

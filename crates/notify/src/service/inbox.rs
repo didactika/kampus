@@ -42,7 +42,7 @@ use sqlx::Row;
 use sqlx::postgres::PgRow;
 
 use super::person;
-use crate::{INBOX, Inbox, Notification, NotificationId, Notify, events, sql};
+use crate::{EMAIL, INBOX, Inbox, Notification, NotificationId, Notify, PUSH, events, sql};
 
 /// The most notifications in a page.
 const PAGE_LIMIT: i64 = 100;
@@ -62,32 +62,10 @@ fn notification(row: &PgRow) -> Notification {
 }
 
 impl Notify {
-    /// Whether a person receives a type through the inbox: it is enabled unless they turned it off, and a
-    /// required type cannot be turned off. None when the type is not declared.
-    async fn receives(&self, recipient: PrincipalId, type_code: &str) -> Result<Option<bool>> {
-        let row = sqlx::query(sql(format!(
-            "select t.required, t.channels, p.enabled from {} t
-             left join {} p on p.type_code = t.code and p.account_id = $2 and p.channel = $3
-             where t.code = $1 and t.retired_at is null",
-            self.table("notification_type"),
-            self.table("preference")
-        )))
-        .bind(type_code)
-        .bind(recipient.as_uuid())
-        .bind(INBOX)
-        .fetch_optional(self.db.pool())
-        .await
-        .map_err(kampus_db::classify)?;
-        Ok(row.map(|r| {
-            let channels: Value = r.get("channels");
-            let by_default = channels.as_array().is_some_and(|c| c.iter().any(|v| v == INBOX));
-            r.get::<bool, _>("required") || r.get::<Option<bool>, _>("enabled").unwrap_or(by_default)
-        }))
-    }
-
-    /// Notifies a person of something that happened, when they receive that type. `dedupe` names what caused
-    /// it, so a listener that runs twice for the same event notifies once. Returns the notification, or none
-    /// when the person does not receive it or it was already sent.
+    /// Notifies a person of something that happened, on every channel they receive that type through: the
+    /// inbox at once, email and push by a delivery job each. `dedupe` names what caused it, so a listener that
+    /// runs twice for the same event notifies once. Returns the notification, or none when the person
+    /// receives that type through no channel or it was already sent.
     ///
     /// # Errors
     ///
@@ -99,18 +77,21 @@ impl Notify {
         payload: Value,
         dedupe: Option<&str>,
     ) -> Result<Option<Notification>> {
-        let Some(receives) = self.receives(recipient, type_code).await? else {
+        let reach = self.resolved(recipient, Some(type_code)).await?;
+        if reach.is_empty() {
             return Err(Error::validation(
                 "notify.type_unknown",
                 vec![kampus_common::FieldError::new("type", "declared")],
             ));
-        };
-        if !receives {
+        }
+        let on = |channel: &str| reach.iter().any(|p| p.channel == channel && p.enabled);
+        let sent: Vec<&str> = [EMAIL, PUSH].into_iter().filter(|c| on(c)).collect();
+        if !on(INBOX) && sent.is_empty() {
             return Ok(None);
         }
         let mut tx = self.db.begin().await?;
         let row = sqlx::query(sql(format!(
-            "insert into {} (id, type_code, recipient_id, dedupe, payload) values ($1, $2, $3, $4, $5)
+            "insert into {} (id, type_code, recipient_id, dedupe, payload, in_inbox) values ($1, $2, $3, $4, $5, $6)
              on conflict (recipient_id, type_code, dedupe) do nothing
              returning id, type_code, recipient_id, payload, created_at, read_at",
             self.table("notification")
@@ -120,6 +101,7 @@ impl Notify {
         .bind(recipient.as_uuid())
         .bind(dedupe)
         .bind(&payload)
+        .bind(on(INBOX))
         .fetch_optional(&mut *tx)
         .await
         .map_err(kampus_db::classify)?;
@@ -127,6 +109,22 @@ impl Notify {
             return Ok(None);
         };
         let created = notification(&row);
+        for channel in &sent {
+            sqlx::query(sql(format!(
+                "insert into {} (notification_id, channel) values ($1, $2)",
+                self.table("delivery")
+            )))
+            .bind(created.id.as_uuid())
+            .bind(channel)
+            .execute(&mut *tx)
+            .await
+            .map_err(kampus_db::classify)?;
+        }
+        if !sent.is_empty() {
+            kampus_tasks::Tasks::new(self.db.clone())
+                .enqueue_in(&mut tx, "notify.deliver", &json!({}), None)
+                .await?;
+        }
         let mut event = kampus_events::Publish::new(
             events::DELIVERED,
             Some(created.id.as_uuid()),
@@ -156,7 +154,7 @@ impl Notify {
         let limit = limit.clamp(1, PAGE_LIMIT);
         let rows = sqlx::query(sql(format!(
             "select id, type_code, recipient_id, payload, created_at, read_at from {t}
-             where recipient_id = $1 and ($2 = false or read_at is null)
+             where recipient_id = $1 and in_inbox and ($2 = false or read_at is null)
              and ($3::uuid is null or (created_at, id) < (select created_at, id from {t} where id = $3))
              order by created_at desc, id desc limit $4",
             t = self.table("notification")
@@ -169,7 +167,7 @@ impl Notify {
         .await
         .map_err(kampus_db::classify)?;
         let unread: i64 = sqlx::query_scalar(sql(format!(
-            "select count(*) from {} where recipient_id = $1 and read_at is null",
+            "select count(*) from {} where recipient_id = $1 and in_inbox and read_at is null",
             self.table("notification")
         )))
         .bind(me.as_uuid())

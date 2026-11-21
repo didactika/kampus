@@ -78,6 +78,8 @@ pub struct Preference {
     pub enabled: bool,
     /// Whether it cannot be turned off.
     pub required: bool,
+    /// Whether the campus fixed it, so the person cannot change it.
+    pub locked: bool,
 }
 
 /// A page of the inbox.

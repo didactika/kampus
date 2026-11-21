@@ -66,7 +66,7 @@ pub const MODULE: Module = Module {
     progress_rules: &[],
     events: crate::events::EVENTS,
     listeners: crate::observers::LISTENERS,
-    jobs: &[],
-    schedules: &[],
+    jobs: crate::jobs::JOBS,
+    schedules: crate::jobs::SCHEDULES,
     routes: Some(crate::http::routes),
 };

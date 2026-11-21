@@ -32,15 +32,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The permissions notify declares: none, because everyone reads their own inbox and sets their own
-//! preferences; what a notification links to is checked against the permissions of the person when they open
-//! it.
+//! The permissions notify declares: writing the templates of a campus and setting its defaults. Everyone reads
+//! their own inbox and sets their own preferences; what a notification links to is checked against the
+//! permissions of the person when they open it.
 
-use kampus_module::PermissionDeclaration;
+use kampus_module::{PermissionDeclaration, PermissionKind, Risk, ScopeKind};
 
 pub mod templates;
 
 pub use templates::TEMPLATES;
 
+/// Write the templates of email and push of a campus.
+pub const TEMPLATE_MANAGE: &str = "notify.template.manage";
+
+/// Set what a campus gives by default for each type and channel, and lock it.
+pub const DEFAULTS_MANAGE: &str = "notify.defaults.manage";
+
 /// The permissions of this module.
-pub const PERMISSIONS: &[PermissionDeclaration] = &[];
+pub const PERMISSIONS: &[PermissionDeclaration] = &[
+    PermissionDeclaration {
+        code: TEMPLATE_MANAGE,
+        kind: PermissionKind::Write,
+        risks: &[Risk::Configuration, Risk::Spam],
+        lowest_kind: ScopeKind::Campus,
+    },
+    PermissionDeclaration {
+        code: DEFAULTS_MANAGE,
+        kind: PermissionKind::Write,
+        risks: &[Risk::Configuration],
+        lowest_kind: ScopeKind::Campus,
+    },
+];

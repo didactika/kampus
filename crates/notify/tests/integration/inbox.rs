@@ -135,6 +135,7 @@ async fn a_person_turns_types_off_except_the_required_ones() {
     let all = w.notify.preferences(&w.lea).await.unwrap();
     let codes: Vec<_> = all
         .iter()
+        .filter(|p| p.channel == "inbox")
         .map(|p| (p.type_code.as_str(), p.enabled, p.required))
         .collect();
     assert_eq!(

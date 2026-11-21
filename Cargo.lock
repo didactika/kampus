@@ -2151,6 +2151,7 @@ dependencies = [
 name = "kampus-notify"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
  "kampus-access",
  "kampus-activities",
@@ -2168,6 +2169,7 @@ dependencies = [
  "kampus-storage",
  "kampus-storage-opendal",
  "kampus-tasks",
+ "kampus-users",
  "rust_decimal",
  "serde",
  "serde_json",
@@ -2175,6 +2177,7 @@ dependencies = [
  "tempfile",
  "time",
  "tokio",
+ "tracing",
  "uuid",
 ]
 

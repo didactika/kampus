@@ -43,6 +43,24 @@ use crate::service::one_time::Purpose;
 use crate::{AccountId, Identity, Message, Notice, Session, sql};
 
 impl Identity {
+    /// The email of an active account, whoever asks; for a module that delivers what the account receives.
+    /// None for an account without one or that is not active.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn email_of(&self, id: AccountId) -> Result<Option<String>> {
+        let found: Option<Option<String>> = sqlx::query_scalar(sql(format!(
+            "select email from {} where id = $1 and status = 'active'",
+            self.table("account")
+        )))
+        .bind(id.as_uuid())
+        .fetch_optional(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(found.flatten())
+    }
+
     /// Asks to change the session's email: the new address receives a link, the current one is told.
     ///
     /// # Errors
