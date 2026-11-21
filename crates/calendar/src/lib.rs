@@ -44,13 +44,14 @@ pub mod module;
 pub mod permissions;
 pub mod privacy;
 pub mod service;
+pub mod support;
 
 use kampus_access::Access;
 use kampus_activities::Activities;
 use kampus_courses::Courses;
 use kampus_db::Database;
 
-pub use model::{Entry, EntryFields, EntryId, Item, ItemKind};
+pub use model::{Entry, EntryFields, EntryId, Item, ItemKind, OccurrenceChange};
 pub use module::MODULE;
 
 /// The calendar of an installation.

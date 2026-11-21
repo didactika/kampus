@@ -47,6 +47,7 @@ publish.workspace = true
 kind = "module"
 
 [dependencies]
+jiff.workspace = true
 kampus-common.workspace = true
 kampus-db.workspace = true
 kampus-module.workspace = true

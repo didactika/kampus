@@ -39,9 +39,13 @@ use kampus_access::{Actor, ScopeId};
 use kampus_common::{Error, Result, Timestamp};
 use kampus_courses::CourseId;
 
-use super::entry::{COLUMNS, entry};
+use jiff::tz::TimeZone;
+use sqlx::Row;
+
+use super::entry::{COLUMNS, entry, from_jiff, to_jiff};
 use super::person;
 use crate::permissions::VIEW;
+use crate::support::recurrence::Rule;
 use crate::{Calendar, Item, ItemKind, sql};
 
 /// The longest window a calendar answers for.
@@ -65,6 +69,8 @@ fn item(found: crate::Entry) -> Item {
         title: found.title,
         starts_at: found.starts_at,
         ends_at: Some(found.ends_at),
+        all_day: found.all_day,
+        occurrence: None,
         entry: Some(found.id),
         course_module: None,
     }
@@ -75,6 +81,7 @@ impl Calendar {
     /// given.
     async fn entries_in(
         &self,
+        actor: &Actor,
         scope: Option<ScopeId>,
         owner: Option<kampus_access::PrincipalId>,
         from: Timestamp,
@@ -82,7 +89,7 @@ impl Calendar {
     ) -> Result<Vec<Item>> {
         let rows = sqlx::query(sql(format!(
             "select {COLUMNS} from {} where ((scope_id = $1) or (owner_id = $2))
-             and starts_at < $4 and ends_at > $3 order by starts_at, id",
+             and starts_at < $4 and (ends_at > $3 or recurrence is not null) order by starts_at, id",
             self.table("entry")
         )))
         .bind(scope.map(|s| s.as_uuid()))
@@ -92,7 +99,84 @@ impl Calendar {
         .fetch_all(self.db.pool())
         .await
         .map_err(kampus_db::classify)?;
-        Ok(rows.iter().map(entry).map(item).collect())
+        let mut items = Vec::new();
+        for found in rows.iter().map(entry) {
+            if found.group.is_some() && !self.can_see(actor, &found).await? {
+                continue;
+            }
+            if found.recurrence.is_some() {
+                items.extend(self.occurrences_of(&found, from, to).await?);
+            } else {
+                items.push(item(found));
+            }
+        }
+        items.sort_by_key(|i| i.starts_at);
+        Ok(items)
+    }
+
+    /// The occurrences of a recurring entry in a window, with the changes of single occurrences applied.
+    async fn occurrences_of(
+        &self,
+        found: &crate::Entry,
+        from: Timestamp,
+        to: Timestamp,
+    ) -> Result<Vec<Item>> {
+        let (Some(rule), Ok(zone)) = (
+            found.recurrence.as_deref().and_then(|r| Rule::parse(r).ok()),
+            TimeZone::get(&found.time_zone),
+        ) else {
+            return Ok(Vec::new());
+        };
+        let length = found.ends_at.as_offset_date_time() - found.starts_at.as_offset_date_time();
+        let rows = sqlx::query(sql(format!(
+            "select occurrence_at, cancelled, title, starts_at, ends_at from {} where entry_id = $1",
+            self.table("entry_exception")
+        )))
+        .bind(found.id.as_uuid())
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        let changes: std::collections::BTreeMap<time::OffsetDateTime, &sqlx::postgres::PgRow> =
+            rows.iter().map(|r| (r.get("occurrence_at"), r)).collect();
+        let starts_from = to_jiff(Timestamp::from_offset_date_time(
+            from.as_offset_date_time() - length,
+        ));
+        let mut items = Vec::new();
+        for at in rule.occurrences(to_jiff(found.starts_at), &zone, starts_from, to_jiff(to)) {
+            let occurrence = from_jiff(at);
+            let mut starts_at = occurrence;
+            let mut ends_at = Timestamp::from_offset_date_time(occurrence.as_offset_date_time() + length);
+            let mut title = found.title.clone();
+            if let Some(change) = changes.get(&occurrence.as_offset_date_time()) {
+                if change.get::<bool, _>("cancelled") {
+                    continue;
+                }
+                let moment = |c: &str| {
+                    change
+                        .get::<Option<time::OffsetDateTime>, _>(c)
+                        .map(Timestamp::from_offset_date_time)
+                };
+                starts_at = moment("starts_at").unwrap_or(starts_at);
+                ends_at = moment("ends_at").unwrap_or(ends_at);
+                if let Some(changed) = change.get::<Option<String>, _>("title") {
+                    title = changed;
+                }
+            }
+            if ends_at <= from || starts_at >= to {
+                continue;
+            }
+            items.push(Item {
+                kind: ItemKind::Entry,
+                title,
+                starts_at,
+                ends_at: Some(ends_at),
+                all_day: found.all_day,
+                occurrence: Some(occurrence),
+                entry: Some(found.id),
+                course_module: None,
+            });
+        }
+        Ok(items)
     }
 
     /// The entries of a scope the actor sees that touch a window, or their personal entries when no scope is
@@ -112,10 +196,10 @@ impl Calendar {
         require_window(from, to)?;
         if let Some(scope) = scope {
             self.access.require(actor, VIEW, scope).await?;
-            self.entries_in(Some(scope), None, from, to).await
+            self.entries_in(actor, Some(scope), None, from, to).await
         } else {
             let owner = person(actor).ok_or_else(|| Error::permission_denied("access.denied"))?;
-            self.entries_in(None, Some(owner), from, to).await
+            self.entries_in(actor, None, Some(owner), from, to).await
         }
     }
 
@@ -139,7 +223,7 @@ impl Calendar {
             return Err(Error::not_found("courses.course_not_found"));
         }
         self.access.require(actor, VIEW, found.scope).await?;
-        let mut items = self.entries_in(Some(found.scope), None, from, to).await?;
+        let mut items = self.entries_in(actor, Some(found.scope), None, from, to).await?;
         if let Some(person) = person(actor) {
             for section in self.courses.sections(actor, course).await? {
                 for module in self.activities.modules(actor, section.id).await? {
@@ -156,6 +240,8 @@ impl Calendar {
                                 title: module.title.clone(),
                                 starts_at: at,
                                 ends_at: None,
+                                all_day: false,
+                                occurrence: None,
                                 entry: None,
                                 course_module: Some(module.id),
                             });

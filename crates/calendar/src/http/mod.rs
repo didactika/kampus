@@ -59,6 +59,10 @@ pub fn routes(context: &ServiceContext) -> Router {
     Router::new()
         .route("/entries", get(list).post(create))
         .route("/entries/{id}", get(read).put(update).delete(remove))
+        .route(
+            "/entries/{id}/occurrences/{at}",
+            axum::routing::put(change_occurrence).delete(restore_occurrence),
+        )
         .route("/courses/{id}/calendar", get(course))
         .with_state(shared)
 }
@@ -197,4 +201,41 @@ async fn course(
         .course_calendar(&caller.actor, id(&course)?, span.from, span.to)
         .await?;
     Ok(Json(items).into_response())
+}
+
+/// The moment of an occurrence in a path.
+fn moment(text: &str) -> Result<Timestamp> {
+    Timestamp::parse_rfc3339(text).map_err(|_| {
+        Error::validation(
+            "calendar.occurrence_invalid",
+            vec![kampus_common::FieldError::new("at", "format")],
+        )
+    })
+}
+
+/// Cancels or changes one occurrence of a recurring entry.
+async fn change_occurrence(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((entry, at)): Path<(String, String)>,
+    Body(body): Body<crate::OccurrenceChange>,
+) -> ApiResult<StatusCode> {
+    shared
+        .calendar()?
+        .change_occurrence(&caller.actor, id(&entry)?, moment(&at)?, body)
+        .await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// Takes back the change of one occurrence.
+async fn restore_occurrence(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path((entry, at)): Path<(String, String)>,
+) -> ApiResult<StatusCode> {
+    shared
+        .calendar()?
+        .restore_occurrence(&caller.actor, id(&entry)?, moment(&at)?)
+        .await?;
+    Ok(StatusCode::NO_CONTENT)
 }

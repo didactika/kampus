@@ -62,6 +62,14 @@ pub struct Entry {
     pub starts_at: Timestamp,
     /// When it ends.
     pub ends_at: Timestamp,
+    /// The time zone its recurrence and all-day dates follow.
+    pub time_zone: String,
+    /// Whether it lasts whole days, from midnight to midnight in its time zone.
+    pub all_day: bool,
+    /// Its recurrence rule, RFC 5545 (`FREQ=WEEKLY;BYDAY=MO`), for an entry that repeats.
+    pub recurrence: Option<String>,
+    /// The group of the course it is for; only its members and who manages the calendar see it.
+    pub group: Option<kampus_courses::GroupId>,
     /// The version, for `If-Match`.
     pub version: i32,
 }
@@ -78,6 +86,18 @@ pub struct EntryFields {
     pub starts_at: Timestamp,
     /// When it ends.
     pub ends_at: Timestamp,
+    /// The time zone its recurrence and all-day dates follow; UTC when left out.
+    #[serde(default)]
+    pub time_zone: Option<String>,
+    /// Whether it lasts whole days.
+    #[serde(default)]
+    pub all_day: bool,
+    /// Its recurrence rule, RFC 5545, for an entry that repeats.
+    #[serde(default)]
+    pub recurrence: Option<String>,
+    /// The group of the course it is for.
+    #[serde(default)]
+    pub group: Option<kampus_courses::GroupId>,
 }
 
 /// What an item of a calendar is.
@@ -107,8 +127,29 @@ pub struct Item {
     pub starts_at: Timestamp,
     /// When it ends, for an entry.
     pub ends_at: Option<Timestamp>,
+    /// Whether it lasts whole days.
+    pub all_day: bool,
+    /// For an occurrence of a recurring entry, when it was due to start by the rule.
+    pub occurrence: Option<Timestamp>,
     /// The entry, for an entry.
     pub entry: Option<EntryId>,
     /// The course module, for the date of an activity.
     pub course_module: Option<ModuleId>,
+}
+
+/// A change of one occurrence of a recurring entry.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct OccurrenceChange {
+    /// The occurrence is cancelled.
+    #[serde(default)]
+    pub cancelled: bool,
+    /// Another title for it.
+    #[serde(default)]
+    pub title: Option<String>,
+    /// Another start.
+    #[serde(default)]
+    pub starts_at: Option<Timestamp>,
+    /// Another end.
+    #[serde(default)]
+    pub ends_at: Option<Timestamp>,
 }

@@ -15,16 +15,18 @@ entity entry {
   description
   starts_at
   ends_at
-  all_day_date
+  all_day
   time_zone
-  rrule
+  recurrence
   version
 }
 entity entry_exception {
   entry_id <<FK>>
   occurrence_at
   cancelled
-  override
+  title
+  starts_at
+  ends_at
 }
 entity activity_date {
   course_module_id <<FK>>
@@ -45,7 +47,7 @@ entity imported_entry {
   sequence
   starts_at
   ends_at
-  rrule
+  recurrence
   data
 }
 entity feed_token {
