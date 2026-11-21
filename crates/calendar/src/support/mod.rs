@@ -32,6 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Pure helpers of calendar, without the database: the recurrence of entries.
+//! Pure helpers of calendar, without the database: the recurrence of entries, and reading and writing iCalendar.
 
+pub mod ical;
 pub mod recurrence;

@@ -147,4 +147,76 @@ pub const STEPS: &[Step] = &[
             }),
         ],
     },
+    Step {
+        sequence: 3,
+        name: "personal feeds and subscriptions to other calendars",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::CreateTable(Table {
+                name: "feed_token",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("hash", Type::Bytes),
+                    Column::new("name", Type::Text),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                    Column::new("last_used_at", Type::Timestamptz).nullable(),
+                    Column::new("revoked_at", Type::Timestamptz).nullable(),
+                ],
+                primary_key: &["id"],
+                unique: &[&["hash"]],
+                foreign_keys: &[other(&["account_id"], "identity", "account", OnDelete::Cascade)],
+                indexes: &[Index {
+                    columns: &["account_id"],
+                    unique: false,
+                }],
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "subscription",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("scope_id", Type::Uuid),
+                    Column::new("url", Type::Text),
+                    Column::new("title", Type::Text),
+                    Column::new("refresh_minutes", Type::Integer).default(ColumnDefault::Int(360)),
+                    Column::new("created_by", Type::Uuid).nullable(),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                    Column::new("last_refreshed_at", Type::Timestamptz).nullable(),
+                    Column::new("last_error", Type::Text).nullable(),
+                ],
+                primary_key: &["id"],
+                unique: &[&["scope_id", "url"]],
+                foreign_keys: &[other(&["scope_id"], "access", "scope", OnDelete::Cascade)],
+                checks: &[Check::Positive("refresh_minutes")],
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "imported_entry",
+                columns: &[
+                    Column::new("subscription_id", Type::Uuid),
+                    Column::new("uid", Type::Text),
+                    Column::new("sequence", Type::Integer),
+                    Column::new("title", Type::Text),
+                    Column::new("description", Type::Text).nullable(),
+                    Column::new("starts_at", Type::Timestamptz),
+                    Column::new("ends_at", Type::Timestamptz),
+                    Column::new("all_day", Type::Boolean).default(ColumnDefault::Bool(false)),
+                    Column::new("recurrence", Type::Text).nullable(),
+                ],
+                primary_key: &["subscription_id", "uid"],
+                foreign_keys: &[ForeignKey {
+                    columns: &["subscription_id"],
+                    module: None,
+                    table: "subscription",
+                    references: &["id"],
+                    on_delete: OnDelete::Cascade,
+                }],
+                checks: &[Check::After("ends_at", "starts_at")],
+                without_natural_key: Some("an event of a subscribed calendar, keyed by its UID there"),
+                ..Table::EMPTY
+            }),
+        ],
+    },
 ];

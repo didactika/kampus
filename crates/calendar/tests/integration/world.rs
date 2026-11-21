@@ -139,7 +139,8 @@ pub(crate) async fn world() -> World {
         .sync_declarations(&[&kampus_activities::MODULE, &crate::entries::QUIZ_MODULE])
         .await
         .unwrap();
-    let calendar = Calendar::new(db.clone(), access.clone(), courses.clone(), activities.clone());
+    let calendar = Calendar::new(db.clone(), access.clone(), courses.clone(), activities.clone())
+        .allowing_private_addresses();
     let platform = access.create_platform().await.unwrap();
     let campus = access.create_scope(platform, ScopeKind::Campus).await.unwrap();
     access.install_campus_roles(campus).await.unwrap();

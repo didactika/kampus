@@ -64,6 +64,12 @@ pub fn routes(context: &ServiceContext) -> Router {
             axum::routing::put(change_occurrence).delete(restore_occurrence),
         )
         .route("/courses/{id}/calendar", get(course))
+        .route("/feeds", get(feeds).post(create_feed))
+        .route("/feeds/{id}", axum::routing::delete(revoke_feed))
+        .route("/feed/{secret}", get(feed_calendar))
+        .route("/scopes/{id}/subscriptions", get(subscriptions).post(subscribe))
+        .route("/subscriptions/{id}", axum::routing::delete(unsubscribe))
+        .route("/subscriptions/{id}/refresh", axum::routing::post(refresh))
         .with_state(shared)
 }
 
@@ -238,4 +244,129 @@ async fn restore_occurrence(
         .restore_occurrence(&caller.actor, id(&entry)?, moment(&at)?)
         .await?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+/// A feed to make.
+#[derive(Debug, Deserialize)]
+struct NewFeed {
+    /// What its owner calls it.
+    name: String,
+}
+
+/// The feeds of the caller.
+async fn feeds(State(shared): State<Shared>, Extension(caller): Extension<Caller>) -> ApiResult<Response> {
+    Ok(Json(shared.calendar()?.feeds(&caller.actor).await?).into_response())
+}
+
+/// Makes a feed; its secret address is shown once.
+async fn create_feed(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Body(body): Body<NewFeed>,
+) -> ApiResult<Response> {
+    let (feed, secret) = shared.calendar()?.create_feed(&caller.actor, &body.name).await?;
+    let url = format!("/api/v1/{}/feed/{secret}", crate::module::NAME);
+    Ok((
+        StatusCode::CREATED,
+        Json(serde_json::json!({ "feed": feed, "secret": secret, "url": url })),
+    )
+        .into_response())
+}
+
+/// Revokes a feed.
+async fn revoke_feed(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(feed): Path<String>,
+) -> ApiResult<StatusCode> {
+    shared.calendar()?.revoke_feed(&caller.actor, id(&feed)?).await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// The calendar of a feed, as iCalendar, for the application that holds its secret address.
+async fn feed_calendar(State(shared): State<Shared>, Path(secret): Path<String>) -> ApiResult<Response> {
+    let secret = secret.trim_end_matches(".ics");
+    let text = shared.calendar()?.feed_calendar(secret).await?;
+    Ok((
+        [
+            (axum::http::header::CONTENT_TYPE, "text/calendar; charset=utf-8"),
+            (axum::http::header::CACHE_CONTROL, "private, no-store"),
+        ],
+        text,
+    )
+        .into_response())
+}
+
+/// A subscription to make.
+#[derive(Debug, Deserialize)]
+struct NewSubscription {
+    /// Where the calendar is read from.
+    url: String,
+    /// What it is called.
+    title: String,
+    /// Every how many minutes it is read.
+    #[serde(default)]
+    refresh_minutes: Option<i32>,
+}
+
+/// The subscriptions of a scope.
+async fn subscriptions(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(scope): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .calendar()?
+            .subscriptions(&caller.actor, id(&scope)?)
+            .await?,
+    )
+    .into_response())
+}
+
+/// Subscribes a scope to a calendar.
+async fn subscribe(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(scope): Path<String>,
+    Body(body): Body<NewSubscription>,
+) -> ApiResult<Response> {
+    let scope: ScopeId = id(&scope)?;
+    if let Some(identity) = shared.identity.as_ref() {
+        caller.acting(identity, MANAGE, scope).await?;
+    }
+    let made = shared
+        .calendar()?
+        .subscribe(&caller.actor, scope, &body.url, &body.title, body.refresh_minutes)
+        .await?;
+    Ok((StatusCode::CREATED, Json(made)).into_response())
+}
+
+/// Removes a subscription.
+async fn unsubscribe(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(subscription): Path<String>,
+) -> ApiResult<StatusCode> {
+    shared
+        .calendar()?
+        .unsubscribe(&caller.actor, id(&subscription)?)
+        .await?;
+    Ok(StatusCode::NO_CONTENT)
+}
+
+/// Reads a subscription again now.
+async fn refresh(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(subscription): Path<String>,
+) -> ApiResult<Response> {
+    let done = shared
+        .calendar()?
+        .refresh_now(&caller.actor, id(&subscription)?)
+        .await?;
+    Ok(
+        Json(serde_json::json!({ "added": done.added, "changed": done.changed, "removed": done.removed }))
+            .into_response(),
+    )
 }

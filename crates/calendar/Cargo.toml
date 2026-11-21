@@ -48,6 +48,10 @@ kind = "module"
 
 [dependencies]
 jiff.workspace = true
+kampus-tasks = { path = "../tasks" }
+reqwest.workspace = true
+sha2.workspace = true
+tokio.workspace = true
 kampus-common.workspace = true
 kampus-db.workspace = true
 kampus-module.workspace = true

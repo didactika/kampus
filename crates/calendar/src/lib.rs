@@ -39,6 +39,7 @@
 pub mod db;
 pub mod events;
 pub mod http;
+pub mod jobs;
 pub mod model;
 pub mod module;
 pub mod permissions;
@@ -51,7 +52,9 @@ use kampus_activities::Activities;
 use kampus_courses::Courses;
 use kampus_db::Database;
 
-pub use model::{Entry, EntryFields, EntryId, Item, ItemKind, OccurrenceChange};
+pub use model::{
+    Entry, EntryFields, EntryId, Feed, FeedId, Item, ItemKind, OccurrenceChange, Subscription, SubscriptionId,
+};
 pub use module::MODULE;
 
 /// The calendar of an installation.
@@ -65,6 +68,8 @@ pub struct Calendar {
     courses: Courses,
     /// Activities, for the dates of course modules.
     activities: Activities,
+    /// Whether subscriptions may read calendars at private network addresses, which only tests allow.
+    private_addresses: bool,
 }
 
 impl std::fmt::Debug for Calendar {
@@ -84,6 +89,17 @@ impl Calendar {
             access,
             courses,
             activities,
+            private_addresses: false,
+        }
+    }
+
+    /// The same allowing subscriptions to calendars at private network addresses, for tests that serve one
+    /// themselves.
+    #[must_use]
+    pub fn allowing_private_addresses(self) -> Self {
+        Self {
+            private_addresses: true,
+            ..self
         }
     }
 

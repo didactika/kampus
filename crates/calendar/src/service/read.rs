@@ -110,7 +110,69 @@ impl Calendar {
                 items.push(item(found));
             }
         }
+        if let Some(scope) = scope {
+            items.extend(self.imported_in(scope, from, to).await?);
+        }
         items.sort_by_key(|i| i.starts_at);
+        Ok(items)
+    }
+
+    /// The events of the calendars a scope subscribes to, in a window; recurring ones are expanded in UTC.
+    async fn imported_in(&self, scope: ScopeId, from: Timestamp, to: Timestamp) -> Result<Vec<Item>> {
+        let rows = sqlx::query(sql(format!(
+            "select e.title, e.starts_at, e.ends_at, e.all_day, e.recurrence from {} e
+             join {} s on s.id = e.subscription_id
+             where s.scope_id = $1 and e.starts_at < $3 and (e.ends_at > $2 or e.recurrence is not null)
+             order by e.starts_at",
+            self.table("imported_entry"),
+            self.table("subscription")
+        )))
+        .bind(scope.as_uuid())
+        .bind(from.as_offset_date_time())
+        .bind(to.as_offset_date_time())
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        let mut items = Vec::new();
+        for row in &rows {
+            let starts = Timestamp::from_offset_date_time(row.get("starts_at"));
+            let ends = Timestamp::from_offset_date_time(row.get("ends_at"));
+            let length = ends.as_offset_date_time() - starts.as_offset_date_time();
+            let rule = row
+                .get::<Option<String>, _>("recurrence")
+                .and_then(|r| Rule::parse(&r).ok());
+            let starts_list = match rule {
+                Some(rule) => rule
+                    .occurrences(
+                        to_jiff(starts),
+                        &TimeZone::UTC,
+                        to_jiff(Timestamp::from_offset_date_time(
+                            from.as_offset_date_time() - length,
+                        )),
+                        to_jiff(to),
+                    )
+                    .into_iter()
+                    .map(from_jiff)
+                    .collect(),
+                None => vec![starts],
+            };
+            for at in starts_list {
+                let until = Timestamp::from_offset_date_time(at.as_offset_date_time() + length);
+                if until <= from || at >= to {
+                    continue;
+                }
+                items.push(Item {
+                    kind: ItemKind::Imported,
+                    title: row.get("title"),
+                    starts_at: at,
+                    ends_at: Some(until),
+                    all_day: row.get("all_day"),
+                    occurrence: None,
+                    entry: None,
+                    course_module: None,
+                });
+            }
+        }
         Ok(items)
     }
 

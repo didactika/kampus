@@ -114,6 +114,8 @@ pub enum ItemKind {
     Closes,
     /// The last moment a late submission is accepted.
     Cutoff,
+    /// An event of a calendar a scope subscribes to.
+    Imported,
 }
 
 /// One thing a calendar shows.
@@ -152,4 +154,48 @@ pub struct OccurrenceChange {
     /// Another end.
     #[serde(default)]
     pub ends_at: Option<Timestamp>,
+}
+
+kampus_common::define_id! {
+    /// Identifies a personal feed.
+    pub struct FeedId;
+}
+
+/// A personal feed: a secret address a calendar application reads what its owner sees from.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Feed {
+    /// The feed.
+    pub id: FeedId,
+    /// What its owner calls it.
+    pub name: String,
+    /// When it was made.
+    pub created_at: Timestamp,
+    /// When an application last read it.
+    pub last_used_at: Option<Timestamp>,
+    /// When it was revoked.
+    pub revoked_at: Option<Timestamp>,
+}
+
+kampus_common::define_id! {
+    /// Identifies a subscription to another calendar.
+    pub struct SubscriptionId;
+}
+
+/// A calendar of another system shown in a scope, read again every so often.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Subscription {
+    /// The subscription.
+    pub id: SubscriptionId,
+    /// The scope it is shown in.
+    pub scope: ScopeId,
+    /// Where it is read from.
+    pub url: String,
+    /// What it is called.
+    pub title: String,
+    /// Every how many minutes it is read.
+    pub refresh_minutes: i32,
+    /// When it was last read.
+    pub last_refreshed_at: Option<Timestamp>,
+    /// Why the last read failed.
+    pub last_error: Option<String>,
 }

@@ -32,7 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The events calendar publishes: entries created, changed and deleted.
+//! The events calendar publishes: entries created, changed and deleted, subscriptions read again, and
+//! personal feeds made and revoked.
 
 use kampus_module::EventDeclaration;
 
@@ -57,9 +58,42 @@ const fn declared(code: &'static str, summary: &'static str) -> EventDeclaration
     }
 }
 
+/// A calendar a scope subscribes to was read again.
+pub const SUBSCRIPTION_REFRESHED: &str = "calendar.subscription_refreshed";
+
+/// A personal feed was made.
+pub const FEED_CREATED: &str = "calendar.feed_created";
+
+/// A personal feed was revoked.
+pub const FEED_REVOKED: &str = "calendar.feed_revoked";
+
 /// The events of this module.
 pub const EVENTS: &[EventDeclaration] = &[
     declared(ENTRY_CREATED, "A calendar entry was created"),
     declared(ENTRY_UPDATED, "A calendar entry changed"),
     declared(ENTRY_DELETED, "A calendar entry was deleted"),
+    EventDeclaration {
+        code: SUBSCRIPTION_REFRESHED,
+        version: 1,
+        summary: "A calendar a scope subscribes to was read again",
+        fields: &["subscription", "added", "changed", "removed"],
+        audited: false,
+        personal_fields: &[],
+    },
+    EventDeclaration {
+        code: FEED_CREATED,
+        version: 1,
+        summary: "A personal calendar feed was made",
+        fields: &["feed", "account"],
+        audited: true,
+        personal_fields: &["account"],
+    },
+    EventDeclaration {
+        code: FEED_REVOKED,
+        version: 1,
+        summary: "A personal calendar feed was revoked",
+        fields: &["feed", "account"],
+        audited: true,
+        personal_fields: &["account"],
+    },
 ];
