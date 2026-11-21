@@ -51,16 +51,21 @@ entity activity_history {
   cause
   at
 }
+entity course_setting {
+  course_id <<FK>>
+  aggregation
+  final
+}
 entity criterion {
   id <<PK>>
   course_id <<FK>>
   kind
-  aggregation
+  position
 }
 entity criterion_activity {
   criterion_id <<FK>>
   course_module_id <<FK>>
-  required_state
+  required
 }
 entity criterion_grade {
   criterion_id <<FK>>
@@ -73,7 +78,7 @@ entity criterion_date {
 }
 entity criterion_duration {
   criterion_id <<FK>>
-  enrolled_for
+  enrolled_days
 }
 entity criterion_role_approval {
   criterion_id <<FK>>
@@ -81,7 +86,13 @@ entity criterion_role_approval {
 }
 entity criterion_course {
   criterion_id <<FK>>
-  course_id <<FK>>
+  required_course_id <<FK>>
+}
+entity approval {
+  criterion_id <<FK>>
+  account_id <<FK>>
+  approved_by
+  at
 }
 entity prerequisite {
   course_id <<FK>>
@@ -97,11 +108,16 @@ entity course_state {
 }
 entity course_history {
   id <<PK>>
-  course_id
-  account_id
+  course_id <<FK>>
+  account_id <<FK>>
   event
-  at
   cause
+  at
+}
+entity course_pending {
+  course_id <<FK>>
+  account_id <<FK>>
+  queued_at
 }
 
 criterion_activity }o--|| criterion
@@ -110,4 +126,5 @@ criterion_date }o--|| criterion
 criterion_duration }o--|| criterion
 criterion_role_approval }o--|| criterion
 criterion_course }o--|| criterion
+approval }o--|| criterion
 @enduml

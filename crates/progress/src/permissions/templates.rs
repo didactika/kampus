@@ -37,7 +37,7 @@
 
 use kampus_module::{RoleTemplateDeclaration, Value};
 
-use super::{EXCEPTION, MANAGE, MARK_OWN, VIEW_ALL, VIEW_OWN};
+use super::{EXCEPTION, MANAGE, MARK_OWN, TRACKED, VIEW_ALL, VIEW_OWN};
 
 /// Everything, for those who run the course.
 const EVERYTHING: &[(&str, Value)] = &[
@@ -51,7 +51,11 @@ const EVERYTHING: &[(&str, Value)] = &[
 const FOLLOWING: &[(&str, Value)] = &[(VIEW_OWN, Value::Allow), (VIEW_ALL, Value::Allow)];
 
 /// What a learner sees and does.
-const OWN: &[(&str, Value)] = &[(VIEW_OWN, Value::Allow), (MARK_OWN, Value::Allow)];
+const OWN: &[(&str, Value)] = &[
+    (VIEW_OWN, Value::Allow),
+    (MARK_OWN, Value::Allow),
+    (TRACKED, Value::Allow),
+];
 
 /// The values of this module in the role templates.
 pub const TEMPLATES: &[RoleTemplateDeclaration] = &[

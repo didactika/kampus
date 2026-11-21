@@ -33,7 +33,8 @@
 // ------------------------------------------------------------------------------
 
 //! The events progress publishes: the state of a person on a course module changed, the rules of a course
-//! module changed, and a teacher decided or removed a state.
+//! module changed, a teacher decided or removed a state, a course was completed or its completion revoked,
+//! what a course requires changed, and someone of a role approved a person.
 
 use kampus_module::EventDeclaration;
 
@@ -45,6 +46,18 @@ pub const RULES_CHANGED: &str = "progress.rules_changed";
 
 /// A teacher decided the state of a person, or removed the decision.
 pub const EXCEPTION_CHANGED: &str = "progress.exception_changed";
+
+/// A person completed a course.
+pub const COURSE_COMPLETED: &str = "progress.course_completed";
+
+/// The completion of a course by a person was revoked, because a criterion stopped being met.
+pub const COURSE_REVOKED: &str = "progress.course_revoked";
+
+/// What a course requires changed.
+pub const CRITERIA_CHANGED: &str = "progress.criteria_changed";
+
+/// Someone of a role approved a person for a criterion.
+pub const APPROVED: &str = "progress.approved";
 
 /// The events of this module.
 pub const EVENTS: &[EventDeclaration] = &[
@@ -69,6 +82,38 @@ pub const EVENTS: &[EventDeclaration] = &[
         version: 1,
         summary: "A teacher decided the state of a person on a course module, or removed the decision",
         fields: &["module", "course", "account"],
+        audited: true,
+        personal_fields: &["account"],
+    },
+    EventDeclaration {
+        code: COURSE_COMPLETED,
+        version: 1,
+        summary: "A person completed a course",
+        fields: &["course", "account"],
+        audited: true,
+        personal_fields: &["account"],
+    },
+    EventDeclaration {
+        code: COURSE_REVOKED,
+        version: 1,
+        summary: "The completion of a course by a person was revoked",
+        fields: &["course", "account"],
+        audited: true,
+        personal_fields: &["account"],
+    },
+    EventDeclaration {
+        code: CRITERIA_CHANGED,
+        version: 1,
+        summary: "What a course requires changed",
+        fields: &["course"],
+        audited: true,
+        personal_fields: &[],
+    },
+    EventDeclaration {
+        code: APPROVED,
+        version: 1,
+        summary: "Someone of a role approved a person for a criterion of a course",
+        fields: &["course", "criterion", "account"],
         audited: true,
         personal_fields: &["account"],
     },

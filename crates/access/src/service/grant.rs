@@ -259,6 +259,28 @@ impl Access {
         self.remove_grant(None, Some(module), grant).await
     }
 
+    /// Whether a principal holds a role now in a scope or in a scope above it, by any origin; for modules
+    /// that ask someone of a role to decide something.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn holds_role(&self, principal: PrincipalId, role: RoleId, scope: ScopeId) -> Result<bool> {
+        sqlx::query_scalar(sql(format!(
+            "select exists (select 1 from {} g join {} c on c.ancestor_id = g.scope_id
+             where c.descendant_id = $3 and g.principal_id = $1 and g.role_id = $2
+                 and g.valid_from <= now() and (g.valid_until is null or g.valid_until > now()))",
+            self.table("grant"),
+            self.table("scope_closure")
+        )))
+        .bind(principal.as_uuid())
+        .bind(role.as_uuid())
+        .bind(scope.as_uuid())
+        .fetch_one(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)
+    }
+
     /// Removes a grant a module owns inside the caller's transaction, so it goes together with what owns
     /// it, such as an enrolment.
     ///

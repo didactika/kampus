@@ -25,16 +25,20 @@ paths:
     get: { summary: The states of a person in a course as the caller may see them, responses: { '200': { description: States } } }
   /api/v1/progress/courses/{course_id}/my-progress:
     get: { summary: The states of the caller in a course, responses: { '200': { description: States } } }
-  /api/v1/progress/courses/{course_id}/progress-criteria:
-    get: { summary: Course criteria, responses: { '200': { description: Criteria } } }
-    put: { summary: 'Replace the criteria (RN-120); re-evaluation queued', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Replaced } } }
+  /api/v1/progress/courses/{course_id}/criteria:
+    get: { summary: 'What the course requires, with how the criteria combine and whether completion is final', responses: { '200': { description: Criteria } } }
+    put: { summary: 'Replace the criteria (RN-120, progress.manage); a criterion that stays keeps its approvals, and everyone followed is evaluated again', responses: { '200': { description: Replaced }, '422': { description: 'A criterion that does not fit the course, or a course that would require itself' } } }
   /api/v1/progress/courses/{course_id}/prerequisites:
     get: { summary: The prerequisite graph around a course, responses: { '200': { description: Graph } } }
     put: { summary: 'Set prerequisites; a cycle is refused (RN-122)', responses: { '200': { description: Set }, '409': { description: Would create a cycle } } }
-  /api/v1/progress/courses/{course_id}/progress:
-    get: { summary: Course progress of the tracked population, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
-  /api/v1/progress/courses/{course_id}/progress/me:
-    get: { summary: The caller's course progress with each criterion, responses: { '200': { description: Progress } } }
+  /api/v1/progress/courses/{course_id}/course-progress:
+    get: { summary: 'The course progress of everyone the course follows, with each criterion (progress.view_all)', responses: { '200': { description: Progress } } }
+  /api/v1/progress/courses/{course_id}/course-progress/{account_id}:
+    get: { summary: 'The course progress of a person, with each criterion', responses: { '200': { description: Progress } } }
+  /api/v1/progress/courses/{course_id}/my-course-progress:
+    get: { summary: 'The course progress of the caller, with each criterion', responses: { '200': { description: Progress } } }
+  /api/v1/progress/criteria/{criterion_id}/approvals/{account_id}:
+    put: { summary: 'Approve a person for a role approval criterion; only someone who holds that role in the course', responses: { '204': { description: Approved }, '403': { description: 'Without the role' } } }
 components:
   parameters:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }

@@ -517,6 +517,28 @@ impl Courses {
             .collect())
     }
 
+    /// Everyone who takes part in a course now, for modules that follow each participant.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the participants cannot be read.
+    pub async fn participants_of(&self, course: CourseId) -> Result<Vec<PrincipalId>> {
+        self.participants.accounts(course).await
+    }
+
+    /// Since when a person takes part in a course without a break, when they do.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the participants cannot be read.
+    pub async fn taking_part_since(
+        &self,
+        course: CourseId,
+        account: PrincipalId,
+    ) -> Result<Option<kampus_common::Timestamp>> {
+        self.participants.since(course, account).await
+    }
+
     /// Whether a person takes part in a course now, by the enrolments the server knows; for modules that
     /// keep something of a person beyond their participation.
     ///

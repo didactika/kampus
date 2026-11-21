@@ -233,4 +233,230 @@ pub const STEPS: &[Step] = &[
             ..Table::EMPTY
         })],
     },
+    Step {
+        sequence: 3,
+        name: "course progress: criteria, states, approvals and the queue",
+        revert: &[],
+        action: None,
+        changes: COURSE_PROGRESS,
+    },
+];
+
+/// The kinds of a criterion of a course.
+pub const CRITERION_KINDS: &[&str] = &["activity", "grade", "date", "duration", "role_approval", "course"];
+
+/// How the criteria of a course combine.
+pub const AGGREGATIONS: &[&str] = &["all", "any"];
+
+/// What an activity criterion asks of a course module.
+pub const ACTIVITY_REQUIRED: &[&str] = &["done", "passed"];
+
+/// Where a person stands in a course.
+pub const COURSE_STATES: &[&str] = &["in_progress", "completed"];
+
+/// What happened to the progress of a person in a course.
+pub const COURSE_EVENTS: &[&str] = &["completed", "revoked"];
+
+/// The foreign key of a leaf to its criterion.
+const CRITERION: ForeignKey = ForeignKey {
+    columns: &["criterion_id"],
+    module: None,
+    table: "criterion",
+    references: &["id"],
+    on_delete: OnDelete::Cascade,
+};
+
+/// The changes of course progress.
+const COURSE_PROGRESS: &[Change] = &[
+    Change::CreateTable(Table {
+        name: "course_setting",
+        columns: &[
+            Column::new("course_id", Type::Uuid),
+            Column::new("aggregation", Type::Text).default(ColumnDefault::Text("all")),
+            Column::new("final", Type::Boolean).default(ColumnDefault::Bool(false)),
+            Column::new("updated_at", Type::Timestamptz).default(ColumnDefault::Now),
+        ],
+        primary_key: &["course_id"],
+        foreign_keys: &[other(&["course_id"], "courses", "course", OnDelete::Cascade)],
+        checks: &[Check::OneOf("aggregation", AGGREGATIONS)],
+        without_natural_key: Some("the settings of one course"),
+        ..Table::EMPTY
+    }),
+    Change::CreateTable(Table {
+        name: "criterion",
+        columns: &[
+            Column::new("id", Type::Uuid),
+            Column::new("course_id", Type::Uuid),
+            Column::new("kind", Type::Text),
+            Column::new("position", Type::Integer).default(ColumnDefault::Int(0)),
+        ],
+        primary_key: &["id"],
+        foreign_keys: &[other(&["course_id"], "courses", "course", OnDelete::Cascade)],
+        checks: &[Check::OneOf("kind", CRITERION_KINDS)],
+        indexes: &[Index {
+            columns: &["course_id", "position"],
+            unique: false,
+        }],
+        without_natural_key: Some("a course may require the same kind of thing more than once"),
+        ..Table::EMPTY
+    }),
+    Change::CreateTable(Table {
+        name: "criterion_activity",
+        columns: &[
+            Column::new("criterion_id", Type::Uuid),
+            Column::new("course_module_id", Type::Uuid),
+            Column::new("required", Type::Text),
+        ],
+        primary_key: &["criterion_id"],
+        foreign_keys: &[
+            CRITERION,
+            other(
+                &["course_module_id"],
+                "activities",
+                "course_module",
+                OnDelete::Cascade,
+            ),
+        ],
+        checks: &[Check::OneOf("required", ACTIVITY_REQUIRED)],
+        without_natural_key: Some("the parameters of one criterion"),
+        ..Table::EMPTY
+    }),
+    Change::CreateTable(Table {
+        name: "criterion_grade",
+        columns: &[
+            Column::new("criterion_id", Type::Uuid),
+            Column::new("record_id", Type::Uuid),
+            Column::new("min_percent", Type::Numeric(7, 4)),
+        ],
+        primary_key: &["criterion_id"],
+        foreign_keys: &[
+            CRITERION,
+            other(&["record_id"], "records", "record", OnDelete::Cascade),
+        ],
+        without_natural_key: Some("the parameters of one criterion"),
+        ..Table::EMPTY
+    }),
+    Change::CreateTable(Table {
+        name: "criterion_date",
+        columns: &[
+            Column::new("criterion_id", Type::Uuid),
+            Column::new("on_or_after", Type::Timestamptz),
+        ],
+        primary_key: &["criterion_id"],
+        foreign_keys: &[CRITERION],
+        without_natural_key: Some("the parameters of one criterion"),
+        ..Table::EMPTY
+    }),
+    Change::CreateTable(Table {
+        name: "criterion_duration",
+        columns: &[
+            Column::new("criterion_id", Type::Uuid),
+            Column::new("enrolled_days", Type::Integer),
+        ],
+        primary_key: &["criterion_id"],
+        foreign_keys: &[CRITERION],
+        without_natural_key: Some("the parameters of one criterion"),
+        ..Table::EMPTY
+    }),
+    Change::CreateTable(Table {
+        name: "criterion_role_approval",
+        columns: &[
+            Column::new("criterion_id", Type::Uuid),
+            Column::new("role_id", Type::Uuid),
+        ],
+        primary_key: &["criterion_id"],
+        foreign_keys: &[
+            CRITERION,
+            other(&["role_id"], "access", "role", OnDelete::Cascade),
+        ],
+        without_natural_key: Some("the parameters of one criterion"),
+        ..Table::EMPTY
+    }),
+    Change::CreateTable(Table {
+        name: "criterion_course",
+        columns: &[
+            Column::new("criterion_id", Type::Uuid),
+            Column::new("required_course_id", Type::Uuid),
+        ],
+        primary_key: &["criterion_id"],
+        foreign_keys: &[
+            CRITERION,
+            other(&["required_course_id"], "courses", "course", OnDelete::Cascade),
+        ],
+        without_natural_key: Some("the parameters of one criterion"),
+        ..Table::EMPTY
+    }),
+    Change::CreateTable(Table {
+        name: "approval",
+        columns: &[
+            Column::new("criterion_id", Type::Uuid),
+            Column::new("account_id", Type::Uuid),
+            Column::new("approved_by", Type::Uuid).nullable(),
+            Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
+        ],
+        primary_key: &["criterion_id", "account_id"],
+        foreign_keys: &[
+            CRITERION,
+            other(&["account_id"], "identity", "account", OnDelete::Cascade),
+        ],
+        without_natural_key: Some("one approval per criterion and person"),
+        ..Table::EMPTY
+    }),
+    Change::CreateTable(Table {
+        name: "course_state",
+        columns: &[
+            Column::new("course_id", Type::Uuid),
+            Column::new("account_id", Type::Uuid),
+            Column::new("state", Type::Text),
+            Column::new("completed_at", Type::Timestamptz).nullable(),
+            Column::new("revoked_at", Type::Timestamptz).nullable(),
+            Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+        ],
+        primary_key: &["course_id", "account_id"],
+        foreign_keys: &[
+            other(&["course_id"], "courses", "course", OnDelete::Cascade),
+            other(&["account_id"], "identity", "account", OnDelete::Cascade),
+        ],
+        checks: &[Check::OneOf("state", COURSE_STATES)],
+        without_natural_key: Some("one state per person and course, the target of the upsert"),
+        ..Table::EMPTY
+    }),
+    Change::CreateTable(Table {
+        name: "course_history",
+        columns: &[
+            Column::new("id", Type::Uuid),
+            Column::new("course_id", Type::Uuid),
+            Column::new("account_id", Type::Uuid),
+            Column::new("event", Type::Text),
+            Column::new("cause", Type::Text),
+            Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
+        ],
+        primary_key: &["id"],
+        foreign_keys: &[
+            other(&["course_id"], "courses", "course", OnDelete::Cascade),
+            other(&["account_id"], "identity", "account", OnDelete::Cascade),
+        ],
+        checks: &[Check::OneOf("event", COURSE_EVENTS)],
+        indexes: &[Index {
+            columns: &["course_id", "account_id", "at"],
+            unique: false,
+        }],
+        without_natural_key: Some("append-only history: one row per completion or revocation"),
+        ..Table::EMPTY
+    }),
+    Change::CreateTable(Table {
+        name: "course_pending",
+        columns: &[
+            Column::new("course_id", Type::Uuid),
+            Column::new("account_id", Type::Uuid),
+            Column::new("queued_at", Type::Timestamptz).default(ColumnDefault::Now),
+        ],
+        primary_key: &["course_id", "account_id"],
+        foreign_keys: &[
+            other(&["course_id"], "courses", "course", OnDelete::Cascade),
+            other(&["account_id"], "identity", "account", OnDelete::Cascade),
+        ],
+        without_natural_key: Some("one row per person and course waiting to be evaluated"),
+        ..Table::EMPTY
+    }),
 ];

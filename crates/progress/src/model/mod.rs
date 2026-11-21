@@ -193,3 +193,88 @@ pub struct Exception {
     /// When.
     pub at: Timestamp,
 }
+
+/// One thing a course requires.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum Criterion {
+    /// A course module of the course done, or passed.
+    Activity {
+        /// The course module.
+        module: ModuleId,
+        /// `done` or `passed`.
+        required: String,
+    },
+    /// A grade of the course at least a share of its range.
+    Grade {
+        /// The grade record.
+        record: kampus_records::RecordId,
+        /// The share, from 0 to 100.
+        min_percent: rust_decimal::Decimal,
+    },
+    /// A moment reached.
+    Date {
+        /// From when it holds.
+        on_or_after: Timestamp,
+    },
+    /// Taking part in the course for some days without a break.
+    Duration {
+        /// The days.
+        enrolled_days: i32,
+    },
+    /// Approved by someone who holds a role in the course.
+    RoleApproval {
+        /// The role.
+        role: kampus_access::RoleId,
+    },
+    /// Another course completed.
+    Course {
+        /// The other course.
+        course: kampus_courses::CourseId,
+    },
+}
+
+/// What a course requires and how.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CourseCriteria {
+    /// `all` of the criteria, or `any` of them.
+    #[serde(default = "every")]
+    pub aggregation: String,
+    /// Whether a completion stays when a criterion stops being met.
+    #[serde(default, rename = "final")]
+    pub is_final: bool,
+    /// The criteria, in order.
+    pub criteria: Vec<Criterion>,
+}
+
+/// The default aggregation.
+fn every() -> String {
+    "all".to_owned()
+}
+
+/// A criterion with whether a person meets it.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct CriterionState {
+    /// The criterion.
+    pub id: uuid::Uuid,
+    /// What it requires.
+    #[serde(flatten)]
+    pub criterion: Criterion,
+    /// Whether the person meets it now.
+    pub met: bool,
+}
+
+/// Where a person stands in a course.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct CourseProgress {
+    /// The course.
+    pub course: kampus_courses::CourseId,
+    /// The person.
+    pub account: PrincipalId,
+    /// `in_progress` or `completed`; `not_tracked` for someone progress does not follow there.
+    pub state: String,
+    /// When they completed it.
+    pub completed_at: Option<Timestamp>,
+    /// Each criterion with whether they meet it.
+    pub criteria: Vec<CriterionState>,
+}

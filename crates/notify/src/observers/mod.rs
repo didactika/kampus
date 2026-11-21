@@ -57,7 +57,29 @@ pub const LISTENERS: &[ListenerDeclaration] = &[
         name: "notify_state_decided",
         run: notify_state_decided,
     },
+    ListenerDeclaration {
+        event: kampus_progress::events::COURSE_COMPLETED,
+        name: "notify_course_completed",
+        run: notify_course_completed,
+    },
 ];
+
+/// Tells a person they completed a course.
+fn notify_course_completed(run: EventRun<'_>) -> JobFuture<'_> {
+    Box::pin(async move {
+        let account: PrincipalId = payload(&run, "account")?;
+        run.services
+            .service::<Notify>()?
+            .notify(
+                kampus_progress::settings::notifications::COURSE_COMPLETED,
+                account,
+                json!({ "course": run.event.payload["course"] }),
+                Some(&run.event.id.to_string()),
+            )
+            .await
+            .map(drop)
+    })
+}
 
 /// The person and the course of an event, and what else its payload names.
 fn payload<T: serde::de::DeserializeOwned>(run: &EventRun<'_>, field: &str) -> Result<T, Error> {

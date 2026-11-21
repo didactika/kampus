@@ -55,7 +55,10 @@ use kampus_courses::Courses;
 use kampus_db::Database;
 use kampus_records::Records;
 
-pub use model::{ActivityState, Exception, RuleKind, Source, State};
+pub use model::{
+    ActivityState, CourseCriteria, CourseProgress, Criterion, CriterionState, Exception, RuleKind, Source,
+    State,
+};
 pub use module::MODULE;
 pub use support::evaluate;
 

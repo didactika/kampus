@@ -38,7 +38,7 @@
 
 use async_trait::async_trait;
 use kampus_access::PrincipalId;
-use kampus_common::Result;
+use kampus_common::{Result, Timestamp};
 use kampus_courses::{CourseId, Participants};
 use kampus_db::Database;
 
@@ -107,6 +107,35 @@ impl Participants for Participation {
 
     async fn any(&self, course: CourseId) -> Result<bool> {
         self.anyone(course).await
+    }
+
+    async fn accounts(&self, course: CourseId) -> Result<Vec<PrincipalId>> {
+        let found: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+            "select distinct e.account_id from {} e join {} i on i.id = e.instance_id
+             where i.course_id = $1 and {ACTIVE} order by e.account_id",
+            table(&self.db, "enrolment"),
+            table(&self.db, "instance")
+        )))
+        .bind(course.as_uuid())
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(found.into_iter().map(PrincipalId::from_uuid).collect())
+    }
+
+    async fn since(&self, course: CourseId, account: PrincipalId) -> Result<Option<Timestamp>> {
+        let since: Option<time::OffsetDateTime> = sqlx::query_scalar(sql(format!(
+            "select min(e.starts_at) from {} e join {} i on i.id = e.instance_id
+             where i.course_id = $1 and e.account_id = $2 and {ACTIVE}",
+            table(&self.db, "enrolment"),
+            table(&self.db, "instance")
+        )))
+        .bind(course.as_uuid())
+        .bind(account.as_uuid())
+        .fetch_one(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(since.map(Timestamp::from_offset_date_time))
     }
 }
 

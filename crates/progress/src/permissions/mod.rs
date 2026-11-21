@@ -56,6 +56,9 @@ pub const EXCEPTION: &str = "progress.exception";
 /// Configure what a course module requires.
 pub const MANAGE: &str = "progress.manage";
 
+/// Be followed by progress in a course: the tracked population is the active participants who hold it.
+pub const TRACKED: &str = "progress.tracked";
+
 /// A permission of this module.
 const fn declared(code: &'static str, kind: PermissionKind, risks: &'static [Risk]) -> PermissionDeclaration {
     PermissionDeclaration {
@@ -73,4 +76,5 @@ pub const PERMISSIONS: &[PermissionDeclaration] = &[
     declared(MARK_OWN, PermissionKind::Write, &[]),
     declared(EXCEPTION, PermissionKind::Write, &[]),
     declared(MANAGE, PermissionKind::Write, &[]),
+    declared(TRACKED, PermissionKind::Read, &[]),
 ];
