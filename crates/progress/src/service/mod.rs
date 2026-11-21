@@ -37,6 +37,7 @@
 
 pub mod course;
 pub mod exception;
+pub mod prerequisite;
 pub mod read;
 pub mod recalc;
 pub mod rule;

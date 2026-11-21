@@ -71,6 +71,10 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/courses/{id}/states/{account}", get(states_for))
         .route("/courses/{id}/my-progress", get(my_progress))
         .route("/courses/{id}/criteria", get(criteria).put(define_criteria))
+        .route(
+            "/courses/{id}/prerequisites",
+            get(prerequisites).put(set_prerequisites),
+        )
         .route("/courses/{id}/course-progress", get(course_report))
         .route("/courses/{id}/course-progress/{account}", get(course_progress))
         .route("/courses/{id}/my-course-progress", get(my_course_progress))
@@ -360,4 +364,42 @@ async fn approve(
         .approve(&caller.actor, criterion, id(&account)?)
         .await?;
     Ok(StatusCode::NO_CONTENT)
+}
+
+/// The courses a course requires first.
+#[derive(Debug, Deserialize)]
+struct PrerequisitesBody {
+    /// The courses.
+    requires: Vec<kampus_courses::CourseId>,
+}
+
+/// The prerequisites around a course.
+async fn prerequisites(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(course): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .progress()?
+            .prerequisites(&caller.actor, id(&course)?)
+            .await?,
+    )
+    .into_response())
+}
+
+/// Replaces the courses a course requires first.
+async fn set_prerequisites(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(course): Path<String>,
+    Body(body): Body<PrerequisitesBody>,
+) -> ApiResult<Response> {
+    Ok(Json(
+        shared
+            .progress()?
+            .set_prerequisites(&caller.actor, id(&course)?, body.requires)
+            .await?,
+    )
+    .into_response())
 }

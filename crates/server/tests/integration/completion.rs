@@ -285,3 +285,117 @@ async fn a_learner_completes_a_course_by_its_criteria_and_loses_it_when_one_stop
     );
     site.drop().await;
 }
+
+/// A self enrolment instance of a course for learners; returns its id.
+async fn self_instance(site: &Site, admin: &str, course: &str) -> String {
+    let instance = site
+        .call(
+            Method::POST,
+            &format!("/api/v1/enrol/courses/{course}/enrolment-instances"),
+            Some(admin),
+            &[],
+            Some(json!({ "method": "self", "name": "Self", "role": site.roles["learner"] })),
+        )
+        .await;
+    assert_eq!(instance.status, StatusCode::CREATED, "{}", instance.body);
+    instance.body["id"].as_str().unwrap().to_owned()
+}
+
+#[tokio::test]
+#[allow(clippy::too_many_lines, reason = "one session read from top to bottom")]
+async fn a_learner_enrols_in_a_course_only_after_completing_the_one_it_requires() {
+    let site = site().await;
+    let admin = site.session("admin").await;
+    let (category, first) = site.course(&admin).await;
+    let second = site
+        .call(
+            Method::POST,
+            &format!("/api/v1/courses/categories/{category}/courses"),
+            Some(&admin),
+            &[],
+            Some(json!({ "short_name": "PHY102", "full_name": "Physics II" })),
+        )
+        .await;
+    let second = second.body["id"].as_str().unwrap().to_owned();
+    let (_, lea) = site.learner(&admin, "lea@example.org").await;
+
+    let set = site
+        .call(
+            Method::PUT,
+            &format!("/api/v1/progress/courses/{second}/prerequisites"),
+            Some(&admin),
+            &[],
+            Some(json!({ "requires": [first] })),
+        )
+        .await;
+    assert_eq!(set.status, StatusCode::OK, "{}", set.body);
+    assert_eq!(set.body["requires"][0], first.as_str());
+    let around = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/progress/courses/{first}/prerequisites"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    assert_eq!(around.body["required_by"][0], second.as_str());
+    let cycle = site
+        .call(
+            Method::PUT,
+            &format!("/api/v1/progress/courses/{first}/prerequisites"),
+            Some(&admin),
+            &[],
+            Some(json!({ "requires": [second] })),
+        )
+        .await;
+    assert_eq!(cycle.status, StatusCode::CONFLICT, "{}", cycle.body);
+    assert_eq!(cycle.code(), "progress.prerequisites_cycle");
+    let through_criteria = site
+        .call(
+            Method::PUT,
+            &format!("/api/v1/progress/courses/{first}/criteria"),
+            Some(&admin),
+            &[],
+            Some(json!({ "criteria": [{ "kind": "course", "course": second }] })),
+        )
+        .await;
+    assert_eq!(through_criteria.code(), "progress.criteria_cycle");
+
+    let join_second = format!(
+        "/api/v1/enrol/enrolment-instances/{}/self",
+        self_instance(&site, &admin, &second).await
+    );
+    let refused = site
+        .call(Method::POST, &join_second, Some(&lea), &[], Some(json!({})))
+        .await;
+    assert_eq!(refused.status, StatusCode::CONFLICT, "{}", refused.body);
+    assert_eq!(refused.code(), "enrol.prerequisites_missing");
+
+    site.call(
+        Method::PUT,
+        &format!("/api/v1/progress/courses/{first}/criteria"),
+        Some(&admin),
+        &[],
+        Some(json!({ "criteria": [{ "kind": "date", "on_or_after": "2000-01-01T00:00:00Z" }] })),
+    )
+    .await;
+    let join_first = format!(
+        "/api/v1/enrol/enrolment-instances/{}/self",
+        self_instance(&site, &admin, &first).await
+    );
+    let joined = site
+        .call(Method::POST, &join_first, Some(&lea), &[], Some(json!({})))
+        .await;
+    assert_eq!(joined.status, StatusCode::CREATED, "{}", joined.body);
+    let progress = site.context.service::<Progress>().unwrap();
+    progress.queue_timed().await.unwrap();
+    run_queue(&site).await;
+    assert_eq!(mine(&site, &lea, &first).await["state"], "completed");
+
+    let accepted = site
+        .call(Method::POST, &join_second, Some(&lea), &[], Some(json!({})))
+        .await;
+    assert_eq!(accepted.status, StatusCode::CREATED, "{}", accepted.body);
+    site.drop().await;
+}

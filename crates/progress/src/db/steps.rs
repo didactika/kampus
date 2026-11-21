@@ -240,6 +240,30 @@ pub const STEPS: &[Step] = &[
         action: None,
         changes: COURSE_PROGRESS,
     },
+    Step {
+        sequence: 4,
+        name: "prerequisites between courses",
+        revert: &[],
+        action: None,
+        changes: &[Change::CreateTable(Table {
+            name: "prerequisite",
+            columns: &[
+                Column::new("course_id", Type::Uuid),
+                Column::new("requires_course_id", Type::Uuid),
+            ],
+            primary_key: &["course_id", "requires_course_id"],
+            foreign_keys: &[
+                other(&["course_id"], "courses", "course", OnDelete::Cascade),
+                other(&["requires_course_id"], "courses", "course", OnDelete::Cascade),
+            ],
+            indexes: &[Index {
+                columns: &["requires_course_id"],
+                unique: false,
+            }],
+            without_natural_key: Some("one row per course and the course it requires first"),
+            ..Table::EMPTY
+        })],
+    },
 ];
 
 /// The kinds of a criterion of a course.

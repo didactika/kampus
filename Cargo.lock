@@ -2211,6 +2211,7 @@ dependencies = [
 name = "kampus-progress"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
  "kampus-access",
  "kampus-activities",
@@ -2218,6 +2219,7 @@ dependencies = [
  "kampus-courses",
  "kampus-customise",
  "kampus-db",
+ "kampus-enrol",
  "kampus-events",
  "kampus-files",
  "kampus-identity",
