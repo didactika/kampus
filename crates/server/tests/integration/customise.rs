@@ -185,7 +185,7 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
             &format!("/api/v1/customise/scopes/{campus}/theme"),
             Some(&admin),
             &[],
-            Some(json!({ "tokens": { "primary": "#0f766e" } })),
+            Some(json!({ "tokens": { "primary": "#1d4ed8" } })),
         )
         .await;
     assert_eq!(theme.status, StatusCode::OK, "{}", theme.body);
@@ -199,7 +199,7 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
         )
         .await;
     assert!(
-        css.body.as_str().unwrap().contains("--kampus-primary: #0f766e;"),
+        css.body.as_str().unwrap().contains("--k-color-primary: #1d4ed8;"),
         "{}",
         css.body
     );
@@ -218,7 +218,7 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
         "{}",
         refused.body
     );
-    assert_eq!(refused.code(), "customise.theme_contrast");
+    assert_eq!(refused.code(), "customise.theme_invalid");
     site.drop().await;
 }
 

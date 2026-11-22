@@ -23,7 +23,7 @@ status: accepted
   | `surface-light` / `surface-dark` | `#f8fafc` / `#0f172a` | slate 50 / slate 900 |
 
   - **Icon.** The Kampus icon (`docs/assets/kampus-icon.svg`) is a K made of three rounded strokes: a white stem and upper arm, and a lower arm with a teal-to-cyan gradient for progress. It sits on a square with rounded corners and a teal gradient from `#0f766e` through `#00555a` to `#042f2e`.
-  - **Customisation.** In settings, a campus can replace the logo and the icon, change any token with a live preview, and check contrast. A change that breaks WCAG 2.2 AA contrast is blocked. Light and dark variants are generated automatically.
+  - **Customisation.** In settings, a campus can replace the logo and the icon, and change the seed colours, the typefaces, the size, the corner radius, the density, the motion and the preferred scheme, with a live preview. The colour roles of the light and the dark scheme are grown from the seeds in the manner of Material 3. A role keeps its seed when it is accessible and the nearest accessible tone of its palette otherwise, so no seed can break WCAG 2.2 AA contrast. Didactika's palettes above are used as they are; any other seed grows a palette in OKLCH that keeps its hue.
 - Consequences:
   - The design system of the web client and the handbook (DEC-011) use these tokens from the start.
   - The no-code theme editor (RF-115) edits the same tokens.

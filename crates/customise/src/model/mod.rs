@@ -35,8 +35,10 @@
 //! The entities of customisation: resolved terms and flags with where they came from, custom fields with
 //! their choices and types, and in [`layout`] and [`theme`] layouts, menus and themes.
 
+pub mod colour;
 pub mod layout;
 pub mod package;
+pub mod palette;
 pub mod rule;
 pub mod theme;
 

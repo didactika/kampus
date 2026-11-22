@@ -28,11 +28,11 @@ paths:
     put: { summary: 'Replace the items, nested at most 3 deep and 100 in all, locked or not', responses: { '200': { description: The menu as it now resolves }, '409': { description: Locked above }, '422': { description: 'Empty label, a target that is neither a path nor a web address, too many or too deep' } } }
     delete: { summary: 'Remove the menu of the scope; the one above applies again', responses: { '200': { description: The menu as it now resolves } } }
   /api/v1/customise/scopes/{scope_id}/theme:
-    get: { summary: Every design token with its value and origin, responses: { '200': { description: Theme } } }
-    put: { summary: 'Set the tokens of the scope, locked or not; kinds and WCAG 2.2 AA contrast checked (RN-217)', responses: { '200': { description: The theme as it now resolves }, '409': { description: Locked above }, '422': { description: 'An unknown token or value (customise.theme_invalid), or contrast too low (customise.theme_contrast)' } } }
+    get: { summary: 'Every design token with its value and origin, and the colour roles of the light and the dark scheme grown from them', responses: { '200': { description: Theme } } }
+    put: { summary: 'Set the tokens of the scope, locked or not; kinds checked, and the roles grown keep WCAG 2.2 AA contrast (RN-217)', responses: { '200': { description: The theme as it now resolves }, '409': { description: Locked above }, '422': { description: 'An unknown token or value (customise.theme_invalid), or contrast too low (customise.theme_contrast)' } } }
     delete: { summary: 'Remove the tokens of the scope', responses: { '200': { description: The theme as it now resolves } } }
   /api/v1/customise/scopes/{scope_id}/theme.css:
-    get: { summary: 'The theme as CSS custom properties (--kampus-<token>) on :root', responses: { '200': { description: 'text/css' } } }
+    get: { summary: 'The theme as the custom properties of the design system (--k-color-<role>, --k-font-family-plain, --k-radius, --k-density…): the scheme the scope prefers on :root, the other one for prefers-color-scheme and [data-theme]', responses: { '200': { description: 'text/css' } } }
   /api/v1/customise/scopes/{scope_id}/rules:
     get: { summary: 'The rules the scope writes; needs customise.rule.manage there', responses: { '200': { description: Rules } } }
     post: { summary: 'Write a rule from a declared trigger, typed conditions and declared actions; its author becomes its owner (RN-218)', responses: { '201': { description: 'Created, with its version as ETag' }, '403': { description: 'Without customise.rule.manage or a permission an action needs' }, '422': { description: 'Unknown trigger or action, conditions on undeclared fields, parameters of another kind, or an action that publishes its own trigger' } } }

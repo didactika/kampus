@@ -191,7 +191,7 @@ async fn an_import_that_does_not_fit_the_scope_is_refused_whole() {
         { "page_kind": "testing.page", "placements": [{ "region": "main", "widget": "testing.unknown" }] }
     ]))
     .unwrap();
-    package.theme = serde_json::from_value(json!({ "tokens": { "primary": "#facc15" } })).unwrap();
+    package.theme = serde_json::from_value(json!({ "tokens": { "primary": "yellow" } })).unwrap();
     package.rules = vec![RuleSpec {
         name: "Bad".to_owned(),
         trigger: "testing.unknown".to_owned(),
@@ -205,7 +205,7 @@ async fn an_import_that_does_not_fit_the_scope_is_refused_whole() {
     for expected in [
         "terms[0].code",
         "layouts[0].placements[0].widget",
-        "theme.tokens.on_primary",
+        "theme.tokens.primary",
         "rules[0].trigger",
     ] {
         assert!(fields.contains(&expected), "{expected} in {fields:?}");
