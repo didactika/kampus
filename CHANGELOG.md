@@ -6,6 +6,7 @@ All notable changes to Kampus are recorded here, following [Keep a Changelog](ht
 
 ### Changed
 
+- The web client is an npm workspace at the root of the repository: the shell in `web/`, the design system in `web/ui/`, the API client in `web/sdk/` and the UI module of each Kampus module in `crates/<module>/web/`. CI checks, tests and builds it (job *Web client*); its image builds from the root (`web/Dockerfile`).
 - The HTTP API of every module lives under the name of its module: `/api/v1/<module>/…` (for example `/api/v1/identity/auth/sign-in`, `/api/v1/users/me/profile`, `/api/v1/courses/courses/{id}`, `/api/v1/enrol/courses/{id}/participants`, `/api/v1/customise/scopes/{scope}/terms/{code}`). The server mounts each module under its name, so routes of two modules never collide, whatever either adds later. The package routes of customisation are now `/api/v1/customise/scopes/{scope}/packages`, `/api/v1/customise/scopes/{scope}/imports` and `/api/v1/customise/imports/{id}[/apply]`.
 - The development PostgreSQL has 512 MB of shared memory, and every integration test drops the installation it creates, so the test database no longer grows run after run.
 - Every component keeps its version data in its own `version.toml`, in the same form as the platform's; `kampus_common::manifest!()` reads it, and no version data is written in code.

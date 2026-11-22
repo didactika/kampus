@@ -11,6 +11,19 @@ The web client (`web/`) is an **application shell** that loads the **UI modules*
 
 ![UI modules and extension points](./ui-modules.svg)
 
+## Packages
+
+The client is one npm workspace at the root of the repository (`package.json`), so the shell, the shared packages and the UI module of every Kampus module build and test together:
+
+| Package | Folder | Holds |
+| --- | --- | --- |
+| `@kampus/web` | `web/` | The shell |
+| `@kampus/ui` | `web/ui/` | The design system: tokens and Web Components |
+| `@kampus/sdk` | `web/sdk/` | The generated API client and the UI module contract |
+| `@kampus/<module>-ui` | `crates/<module>/web/` | The UI module of a Kampus module, next to its Rust crate, as a plugin ships both in one package (RN-204) |
+
+`npm run check`, `npm test` and `npm run build` at the root run every package; CI runs them in the job *Web client*.
+
 ## Shell
 
 ![Shell](./shell.svg)
