@@ -472,8 +472,8 @@
   },
   "gradient": {
     "brand": {
-      "$value": "linear-gradient(135deg, var(--k-color-primary), var(--k-color-brand) 55%, color-mix(in srgb, var(--k-color-brand) 45%, var(--k-color-scrim)))",
-      "$description": "The gradient of the Kampus icon"
+      "$value": "linear-gradient(135deg, var(--k-color-brand), color-mix(in srgb, var(--k-color-brand) 55%, var(--k-color-scrim)))",
+      "$description": "The gradient of the Kampus icon, from the brand to a deeper brand, the same in both schemes so on-brand text reads on it"
     },
     "progress": {
       "$value": "linear-gradient(90deg, var(--k-color-primary), var(--k-color-accent))",
