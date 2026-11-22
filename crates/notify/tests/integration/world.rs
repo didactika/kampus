@@ -164,13 +164,20 @@ pub(crate) async fn world() -> World {
     );
     let email = Arc::new(MemoryTransport::default());
     let push = Arc::new(MemoryTransport::default());
-    let notify = Notify::new(db.clone()).with_transports(email.clone(), push.clone());
+    let notify = Notify::new(db.clone())
+        .with_transports(email.clone(), push.clone())
+        .with_courses(courses.clone());
     notify
         .sync_declarations(&[
             &kampus_records::MODULE,
             &kampus_progress::MODULE,
+            &kampus_notify::MODULE,
             &crate::inbox::NEWS_MODULE,
         ])
+        .await
+        .unwrap();
+    kampus_settings::Settings::new(db.clone(), access.clone())
+        .sync_declarations(&modules)
         .await
         .unwrap();
     let platform = access.create_platform().await.unwrap();

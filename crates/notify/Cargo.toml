@@ -54,6 +54,7 @@ kampus-access.workspace = true
 kampus-mail.workspace = true
 kampus-push.workspace = true
 kampus-courses = { path = "../courses" }
+kampus-settings = { path = "../settings" }
 kampus-events = { path = "../events" }
 kampus-identity = { path = "../identity" }
 kampus-progress = { path = "../progress" }
@@ -72,7 +73,6 @@ uuid.workspace = true
 [dev-dependencies]
 kampus-activities = { path = "../activities" }
 kampus-tasks = { path = "../tasks" }
-kampus-settings = { path = "../settings" }
 kampus-customise = { path = "../customise" }
 kampus-files = { path = "../files" }
 kampus-storage.workspace = true

@@ -33,14 +33,18 @@
 // ------------------------------------------------------------------------------
 
 //! The values notify gives in the default role templates, version 1: whoever administers a campus writes its
-//! templates and sets its defaults.
+//! templates, sets its defaults and writes to anyone of it.
 
 use kampus_module::{RoleTemplateDeclaration, Value};
 
-use super::{DEFAULTS_MANAGE, TEMPLATE_MANAGE};
+use super::{DEFAULTS_MANAGE, MESSAGE_ANYONE, TEMPLATE_MANAGE};
 
 /// Running the notifications of a campus.
-const RUNNING: &[(&str, Value)] = &[(TEMPLATE_MANAGE, Value::Allow), (DEFAULTS_MANAGE, Value::Allow)];
+const RUNNING: &[(&str, Value)] = &[
+    (TEMPLATE_MANAGE, Value::Allow),
+    (DEFAULTS_MANAGE, Value::Allow),
+    (MESSAGE_ANYONE, Value::Allow),
+];
 
 /// The values of this module in the role templates.
 pub const TEMPLATES: &[RoleTemplateDeclaration] = &[

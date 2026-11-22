@@ -32,7 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The permissions notify declares: writing the templates of a campus and setting its defaults. Everyone reads
+//! The permissions notify declares: writing the templates of a campus, setting its defaults, and writing to
+//! anyone of it. Everyone reads
 //! their own inbox and sets their own preferences; what a notification links to is checked against the
 //! permissions of the person when they open it.
 
@@ -48,6 +49,9 @@ pub const TEMPLATE_MANAGE: &str = "notify.template.manage";
 /// Set what a campus gives by default for each type and channel, and lock it.
 pub const DEFAULTS_MANAGE: &str = "notify.defaults.manage";
 
+/// Write to anyone of a campus, whatever its rule of messaging says.
+pub const MESSAGE_ANYONE: &str = "notify.message.anyone";
+
 /// The permissions of this module.
 pub const PERMISSIONS: &[PermissionDeclaration] = &[
     PermissionDeclaration {
@@ -60,6 +64,12 @@ pub const PERMISSIONS: &[PermissionDeclaration] = &[
         code: DEFAULTS_MANAGE,
         kind: PermissionKind::Write,
         risks: &[Risk::Configuration],
+        lowest_kind: ScopeKind::Campus,
+    },
+    PermissionDeclaration {
+        code: MESSAGE_ANYONE,
+        kind: PermissionKind::Write,
+        risks: &[Risk::Spam],
         lowest_kind: ScopeKind::Campus,
     },
 ];

@@ -226,7 +226,140 @@ pub const STEPS: &[Step] = &[
             }),
         ],
     },
+    Step {
+        sequence: 3,
+        name: "conversations: members, messages, deletions and blocks",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::CreateTable(Table {
+                name: "conversation",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("campus_id", Type::Uuid),
+                    Column::new("kind", Type::Text),
+                    Column::new("title", Type::Text).nullable(),
+                    Column::new("direct_key", Type::Text).nullable(),
+                    Column::new("course_group_id", Type::Uuid).nullable(),
+                    Column::new("created_by", Type::Uuid).nullable(),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                unique: &[&["direct_key"], &["course_group_id"]],
+                foreign_keys: &[
+                    other(&["campus_id"], "access", "scope", OnDelete::Cascade),
+                    other(&["course_group_id"], "courses", "group", OnDelete::Cascade),
+                    other(&["created_by"], "identity", "account", OnDelete::SetNull),
+                ],
+                checks: &[Check::OneOf("kind", CONVERSATION_KINDS)],
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "member",
+                columns: &[
+                    Column::new("conversation_id", Type::Uuid),
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("joined_at", Type::Timestamptz).default(ColumnDefault::Now),
+                    Column::new("left_at", Type::Timestamptz).nullable(),
+                    Column::new("muted", Type::Boolean).default(ColumnDefault::Bool(false)),
+                    Column::new("last_read_at", Type::Timestamptz).nullable(),
+                ],
+                primary_key: &["conversation_id", "account_id"],
+                foreign_keys: &[
+                    CONVERSATION_OF,
+                    other(&["account_id"], "identity", "account", OnDelete::Cascade),
+                ],
+                indexes: &[Index {
+                    columns: &["account_id"],
+                    unique: false,
+                }],
+                without_natural_key: Some("one membership per conversation and person"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "message",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("conversation_id", Type::Uuid),
+                    Column::new("author_id", Type::Uuid),
+                    Column::new("body", Type::Text),
+                    Column::new("sent_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                foreign_keys: &[
+                    CONVERSATION_OF,
+                    other(&["author_id"], "identity", "account", OnDelete::Cascade),
+                ],
+                indexes: &[
+                    Index {
+                        columns: &["conversation_id", "sent_at"],
+                        unique: false,
+                    },
+                    Index {
+                        columns: &["author_id"],
+                        unique: false,
+                    },
+                ],
+                without_natural_key: Some(
+                    "two messages may say the same at the same time; they differ only by id",
+                ),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "message_deletion",
+                columns: &[
+                    Column::new("message_id", Type::Uuid),
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["message_id", "account_id"],
+                foreign_keys: &[
+                    ForeignKey {
+                        columns: &["message_id"],
+                        module: None,
+                        table: "message",
+                        references: &["id"],
+                        on_delete: OnDelete::Cascade,
+                    },
+                    other(&["account_id"], "identity", "account", OnDelete::Cascade),
+                ],
+                without_natural_key: Some("one deletion per message and person"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "block",
+                columns: &[
+                    Column::new("account_id", Type::Uuid),
+                    Column::new("blocked_id", Type::Uuid),
+                    Column::new("created_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["account_id", "blocked_id"],
+                foreign_keys: &[
+                    other(&["account_id"], "identity", "account", OnDelete::Cascade),
+                    other(&["blocked_id"], "identity", "account", OnDelete::Cascade),
+                ],
+                indexes: &[Index {
+                    columns: &["blocked_id"],
+                    unique: false,
+                }],
+                without_natural_key: Some("one block per pair of people"),
+                ..Table::EMPTY
+            }),
+        ],
+    },
 ];
+
+/// What a conversation is: between two people, of a group someone gathered, or of a group of a course.
+pub const CONVERSATION_KINDS: &[&str] = &["direct", "group", "course_group"];
+
+/// The foreign key to the conversation of a row.
+const CONVERSATION_OF: ForeignKey = ForeignKey {
+    columns: &["conversation_id"],
+    module: None,
+    table: "conversation",
+    references: &["id"],
+    on_delete: OnDelete::Cascade,
+};
 
 /// Where a delivery stands: waiting, sent, or given up after its attempts.
 pub const DELIVERY_STATES: &[&str] = &["pending", "sent", "dead"];

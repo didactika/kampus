@@ -526,6 +526,32 @@ impl Courses {
         self.participants.accounts(course).await
     }
 
+    /// Whether two people take part in a course together now, by the enrolments the server knows.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the participants cannot be read.
+    pub async fn share_a_course(&self, one: PrincipalId, other: PrincipalId) -> Result<bool> {
+        self.participants.together(one, other).await
+    }
+
+    /// The members of a group, whoever asks; for modules that follow the membership of a group.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn group_members_of(&self, group: GroupId) -> Result<Vec<PrincipalId>> {
+        let found: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+            "select distinct account_id from {} where group_id = $1 order by account_id",
+            self.table("group_member")
+        )))
+        .bind(group.as_uuid())
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(found.into_iter().map(PrincipalId::from_uuid).collect())
+    }
+
     /// Since when a person takes part in a course without a break, when they do.
     ///
     /// # Errors

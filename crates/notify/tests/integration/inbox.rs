@@ -142,6 +142,7 @@ async fn a_person_turns_types_off_except_the_required_ones() {
         codes,
         [
             (ANNOUNCEMENT, true, true),
+            ("notify.message_received", true, false),
             ("progress.course_completed", true, false),
             ("progress.state_decided", true, false),
             ("records.grade_posted", true, false),

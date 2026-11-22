@@ -33,35 +33,61 @@
 // ------------------------------------------------------------------------------
 
 //! The jobs of notify: sending the deliveries of email and push, when something is queued and every minute
-//! for those to try again.
+//! for those to try again, and purging the messages nobody keeps, every night.
 
 use kampus_module::{JobDeclaration, JobFuture, JobRun, ScheduleDeclaration};
 
 use crate::Notify;
 
 /// The jobs of this module.
-pub const JOBS: &[JobDeclaration] = &[JobDeclaration {
-    code: "notify.deliver",
-    summary: "Send the notifications of email and push whose time came",
-    max_attempts: 3,
-    backoff_seconds: 60,
-    timeout_seconds: 600,
-    concurrency: Some("all"),
-    run: deliver,
-}];
+pub const JOBS: &[JobDeclaration] = &[
+    JobDeclaration {
+        code: "notify.deliver",
+        summary: "Send the notifications of email and push whose time came",
+        max_attempts: 3,
+        backoff_seconds: 60,
+        timeout_seconds: 600,
+        concurrency: Some("all"),
+        run: deliver,
+    },
+    JobDeclaration {
+        code: "notify.message_purge",
+        summary: "Purge the messages every member deleted and those older than their campus keeps",
+        max_attempts: 3,
+        backoff_seconds: 600,
+        timeout_seconds: 3600,
+        concurrency: Some("all"),
+        run: purge,
+    },
+];
 
 /// The schedules of this module.
-pub const SCHEDULES: &[ScheduleDeclaration] = &[ScheduleDeclaration {
-    job: "notify.deliver",
-    cron: "* * * * *",
-    time_zone: "UTC",
-}];
+pub const SCHEDULES: &[ScheduleDeclaration] = &[
+    ScheduleDeclaration {
+        job: "notify.deliver",
+        cron: "* * * * *",
+        time_zone: "UTC",
+    },
+    ScheduleDeclaration {
+        job: "notify.message_purge",
+        cron: "40 3 * * *",
+        time_zone: "UTC",
+    },
+];
 
 /// Sends what is due.
 fn deliver(run: JobRun<'_>) -> JobFuture<'_> {
     Box::pin(async move {
         let notify = run.services.service::<Notify>()?;
         while notify.deliver(run.services).await? > 0 {}
+        Ok(())
+    })
+}
+
+/// Purges the messages nobody keeps.
+fn purge(run: JobRun<'_>) -> JobFuture<'_> {
+    Box::pin(async move {
+        run.services.service::<Notify>()?.purge_messages().await?;
         Ok(())
     })
 }

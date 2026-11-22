@@ -101,6 +101,21 @@ impl Participation {
 
 #[async_trait]
 impl Participants for Participation {
+    async fn together(&self, one: PrincipalId, other: PrincipalId) -> Result<bool> {
+        sqlx::query_scalar(sql(format!(
+            "select exists (select 1 from {e} e join {i} i on i.id = e.instance_id where e.account_id = $1 and {ACTIVE}
+                 and i.course_id in (select i.course_id from {e} e join {i} i on i.id = e.instance_id
+                                     where e.account_id = $2 and {ACTIVE}))",
+            e = table(&self.db, "enrolment"),
+            i = table(&self.db, "instance")
+        )))
+        .bind(one.as_uuid())
+        .bind(other.as_uuid())
+        .fetch_one(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)
+    }
+
     async fn takes_part(&self, course: CourseId, account: PrincipalId) -> Result<bool> {
         self.is_active(course, account).await
     }
