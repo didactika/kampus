@@ -33,25 +33,40 @@
 // ------------------------------------------------------------------------------
 
 
-/** A problem the API answered with: its status and the code of its problem details. */
+/** One failing field of a validation problem: the field and the rule it breaks. */
+export interface ProblemField {
+  readonly field: string;
+  readonly rule: string;
+}
+
+/** A problem the API answered with: its status, the code of its problem details, its values and failing fields. */
 export class ApiError extends Error {
   constructor(
     readonly status: number,
     readonly code: string,
+    readonly params: Readonly<Record<string, string>> = {},
+    readonly fields: readonly ProblemField[] = [],
   ) {
     super(code);
     this.name = "ApiError";
   }
+
+  /** The rules a field breaks. */
+  rulesOf(field: string): string[] {
+    return this.fields.filter((f) => f.field === field).map((f) => f.rule);
+  }
 }
 
-/** Reads an answer of the API: its JSON, or an `ApiError` with the code of the problem. */
+/** Reads an answer of the API: its JSON, or an `ApiError` with the code, values and fields of the problem. */
 export async function answer<T>(response: Response): Promise<T> {
   if (response.status === 204) return undefined as T;
   const text = await response.text();
   const data: unknown = text ? JSON.parse(text) : undefined;
   if (!response.ok) {
-    const code = typeof data === "object" && data !== null && "code" in data ? String((data as { code: unknown }).code) : "unknown";
-    throw new ApiError(response.status, code);
+    const problem = (typeof data === "object" && data !== null ? data : {}) as { code?: unknown; params?: unknown; fields?: unknown };
+    const params = typeof problem.params === "object" && problem.params !== null ? (problem.params as Record<string, string>) : {};
+    const fields = Array.isArray(problem.fields) ? (problem.fields as ProblemField[]) : [];
+    throw new ApiError(response.status, problem.code === undefined ? "unknown" : String(problem.code), params, fields);
   }
   return data as T;
 }

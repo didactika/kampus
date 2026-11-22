@@ -42,45 +42,46 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
-import { Button, Icon, TextField, useToast } from "@kampus/ui";
+import { Button, Icon, useToast } from "@kampus/ui";
 
 import { browserApi } from "../../api/browser";
+import { ApiError } from "../../api/problem";
 import type { SessionSummary } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { EmptyState } from "../shell/EmptyState";
+import { NewPasswordForm } from "../session/NewPasswordForm";
+import { PasswordField } from "../session/PasswordField";
 import { deviceOf } from "./device";
 
 /** How many sessions show before the rest are asked for. */
 const SHOWN = 6;
 
-/** A form that changes the password, asking for the current one and the new one twice. */
+/**
+ * A form that changes the password, asking for the current one and the new one twice. When the session is too old for
+ * a sensitive change, the current password the person just typed raises it first, so they are never asked twice. The
+ * change ends every session, this one too, so the person signs in again with the new password.
+ */
 function PasswordForm() {
   const { t } = useI18n();
-  const toast = useToast();
-  const [busy, setBusy] = useState(false);
-  const [mismatch, setMismatch] = useState("");
+  const router = useRouter();
+  const [wrong, setWrong] = useState("");
 
-  async function change(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const element = event.currentTarget;
-    const form = new FormData(element);
-    if (form.get("new") !== form.get("confirm")) {
-      setMismatch(t("password.mismatch"));
-      return;
-    }
-    setMismatch("");
-    setBusy(true);
+  async function change(password: string, form: FormData) {
+    const current = String(form.get("current") ?? "");
+    const send = () => browserApi("/identity/me/password", { method: "POST", body: { current, new: password } });
+    setWrong("");
     try {
-      await browserApi("/identity/me/password", { method: "POST", body: { current: form.get("current"), new: form.get("new") } });
-      element.reset();
-      toast(t("password.saved"), "success");
-    } catch {
-      toast(t("password.wrong"), "danger");
-    } finally {
-      setBusy(false);
+      await send();
+    } catch (failure) {
+      if (!(failure instanceof ApiError && failure.code === "identity.step_up_required")) throw failure;
+      await browserApi("/identity/auth/step-up", { method: "POST", body: { password: current } });
+      await send();
     }
+    router.replace("/sign-in?changed=password");
+    router.refresh();
   }
 
   return (
@@ -89,16 +90,22 @@ function PasswordForm() {
         <Typography id="password-title" variant="h3" component="h2" sx={{ mb: 2.5 }}>
           {t("password.title")}
         </Typography>
-        <Stack component="form" spacing={2.5} onSubmit={(event) => void change(event)} sx={{ maxInlineSize: 480 }}>
-          <TextField name="current" type="password" label={t("password.current")} autoComplete="current-password" required />
-          <TextField name="new" type="password" label={t("password.new")} autoComplete="new-password" required />
-          <TextField name="confirm" type="password" label={t("password.confirm")} autoComplete="new-password" required error={mismatch} />
-          <Box>
-            <Button type="submit" variant="filled" icon="lock" busy={busy}>
-              {t("password.save")}
-            </Button>
-          </Box>
-        </Stack>
+        <Box sx={{ maxInlineSize: 480 }}>
+          <NewPasswordForm
+            label={t("password.title")}
+            submit={t("password.save")}
+            onSubmit={change}
+            describe={(failure) => {
+              if (failure instanceof ApiError && (failure.code === "identity.password_wrong" || failure.status === 401)) {
+                setWrong(t("password.current.wrong"));
+                return t("password.current.wrong");
+              }
+              return undefined;
+            }}
+          >
+            <PasswordField name="current" label={t("password.current")} autoComplete="current-password" required error={wrong || undefined} onChange={() => setWrong("")} />
+          </NewPasswordForm>
+        </Box>
       </CardContent>
     </Card>
   );

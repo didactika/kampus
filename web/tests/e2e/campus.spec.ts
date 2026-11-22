@@ -92,3 +92,13 @@ test("the account shows the profile and the security of the person", async ({ pa
   await page.getByRole("tab", { name: t("account.tab.security") }).click();
   await expect(page.getByRole("heading", { name: t("sessions.title") })).toBeVisible();
 });
+
+test("changing the password refuses a new one with spaces before sending it", async ({ page }) => {
+  await page.goto("/account?tab=security");
+  const form = page.getByRole("form", { name: t("password.title") });
+  await form.getByRole("textbox", { name: t("password.new"), exact: true }).fill("with a space");
+  await expect(form.getByText(t("password.rule.whitespace"))).toBeVisible();
+  await form.getByRole("textbox", { name: t("password.new"), exact: true }).fill("without-a-space");
+  await expect(form.getByText(t("password.rule.whitespace"))).toBeHidden();
+  await expect(form.getByText(t("password.hint"))).toBeVisible();
+});

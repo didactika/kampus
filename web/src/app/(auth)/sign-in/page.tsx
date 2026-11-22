@@ -35,15 +35,13 @@
 
 /** The page where a person signs in: the brand and what Kampus offers on one side, the form on the other. */
 
-import Box from "@mui/material/Box";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { BrandPanel } from "../../../features/session/BrandPanel";
+import { AuthFrame } from "../../../features/session/AuthFrame";
 import { currentAccount } from "../../../features/session/current-account";
 import { SignInForm } from "../../../features/session/SignInForm";
 import { requestI18n } from "../../../i18n/server";
-import { SchemeMenu } from "../../../theme/SchemeMenu";
 
 /** The title of the page, in the language of the request. */
 export async function generateMetadata(): Promise<Metadata> {
@@ -51,18 +49,18 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("signin.title") };
 }
 
+/** Why a person is asked to sign in again, by the `changed` of the address. */
+const NOTICES: Readonly<Record<string, string>> = { password: "signin.notice.password" };
+
 /** Signs a person in; someone already signed in goes to the campus. */
-export default async function SignInPage() {
+export default async function SignInPage({ searchParams }: { readonly searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   if (await currentAccount()) redirect("/");
+  const { t } = await requestI18n();
+  const changed = (await searchParams)["changed"];
+  const notice = typeof changed === "string" && NOTICES[changed] ? t(NOTICES[changed]) : undefined;
   return (
-    <Box component="main" sx={{ minBlockSize: "100dvh", display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1.15fr) minmax(420px, 1fr)" } }}>
-      <BrandPanel />
-      <Box sx={{ position: "relative", display: "grid", placeItems: "center", p: { xs: 3, sm: 6 }, bgcolor: "background.paper" }}>
-        <Box sx={{ position: "absolute", top: 16, insetInlineEnd: 16, color: "text.secondary" }}>
-          <SchemeMenu />
-        </Box>
-        <SignInForm />
-      </Box>
-    </Box>
+    <AuthFrame>
+      <SignInForm notice={notice} />
+    </AuthFrame>
   );
 }

@@ -86,6 +86,15 @@ A module uses the components and patterns of `@kampus/ui`, or MUI directly with 
 | Help | Opens the help topic of the current screen and runs guided tours (DEC-077) |
 | Error boundary | One per extension point: a failing UI module shows an error card and reports it, the rest of the page works |
 
+The links sent by email open these pages of the shell, with their one-time token in the fragment, which browsers never send to a server nor put in the `Referer`; the page reads it once and takes it out of the address:
+
+| Link | Page |
+| --- | --- |
+| Invitation | `/invitation#token=<token>` |
+| Confirmation of a sign-up | `/sign-up/confirm#token=<token>` |
+| Recovery | `/recovery/complete#token=<token>` |
+| Confirmation of a new email | `/email/confirm#token=<token>`, confirmed with a button, so a mail scanner that opens it confirms nothing |
+
 ## UI module contract
 
 A UI module is a React package with a `kampus-ui.json` manifest, written with `@kampus/ui`. Each Kampus module and each plugin ships at most one.

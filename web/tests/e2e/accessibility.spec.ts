@@ -54,10 +54,13 @@ test("a course has no WCAG 2.2 AA violations", async ({ page }) => {
   await expectAccessible(page);
 });
 
-test("the sign-in page has no WCAG 2.2 AA violations", async ({ browser }) => {
-  const context = await browser.newContext({ storageState: undefined });
-  const page = await context.newPage();
-  await page.goto(`${test.info().project.use.baseURL}/sign-in`);
-  await expectAccessible(page);
-  await context.close();
-});
+for (const path of ["/sign-in", "/recovery", "/invitation#token=check", "/recovery/complete", "/email/confirm#token=check"]) {
+  test(`${path} before signing in has no WCAG 2.2 AA violations`, async ({ browser }) => {
+    const context = await browser.newContext({ storageState: { cookies: [], origins: [] }, colorScheme: test.info().project.use.colorScheme });
+    const page = await context.newPage();
+    await page.goto(`${test.info().project.use.baseURL}${path}`);
+    await page.waitForLoadState("networkidle");
+    await expectAccessible(page);
+    await context.close();
+  });
+}
