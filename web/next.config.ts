@@ -46,7 +46,7 @@ import type { NextConfig } from "next";
 const config: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: path.resolve(process.cwd(), ".."),
-  transpilePackages: ["@kampus/ui"],
+  transpilePackages: ["@kampus/ui", "@kampus/sdk"],
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {

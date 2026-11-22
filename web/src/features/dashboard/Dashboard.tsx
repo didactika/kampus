@@ -63,7 +63,7 @@ import { useState, type ReactNode } from "react";
 import { Button, ConfirmDialog, Icon, useToast } from "@kampus/ui";
 
 import { browserApi } from "../../api/browser";
-import type { AvailableWidget, Placement } from "../../api/types";
+import type { AvailableWidget, DeclaredSetting, Placement } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { WidgetSettings } from "./WidgetSettings";
 import { WIDGET_ICONS } from "./widget-icons";
@@ -98,6 +98,9 @@ export interface DashboardProps {
 }
 
 let keys = 0;
+
+/** The settings a widget declares, as the API sends them. */
+const settingsOf = (widget: AvailableWidget | undefined): DeclaredSetting[] => (widget?.settings ?? []) as DeclaredSetting[];
 
 /** `<Dashboard scope="…" regions={["top", "main", "side"]} widgets={…} editable available={…} />` */
 export function Dashboard({ scope, pageKind, regions, widgets, editable, available }: DashboardProps) {
@@ -246,7 +249,7 @@ export function Dashboard({ scope, pageKind, regions, widgets, editable, availab
                           </span>
                         </Tooltip>
                         <RegionMenu regions={regions.filter((r) => r !== region)} onMove={(to) => move(item.key, to, 0)} />
-                        {(declared(item.placement.widget)?.settings.length ?? 0) > 0 ? (
+                        {settingsOf(declared(item.placement.widget)).length > 0 ? (
                           <Tooltip title={t("dashboard.settings")}>
                             <IconButton size="small" aria-label={t("dashboard.settings")} onClick={() => setConfiguring(item.key)}>
                               <Icon name="tune" size="small" />
@@ -293,8 +296,8 @@ export function Dashboard({ scope, pageKind, regions, widgets, editable, availab
                   <CardActionArea
                     sx={{ p: 2, blockSize: "100%", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 1.5 }}
                     onClick={() => {
-                      const settings = Object.fromEntries(widget.settings.map((s) => [s.key, s.default]));
-                      setDraft((d) => [...d, { key: ++keys, placement: { region: adding ?? "main", widget: widget.code, settings }, node: null }]);
+                      const settings = Object.fromEntries(settingsOf(widget).map((s) => [s.key, s.default]));
+                      setDraft((d) => [...d, { key: ++keys, placement: { region: adding ?? "main", widget: widget.code, settings, permission: null }, node: null }]);
                       setAdding(null);
                     }}
                   >
@@ -318,7 +321,7 @@ export function Dashboard({ scope, pageKind, regions, widgets, editable, availab
       {configured ? (
         <WidgetSettings
           title={t("dashboard.settings.title", { widget: name(configured.placement.widget) })}
-          declared={declared(configured.placement.widget)?.settings ?? []}
+          declared={settingsOf(declared(configured.placement.widget))}
           values={configured.placement.settings}
           onClose={() => setConfiguring(null)}
           onApply={(settings) => {

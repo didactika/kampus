@@ -68,7 +68,7 @@ export interface NotificationRowProps {
 export function NotificationRow({ notification: n, onRead, dense = false }: NotificationRowProps) {
   const { t, relative, date } = useI18n();
   const look = lookOf(n.type);
-  const course = courseOf(n.payload);
+  const course = courseOf((n.payload ?? {}) as Readonly<Record<string, unknown>>);
   const unread = !n.read_at;
   const content = (
     <Stack direction="row" spacing={dense ? 1.5 : 2} sx={{ alignItems: "center", flex: 1, minInlineSize: 0, p: dense ? 1.25 : 1.75, textAlign: "start" }}>

@@ -33,123 +33,53 @@
 // ------------------------------------------------------------------------------
 
 
-/** What the pages of the shell read from the API. */
+/**
+ * What the shell reads from the API, by the names its pages use: each an alias of a schema the server publishes,
+ * generated in `@kampus/sdk`, so a field the client reads is a field the server sends.
+ */
+
+import type { Schema } from "@kampus/sdk";
 
 /** The account that is signed in. */
-export interface Me {
-  readonly id: string;
-  readonly campus: string;
-  readonly username: string;
-  readonly email: string;
-}
-
+export type Me = Schema<"Account">;
 /** A category of courses. */
-export interface Category {
-  readonly id: string;
-  readonly parent: string | null;
-  readonly code: string | null;
-  readonly name: string;
-  readonly description: string | null;
-}
-
-/** Where a course is in its life. */
-export type CourseState = "draft" | "published" | "archived" | "deletion_scheduled";
-
+export type Category = Schema<"Category">;
 /** A course. */
-export interface Course {
-  readonly id: string;
-  readonly category: string;
-  readonly short_name: string;
-  readonly full_name: string;
-  readonly code: string | null;
-  readonly summary: string | null;
-  readonly language_code: string | null;
-  readonly starts_at: string | null;
-  readonly ends_at: string | null;
-  readonly state: CourseState;
-}
-
+export type Course = Schema<"Course">;
+/** A course with its owners, as one course is read. */
+export type CourseWithOwners = Schema<"WithOwners">;
+/** Where a course is in its life. */
+export type CourseState = Schema<"CourseState">;
 /** A section of a course. */
-export interface Section {
-  readonly id: string;
-  readonly title: string | null;
-}
-
+export type Section = Schema<"Section">;
 /** A course module. */
-export interface CourseModule {
-  readonly id: string;
-  readonly title: string;
-  readonly type: string;
-}
-
-/** A grade of the caller. */
-export interface Grade {
-  readonly record: string;
-  readonly final: string | null;
-  readonly text: string | null;
-}
-
-/** A record of a course. */
-export interface GradeRecord {
-  readonly id: string;
-  readonly title: string;
-  readonly max: string;
-}
-
-/** What the course records hold. */
-export interface Tree {
-  readonly records: GradeRecord[];
-}
-
-/** The state of the caller on a course module. */
-export interface ActivityState {
-  readonly course_module: string;
-  readonly state: string;
-}
-
+export type CourseModule = Schema<"Module">;
+/** A grade of the person. */
+export type Grade = Schema<"Grade">;
+/** What the records of a course hold. */
+export type Tree = Schema<"Tree">;
+/** The state of the person on a course module. */
+export type ActivityState = Schema<"ActivityState">;
 /** One thing a calendar shows. */
-export interface CalendarItem {
-  readonly kind: string;
-  readonly title: string;
-  readonly starts_at: string;
-  readonly ends_at: string | null;
-}
-
-/** A notification of the inbox. */
-export interface Notification {
-  readonly id: string;
-  readonly type: string;
-  readonly payload: Readonly<Record<string, unknown>>;
-  readonly created_at: string;
-  readonly read_at: string | null;
-}
-
-/** How the person wants a type of notification on a channel. */
-export interface Preference {
-  readonly type: string;
-  readonly summary: string;
-  readonly channel: string;
-  readonly enabled: boolean;
-  readonly required: boolean;
-  readonly locked: boolean;
-}
-
+export type CalendarItem = Schema<"Item">;
 /** A page of the inbox. */
-export interface Inbox {
-  readonly notifications: Notification[];
-  readonly unread: number;
-  readonly next: string | null;
-}
-
+export type Inbox = Schema<"Inbox">;
+/** A notification of the inbox. */
+export type Notification = Schema<"Notification">;
+/** How the person wants a type of notification on a channel. */
+export type Preference = Schema<"Preference">;
+/** The layout of a page kind in a scope, as the reader sees it. */
+export type Layout = Schema<"Layout">;
 /** A widget in a region of a page, with its settings. */
-export interface Placement {
-  readonly region: string;
-  readonly widget: string;
-  readonly settings: Readonly<Record<string, unknown>>;
-  readonly permission?: string | null;
-}
+export type Placement = Schema<"Placement">;
+/** A widget that may be placed on a page. */
+export type AvailableWidget = Schema<"AvailableWidget">;
+/** A navigation menu of a scope. */
+export type Menu = Schema<"Menu">;
+/** An item of a navigation menu. */
+export type MenuItem = Schema<"MenuItem">;
 
-/** A setting of a widget as its module declares it. */
+/** A setting of a widget as its module declares it; the API sends it as free JSON. */
 export interface DeclaredSetting {
   readonly key: string;
   readonly kind:
@@ -158,34 +88,4 @@ export interface DeclaredSetting {
     | { readonly type: "integer"; readonly min: number; readonly max: number }
     | { readonly type: "text"; readonly max: number };
   readonly default: unknown;
-}
-
-/** A widget that may be placed on a page. */
-export interface AvailableWidget {
-  readonly code: string;
-  readonly summary: string;
-  readonly settings: readonly DeclaredSetting[];
-}
-
-/** The layout of a page kind in a scope, as the reader sees it. */
-export interface Layout {
-  readonly page_kind: string;
-  readonly regions: readonly string[];
-  readonly placements: readonly Placement[];
-  readonly editable?: boolean;
-  readonly widgets?: readonly AvailableWidget[];
-}
-
-/** An item of a navigation menu. */
-export interface MenuItem {
-  readonly label: string;
-  readonly target: string;
-  readonly children: readonly MenuItem[];
-}
-
-/** A navigation menu of a scope. */
-export interface Menu {
-  readonly kind: string;
-  readonly items: readonly MenuItem[];
-  readonly editable?: boolean;
 }

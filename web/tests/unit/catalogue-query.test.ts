@@ -43,7 +43,7 @@ import { subjectIcon } from "../../src/features/courses/subject";
 
 /** A course of the catalogue. */
 function course(id: string, fields: Partial<CatalogueCourse> = {}): CatalogueCourse {
-  return {
+  return ({
     id,
     category: "science",
     short_name: id.toUpperCase(),
@@ -57,7 +57,7 @@ function course(id: string, fields: Partial<CatalogueCourse> = {}): CatalogueCou
     categoryName: "Science",
     categoryPath: "Science",
     ...fields,
-  };
+  }) as CatalogueCourse;
 }
 
 const courses = [

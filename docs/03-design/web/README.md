@@ -19,7 +19,7 @@ The client is one npm workspace at the root of the repository (`package.json`), 
 | --- | --- | --- |
 | `@kampus/web` | `web/` | The Next.js application: the shell and the registry of UI modules |
 | `@kampus/ui` | `web/ui/` | The design system: tokens, the MUI theme, components, patterns and icons |
-| `@kampus/sdk` | `web/sdk/` | The generated API client and the UI module contract |
+| `@kampus/sdk` | `web/sdk/` | The types of every route and schema of the API, generated from `openapi.json`, the document the server serves; a server test fails when the API changes without it (`KAMPUS_UPDATE_OPENAPI=1` rewrites it, `npm run generate -w @kampus/sdk` regenerates the types). Later, the UI module contract |
 | `@kampus/<module>-ui` | `crates/<module>/web/` | The UI module of a Kampus module, next to its Rust crate, as a plugin ships both in one package (RN-204) |
 
 `npm run check`, `npm test` and `npm run build` at the root run every package; CI runs them in the job *Web client*. Everything is TypeScript in strict mode; tests live in `tests/` of each package, never next to the code.

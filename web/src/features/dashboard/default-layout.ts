@@ -42,7 +42,7 @@ export const DASHBOARD = "customise.dashboard";
 
 /** The widgets of the home by default. */
 export const DEFAULT_DASHBOARD: readonly Placement[] = [
-  { region: "top", widget: "customise.welcome", settings: { heading: "", figures: true } },
-  { region: "main", widget: "courses.catalogue", settings: { heading: "", view: "grid", size: 8 } },
-  { region: "side", widget: "notify.inbox", settings: { limit: 5 } },
+  { region: "top", widget: "customise.welcome", settings: { heading: "", figures: true }, permission: null },
+  { region: "main", widget: "courses.catalogue", settings: { heading: "", view: "grid", size: 8 }, permission: null },
+  { region: "side", widget: "notify.inbox", settings: { limit: 5 }, permission: null },
 ];

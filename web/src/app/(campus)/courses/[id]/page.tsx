@@ -67,7 +67,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
   const [category, modules, tree, grades, progress, items] = await Promise.all([
     optional<Category | null>(`/courses/categories/${course.category}`, null),
     Promise.all(sections.map((s) => optional<CourseModule[]>(`/activities/sections/${s.id}/course-modules`, []))),
-    optional<Tree>(`/records/courses/${id}/records`, { records: [] }),
+    optional<Tree>(`/records/courses/${id}/records`, { categories: [], records: [] }),
     optional<Grade[]>(`/records/courses/${id}/my-grades`, []),
     optional<ActivityState[]>(`/progress/courses/${id}/my-progress`, []),
     optional<CalendarItem[]>(`/calendar/courses/${id}/calendar?${window}`, []),

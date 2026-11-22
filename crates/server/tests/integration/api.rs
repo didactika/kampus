@@ -511,6 +511,25 @@ async fn a_provider_signs_a_person_in_through_the_browser_flow() {
 }
 
 #[tokio::test]
+async fn the_web_client_knows_the_api_it_talks_to() {
+    let site = site().await;
+    let answer = site
+        .call(Method::GET, "/api/v1/openapi.json", None, &[], None)
+        .await;
+    let snapshot = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../web/sdk/openapi.json");
+    let served = format!("{}\n", serde_json::to_string_pretty(&answer.body).unwrap());
+    if std::env::var("KAMPUS_UPDATE_OPENAPI").is_ok_and(|v| v == "1") {
+        std::fs::write(&snapshot, &served).unwrap();
+    }
+    let known = std::fs::read_to_string(&snapshot).unwrap_or_default();
+    assert!(
+        known == served,
+        "web/sdk/openapi.json is not the API the server serves: run the server tests with KAMPUS_UPDATE_OPENAPI=1, then npm run generate -w @kampus/sdk"
+    );
+    site.drop().await;
+}
+
+#[tokio::test]
 async fn the_api_describes_the_routes_it_really_serves() {
     let site = site().await;
     let answer = site
