@@ -56,6 +56,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -67,6 +68,7 @@ import { browserApi } from "../../api/browser";
 import type { Me, MenuItem as MenuEntry, Profile } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { SchemeMenu } from "../../theme/SchemeMenu";
+import { helpAddress } from "./help";
 import { initialsOf, nameOf } from "../account/names";
 
 /** A place of the main navigation. */
@@ -104,13 +106,15 @@ export interface CampusFrameProps {
   readonly profile: Profile | null;
   /** The main menu the campus set; the default places when it set none. */
   readonly menu: readonly MenuEntry[];
+  /** The address of the handbook, for the help of each screen; no help link without it. */
+  readonly help?: string | null;
   /** The page. */
   readonly children: ReactNode;
 }
 
 /** The frame of the pages of a campus. */
-export function CampusFrame({ account, profile, menu, children }: CampusFrameProps) {
-  const { t } = useI18n();
+export function CampusFrame({ account, profile, menu, help, children }: CampusFrameProps) {
+  const { t, language } = useI18n();
   const places: Place[] = menu.length
     ? placesOf(menu)
     : [
@@ -222,6 +226,13 @@ export function CampusFrame({ account, profile, menu, children }: CampusFramePro
             </Menu>
           </Box>
           <Box sx={{ flex: 1 }} />
+          {helpAddress(help, language, path) ? (
+            <Tooltip title={t("nav.help")}>
+              <IconButton color="inherit" component="a" href={helpAddress(help, language, path) ?? undefined} target="_blank" rel="noopener" aria-label={t("nav.help")}>
+                <Icon name="help" />
+              </IconButton>
+            </Tooltip>
+          ) : null}
           <SchemeMenu />
           <IconButton
             color="inherit"

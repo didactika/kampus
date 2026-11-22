@@ -160,6 +160,7 @@ services:
       - "8101:3000"
     environment:
       KAMPUS_API_URL: http://server:8080
+      KAMPUS_HELP_URL: http://localhost:8096
     depends_on:
       server:
         condition: service_healthy

@@ -51,7 +51,7 @@ export default async function CampusLayout({ children }: { readonly children: Re
     optional<Profile | null>("/users/me/profile", null),
   ]);
   return (
-    <CampusFrame account={account} profile={profile} menu={menu?.items ?? []}>
+    <CampusFrame account={account} profile={profile} menu={menu?.items ?? []} help={process.env["KAMPUS_HELP_URL"] ?? null}>
       {children}
     </CampusFrame>
   );

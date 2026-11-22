@@ -101,6 +101,9 @@ enum Command {
     /// Generate a VAPID key for push notifications: the private key for `KAMPUS_PUSH_VAPID_PRIVATE_KEY` and the
     /// public key browsers subscribe with.
     PushKey,
+    /// Print what every module of the build declares (permissions, settings, features, terms, events,
+    /// notification types, jobs) as JSON, without a configuration or a database.
+    Reference,
     /// A component and one of its commands: `kampus-server identity purge`.
     #[command(external_subcommand)]
     Component(Vec<String>),
@@ -137,6 +140,13 @@ pub async fn run() -> ExitCode {
     }
     if let Some(Command::PushKey) = cli.command {
         return finish(push_key());
+    }
+    if let Some(Command::Reference) = cli.command {
+        print(
+            &serde_json::to_string_pretty(&super::reference::reference(crate::wiring::registry::MODULES))
+                .unwrap_or_default(),
+        );
+        return ExitCode::SUCCESS;
     }
     let config = match Config::from_environment() {
         Ok(config) => config,
@@ -203,7 +213,7 @@ async fn execute(command: Command, config: &Config) -> kampus_common::Result<()>
     match command {
         Command::Serve => super::serve(config).await,
         Command::Component(arguments) => component(config, &arguments).await,
-        Command::Install { .. } | Command::PushKey => Ok(()),
+        Command::Install { .. } | Command::PushKey | Command::Reference => Ok(()),
         Command::Upgrade { new_installation } => {
             let applied = super::upgrade(config, new_installation).await?;
             report(&format!(

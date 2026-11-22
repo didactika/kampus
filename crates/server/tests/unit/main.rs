@@ -43,3 +43,4 @@
 mod config;
 mod modules;
 mod openapi;
+mod reference;

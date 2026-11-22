@@ -37,6 +37,7 @@
 
 pub mod cli;
 pub mod install;
+pub mod reference;
 pub mod status;
 
 use std::sync::Arc;
