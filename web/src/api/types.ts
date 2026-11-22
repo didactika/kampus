@@ -46,15 +46,27 @@ export interface Me {
 /** A category of courses. */
 export interface Category {
   readonly id: string;
+  readonly parent: string | null;
+  readonly code: string | null;
   readonly name: string;
+  readonly description: string | null;
 }
+
+/** Where a course is in its life. */
+export type CourseState = "draft" | "published" | "archived" | "deletion_scheduled";
 
 /** A course. */
 export interface Course {
   readonly id: string;
+  readonly category: string;
   readonly short_name: string;
   readonly full_name: string;
+  readonly code: string | null;
   readonly summary: string | null;
+  readonly language_code: string | null;
+  readonly starts_at: string | null;
+  readonly ends_at: string | null;
+  readonly state: CourseState;
 }
 
 /** A section of a course. */

@@ -73,6 +73,11 @@ export function formatDate(language: string, iso: string): string {
   return new Intl.DateTimeFormat(language, { dateStyle: "medium", timeStyle: "short" }).format(new Date(iso));
 }
 
+/** A day in a language. */
+export function formatDay(language: string, iso: string): string {
+  return new Intl.DateTimeFormat(language, { dateStyle: "medium" }).format(new Date(iso));
+}
+
 /** A number in a language. */
 export function formatNumber(language: string, value: string | number): string {
   return new Intl.NumberFormat(language, { maximumFractionDigits: 5 }).format(Number(value));

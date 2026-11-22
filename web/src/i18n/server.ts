@@ -37,7 +37,7 @@
 
 import { headers } from "next/headers";
 
-import { directionOf, formatDate, formatNumber, languageOf, translator } from "./translator";
+import { directionOf, formatDate, formatDay, formatNumber, languageOf, translator } from "./translator";
 
 /** The language of the request, its direction and its messages. */
 export async function requestI18n() {
@@ -47,6 +47,7 @@ export async function requestI18n() {
     direction: directionOf(language),
     t: translator(language),
     date: (iso: string) => formatDate(language, iso),
+    day: (iso: string) => formatDay(language, iso),
     number: (value: string | number) => formatNumber(language, value),
   };
 }
