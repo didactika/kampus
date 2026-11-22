@@ -53,7 +53,7 @@ use kampus_identity::{
 use kampus_users::{GroupKind, Users};
 
 /// The password of every account of these tests.
-const PASSWORD: &str = "a long and quiet river";
+const PASSWORD: &str = "a-long-and-quiet-river";
 
 /// A cheap cost for the hashes of these tests.
 const COST: PasswordCost = PasswordCost {

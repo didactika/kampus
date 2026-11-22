@@ -16,4 +16,5 @@ status: accepted
   - **Quality**: WCAG 2.2 AA components, internationalisation and right-to-left from the start, Playwright end-to-end and accessibility tests, Vite builds.
 - Consequences: Plugins can add or replace screens without forking the client; layouts and themes are data (DEC-008). The UI module contract (manifest, extension points, events) becomes part of the plugin SDK.
 - Affected artifacts: `web/`, the plugin SDK, the customisation framework, Q-002 (resolved by this decision when accepted).
+- Superseded in part by: DEC-089. The shell is Next.js with React, the design system is built on MUI, and UI modules are built into the client.
 - Refined by: DEC-074 (UI modules), DEC-075 (design system) and DEC-076 (client data); design in the [web client](../../03-design/web/README.md).

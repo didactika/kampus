@@ -59,7 +59,7 @@ use openidconnect::url::Url;
 use sqlx::Row;
 
 /// A password that passes the default policy.
-const PASSWORD: &str = "a long and quiet river";
+const PASSWORD: &str = "a-long-and-quiet-river";
 
 /// A campus with its roles and people.
 struct World {
@@ -457,10 +457,22 @@ async fn passwords_follow_the_policy_and_are_hashed() {
     assert!(rejected.fields().iter().any(|f| f.rule == "min_length"));
     let rejected = w
         .identity
-        .accept_invitation(&token, "my name is carla.ruiz indeed")
+        .accept_invitation(&token, "my-name-is-carla.ruiz-indeed")
         .await
         .unwrap_err();
     assert!(rejected.fields().iter().any(|f| f.rule == "contains_name"));
+    for blank in [
+        "a long and quiet river",
+        "a-long-and-quiet	river",
+        " a-long-and-quiet-river",
+    ] {
+        let rejected = w.identity.accept_invitation(&token, blank).await.unwrap_err();
+        assert_eq!(rejected.code(), "identity.password_rejected");
+        assert!(
+            rejected.fields().iter().any(|f| f.rule == "whitespace"),
+            "a password never holds blank characters"
+        );
+    }
     let carla = w.identity.accept_invitation(&token, PASSWORD).await.unwrap();
 
     let (hash, params): (String, String) = sqlx::query_as(sqlx::AssertSqlSafe(format!(
@@ -652,7 +664,7 @@ async fn sessions_are_checked_on_every_request_and_revoked_centrally() {
         .unwrap();
     let (session, token) = w.session("ana@example.org").await;
     w.identity
-        .change_password(&session, PASSWORD, "an even longer and quieter river")
+        .change_password(&session, PASSWORD, "an-even-longer-and-quieter-river")
         .await
         .unwrap();
     assert_eq!(error(w.identity.authenticate(&token).await), invalid);
@@ -662,7 +674,7 @@ async fn sessions_are_checked_on_every_request_and_revoked_centrally() {
     );
 
     let (_, token) = match w
-        .sign_in("ana@example.org", "an even longer and quieter river", None)
+        .sign_in("ana@example.org", "an-even-longer-and-quieter-river", None)
         .await
         .unwrap()
     {
@@ -689,7 +701,7 @@ async fn sensitive_operations_need_a_recent_strong_authentication() {
     assert_eq!(
         error(
             w.identity
-                .change_password(&session, PASSWORD, "a brand new long river")
+                .change_password(&session, PASSWORD, "a-brand-new-long-river")
                 .await
         ),
         (
@@ -703,7 +715,7 @@ async fn sensitive_operations_need_a_recent_strong_authentication() {
     );
     let session = w.identity.step_up(&session, PASSWORD).await.unwrap();
     w.identity
-        .change_password(&session, PASSWORD, "a brand new long river")
+        .change_password(&session, PASSWORD, "a-brand-new-long-river")
         .await
         .unwrap();
     w.drop().await;
@@ -1140,7 +1152,7 @@ async fn recovery_checks_the_second_factor_first_and_never_signs_in() {
         w.identity.recovery_needs(&first).await.unwrap().methods,
         vec![FactorKind::Totp]
     );
-    let new_password = "a recovered and quiet river";
+    let new_password = "a-recovered-and-quiet-river";
     assert_eq!(
         error(w.identity.complete_recovery(&first, None, new_password).await).1,
         "identity.second_factor_failed"

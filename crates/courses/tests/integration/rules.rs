@@ -47,7 +47,7 @@ use kampus_db::{Database, Prefix, Upgrader};
 use kampus_identity::{AccountId, FixedPolicies, Identity, MemoryCourier, Notice, PasswordCost, SecretKey};
 
 /// The password of every account of these tests.
-const PASSWORD: &str = "a long and quiet river";
+const PASSWORD: &str = "a-long-and-quiet-river";
 
 /// A campus with its administrator, its roles and people.
 struct World {

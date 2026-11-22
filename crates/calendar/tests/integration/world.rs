@@ -46,7 +46,7 @@ use kampus_files::Files;
 use kampus_identity::{FixedPolicies, Identity, MemoryCourier, Notice, PasswordCost, SecretKey};
 
 /// The password of every account of these tests.
-const PASSWORD: &str = "a long and quiet river";
+const PASSWORD: &str = "a-long-and-quiet-river";
 
 /// The modules whose types these tests use.
 static MODULES: &[&kampus_module::Module] = &[&kampus_activities::MODULE, &crate::entries::QUIZ_MODULE];

@@ -158,7 +158,7 @@ impl World {
             panic!("an invitation was sent");
         };
         self.identity
-            .accept_invitation(&token, "a long and quiet river")
+            .accept_invitation(&token, "a-long-and-quiet-river")
             .await
             .unwrap();
         id

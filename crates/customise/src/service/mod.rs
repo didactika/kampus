@@ -174,6 +174,19 @@ impl Customise {
         tx.commit().await.map_err(kampus_db::classify)
     }
 
+    /// Whether the actor may change what a scope sets of a kind whose resolved value came from `origin`: they
+    /// hold the permission there and no scope above locks it.
+    pub(crate) async fn editable(
+        &self,
+        actor: &Actor,
+        permission: &str,
+        origin: &crate::Origin,
+        scope: ScopeId,
+    ) -> Result<bool> {
+        let locked_above = matches!(origin, crate::Origin::Scope { scope: at, locked: true } if *at != scope);
+        Ok(!locked_above && self.holds(actor, Some(permission), scope).await?)
+    }
+
     /// Whether an actor holds a permission in a scope; everyone when no permission is given.
     pub(crate) async fn holds(
         &self,

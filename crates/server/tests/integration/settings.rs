@@ -88,7 +88,7 @@ async fn the_policy_of_a_campus_follows_its_settings() {
             "/api/v1/identity/auth/confirm",
             None,
             &[],
-            Some(json!({ "token": token, "password": "only twenty-six characters" })),
+            Some(json!({ "token": token, "password": "only-twenty-six-characters" })),
         )
         .await;
     assert_eq!(

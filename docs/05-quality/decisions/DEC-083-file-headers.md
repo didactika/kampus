@@ -47,9 +47,9 @@ status: accepted
     // ------------------------------------------------------------------------------
     ```
 
-    TOML, YAML, shell and Dockerfiles use `#`, CSS `/* */`, Svelte and HTML `<!-- -->`, SQL `--`, Astro components put it inside their front matter.
+    TOML, YAML, shell and Dockerfiles use `#`, CSS `/* */`, TSX like TypeScript, HTML `<!-- -->`, SQL `--`, Astro components put it inside their front matter.
   - Files that cannot hold comments (JSON, lock files, images) and the specification in `docs/` are exempt.
-  - Every item gets a documentation comment above it, public or not (Rust: `//!` for modules, `///` for items; TypeScript and Svelte: TSDoc), saying what it is for, not how it works. Comments inside bodies are kept for what the code cannot say.
+  - Every item gets a documentation comment above it, public or not (Rust: `//!` for modules, `///` for items; TypeScript and TSX: TSDoc), saying what it is for, not how it works. Comments inside bodies are kept for what the code cannot say.
   - `tools/repo-check` fails when a file lacks its header and adds missing headers with `--fix`; the Rust lints `missing_docs` and `missing_docs_in_private_items` fail on undocumented items.
 - Consequences: Every file says what it belongs to and under which terms; the generated references (DEC-078) have text for every item.
 - Affected artifacts: every file, `tools/repo-check`, the workspace lints.

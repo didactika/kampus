@@ -7,7 +7,7 @@ sourceOfTruth: model
 
 # Web client
 
-The web client (`web/`) is an **application shell** that loads the **UI modules** of every Kampus module and plugin at runtime into its **extension points** (DEC-004, DEC-074). It holds no business logic: everything comes from the API through a generated client (DEC-076). Its components are framework-agnostic Web Components themed by design tokens (DEC-075). Requirement RF-008; RNF-003, RNF-010.
+The web client (`web/`) is a **Next.js** application in **React** and **TypeScript** (DEC-089). Its shell places the **UI modules** of every Kampus module and plugin into its **extension points** (DEC-004, DEC-074). It holds no business logic: everything comes from the API through a generated client (DEC-076). Its components come from `@kampus/ui`, a design system built on **MUI** and themed by Didactika's identity (DEC-013), which prevails over MUI's defaults. Requirement RF-008; RNF-003, RNF-010.
 
 ![UI modules and extension points](./ui-modules.svg)
 
@@ -17,12 +17,59 @@ The client is one npm workspace at the root of the repository (`package.json`), 
 
 | Package | Folder | Holds |
 | --- | --- | --- |
-| `@kampus/web` | `web/` | The shell |
-| `@kampus/ui` | `web/ui/` | The design system: tokens and Web Components |
-| `@kampus/sdk` | `web/sdk/` | The generated API client and the UI module contract |
+| `@kampus/web` | `web/` | The Next.js application: the shell and the registry of UI modules |
+| `@kampus/ui` | `web/ui/` | The design system: tokens, the MUI theme, components, patterns and icons |
+| `@kampus/sdk` | `web/sdk/` | The types of every route and schema of the API, generated from `openapi.json`, the document the server serves; a server test fails when the API changes without it (`KAMPUS_UPDATE_OPENAPI=1` rewrites it, `npm run generate -w @kampus/sdk` regenerates the types). Later, the UI module contract |
 | `@kampus/<module>-ui` | `crates/<module>/web/` | The UI module of a Kampus module, next to its Rust crate, as a plugin ships both in one package (RN-204) |
 
-`npm run check`, `npm test` and `npm run build` at the root run every package; CI runs them in the job *Web client*.
+`npm run check`, `npm test` and `npm run build` at the root run every package; CI runs them in the job *Web client*. Everything is TypeScript in strict mode; tests live in `tests/` of each package, never next to the code.
+
+The end-to-end tests of the shell (`web/tests/e2e/`) drive a real browser against a running Kampus: they sign in once, walk the home, the catalogue, a course, the notifications and the account, and check every page against WCAG 2.2 AA with axe in the light and the dark scheme. They read the address and the account from the environment, never from the code: `KAMPUS_E2E_URL` (default `http://localhost:3100`), `KAMPUS_E2E_USER` and `KAMPUS_E2E_PASSWORD`; `npm run e2e -w @kampus/web` runs them, and the image `mcr.microsoft.com/playwright:v1.65.1-noble` has the browsers they need.
+
+## Folder structure
+
+Every package keeps one layout, so a module or a plugin looks the same as the shell from inside, and a new one starts from the same skeleton. Folders hold one concern each; a component is a folder named like it, with an `index.ts` that is its only entry.
+
+```text
+web/                                   @kampus/web, the Next.js application
+  next.config.ts
+  src/
+    app/                               routing files of the App Router only: layout, page, loading, error, not-found
+      layout.tsx                       the document: language, direction, theme of the scope, providers
+      (auth)/sign-in/page.tsx          pages without the frame of the campus
+      (campus)/layout.tsx              the frame: app bar, navigation, the region of toasts
+      (campus)/page.tsx                the dashboard
+      (campus)/[...path]/page.tsx      the pages of UI modules, found in the registry
+    features/<feature>/                the screens and parts of the shell itself (session, navigation, preferences)
+    modules/                           the generated registry of UI modules and the extension points
+    theme/                             the theme of the scope as an MUI theme, and the scheme of the person
+    i18n/                              the strings of the shell per language, the gathered texts and formatters
+    api/                               the API client set up for the server and for the browser
+  tests/
+    unit/
+    e2e/                               Playwright, one file per use case
+  ui/                                  @kampus/ui, the design system
+    tokens/                            reference, system, light and dark tokens (W3C)
+    src/
+      theme/                           tokens and the roles of a scope turned into the MUI theme
+      components/<Component>/          Didactika's components over MUI: <Component>.tsx and index.ts
+      patterns/<Pattern>/              Didactika's patterns: list toolbar, filters, table, pager, selection bar, wizard, empty state
+      icons/                           Material Symbols by name, the registry and its overrides
+      tokens/                          reading the tokens, contrast
+    tests/
+  sdk/                                 @kampus/sdk, the generated API client and the UI module contract
+crates/<module>/web/                   @kampus/<module>-ui, the UI module of a Kampus module or plugin
+  kampus-ui.json                       the manifest: routes, contributions, strings, events
+  src/
+    index.ts                           the module: its routes and contributions, typed by @kampus/sdk
+    routes/<route>/                    one folder per page of the module
+    contributions/<point>/             widgets, menu items, tabs, actions, form sections, settings panels
+    components/<Component>/            components private to the module
+    strings/<language>.json            the texts of the module, one file per language, keys under its name
+  tests/
+```
+
+A module uses the components and patterns of `@kampus/ui`, or MUI directly with the theme; it never sets a colour, a font or a radius of its own, and never restyles a component of the design system.
 
 ## Shell
 
@@ -30,18 +77,27 @@ The client is one npm workspace at the root of the repository (`package.json`), 
 
 | Part | Responsibility |
 | --- | --- |
-| Router | Routes declared by UI modules (`/courses/:id`, `/admin/settings`…); server-side rendering of the first page, client navigation afterwards |
+| Router | The App Router of Next.js: the pages of the shell, and the routes UI modules declare (`/courses/:id`, `/admin/settings`…) through the registry; server-side rendering of the first page, client navigation afterwards |
 | Layout engine | Renders the page kind's regions from the resolved layout (RN-216); a widget whose module is disabled or failing is skipped with a placeholder |
 | Navigation | Menus from data (DEC-071), filtered by permissions |
 | Session | Signed-in account, current scope, language and time zone; reacts to revocation (DEC-031) |
-| Theme | Applies the resolved design tokens as CSS custom properties (RN-217); direction from the language (RN-192) |
+| Theme | Turns the theme of the scope of the page into the MUI theme, in light and dark; the scheme of the person; direction from the language (RN-192) |
 | Strings | Loads message bundles per module and language (RN-191), with terms applied |
 | Help | Opens the help topic of the current screen and runs guided tours (DEC-077) |
 | Error boundary | One per extension point: a failing UI module shows an error card and reports it, the rest of the page works |
 
+The links sent by email open these pages of the shell, with their one-time token in the fragment, which browsers never send to a server nor put in the `Referer`; the page reads it once and takes it out of the address:
+
+| Link | Page |
+| --- | --- |
+| Invitation | `/invitation#token=<token>` |
+| Confirmation of a sign-up | `/sign-up/confirm#token=<token>` |
+| Recovery | `/recovery/complete#token=<token>` |
+| Confirmation of a new email | `/email/confirm#token=<token>`, confirmed with a button, so a mail scanner that opens it confirms nothing |
+
 ## UI module contract
 
-A UI module is an ES module package with a `kampus-ui.json` manifest, built with any framework but using the design system. Each Kampus module and each plugin ships at most one.
+A UI module is a React package with a `kampus-ui.json` manifest, written with `@kampus/ui`. Each Kampus module and each plugin ships at most one.
 
 | Manifest section | Content |
 | --- | --- |
@@ -55,7 +111,7 @@ Rules:
 
 | ID | Rule |
 | --- | --- |
-| UI-01 | The shell loads a UI module through the import map only when a route or contribution of it is needed; nothing is bundled into the shell. |
+| UI-01 | UI modules are built into the client from a registry generated from the installed modules (`tools/repo-check --fix`); each page and contribution is loaded lazily, only when it is shown. |
 | UI-02 | A contribution is shown only when its module is enabled in the scope (RN-209, RN-220) and the viewer holds its permission; the API remains the authority (DEC-017). |
 | UI-03 | Extension points have typed props and events; a module never reaches into another module's DOM or state. |
 | UI-04 | Every route and contribution declares a help topic (DEC-077); the build fails without it. |
@@ -76,13 +132,7 @@ Rules:
 
 ## Design system
 
-| Aspect | Rule |
-| --- | --- |
-| Components | Web Components (`k-button`, `k-field`, `k-table`, `k-dialog`, `k-tabs`, `k-menu`, `k-toast`, `k-date-picker`, `k-rich-text`, `k-file-picker`…), published as `@kampus/ui` |
-| Tokens | W3C design tokens: colour, typography, spacing, radius, elevation, motion; the default is Didactika's identity (DEC-013); themes override them (RN-217) |
-| Accessibility | WCAG 2.2 AA: keyboard operation, visible focus, roles and names, contrast checked in CI, reduced motion honoured, forms with labelled errors, live regions for asynchronous results |
-| Internationalisation | Logical CSS properties (`margin-inline-start`) so right-to-left works without overrides |
-| Density and breakpoints | Comfortable and compact densities; layouts from 320 px wide |
+The look and behaviour of every screen, its principles (Didactika prevails, latest stable versions, scalable, dynamic, optimised, intuitive, accessible), its tokens, theme, components, patterns, icons and theming per scope are in the [Kampus design system](./design-system.md).
 
 ## Data and state
 

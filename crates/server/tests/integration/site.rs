@@ -54,7 +54,7 @@ use serde_json::{Value, json};
 use tower::ServiceExt;
 
 /// The password of every account of these tests.
-pub(crate) const PASSWORD: &str = "a long sentence nobody guesses";
+pub(crate) const PASSWORD: &str = "a-long-sentence-nobody-guesses";
 
 /// The address of the site.
 pub(crate) const SITE: &str = "http://kampus.test";

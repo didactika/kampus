@@ -45,14 +45,37 @@ Rules listen to `events.any`, the type `kampus-events` declares so that a listen
 
 ## Theme tokens (RN-217)
 
-| Tokens | Kind | Default |
+| Tokens | Kind | Default (Didactika, DEC-013) |
 | --- | --- | --- |
-| `primary`, `on_primary`, `secondary`, `on_secondary`, `surface`, `on_surface`, `background`, `on_background`, `danger`, `on_danger`, `link` | Colour `#rrggbb` | An accessible neutral palette |
-| `font_family` | Font families: letters, digits, spaces, commas, hyphens and quotes, at most 200 characters | `system-ui, sans-serif` |
-| `font_size`, `spacing`, `radius` | Pixels within bounds (12–24, 2–16, 0–32) | 16, 4, 6 |
+| `brand`, `primary`, `secondary`, `accent`, `neutral`, `danger`, `success`, `warning`, `info` | Seed colour `#rrggbb` | `#00555a`, `#0f766e`, `#475569`, `#06b6d4`, `#64748b`, `#b91c1c`, `#15803d`, `#b45309`, `#0369a1` |
+| `font_family`, `font_family_brand` | Font families: letters, digits, spaces, commas, hyphens and quotes, at most 200 characters | `"Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", sans-serif` for both |
+| `font_size` | Pixels, 12–24 | 16 |
+| `radius` | Pixels, 0–28: the medium corner; the other corners are multiples of it | 12 |
+| `density` | `comfortable` or `compact` | `comfortable` |
 | `motion` | `full` or `reduced` | `full` |
+| `scheme` | `system`, `light` or `dark`: the scheme the scope prefers | `system` |
 
-Every `on_*` colour keeps a contrast of at least 4.5:1 on its background, and `link` on `surface` and `background` (WCAG 2.2 AA for normal text); the theme as it resolves in the scope that sets it is checked, and one that fails is refused. The client reads `GET /scopes/{scope}/theme.css`, the tokens as `--kampus-<token>` custom properties.
+Each seed colour grows a **tonal palette** of eleven tones (50 to 950). When the seed is a tone of one of Didactika's palettes, that palette is used; otherwise the palette is grown in OKLCH with the hue of the seed, and the seed takes the place of the tone nearest to it. The theme gives the **colour roles** of a light and a dark scheme, after Material 3:
+
+| Roles | Light | Dark |
+| --- | --- | --- |
+| `<colour>` (`primary`, `secondary`, `accent`, `danger`, `success`, `warning`, `info`) | The seed when it keeps 4.5:1 on `surface`, otherwise the first darker tone that does | Tone 300, or the first lighter tone that keeps 4.5:1 |
+| `on-<colour>` | White or tone 950, whichever contrasts more | The same |
+| `<colour>-container`, `on-<colour>-container` | Tones 100 and 900 | Tones 800 and 100 |
+| `brand`, `on-brand` | The seed, and white or the darkest neutral | The same |
+| `surface`, `surface-container-lowest` to `-highest` | Neutral 50; white, 100, 100–200, 200, 200–300 | Neutral 900; 950, 900–800, 800, 800–700, 700 |
+| `on-surface`, `on-surface-variant`, `outline`, `outline-variant` | Neutral 900, 600, 500, 300 | Neutral 50, 300, 400–300, 700 |
+| `inverse-surface`, `inverse-on-surface`, `inverse-primary`, `scrim`, `shadow` | Neutral 800, 100, the dark `primary`, neutral 950, primary 950 | Neutral 100, 800, the light `primary`, neutral 950, neutral 950 |
+
+Every `on-*` role keeps 4.5:1 on its background, each colour role 4.5:1 on `surface`, and `outline` 3:1 on every surface. The theme is checked as it resolves in the scope that sets it, and a theme that fails is refused (`customise.theme_contrast`); the way the roles are grown prevents that. Neutral palettes grown from a seed follow a darker lightness curve than colours, as surfaces and their text need.
+
+The client reads `GET /scopes/{scope}/theme.css`, written in the custom properties of its design system:
+
+- the roles of the preferred scheme on `:root`, as `--k-color-<role>`;
+- the other scheme under `prefers-color-scheme` and `[data-theme]`;
+- `--k-font-family-plain`, `--k-font-family-brand`, `--k-font-size-root`, `--k-radius`, `--k-density` and `--k-motion`.
+
+So a theme replaces the whole look.
 
 ## Anti-patterns avoided (DEC-014)
 

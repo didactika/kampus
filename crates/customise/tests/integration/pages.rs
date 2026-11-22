@@ -76,6 +76,16 @@ async fn a_layout_keeps_to_the_regions_and_widgets_of_its_page_and_fills_default
     let empty = c.layout(&w.admin, "testing.page", w.section).await.unwrap();
     assert_eq!((empty.placements.len(), empty.origin), (0, Origin::Declared));
     assert_eq!(empty.regions, ["main", "side"]);
+    assert!(empty.editable, "an administrator may arrange the page");
+    assert!(
+        empty.widgets.iter().any(|widget| widget.code == "testing.clock"),
+        "and is offered the widgets of the page with their settings"
+    );
+    let reader = c.layout(&w.nobody, "testing.page", w.section).await.unwrap();
+    assert!(
+        !reader.editable && reader.widgets.is_empty(),
+        "a reader only reads"
+    );
     let layout = c
         .set_layout(
             &w.admin,
@@ -135,6 +145,13 @@ async fn a_locked_layout_holds_below_and_a_widget_no_longer_declared_is_skipped(
         .await
         .unwrap_err();
     assert_eq!(refused.kind(), ErrorKind::Conflict);
+    assert!(
+        !c.layout(&w.admin, "testing.page", w.course)
+            .await
+            .unwrap()
+            .editable,
+        "a lock above leaves nothing to arrange below"
+    );
     let denied = c
         .set_layout(&w.nobody, "testing.page", w.campus, Vec::new(), false)
         .await
@@ -169,6 +186,8 @@ async fn a_menu_shows_each_reader_only_the_items_they_may_see() {
     assert_eq!(menu.items[1].children[0].label, "Theme");
     let seen = c.menu(&w.nobody, "testing.menu", w.course).await.unwrap();
     assert_eq!(seen.items.len(), 1, "the hidden item takes its children with it");
+    assert!(!seen.editable);
+    assert!(menu.editable);
     assert_eq!(seen.items[0].children[0].target, "/contact");
     let mut deep = item("1", "/1", None);
     let mut two = item("2", "/2", None);
@@ -199,22 +218,25 @@ async fn a_theme_merges_tokens_down_the_tree_and_keeps_its_contrast() {
     let w = world().await;
     let c = &w.customise;
     let initial = c.theme(w.course).await.unwrap();
-    assert_eq!(initial.tokens["primary"], json!("#1d4ed8"));
+    assert_eq!(initial.tokens["primary"], json!("#0f766e"));
     assert_eq!(initial.origins["primary"], Origin::Declared);
+    assert_eq!(initial.light.0["primary"], "#0f766e");
+    assert_eq!(initial.dark.0["primary"], "#5eead4");
     c.set_theme(
         &w.admin,
         w.campus,
-        &tokens(json!({ "primary": "#0F766E" })),
+        &tokens(json!({ "primary": "#1D4ED8" })),
         false,
     )
     .await
     .unwrap();
-    c.set_theme(&w.admin, w.category, &tokens(json!({ "radius": 12 })), false)
+    c.set_theme(&w.admin, w.category, &tokens(json!({ "radius": 20 })), false)
         .await
         .unwrap();
     let theme = c.theme(w.course).await.unwrap();
-    assert_eq!(theme.tokens["primary"], json!("#0f766e"));
-    assert_eq!(theme.tokens["radius"], json!(12));
+    assert_eq!(theme.tokens["primary"], json!("#1d4ed8"));
+    assert_eq!(theme.light.0["primary"], "#1d4ed8");
+    assert_eq!(theme.tokens["radius"], json!(20));
     assert_eq!(
         theme.origins["radius"],
         Origin::Scope {
@@ -222,8 +244,9 @@ async fn a_theme_merges_tokens_down_the_tree_and_keeps_its_contrast() {
             locked: false
         }
     );
-    assert!(theme.css().contains("--kampus-radius: 12px;"));
-    let low = c
+    assert!(theme.css().contains("--k-radius: 20px;"));
+    assert!(theme.css().contains("--k-color-primary: #1d4ed8;"));
+    let yellow = c
         .set_theme(
             &w.admin,
             w.course,
@@ -231,12 +254,17 @@ async fn a_theme_merges_tokens_down_the_tree_and_keeps_its_contrast() {
             false,
         )
         .await
-        .unwrap_err();
-    assert_eq!(low.code(), "customise.theme_contrast");
+        .unwrap();
+    assert_ne!(
+        yellow.light.0["primary"], "#facc15",
+        "a seed too light for text gives a darker tone of it"
+    );
+    assert!(yellow.light.shortfalls().is_empty() && yellow.dark.shortfalls().is_empty());
     for wrong in [
         json!({ "primary": "blue" }),
         json!({ "radius": 99 }),
         json!({ "shadow": "big" }),
+        json!({ "density": "huge" }),
         json!({ "font_family": "Arial; } body { display: none" }),
     ] {
         let refused = c
@@ -245,20 +273,26 @@ async fn a_theme_merges_tokens_down_the_tree_and_keeps_its_contrast() {
             .unwrap_err();
         assert_eq!(refused.code(), "customise.theme_invalid");
     }
+    c.reset_theme(&w.admin, w.course).await.unwrap();
     c.set_theme(&w.admin, w.campus, &tokens(json!({ "primary": "#0f766e" })), true)
         .await
         .unwrap();
     let locked = c
-        .set_theme(&w.admin, w.course, &tokens(json!({ "spacing": 8 })), false)
+        .set_theme(
+            &w.admin,
+            w.course,
+            &tokens(json!({ "density": "compact" })),
+            false,
+        )
         .await
         .unwrap_err();
     assert_eq!(locked.kind(), ErrorKind::Conflict);
     assert_eq!(
         c.theme(w.course).await.unwrap().tokens["radius"],
-        json!(6),
+        json!(12),
         "a lock above hides what is below"
     );
     c.reset_theme(&w.admin, w.campus).await.unwrap();
-    assert_eq!(c.theme(w.course).await.unwrap().tokens["radius"], json!(12));
+    assert_eq!(c.theme(w.course).await.unwrap().tokens["radius"], json!(20));
     w.drop().await;
 }

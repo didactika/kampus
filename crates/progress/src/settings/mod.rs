@@ -32,8 +32,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! What progress offers to other modules: the types of notification, the kind of access condition and the setting it declares.
+//! What progress offers to other modules: the types of notification, the kind of access condition, the setting and the widget it declares.
 
 pub mod conditions;
+pub mod customise;
 pub mod notifications;
 pub mod notify;

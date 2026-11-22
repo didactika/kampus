@@ -11,7 +11,7 @@ status: accepted
 - Decision:
   - Every module and plugin ships at most one UI module with a `kampus-ui.json` manifest: routes, contributions, strings, client events.
   - Extension points (regions, menus, tabs, actions, form sections, settings panels, activity views) have typed props and events.
-  - UI modules load on demand through the import map; each extension point is an error boundary.
+  - UI modules are built into the client from a generated registry (DEC-089), and their pages load lazily; each extension point is an error boundary.
   - Contributions follow module state and permissions; every route and contribution declares a help topic.
 - Consequences: Plugins add or replace screens without forking the client; a failing module never takes a page down.
 - Affected artifacts: `web/`, `@kampus/sdk`, the plugin SDK.

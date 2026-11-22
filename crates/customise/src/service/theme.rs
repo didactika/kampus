@@ -44,7 +44,8 @@ use serde_json::{Value, json};
 use sqlx::Row;
 
 use super::principal;
-use crate::model::theme::{CONTRAST_PAIRS, MIN_CONTRAST, TOKENS, TokenKind};
+use crate::model::colour::Rgb;
+use crate::model::theme::{TOKENS, TokenKind};
 use crate::permissions::THEME_MANAGE;
 use crate::{Customise, Origin, Theme, sql};
 
@@ -54,42 +55,12 @@ const MAX_FONT_FAMILY: usize = 200;
 /// The tokens a scope sets.
 pub(super) type Tokens = BTreeMap<String, Value>;
 
-/// A colour `#rrggbb` as its three channels.
-fn channels(colour: &str) -> Option<[u8; 3]> {
-    let hex = colour.strip_prefix('#')?;
-    if hex.len() != 6 || !hex.bytes().all(|b| b.is_ascii_hexdigit()) {
-        return None;
-    }
-    let channel = |at: usize| u8::from_str_radix(&hex[at..at + 2], 16).ok();
-    Some([channel(0)?, channel(2)?, channel(4)?])
-}
-
-/// The relative luminance of a colour, as WCAG defines it.
-fn luminance([red, green, blue]: [u8; 3]) -> f64 {
-    let linear = |c: u8| {
-        let c = f64::from(c) / 255.0;
-        if c <= 0.040_45 {
-            c / 12.92
-        } else {
-            ((c + 0.055) / 1.055).powf(2.4)
-        }
-    };
-    0.0722_f64.mul_add(
-        linear(blue),
-        0.2126_f64.mul_add(linear(red), 0.7152 * linear(green)),
-    )
-}
-
-/// The contrast between two colours, from 1 to 21.
-fn contrast(one: [u8; 3], other: [u8; 3]) -> f64 {
-    let (a, b) = (luminance(one), luminance(other));
-    (a.max(b) + 0.05) / (a.min(b) + 0.05)
-}
-
 /// The value of a token that fits its kind, normalised; none when it does not fit.
 fn fitted(kind: TokenKind, value: &Value) -> Option<Value> {
     match (kind, value) {
-        (TokenKind::Colour, Value::String(text)) => channels(text).map(|_| json!(text.to_ascii_lowercase())),
+        (TokenKind::Colour, Value::String(text)) => {
+            Rgb::parse(text).map(|_| json!(text.to_ascii_lowercase()))
+        }
         (TokenKind::Pixels { min, max }, Value::Number(n)) => {
             n.as_i64().filter(|n| (min..=max).contains(n)).map(|n| json!(n))
         }
@@ -129,34 +100,32 @@ pub(super) fn checked(tokens: &Tokens) -> std::result::Result<Tokens, Vec<FieldE
     }
 }
 
-/// The pairs of a theme whose contrast is too low.
+/// The colour pairs of a theme, in either scheme, whose contrast is too low. Roles are grown to keep it, so
+/// this is a last guard rather than a rule a seed can break.
 pub(super) fn low_contrast(theme: &Theme) -> Vec<FieldError> {
-    let colour = |name: &str| theme.tokens.get(name).and_then(Value::as_str).and_then(channels);
-    CONTRAST_PAIRS
-        .iter()
-        .filter(|(text, background)| match (colour(text), colour(background)) {
-            (Some(text), Some(background)) => contrast(text, background) < MIN_CONTRAST,
-            _ => true,
+    [("light", &theme.light), ("dark", &theme.dark)]
+        .into_iter()
+        .flat_map(|(mode, scheme)| {
+            scheme.shortfalls().into_iter().map(move |(text, background, _)| {
+                FieldError::new(format!("tokens.{text}"), format!("contrast_{mode}_{background}"))
+            })
         })
-        .map(|(text, background)| FieldError::new(format!("tokens.{text}"), format!("contrast_{background}")))
         .collect()
 }
 
 /// The theme every scope starts from: the default of every token.
-fn defaults() -> Theme {
-    let mut theme = Theme {
-        tokens: BTreeMap::new(),
-        origins: BTreeMap::new(),
-    };
+fn defaults() -> (Tokens, BTreeMap<String, Origin>) {
+    let mut tokens = Tokens::new();
+    let mut origins = BTreeMap::new();
     for token in TOKENS {
         let value = match token.kind {
             TokenKind::Pixels { .. } => token.default.parse::<i64>().map_or(Value::Null, |n| json!(n)),
             _ => json!(token.default),
         };
-        theme.tokens.insert(token.name.to_owned(), value);
-        theme.origins.insert(token.name.to_owned(), Origin::Declared);
+        tokens.insert(token.name.to_owned(), value);
+        origins.insert(token.name.to_owned(), Origin::Declared);
     }
-    theme
+    (tokens, origins)
 }
 
 /// The themes set along a path, farthest first: the scope, its tokens and whether it locks.
@@ -164,11 +133,14 @@ pub(super) type Path = Vec<(i32, ScopeId, Tokens, bool)>;
 
 /// A theme made of the defaults and the tokens set along a path, down to the first scope that locks.
 pub(super) fn merged(path: &Path) -> (Theme, Option<ScopeId>) {
-    let mut theme = defaults();
+    let (mut merged, mut origins) = defaults();
     for (_, scope, tokens, locked) in path {
-        for (name, value) in tokens {
-            theme.tokens.insert(name.clone(), value.clone());
-            theme.origins.insert(
+        for (name, value) in tokens
+            .iter()
+            .filter(|(name, _)| TOKENS.iter().any(|t| t.name == name.as_str()))
+        {
+            merged.insert(name.clone(), value.clone());
+            origins.insert(
                 name.clone(),
                 Origin::Scope {
                     scope: *scope,
@@ -177,10 +149,10 @@ pub(super) fn merged(path: &Path) -> (Theme, Option<ScopeId>) {
             );
         }
         if *locked {
-            return (theme, Some(*scope));
+            return (Theme::new(merged, origins), Some(*scope));
         }
     }
-    (theme, None)
+    (Theme::new(merged, origins), None)
 }
 
 impl Customise {

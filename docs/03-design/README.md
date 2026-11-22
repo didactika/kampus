@@ -37,7 +37,7 @@ OpenAPI fragments per module, following DEC-025 and DEC-026: [access](./api/acce
 
 ![UI modules and extension points](./web/ui-modules.svg)
 
-Shell, UI module contract, extension points, design system, data and quality: [web client](./web/README.md) (DEC-004, DEC-074 to DEC-076). The documentation for every role and the help inside the product: [handbook](./handbook/README.md) (DEC-011, DEC-077, DEC-078).
+Shell, UI module contract, extension points, data and quality: [web client](./web/README.md) (DEC-004, DEC-074, DEC-076, DEC-089). How every screen looks and behaves: [Kampus design system](./web/design-system.md) (DEC-013, DEC-089). The documentation for every role and the help inside the product: [handbook](./handbook/README.md) (DEC-011, DEC-077, DEC-078).
 
 ## Plugin SDK
 

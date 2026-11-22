@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="t">
+  <title id="t">Kampus</title>
+  <!-- Colours: Didactika brand tokens. Default theme of Kampus; customisable in settings. -->
+  <defs>
+    <linearGradient id="kbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f766e"/>
+      <stop offset="0.55" stop-color="#00555a"/>
+      <stop offset="1" stop-color="#042f2e"/>
+    </linearGradient>
+    <radialGradient id="kglow" cx="0.22" cy="0.12" r="0.8">
+      <stop offset="0" stop-color="#5eead4" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#5eead4" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="karm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5eead4"/>
+      <stop offset="1" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="120" fill="url(#kbg)"/>
+  <rect width="512" height="512" rx="120" fill="url(#kglow)"/>
+  <g fill="none" stroke-linecap="round" stroke-width="76">
+    <line x1="170" y1="138" x2="170" y2="374" stroke="#ffffff"/>
+    <line x1="266" y1="256" x2="350" y2="146" stroke="#ffffff"/>
+    <line x1="266" y1="256" x2="350" y2="366" stroke="url(#karm)"/>
+  </g>
+</svg>

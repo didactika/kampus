@@ -106,7 +106,7 @@ Every user-facing string is an ICU message of its module, resolved by `kampus-i1
 ![Deployment](./deployment/deployment.svg)
 
 - **One image** of `kampus-server`, started in one of three roles: `server` (HTTP), `worker` (jobs and listeners) and `scheduler` (one active instance, by database lease) (DEC-020). Small installations run all three in one process.
-- The **web client** is its own container (SvelteKit server-side rendering), stateless, behind the same reverse proxy.
+- The **web client** is its own container (Next.js server-side rendering, DEC-089), stateless, behind the same reverse proxy.
 - **State lives only in the ports**: PostgreSQL, the file storage (local disk or S3-compatible) and the cache (Redis or Valkey). Server and worker processes are stateless and scale horizontally (RNF-005).
 - Upgrades run migrations with the expand-and-contract pattern, so a rolling upgrade of minor versions needs no downtime (RNF-006).
 - Local development and every test run in Docker Compose; production uses the same image with Compose or a Helm chart (RNF-013).

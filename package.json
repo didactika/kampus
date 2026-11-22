@@ -3,10 +3,33 @@
   "version": "0.1.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
-  "workspaces": ["web", "web/ui", "web/sdk", "crates/*/web"],
+  "workspaces": [
+    "web",
+    "web/ui",
+    "web/sdk",
+    "crates/*/web"
+  ],
   "scripts": {
     "check": "npm run check --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "build": "npm run build --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.65.1",
+    "@types/node": "24.19.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitest/browser-playwright": "5.0.5",
+    "axe-core": "4.14.1",
+    "jsdom": "26.1.0",
+    "openapi-typescript": "7.13.0",
+    "playwright": "1.65.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "typescript": "5.8.3",
+    "vite": "7.3.7",
+    "vitest": "5.0.5",
+    "vitest-browser-react": "2.3.0"
   }
 }

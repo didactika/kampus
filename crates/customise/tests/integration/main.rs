@@ -44,4 +44,5 @@ mod packages;
 mod pages;
 mod resolution;
 mod rules;
+mod schemes;
 mod world;

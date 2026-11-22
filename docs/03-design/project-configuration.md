@@ -12,7 +12,7 @@ sourceOfTruth: model
 | Language | Rust, edition 2024, stable toolchain pinned in `rust-toolchain.toml` (DEC-001) |
 | Framework | Axum on Tokio, tower middleware |
 | Persistence | SQLx over the database port, PostgreSQL 17 first (DEC-009, DEC-014) |
-| Web client | SvelteKit with Svelte 5 and TypeScript, Node 24 (DEC-004) |
+| Web client | Next.js with React, MUI and TypeScript, Node 24 (DEC-089) |
 | Messages | Project Fluent (DEC-024) |
 | API description | OpenAPI 3.1, generated from the code (DEC-025) |
 | Testing | `cargo test` with tests against PostgreSQL in Docker; Playwright for the web client and end-to-end tests |

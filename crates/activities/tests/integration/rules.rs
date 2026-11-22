@@ -54,7 +54,7 @@ use kampus_module::ServiceContext;
 use serde_json::json;
 
 /// The password of every account of these tests.
-const PASSWORD: &str = "a long and quiet river";
+const PASSWORD: &str = "a-long-and-quiet-river";
 
 /// The modules whose areas and types these tests use.
 static MODULES: &[&kampus_module::Module] = &[&kampus_activities::MODULE, &crate::exceptions::QUIZ_MODULE];

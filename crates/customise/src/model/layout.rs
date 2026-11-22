@@ -69,6 +69,21 @@ pub struct Layout {
     pub placements: Vec<Placement>,
     /// Where the layout came from.
     pub origin: Origin,
+    /// Whether the reader may change it here: they hold `customise.layout.manage` and no scope above locks it.
+    pub editable: bool,
+    /// The widgets the reader may place on the page kind, with their settings; only when it is editable.
+    pub widgets: Vec<AvailableWidget>,
+}
+
+/// A widget that may be placed on a page kind.
+#[derive(Debug, Clone, PartialEq, Serialize, schemars::JsonSchema)]
+pub struct AvailableWidget {
+    /// Its code.
+    pub code: String,
+    /// What it shows.
+    pub summary: String,
+    /// Its settings as declared: key, kind and default.
+    pub settings: Vec<Value>,
 }
 
 /// An item of a navigation menu, with the items under it.
@@ -95,4 +110,6 @@ pub struct Menu {
     pub items: Vec<MenuItem>,
     /// Where the menu came from.
     pub origin: Origin,
+    /// Whether the reader may change it here: they hold `customise.menu.manage` and no scope above locks it.
+    pub editable: bool,
 }

@@ -32,8 +32,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! What records offers to other modules: the types of notification, the kind of access condition and the file area it declares.
+//! What records offers to other modules: the types of notification, the kind of access condition, the file area and the widget it declares.
 
 pub mod conditions;
+pub mod customise;
 pub mod files;
 pub mod notifications;

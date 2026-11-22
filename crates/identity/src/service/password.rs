@@ -43,7 +43,8 @@ use crate::{Account, AccountKind, CampusPolicy, Identity, Message, Notice, Sessi
 /// The longest password accepted, so hashing cannot be used to exhaust the server.
 pub const MAX_LENGTH: usize = 1024;
 
-/// Checks a new password against the policy and the account's own names.
+/// Checks a new password against the policy and the account's own names; a password never holds
+/// spaces or other blank characters, since a space typed or pasted by mistake cannot be seen.
 ///
 /// # Errors
 ///
@@ -56,6 +57,9 @@ pub fn validate(policy: &CampusPolicy, account: &Account, password: &str) -> Res
     }
     if length > MAX_LENGTH {
         fields.push(FieldError::new("password", "max_length"));
+    }
+    if password.chars().any(char::is_whitespace) {
+        fields.push(FieldError::new("password", "whitespace"));
     }
     let lower = password.to_lowercase();
     let names = [
