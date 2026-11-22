@@ -420,7 +420,7 @@ async fn an_integration_creates_and_finds_records_by_their_external_identifiers(
     let set = site
         .call(
             Method::PUT,
-            &format!("/api/v1/courses/courses/{id}/references/moodle"),
+            &format!("/api/v1/courses/courses/{id}/references/lms"),
             Some(&admin),
             &[],
             Some(json!({ "external_id": "77" })),

@@ -48,7 +48,7 @@ The identifiers other systems give a record (the `idnumber` of another platform,
 | Column | Meaning |
 | --- | --- |
 | `campus_id` FK → `access.scope` (`CASCADE`) | The campus the identifier is unique in |
-| `system` | The system, a code such as `sis` or `moodle` |
+| `system` | The system, a code such as `sis` or `lms` |
 | `identifier` | The identifier the system gives the record (at most 255 characters); a soft value, so it carries no `_id` suffix |
 | `record_id` FK → the record (`CASCADE`) | The record; deleting it deletes its references |
 | `created_at` | When it was set |
