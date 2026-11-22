@@ -44,7 +44,7 @@ fn a_reference_is_trimmed_and_keeps_to_its_rules() {
         (reference.system.as_str(), reference.external_id.as_str()),
         ("sis", "A-2026/001")
     );
-    ExternalReference::new("moodle.campus-1_old", "42").unwrap();
+    ExternalReference::new("lms.campus-1_old", "42").unwrap();
     for (system, external_id) in [
         ("SIS", "1"),
         ("1sis", "1"),

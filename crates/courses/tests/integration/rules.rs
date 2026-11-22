@@ -1072,13 +1072,13 @@ async fn records_are_found_and_updated_by_the_identifier_a_system_gives_them() {
         .await
         .unwrap();
     assert_eq!(found, Some(physics.id.as_uuid()));
-    let moodle = kampus_db::references::ExternalReference::new("moodle", "77").unwrap();
+    let lms = kampus_db::references::ExternalReference::new("lms", "77").unwrap();
     let both = c
         .set_external_reference(
             &w.admin,
             kampus_courses::RecordKind::Course,
             physics.id.as_uuid(),
-            &moodle,
+            &lms,
         )
         .await
         .unwrap();
@@ -1092,7 +1092,7 @@ async fn records_are_found_and_updated_by_the_identifier_a_system_gives_them() {
             &w.admin,
             kampus_courses::RecordKind::Course,
             chemistry.id.as_uuid(),
-            &moodle,
+            &lms,
         )
         .await
         .unwrap_err();
@@ -1101,7 +1101,7 @@ async fn records_are_found_and_updated_by_the_identifier_a_system_gives_them() {
         &w.admin,
         kampus_courses::RecordKind::Category,
         science.id.as_uuid(),
-        &moodle,
+        &lms,
     )
     .await
     .unwrap();
@@ -1109,7 +1109,7 @@ async fn records_are_found_and_updated_by_the_identifier_a_system_gives_them() {
         &w.admin,
         kampus_courses::RecordKind::Course,
         physics.id.as_uuid(),
-        "moodle",
+        "lms",
     )
     .await
     .unwrap();
@@ -1124,7 +1124,7 @@ async fn records_are_found_and_updated_by_the_identifier_a_system_gives_them() {
             &learner,
             kampus_courses::RecordKind::Course,
             physics.id.as_uuid(),
-            &moodle,
+            &lms,
         )
         .await
         .unwrap_err();
