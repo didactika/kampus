@@ -152,7 +152,9 @@ services:
       retries: 6
 
   web:
-    build: web
+    build:
+      context: .
+      dockerfile: web/Dockerfile
     image: kampus-web:0.1.0-dev
     ports:
       - "8101:80"

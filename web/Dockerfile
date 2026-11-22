@@ -33,12 +33,11 @@
 # ------------------------------------------------------------------------------
 
 FROM node:24-slim AS build
-WORKDIR /web
-COPY package.json package-lock.json* ./
-RUN npm install --no-audit --no-fund
+WORKDIR /repo
 COPY . .
-RUN npm run build
+RUN npm ci --no-audit --no-fund
+RUN npm run build -w @kampus/web
 
 FROM nginx:1.27-alpine
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /web/dist /usr/share/nginx/html
+COPY web/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /repo/web/dist /usr/share/nginx/html

@@ -48,3 +48,4 @@ node_modules/
 /config.toml
 .env.*
 !.env.example
+node_modules
