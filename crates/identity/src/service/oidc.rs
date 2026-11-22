@@ -75,7 +75,7 @@ pub struct ProviderConfig {
 }
 
 /// A provider as listed on the sign-in page.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Provider {
     /// The provider.
     pub id: ProviderId,

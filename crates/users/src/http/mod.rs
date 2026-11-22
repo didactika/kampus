@@ -48,13 +48,14 @@ use kampus_common::{Error, Result};
 use kampus_identity::http::Caller;
 use kampus_identity::permissions::ACCOUNT_READ;
 use kampus_identity::{AccountId, Identity};
+use kampus_module::Operation;
 use kampus_module::ServiceContext;
-use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
+use kampus_module::http::{ApiResult, Body, Identified, id, if_match, with_etag};
 use serde::Deserialize;
-use serde_json::{Map, Value, json};
+use serde_json::{Map, Value};
 
 use crate::permissions::{GROUP_MANAGE, PROFILE_UPDATE_ANY, PROFILE_UPDATE_OWN};
-use crate::{GroupId, GroupKind, GroupRule, ProfileFields, Users};
+use crate::{GroupId, GroupKind, GroupRule, Member, Profile, ProfileFields, SystemGroup, Users};
 
 /// The routes of users.
 pub fn routes(context: &ServiceContext) -> Router {
@@ -78,6 +79,62 @@ pub fn routes(context: &ServiceContext) -> Router {
         .merge(references::routes())
         .merge(picture::routes())
         .with_state(shared)
+}
+
+/// The operations of the routes, one list per file of routes.
+pub const OPERATIONS: &[&[Operation]] = &[USERS, picture::OPERATIONS, references::OPERATIONS];
+
+/// The operations of profiles, preferences and system groups.
+const USERS: &[Operation] = &[
+    Operation::get(
+        "/me/profile",
+        "The profile of the caller, with its version as ETag",
+    )
+    .returns::<Profile>(),
+    Operation::put("/me/profile", "Replace the profile of the caller")
+        .body::<ProfileFields>()
+        .returns::<Profile>(),
+    Operation::get(
+        "/accounts/{id}/profile",
+        "The profile of an account, with its version as ETag",
+    )
+    .returns::<Profile>(),
+    Operation::put("/accounts/{id}/profile", "Replace the profile of an account")
+        .body::<ProfileFields>()
+        .returns::<Profile>(),
+    Operation::get(
+        "/me/preferences",
+        "The preferences of the caller, with their defaults",
+    )
+    .returns::<Map<String, Value>>(),
+    Operation::patch(
+        "/me/preferences",
+        "Set some preferences of the caller; null clears one",
+    )
+    .body::<Map<String, Value>>()
+    .no_content(),
+    Operation::post(
+        "/scopes/{scope}/system-groups",
+        "Create a system group in a scope",
+    )
+    .body::<GroupBody>()
+    .creates::<Identified<GroupId>>(),
+    Operation::get("/system-groups/{id}", "A system group").returns::<SystemGroup>(),
+    Operation::get("/system-groups/{id}/members", "The members of a system group").returns::<Vec<Member>>(),
+    Operation::put("/system-groups/{id}/members/{account}", "Add a member by hand").no_content(),
+    Operation::delete("/system-groups/{id}/members/{account}", "Remove a member").no_content(),
+    Operation::post(
+        "/system-groups/{id}/apply-rule",
+        "Apply the rule of a group to its members now",
+    )
+    .returns::<Applied>(),
+];
+
+/// How many members a group has after its rule was applied.
+#[derive(Debug, serde::Serialize, schemars::JsonSchema)]
+struct Applied {
+    /// The members.
+    members: usize,
 }
 
 /// What the handlers share.
@@ -133,7 +190,7 @@ impl Shared {
 }
 
 /// A new system group.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct GroupBody {
     /// Its code.
     code: String,
@@ -261,7 +318,7 @@ async fn create_group(
         .users()?
         .create_group(actor, scope, &body.code, &body.name, kind)
         .await?;
-    Ok((StatusCode::CREATED, Json(json!({ "id": group }))).into_response())
+    Ok((StatusCode::CREATED, Json(Identified { id: group })).into_response())
 }
 
 /// The actor managing a group, with the group's scope.
@@ -331,5 +388,5 @@ async fn apply_rule(
     let group: GroupId = id(&group)?;
     let actor = managing(&shared, &caller, group).await?;
     let members = shared.users()?.apply_rule(actor, group).await?;
-    Ok(Json(json!({ "members": members })).into_response())
+    Ok(Json(Applied { members }).into_response())
 }

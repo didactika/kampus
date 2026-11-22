@@ -49,7 +49,7 @@ use crate::permissions::MANAGE;
 use crate::{Record, RecordId, RecordKind, Records, events, sql};
 
 /// The formula of a record.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Formula {
     /// The record it computes.
     pub record: RecordId,

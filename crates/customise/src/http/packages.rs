@@ -42,12 +42,31 @@ use axum::routing::{get, post};
 use axum::{Extension, Json, Router};
 use kampus_access::ScopeId;
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id};
 use serde::Deserialize;
 
 use super::Shared;
 use crate::permissions::PACKAGE_MANAGE;
 use crate::{ImportId, Package, PackageKind};
+
+/// The operations of customisation packages.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::post(
+        "/scopes/{scope}/packages",
+        "Export the customisation of a scope as a package",
+    )
+    .body::<ExportBody>()
+    .returns::<crate::Exported>(),
+    Operation::post(
+        "/scopes/{scope}/imports",
+        "Preview the import of a package into a scope",
+    )
+    .body::<crate::Package>()
+    .creates::<crate::Import>(),
+    Operation::get("/imports/{id}", "An import with its differences").returns::<crate::Import>(),
+    Operation::post("/imports/{id}/apply", "Apply a previewed import").returns::<crate::Import>(),
+];
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -59,7 +78,7 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// The kinds to export.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ExportBody {
     /// The kinds of customisation the package holds.
     kinds: Vec<PackageKind>,

@@ -55,7 +55,7 @@ kampus_common::define_id! {
 }
 
 /// Whom an exception is for.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Target {
     /// One person.
@@ -65,7 +65,7 @@ pub enum Target {
 }
 
 /// The settings an exception may change; each left out keeps the value below it.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Values {
     /// When it opens.
     #[serde(default)]
@@ -120,7 +120,7 @@ const fn pick<T: Copy>(first: Option<T>, second: Option<T>) -> Option<T> {
 }
 
 /// An exception of a course module.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Exception {
     /// The exception.
     pub id: ExceptionId,

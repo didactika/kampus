@@ -42,6 +42,7 @@ mod event;
 mod file;
 mod job;
 mod notification;
+mod operation;
 mod preference;
 mod privacy;
 mod progress;
@@ -63,6 +64,7 @@ pub use event::{Event, EventDeclaration, EventRun, ListenerDeclaration};
 pub use file::{FileAreaDeclaration, FileRead, ReadFuture};
 pub use job::{JobDeclaration, JobFuture, JobRun, ScheduleDeclaration};
 pub use notification::NotificationTypeDeclaration;
+pub use operation::{Content, Method, Operation, SchemaOf, schema_of};
 pub use preference::PreferenceDeclaration;
 pub use privacy::{PrivacyFuture, PrivacyHandlerDeclaration, PrivacyRun};
 pub use progress::ProgressRuleDeclaration;
@@ -136,6 +138,9 @@ pub struct Module {
     pub schedules: &'static [ScheduleDeclaration],
     /// Its HTTP routes, from `src/http/mod.rs`, built with the services the server composed.
     pub routes: Option<fn(&crate::ServiceContext) -> axum::Router>,
+    /// The operations its routes answer, with the schemas of what they take and answer, from
+    /// `src/http/mod.rs`: one list per file of routes.
+    pub operations: &'static [&'static [Operation]],
 }
 
 impl Module {

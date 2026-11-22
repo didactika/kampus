@@ -58,7 +58,7 @@ const MAX_SIDE: u32 = 12_000;
 const MAX_DECODED: u64 = 256 * 1024 * 1024;
 
 /// Where a conversion of a file stands.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Conversion {
     /// What it converts into.
     pub kind: String,

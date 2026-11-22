@@ -57,6 +57,14 @@ use crate::service::api_token::TokenAuth;
 use crate::service::session::Client;
 use crate::{Identity, Session};
 
+/// The operations of the routes, one list per file of routes.
+pub const OPERATIONS: &[&[kampus_module::Operation]] = &[
+    auth::OPERATIONS,
+    me::OPERATIONS,
+    accounts::OPERATIONS,
+    oidc::OPERATIONS,
+];
+
 /// The cookie that carries the session.
 pub const SESSION_COOKIE: &str = "kampus_session";
 

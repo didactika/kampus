@@ -47,13 +47,109 @@ use kampus_common::{Error, Result};
 use kampus_courses::{CourseId, Courses, GroupId};
 use kampus_identity::Identity;
 use kampus_identity::http::Caller;
-use kampus_module::ServiceContext;
 use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
+use kampus_module::{Operation, ServiceContext};
 use serde::Deserialize;
-use serde_json::json;
 
 use crate::permissions::{ENROLMENT_MANAGE, ENROLMENT_READ, INSTANCE_MANAGE, REQUEST_DECIDE, SELF};
 use crate::{Enrol, EnrolmentChange, InstanceFields, InstanceId, Joined, Method, Period};
+
+/// The operations of the routes, one list per file of routes.
+pub const OPERATIONS: &[&[Operation]] = &[ENROL, references::OPERATIONS];
+
+/// The operations of instances, enrolments and requests.
+const ENROL: &[Operation] = &[
+    Operation::get(
+        "/courses/{id}/enrolment-instances",
+        "The enrolment instances of a course",
+    )
+    .returns::<Vec<crate::Instance>>(),
+    Operation::post(
+        "/courses/{id}/enrolment-instances",
+        "Add an enrolment instance to a course",
+    )
+    .body::<NewInstance>()
+    .creates::<crate::Instance>(),
+    Operation::get(
+        "/enrolment-instances/{id}",
+        "An enrolment instance, with its version as ETag",
+    )
+    .returns::<crate::Instance>(),
+    Operation::put(
+        "/enrolment-instances/{id}",
+        "Replace the settings of an enrolment instance",
+    )
+    .body::<crate::InstanceFields>()
+    .returns::<crate::Instance>(),
+    Operation::delete(
+        "/enrolment-instances/{id}",
+        "Delete an enrolment instance with its enrolments",
+    )
+    .no_content(),
+    Operation::put(
+        "/enrolment-instances/{id}/keys",
+        "Set or clear the enrolment key of a self instance",
+    )
+    .body::<KeyBody>()
+    .no_content(),
+    Operation::post(
+        "/enrolment-instances/{id}/sync",
+        "Synchronise an instance with its source now",
+    )
+    .returns::<crate::Synced>(),
+    Operation::post(
+        "/enrolment-instances/{id}/enrolments",
+        "Enrol people by hand, with an answer per person",
+    )
+    .body::<EnrolBody>()
+    .returns::<Vec<Enrolled>>(),
+    Operation::post(
+        "/enrolment-instances/{id}/self",
+        "Enrol the caller; 202 when it becomes a request",
+    )
+    .body::<SelfBody>()
+    .creates::<crate::Joined>(),
+    Operation::get(
+        "/courses/{id}/participants",
+        "The enrolments of a course (query `active`)",
+    )
+    .returns::<Vec<crate::Enrolment>>(),
+    Operation::get("/enrolments/{id}", "An enrolment, with its version as ETag")
+        .returns::<crate::Enrolment>(),
+    Operation::put("/enrolments/{id}", "Change the period or status of an enrolment")
+        .body::<crate::EnrolmentChange>()
+        .returns::<crate::Enrolment>(),
+    Operation::delete("/enrolments/{id}", "Remove an enrolment").no_content(),
+    Operation::get(
+        "/courses/{id}/enrolment-requests",
+        "The pending enrolment requests of a course",
+    )
+    .returns::<Vec<crate::Request>>(),
+    Operation::put(
+        "/enrolment-requests/{id}/decision",
+        "Approve or reject an enrolment request",
+    )
+    .body::<Decision>()
+    .returns::<crate::Request>(),
+    Operation::delete(
+        "/enrolment-requests/{id}",
+        "Withdraw the caller's own enrolment request",
+    )
+    .no_content(),
+];
+
+/// The answer for one person enrolled by hand: the enrolment, or the code of why it failed.
+#[derive(Debug, serde::Serialize, schemars::JsonSchema)]
+struct Enrolled {
+    /// The person.
+    account: PrincipalId,
+    /// The enrolment, when it was made.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    enrolment: Option<crate::EnrolmentId>,
+    /// The code of the problem, when it failed.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    error: Option<String>,
+}
 
 /// The routes of enrolment.
 pub fn routes(context: &ServiceContext) -> Router {
@@ -127,7 +223,7 @@ impl Shared {
 }
 
 /// A new instance.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewInstance {
     /// Its method.
     method: Method,
@@ -143,7 +239,7 @@ struct NewInstance {
 }
 
 /// A key to set or remove.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct KeyBody {
     /// The group the key puts people in; the whole course when absent.
     #[serde(default)]
@@ -154,7 +250,7 @@ struct KeyBody {
 }
 
 /// People to enrol.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct EnrolBody {
     /// Their accounts.
     accounts: Vec<PrincipalId>,
@@ -164,7 +260,7 @@ struct EnrolBody {
 }
 
 /// Enrolling oneself.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct SelfBody {
     /// The key, when the instance has one.
     #[serde(default)]
@@ -175,7 +271,7 @@ struct SelfBody {
 }
 
 /// A decision.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Decision {
     /// Whether the request is approved.
     approve: bool,
@@ -185,7 +281,7 @@ struct Decision {
 }
 
 /// Which participants to list.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Filter {
     /// Only those who take part now.
     #[serde(default)]
@@ -333,8 +429,16 @@ async fn enrol(
     let body: Vec<_> = report
         .into_iter()
         .map(|(account, result)| match result {
-            Ok(enrolment) => json!({ "account": account, "enrolment": enrolment }),
-            Err(error) => json!({ "account": account, "error": error.code() }),
+            Ok(enrolment) => Enrolled {
+                account,
+                enrolment: Some(enrolment),
+                error: None,
+            },
+            Err(error) => Enrolled {
+                account,
+                enrolment: None,
+                error: Some(error.code().to_owned()),
+            },
         })
         .collect();
     Ok(Json(body).into_response())

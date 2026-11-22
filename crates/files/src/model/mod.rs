@@ -50,7 +50,7 @@ kampus_common::define_id! {
 }
 
 /// A file: content stored once, used under a name in an area.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct File {
     /// The file.
     pub id: FileId,
@@ -73,7 +73,7 @@ pub struct File {
 }
 
 /// An upload: permission to send one file into an area, for a while.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Upload {
     /// The upload.
     pub id: UploadId,
@@ -94,7 +94,7 @@ pub struct Upload {
 }
 
 /// A link that reads one file for a few minutes, without signing in.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct SignedUrl {
     /// The link.
     pub url: String,

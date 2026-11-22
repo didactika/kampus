@@ -41,10 +41,26 @@ use axum::routing::{get, put};
 use axum::{Extension, Json, Router};
 use kampus_customise::permissions::FIELD_EDIT;
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id};
 use serde::Deserialize;
 
 use super::{Shared, hidden};
+
+/// The operations of the custom fields of courses.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get(
+        "/courses/{id}/fields",
+        "The custom fields that apply to a course, with the values the caller sees",
+    )
+    .returns::<Vec<kampus_customise::FieldEntry>>(),
+    Operation::put(
+        "/courses/{id}/fields/{code}",
+        "Set the value of a custom field of a course, or clear it with null",
+    )
+    .body::<Value>()
+    .returns::<kampus_customise::FieldEntry>(),
+];
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -54,7 +70,7 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// The value of a field to set.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Value {
     /// The value, or null to clear it.
     value: serde_json::Value,

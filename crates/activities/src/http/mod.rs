@@ -48,13 +48,147 @@ use kampus_db::references::ExternalReference;
 use kampus_files::FileId;
 use kampus_identity::Identity;
 use kampus_identity::http::Caller;
-use kampus_module::ServiceContext;
 use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
+use kampus_module::{Operation, ServiceContext};
 use serde::Deserialize;
-use serde_json::json;
 
 use crate::permissions::{CONDITIONS_MANAGE, EXCEPTION_MANAGE, MODULE_MANAGE};
 use crate::{Activities, Conditions, ExceptionId, ModuleFields, ModuleId, Restricted, Target, Values};
+
+/// The operations of the routes, one list per file of routes.
+pub const OPERATIONS: &[&[Operation]] = &[MODULES, EXCEPTIONS];
+
+/// The operations of course modules, their files, conditions, recycle bin and identifiers.
+const MODULES: &[Operation] = &[
+    Operation::get("/types", "The types of activity and material this build provides")
+        .returns::<Vec<crate::ActivityType>>(),
+    Operation::get(
+        "/sections/{id}/course-modules",
+        "The course modules of a section, as the caller may see them",
+    )
+    .returns::<Vec<crate::Module>>(),
+    Operation::post(
+        "/sections/{id}/course-modules",
+        "Add a course module of a type to a section",
+    )
+    .body::<NewModule>()
+    .creates::<crate::Module>(),
+    Operation::get(
+        "/course-modules/{id}",
+        "A course module available to the caller, with its version as ETag",
+    )
+    .returns::<crate::Module>(),
+    Operation::put("/course-modules/{id}", "Replace a course module")
+        .body::<crate::ModuleFields>()
+        .returns::<crate::Module>(),
+    Operation::delete(
+        "/course-modules/{id}",
+        "Put a course module in the recycle bin (query `permanent`)",
+    )
+    .no_content(),
+    Operation::post(
+        "/course-modules/{id}/move",
+        "Move a course module to another section and/or place",
+    )
+    .body::<Destination>()
+    .returns::<crate::Module>(),
+    Operation::post("/course-modules/{id}/copy", "Copy a course module to a section")
+        .body::<Destination>()
+        .creates::<crate::Module>(),
+    Operation::post(
+        "/course-modules/{id}/restore",
+        "Restore a course module from the recycle bin",
+    )
+    .returns::<crate::Module>(),
+    Operation::get("/course-modules/{id}/file", "The file of a material").returns::<MaterialFile>(),
+    Operation::put(
+        "/course-modules/{id}/file",
+        "Make an uploaded file the file of a material",
+    )
+    .body::<FileBody>()
+    .returns::<MaterialFile>(),
+    Operation::get(
+        "/course-modules/{id}/conditions",
+        "The access conditions of a course module",
+    )
+    .returns::<Option<crate::Conditions>>(),
+    Operation::put(
+        "/course-modules/{id}/conditions",
+        "Replace the access conditions of a course module; null removes them",
+    )
+    .body::<Option<crate::Conditions>>()
+    .returns::<Option<crate::Conditions>>(),
+    Operation::get("/sections/{id}/conditions", "The access conditions of a section")
+        .returns::<Option<crate::Conditions>>(),
+    Operation::put(
+        "/sections/{id}/conditions",
+        "Replace the access conditions of a section; null removes them",
+    )
+    .body::<Option<crate::Conditions>>()
+    .returns::<Option<crate::Conditions>>(),
+    Operation::get("/courses/{id}/bin", "The recycle bin of a course").returns::<Vec<crate::BinItem>>(),
+    Operation::get(
+        "/course-modules/{id}/references",
+        "The identifiers systems give a course module",
+    )
+    .returns::<Vec<kampus_db::references::ExternalReference>>(),
+    Operation::put(
+        "/course-modules/{id}/references/{system}",
+        "Give a course module the identifier a system uses for it",
+    )
+    .body::<ExternalId>()
+    .returns::<Vec<kampus_db::references::ExternalReference>>(),
+    Operation::delete(
+        "/course-modules/{id}/references/{system}",
+        "Remove the identifier a system gave a course module",
+    )
+    .no_content(),
+    Operation::get(
+        "/campuses/{campus}/course-modules/by-reference/{system}/{external_id}",
+        "The course module a system knows by an identifier in a campus",
+    )
+    .returns::<crate::Module>(),
+    Operation::put(
+        "/sections/{id}/course-modules/by-reference/{system}/{external_id}",
+        "Update the course module a system knows by an identifier; 201 when it was created in the section",
+    )
+    .body::<NewModule>()
+    .returns::<crate::Module>(),
+];
+
+/// The operations of exceptions to the settings of a course module.
+const EXCEPTIONS: &[Operation] = &[
+    Operation::get(
+        "/course-modules/{id}/exceptions",
+        "The exceptions of a course module",
+    )
+    .returns::<Vec<crate::Exception>>(),
+    Operation::put(
+        "/course-modules/{id}/exceptions/accounts/{account}",
+        "Give a person an exception to the settings of a course module",
+    )
+    .body::<ExceptionBody>()
+    .returns::<crate::Exception>(),
+    Operation::put(
+        "/course-modules/{id}/exceptions/groups/{group}",
+        "Give a group an exception to the settings of a course module",
+    )
+    .body::<ExceptionBody>()
+    .returns::<crate::Exception>(),
+    Operation::get(
+        "/course-modules/{id}/effective-values/{account}",
+        "The settings of a course module as they apply to a person",
+    )
+    .returns::<crate::Values>(),
+    Operation::delete("/exceptions/{id}", "Remove an exception").no_content(),
+];
+
+/// The file of a material.
+#[derive(Debug, serde::Serialize, schemars::JsonSchema)]
+struct MaterialFile {
+    /// The file.
+    file: kampus_files::FileId,
+}
 
 /// The routes of activities.
 pub fn routes(context: &ServiceContext) -> Router {
@@ -145,7 +279,7 @@ impl Shared {
 }
 
 /// A course module to add.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewModule {
     /// Its type.
     #[serde(rename = "type")]
@@ -159,7 +293,7 @@ struct NewModule {
 }
 
 /// Where a course module goes.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Destination {
     /// The section.
     section: SectionId,
@@ -169,14 +303,14 @@ struct Destination {
 }
 
 /// The file to make the file of a material.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct FileBody {
     /// A file uploaded into `activities.material`.
     file: FileId,
 }
 
 /// The identifier a system gives a course module.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ExternalId {
     /// The identifier.
     external_id: String,
@@ -270,7 +404,7 @@ async fn remove(
 }
 
 /// How a course module is deleted.
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, schemars::JsonSchema)]
 struct RemoveOptions {
     /// Removes the access conditions that depend on it instead of refusing.
     #[serde(default)]
@@ -412,7 +546,7 @@ async fn file(
         .module_file(&caller.actor, module)
         .await?
         .ok_or_else(|| Error::not_found("activities.file_not_found"))?;
-    Ok(Json(json!({ "file": found })).into_response())
+    Ok(Json(MaterialFile { file: found }).into_response())
 }
 
 /// Makes an uploaded file the file of a material.
@@ -428,7 +562,7 @@ async fn set_file(
         .acting(&caller, MODULE_MANAGE, activities.scope_of(module).await?)
         .await?;
     let file = activities.set_module_file(actor, module, body.file).await?;
-    Ok(Json(json!({ "file": file })).into_response())
+    Ok(Json(MaterialFile { file }).into_response())
 }
 
 /// The recycle bin of a course.
@@ -526,7 +660,7 @@ async fn upsert(
 }
 
 /// An exception to grant.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ExceptionBody {
     /// What it changes.
     #[serde(flatten)]

@@ -46,7 +46,7 @@ kampus_common::define_id! {
 }
 
 /// An entry of a scope, or a personal one.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Entry {
     /// The entry.
     pub id: EntryId,
@@ -75,7 +75,7 @@ pub struct Entry {
 }
 
 /// What a person sets on an entry.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, schemars::JsonSchema)]
 pub struct EntryFields {
     /// Its title.
     pub title: String,
@@ -101,7 +101,7 @@ pub struct EntryFields {
 }
 
 /// What an item of a calendar is.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ItemKind {
     /// An entry people created.
@@ -119,7 +119,7 @@ pub enum ItemKind {
 }
 
 /// One thing a calendar shows.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Item {
     /// What it is.
     pub kind: ItemKind,
@@ -140,7 +140,7 @@ pub struct Item {
 }
 
 /// A change of one occurrence of a recurring entry.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct OccurrenceChange {
     /// The occurrence is cancelled.
     #[serde(default)]
@@ -162,7 +162,7 @@ kampus_common::define_id! {
 }
 
 /// A personal feed: a secret address a calendar application reads what its owner sees from.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Feed {
     /// The feed.
     pub id: FeedId,
@@ -182,7 +182,7 @@ kampus_common::define_id! {
 }
 
 /// A calendar of another system shown in a scope, read again every so often.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Subscription {
     /// The subscription.
     pub id: SubscriptionId,

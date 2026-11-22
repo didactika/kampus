@@ -65,6 +65,7 @@ kampus-users = { path = "../users" }
 async-trait.workspace = true
 tracing.workspace = true
 axum.workspace = true
+schemars.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sqlx.workspace = true

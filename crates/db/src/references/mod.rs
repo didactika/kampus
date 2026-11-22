@@ -53,7 +53,7 @@ const MAX_SYSTEM: usize = 63;
 const MAX_EXTERNAL_ID: usize = 255;
 
 /// The identifier a system gives a record.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct ExternalReference {
     /// The system, such as `sis` or `lms`: lowercase letters, digits, `_`, `-` and `.`.
     pub system: String,

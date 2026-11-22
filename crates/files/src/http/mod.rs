@@ -47,6 +47,7 @@ use axum::{Extension, Json, Router};
 use kampus_access::ScopeId;
 use kampus_common::{Error, Result};
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::ServiceContext;
 use kampus_module::http::{ApiResult, Body, id};
 use serde::Deserialize;
@@ -73,6 +74,33 @@ pub fn routes(context: &ServiceContext) -> Router {
         .with_state(shared)
 }
 
+/// The operations of the routes, one list per file of routes.
+pub const OPERATIONS: &[&[Operation]] = &[FILES, quota::OPERATIONS];
+
+/// The operations of uploads, files and their content.
+const FILES: &[Operation] = &[
+    Operation::post("/uploads", "Open an upload into an area of a scope")
+        .body::<OpenBody>()
+        .creates::<crate::Upload>(),
+    Operation::put("/uploads/{id}", "Send the content of an open upload")
+        .body_media("application/octet-stream")
+        .returns::<crate::Upload>(),
+    Operation::post("/uploads/{id}", "Complete an upload into a file").creates::<crate::File>(),
+    Operation::get("/files/{id}", "A file the caller may read").returns::<crate::File>(),
+    Operation::post(
+        "/files/{id}/url",
+        "A signed link that reads the file for a few minutes",
+    )
+    .returns::<crate::SignedUrl>(),
+    Operation::get(
+        "/files/{id}/conversions/{kind}",
+        "A conversion of a file, such as its thumbnail; 202 while it is queued",
+    )
+    .returns::<crate::service::convert::Conversion>(),
+    Operation::get("/content/{id}", "The content behind a signed link")
+        .returns_media("application/octet-stream"),
+];
+
 /// What the handlers share.
 #[derive(Clone)]
 struct Shared {
@@ -92,7 +120,7 @@ impl Shared {
 }
 
 /// An upload to open.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct OpenBody {
     /// The area.
     area: String,
@@ -108,7 +136,7 @@ struct OpenBody {
 }
 
 /// The signature of a link.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Link {
     /// When it stops working, as a Unix time.
     expires: i64,

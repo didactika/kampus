@@ -46,7 +46,7 @@ kampus_common::define_id! {
 }
 
 /// One notification to one person.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Notification {
     /// The notification.
     pub id: NotificationId,
@@ -65,7 +65,7 @@ pub struct Notification {
 }
 
 /// What a person receives of a type of notification through a channel.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Preference {
     /// The type.
     #[serde(rename = "type")]
@@ -83,7 +83,7 @@ pub struct Preference {
 }
 
 /// A page of the inbox.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Inbox {
     /// The notifications, newest first.
     pub notifications: Vec<Notification>,
@@ -104,7 +104,7 @@ kampus_common::define_id! {
 }
 
 /// A conversation between people: two, a group someone gathered, or the members of a group of a course.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Conversation {
     /// The conversation.
     pub id: ConversationId,
@@ -125,7 +125,7 @@ pub struct Conversation {
 }
 
 /// One message of a conversation.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Message {
     /// The message.
     pub id: MessageId,
