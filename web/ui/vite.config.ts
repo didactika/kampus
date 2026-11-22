@@ -36,6 +36,41 @@ import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  optimizeDeps: {
+    include: [
+      "@mui/material/Badge",
+      "@mui/material/Box",
+      "@mui/material/Button",
+      "@mui/material/ButtonGroup",
+      "@mui/material/Chip",
+      "@mui/material/CircularProgress",
+      "@mui/material/CssBaseline",
+      "@mui/material/Dialog",
+      "@mui/material/DialogActions",
+      "@mui/material/DialogContent",
+      "@mui/material/DialogTitle",
+      "@mui/material/FormControl",
+      "@mui/material/FormHelperText",
+      "@mui/material/FormLabel",
+      "@mui/material/IconButton",
+      "@mui/material/InputAdornment",
+      "@mui/material/NativeSelect",
+      "@mui/material/OutlinedInput",
+      "@mui/material/Popover",
+      "@mui/material/Snackbar",
+      "@mui/material/Stack",
+      "@mui/material/ToggleButton",
+      "@mui/material/ToggleButtonGroup",
+      "@mui/material/Tooltip",
+      "@mui/material/Typography",
+      "@mui/material/styles",
+      "axe-core",
+      "react",
+      "react-dom",
+      "react/jsx-dev-runtime",
+      "vitest-browser-react",
+    ],
+  },
   test: {
     include: ["tests/**/*.test.{ts,tsx}"],
     browser: {
