@@ -41,6 +41,9 @@ pub const CACHE: &[kampus_cache::Adapter] = &[kampus_cache_moka::ADAPTER, kampus
 /// The mail adapters of this build.
 pub const MAIL: &[kampus_mail::Adapter] = &[kampus_mail_smtp::ADAPTER];
 
+/// The push adapters of this build.
+pub const PUSH: &[kampus_push::Adapter] = &[kampus_push_webpush::ADAPTER];
+
 /// The scan adapters of this build.
 pub const SCAN: &[kampus_scan::Adapter] = &[kampus_scan_clamd::ADAPTER];
 

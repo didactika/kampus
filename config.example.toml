@@ -58,6 +58,11 @@ url = "clamd://localhost:3310"
 url = "smtp://localhost:1025"
 from = "Kampus <no-reply@kampus.localhost>"
 
+[push]
+url = "webpush://"
+vapid_private_key = "replace with: kampus-server push-key, which generates it"
+subject = "mailto:admin@kampus.localhost"
+
 [security]
 secret_key = "replace with: kampus-server install, which generates it"
 

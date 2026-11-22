@@ -84,6 +84,17 @@ Operations: `index`, `remove`, `query` (text, filters, permissions filter, pagin
 | Without a mail server | The email channel writes to the log what it would send |
 | First adapter | SMTP (`kampus-mail-smtp`): `smtp://host:port` in the clear, `?tls=required` for STARTTLS, `smtps://` over TLS; the sender in `KAMPUS_MAIL_FROM`, sign in with `KAMPUS_MAIL_USERNAME` and `KAMPUS_MAIL_PASSWORD`. Next: provider APIs, attachments, and bounces reported back as events (capability) |
 
+## Push (`kampus-push`)
+
+| Aspect | Contract |
+| --- | --- |
+| Operation | `push(device, payload)` sends one message of up to 3000 bytes to one device and answers delivered or gone; `public_key()` is the key browsers subscribe with |
+| Device | The endpoint, the public key (`p256dh`) and the authentication secret its push service gave when the browser subscribed |
+| Errors | `push.invalid` for a device that cannot be used or a message refused for good, `push.too_large`, `push.failed` when it cannot be sent now |
+| Use | The push channel of notify sends each delivery to every device of the person, removes the devices that are gone, and serves the public key at `GET /api/v1/notify/push-key` |
+| Without push services | The push channel writes to the log what it would send |
+| First adapter | Web Push (`kampus-push-webpush`, `webpush://`): encryption for the device (RFC 8291) and a VAPID signature (RFC 8292) with `KAMPUS_PUSH_VAPID_PRIVATE_KEY` and `KAMPUS_PUSH_SUBJECT`. Endpoints come from browsers, so only public network addresses are reached, without following redirects |
+
 ## Configuration
 
 | Port | Variable | Schemes |
@@ -95,5 +106,6 @@ Operations: `index`, `remove`, `query` (text, filters, permissions filter, pagin
 | Task queue | `KAMPUS_QUEUE_URL` | empty for the database |
 | Search | `KAMPUS_SEARCH_URL` | empty for the database |
 | Mail | `KAMPUS_MAIL_URL` | `smtp://`, `smtps://`; empty to log mail instead of sending it |
+| Push | `KAMPUS_PUSH_URL` | `webpush://`; empty to log push notifications instead of sending them |
 
 The full list is in [project configuration](../project-configuration.md#deployment-configuration).

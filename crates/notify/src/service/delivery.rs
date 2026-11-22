@@ -43,6 +43,8 @@ use kampus_module::ServiceContext;
 use serde_json::Value;
 use sqlx::Row;
 
+use kampus_push::Device;
+
 use crate::ports::transport::Envelope;
 use crate::{EMAIL, Notify, sql};
 
@@ -127,29 +129,51 @@ impl Notify {
         })
     }
 
-    /// Where a notification goes on a channel: the email of the person, or the endpoints of their devices.
+    /// Where a notification goes on a channel: the email of the person, or the endpoints of their devices
+    /// with the devices themselves.
     async fn addresses(
         &self,
         account: PrincipalId,
         channel: &str,
         services: &ServiceContext,
-    ) -> Result<Vec<String>> {
+    ) -> Result<(Vec<String>, Vec<Device>)> {
         if channel == EMAIL {
             let identity = services.service::<kampus_identity::Identity>()?;
-            return Ok(identity
+            let email = identity
                 .email_of(kampus_identity::AccountId::from_uuid(account.as_uuid()))
-                .await?
-                .into_iter()
-                .collect());
+                .await?;
+            return Ok((email.into_iter().collect(), Vec::new()));
         }
-        sqlx::query_scalar(sql(format!(
-            "select endpoint from {} where account_id = $1 order by created_at",
+        let devices: Vec<Device> = sqlx::query(sql(format!(
+            "select endpoint, p256dh, auth from {} where account_id = $1 order by created_at",
             self.table("push_subscription")
         )))
         .bind(account.as_uuid())
         .fetch_all(self.db.pool())
         .await
-        .map_err(kampus_db::classify)
+        .map_err(kampus_db::classify)?
+        .iter()
+        .map(|r| Device {
+            endpoint: r.get("endpoint"),
+            p256dh: r.get("p256dh"),
+            auth: r.get("auth"),
+        })
+        .collect();
+        Ok((devices.iter().map(|d| d.endpoint.clone()).collect(), devices))
+    }
+
+    /// Removes the push subscriptions of an account that their push service says are gone.
+    async fn forget_devices(&self, account: PrincipalId, gone: &[String]) -> Result<()> {
+        sqlx::query(sql(format!(
+            "delete from {} where account_id = $1 and endpoint = any($2)",
+            self.table("push_subscription")
+        )))
+        .bind(account.as_uuid())
+        .bind(gone)
+        .execute(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(())
     }
 
     /// Sends the deliveries whose time came, at most a batch per run, and returns how many it tried. Each one
@@ -231,7 +255,7 @@ impl Notify {
         let type_code: String = row.get("type_code");
         let payload: Value = row.get("payload");
         let summary: String = row.get("summary");
-        let to = self.addresses(account, channel, services).await?;
+        let (to, devices) = self.addresses(account, channel, services).await?;
         if to.is_empty() {
             return Err(kampus_common::Error::conflict("notify.no_address"));
         }
@@ -244,11 +268,16 @@ impl Notify {
             to,
             subject,
             body,
+            devices,
         };
-        if channel == EMAIL {
-            self.email.send(&envelope).await
-        } else {
-            self.push.send(&envelope).await
+        let transport = if channel == EMAIL { &self.email } else { &self.push };
+        let sent = transport.send(&envelope).await?;
+        if !sent.gone.is_empty() {
+            self.forget_devices(account, &sent.gone).await?;
+            if sent.gone.len() == envelope.to.len() {
+                return Err(kampus_common::Error::conflict("notify.no_address"));
+            }
         }
+        Ok(())
     }
 }

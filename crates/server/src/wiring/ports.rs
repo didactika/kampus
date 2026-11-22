@@ -59,6 +59,8 @@ pub struct Ports {
     pub scanner: Option<Arc<dyn kampus_scan::Scanner>>,
     /// The mail server, when one is configured.
     pub mailer: Option<Arc<dyn kampus_mail::Mailer>>,
+    /// The push services, when they are configured.
+    pub pusher: Option<Arc<dyn kampus_push::Pusher>>,
 }
 
 impl Ports {
@@ -108,6 +110,20 @@ impl Ports {
             ),
             None => None,
         };
+        let pusher = match &config.push_url {
+            Some(url) => Some(
+                kampus_push::open(
+                    adapters::PUSH,
+                    AdapterSettings {
+                        url: url.clone(),
+                        prefix: prefix.clone(),
+                        options: config.push_options.clone(),
+                    },
+                )
+                .await?,
+            ),
+            None => None,
+        };
         let local = kampus_cache::open(
             adapters::CACHE,
             AdapterSettings {
@@ -137,6 +153,7 @@ impl Ports {
             cache,
             scanner,
             mailer,
+            pusher,
         })
     }
 
@@ -164,6 +181,7 @@ impl Ports {
             cache,
             scanner: None,
             mailer: None,
+            pusher: None,
         })
     }
 }

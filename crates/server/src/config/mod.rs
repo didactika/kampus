@@ -166,6 +166,10 @@ pub struct Config {
     pub mail_url: Option<String>,
     /// The options of the mail adapter (`from`, `username`, `password`).
     pub mail_options: BTreeMap<String, String>,
+    /// The push services of browsers (`webpush://`); without it push notifications are written to the log.
+    pub push_url: Option<String>,
+    /// The options of the push adapter (`vapid_private_key`, `subject`).
+    pub push_options: BTreeMap<String, String>,
     /// The key that seals secrets, for roles that run the services.
     pub secret_key: Option<SecretKey>,
     /// How campuses are served.
@@ -182,6 +186,9 @@ const STORAGE_OPTIONS: &[&str] = &[
 
 /// The options of the mail adapters that the configuration passes on.
 const MAIL_OPTIONS: &[&str] = &["from", "username", "password"];
+
+/// The options of the push adapters that the configuration passes on.
+const PUSH_OPTIONS: &[&str] = &["vapid_private_key", "subject"];
 
 /// Reads values by key, from the environment first, and gathers every problem.
 struct Reader<'a, F> {
@@ -299,6 +306,24 @@ impl<F: Fn(&str) -> Option<String>> Reader<'_, F> {
         (url, options)
     }
 
+    /// The `[push]` section: push services need the key and the subject of the installation.
+    fn push(&mut self) -> (Option<String>, BTreeMap<String, String>) {
+        let url = self.value("push.url");
+        let options: BTreeMap<String, String> = PUSH_OPTIONS
+            .iter()
+            .filter_map(|option| {
+                self.value(&format!("push.{option}"))
+                    .map(|v| ((*option).to_owned(), v))
+            })
+            .collect();
+        for required in PUSH_OPTIONS {
+            if url.is_some() && !options.contains_key(*required) {
+                self.fail(&format!("push.{required}"), "required");
+            }
+        }
+        (url, options)
+    }
+
     /// The `[security]` and `[tenancy]` sections.
     fn security(&mut self, runs_services: bool) -> (Option<SecretKey>, Tenancy) {
         let secret_key = match self.value("security.secret_key") {
@@ -391,6 +416,7 @@ impl Config {
         let (storage_url, storage_options, cache_url) = reader.storage(runs_services);
         let scan_url = reader.value("scan.url");
         let (mail_url, mail_options) = reader.mail();
+        let (push_url, push_options) = reader.push();
         let (secret_key, tenancy) = reader.security(runs_services);
         let (log_level, log_format) = reader.log();
         if !reader.fields.is_empty() {
@@ -414,6 +440,8 @@ impl Config {
             scan_url,
             mail_url,
             mail_options,
+            push_url,
+            push_options,
             secret_key,
             tenancy,
         })

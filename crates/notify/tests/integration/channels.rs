@@ -34,15 +34,17 @@
 
 //! Channels: a person who turns email or push on receives a notification there through a delivery job, with
 //! the template of their campus; a campus default that is locked cannot be changed; a delivery without an
-//! address, or one the mail server refuses for good, is given up.
+//! address, or one the mail server refuses for good, is given up; devices their push service says are gone
+//! are forgotten.
 
 use std::sync::Arc;
 
 use kampus_common::ErrorKind;
 use kampus_mail::{Mail, Mailer};
 use kampus_module::ServiceContext;
-use kampus_notify::ports::transport::MailTransport;
+use kampus_notify::ports::transport::{MailTransport, PushTransport};
 use kampus_notify::service::channel::{CampusDefault, PushSubscription, Template};
+use kampus_push::{Device, Outcome, Pusher};
 use serde_json::json;
 
 use crate::world::{World, who, world};
@@ -269,5 +271,113 @@ async fn email_goes_through_the_mail_port_and_a_refusal_for_good_is_not_tried_ag
         (state.as_str(), error.as_deref()),
         ("dead", Some("mail.rejected"))
     );
+    w.drop().await;
+}
+
+/// Push services where every device whose endpoint ends in `gone` is gone, and the others take messages.
+#[derive(Debug, Default)]
+struct Services {
+    /// The endpoints delivered to, oldest first.
+    delivered: std::sync::Mutex<Vec<String>>,
+}
+
+#[async_trait::async_trait]
+impl Pusher for Services {
+    async fn push(&self, device: &Device, payload: &[u8]) -> kampus_common::Result<Outcome> {
+        let message: serde_json::Value = serde_json::from_slice(payload).unwrap();
+        assert!(
+            message["title"].is_string() && message["body"].is_string(),
+            "{message}"
+        );
+        if device.endpoint.ends_with("gone") {
+            return Ok(Outcome::Gone);
+        }
+        self.delivered.lock().unwrap().push(device.endpoint.clone());
+        Ok(Outcome::Delivered)
+    }
+
+    fn public_key(&self) -> String {
+        "the key".to_owned()
+    }
+}
+
+/// Registers a device of a person.
+async fn device(w: &World, notify: &kampus_notify::Notify, endpoint: &str) {
+    notify
+        .register_push(
+            &w.lea,
+            PushSubscription {
+                id: None,
+                endpoint: endpoint.to_owned(),
+                p256dh: "key".to_owned(),
+                auth: "secret".to_owned(),
+            },
+        )
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+async fn push_goes_through_the_push_port_and_devices_that_are_gone_are_forgotten() {
+    let w = world().await;
+    assert_eq!(w.notify.push_key().unwrap_err().code(), "notify.push_unavailable");
+    let pusher = Arc::new(Services::default());
+    let notify = w
+        .notify
+        .clone()
+        .with_transports(w.email.clone(), Arc::new(PushTransport::new(pusher.clone())));
+    assert_eq!(notify.push_key().unwrap(), "the key");
+    notify.set_preference(&w.lea, GRADE, "push", true).await.unwrap();
+    device(&w, &notify, "https://push.example.org/phone").await;
+    device(&w, &notify, "https://push.example.org/old-gone").await;
+    notify
+        .notify(GRADE, who(&w.lea), json!({}), Some("e1"))
+        .await
+        .unwrap();
+    notify.deliver(&services(&w)).await.unwrap();
+    assert_eq!(
+        *pusher.delivered.lock().unwrap(),
+        ["https://push.example.org/phone"]
+    );
+    let left: Vec<_> = notify
+        .push_subscriptions(&w.lea)
+        .await
+        .unwrap()
+        .into_iter()
+        .map(|s| s.endpoint)
+        .collect();
+    assert_eq!(
+        left,
+        ["https://push.example.org/phone"],
+        "the device that is gone is forgotten"
+    );
+
+    w.notify
+        .remove_push(
+            &w.lea,
+            notify.push_subscriptions(&w.lea).await.unwrap()[0].id.unwrap(),
+        )
+        .await
+        .unwrap();
+    device(&w, &notify, "https://push.example.org/last-gone").await;
+    notify
+        .notify(GRADE, who(&w.lea), json!({}), Some("e2"))
+        .await
+        .unwrap();
+    notify.deliver(&services(&w)).await.unwrap();
+    let error: Option<String> = sqlx::query_scalar(sqlx::AssertSqlSafe(format!(
+        "select d.last_error from {s}.\"delivery\" d join {s}.\"notification\" n on n.id = d.notification_id
+         where d.channel = 'push' and d.state = 'dead'",
+        s = w.db.prefix().schema("notify")
+    )))
+    .fetch_one(w.db.pool())
+    .await
+    .unwrap();
+    assert_eq!(
+        error.as_deref(),
+        Some("notify.no_address"),
+        "nobody is left to receive it"
+    );
+    assert_eq!(notify.push_subscriptions(&w.lea).await.unwrap().len(), 0);
     w.drop().await;
 }
