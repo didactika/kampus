@@ -162,6 +162,7 @@ async fn install_creates_the_installation_once_and_its_administrator_signs_in() 
         .await
         .unwrap();
     }
+    db.close().await;
 }
 
 #[tokio::test]
@@ -223,4 +224,5 @@ async fn an_installation_created_by_an_upgrade_gets_its_first_campus_from_instal
         .await
         .unwrap();
     }
+    db.close().await;
 }

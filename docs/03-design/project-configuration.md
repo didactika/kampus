@@ -77,3 +77,11 @@ docker compose run --rm -it server install
 | `log.format` | `KAMPUS_LOG_FORMAT` | all | `json` | `json` lines for collectors, or `text` |
 
 `KAMPUS_CONFIG_FILE` names another file; the container image reads `/etc/kampus/config.toml`. Mail, sessions, the task queue and search get their sections with the modules that use them.
+
+### Database connections
+
+Each process keeps one pool of at most `database.pool_size` connections. It opens them as they are needed, closes a connection idle for 2 minutes or open for 30 minutes, and waits up to 30 seconds for a connection, retrying while PostgreSQL has no free slot, before an operation fails as unavailable. Size `max_connections` for the pool size times the number of processes, plus room for maintenance.
+
+A connection pooler in front of PostgreSQL must keep sessions: PgBouncer in `session` mode works, `transaction` and `statement` modes do not. Upgrades hold a session advisory lock on one connection while their steps run on others, so that replicas started together upgrade one after the other; behind transaction pooling that lock would be taken and released on whichever server connection the pooler hands out, and left behind on a shared one. Holding a transaction lock instead keeps one server connection per running upgrade while its steps need more, which stalls a pooler once more upgrades run at once than it has server connections.
+
+In development the tests of the `rust` service reach PostgreSQL through PgBouncer in `session` mode (`pgbouncer` in `compose.yaml`, port 56432 on the host), which keeps at most 200 server connections and makes any other client wait for one instead of failing; PostgreSQL accepts 300, so the server and maintenance always have room. Each run of the suite runs 16 tests at a time (`RUST_TEST_THREADS`) and needs about 50 connections; three runs at once peak at about 90 behind PgBouncer. The server of the compose file and CI use PostgreSQL directly.

@@ -172,6 +172,7 @@ async fn drop_installation(db: &Database) {
         .await
         .unwrap();
     }
+    db.close().await;
 }
 
 /// The quoted name of a probe table.

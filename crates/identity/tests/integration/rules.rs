@@ -195,6 +195,7 @@ impl World {
             .await
             .unwrap();
         }
+        self.db.close().await;
     }
 
     /// Invites a person to the campus and accepts the invitation with [`PASSWORD`].
