@@ -129,3 +129,52 @@ export interface Inbox {
   readonly notifications: Notification[];
   readonly unread: number;
 }
+
+/** A widget in a region of a page, with its settings. */
+export interface Placement {
+  readonly region: string;
+  readonly widget: string;
+  readonly settings: Readonly<Record<string, unknown>>;
+  readonly permission?: string | null;
+}
+
+/** A setting of a widget as its module declares it. */
+export interface DeclaredSetting {
+  readonly key: string;
+  readonly kind:
+    | { readonly type: "boolean" }
+    | { readonly type: "choice"; readonly options: readonly string[] }
+    | { readonly type: "integer"; readonly min: number; readonly max: number }
+    | { readonly type: "text"; readonly max: number };
+  readonly default: unknown;
+}
+
+/** A widget that may be placed on a page. */
+export interface AvailableWidget {
+  readonly code: string;
+  readonly summary: string;
+  readonly settings: readonly DeclaredSetting[];
+}
+
+/** The layout of a page kind in a scope, as the reader sees it. */
+export interface Layout {
+  readonly page_kind: string;
+  readonly regions: readonly string[];
+  readonly placements: readonly Placement[];
+  readonly editable?: boolean;
+  readonly widgets?: readonly AvailableWidget[];
+}
+
+/** An item of a navigation menu. */
+export interface MenuItem {
+  readonly label: string;
+  readonly target: string;
+  readonly children: readonly MenuItem[];
+}
+
+/** A navigation menu of a scope. */
+export interface Menu {
+  readonly kind: string;
+  readonly items: readonly MenuItem[];
+  readonly editable?: boolean;
+}

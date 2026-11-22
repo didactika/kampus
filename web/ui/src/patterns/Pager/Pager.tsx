@@ -37,8 +37,8 @@
 
 /**
  * The pages of a list, under it, as Didactika's lists have them: how many items per page on one side (12, 24, 48 or
- * 96, only those smaller than the list, and All when the list has at most 500 items), and on the other the range
- * shown and the previous and next arrows.
+ * 96, only those smaller than the list, and All when the list has at most 500 items, chosen only on purpose), and on
+ * the other the range shown and the previous and next arrows.
  */
 
 import IconButton from "@mui/material/IconButton";
@@ -56,17 +56,22 @@ export const PAGE_SIZES = [12, 24, 48, 96] as const;
 /** The largest list "All" is offered for. */
 const ALL_UP_TO = 500;
 
-/** The sizes offered for a list of this many items. */
-export function pageSizes(total: number): number[] {
-  const smaller = PAGE_SIZES.filter((size) => size < total);
-  return total <= ALL_UP_TO ? [...(smaller.length ? smaller : [PAGE_SIZES[0]]), 0] : smaller;
+/** The sizes offered for a list of this many items, with a size a page prefers (such as the one a widget sets). */
+export function pageSizes(total: number, preferred = 0): number[] {
+  const sizes = [...new Set([...PAGE_SIZES, ...(preferred > 0 ? [preferred] : [])])].sort((a, b) => a - b);
+  const smaller = sizes.filter((size) => size < total);
+  const shown = smaller.length ? smaller : [Math.min(...sizes)];
+  return total <= ALL_UP_TO ? [...shown, 0] : shown;
 }
 
-/** The size a page takes: the one asked for when it is offered, the whole list or 12 otherwise. */
-export function pageSize(asked: number, total: number): number {
-  const offered = pageSizes(total);
+/**
+ * The size a page takes: the one asked for when it is offered (0, the whole list, only when asked for on purpose),
+ * the preferred size or 12 otherwise, so a list never shows everything at once by surprise.
+ */
+export function pageSize(asked: number, total: number, preferred = 0): number {
+  const offered = pageSizes(total, preferred);
   if (offered.includes(asked)) return asked;
-  return offered.includes(0) && asked > 0 ? 0 : PAGE_SIZES[0];
+  return preferred > 0 && offered.includes(preferred) ? preferred : PAGE_SIZES[0];
 }
 
 /** The props of `Pager`. */
@@ -81,6 +86,8 @@ export interface PagerProps {
   readonly onPage: (page: number) => void;
   /** Changes the size. */
   readonly onSize: (size: number) => void;
+  /** A size the list prefers, offered beside the usual ones. */
+  readonly preferred?: number;
   /** The words of the pager. */
   readonly labels: {
     readonly perPage: string;
@@ -93,7 +100,7 @@ export interface PagerProps {
 }
 
 /** `<Pager total={62} page={0} size={12} … />` */
-export function Pager({ total, page, size, onPage, onSize, labels }: PagerProps) {
+export function Pager({ total, page, size, onPage, onSize, labels, preferred = 0 }: PagerProps) {
   const select = useId();
   const per = size === 0 ? total : size;
   const pages = Math.max(1, Math.ceil(total / Math.max(per, 1)));
@@ -110,7 +117,7 @@ export function Pager({ total, page, size, onPage, onSize, labels }: PagerProps)
             label={labels.perPage}
             value={String(size)}
             onChange={(value) => onSize(Number(value))}
-            options={pageSizes(total).map((option) => ({ value: String(option), label: option === 0 ? labels.all : String(option) }))}
+            options={pageSizes(total, preferred).map((option) => ({ value: String(option), label: option === 0 ? labels.all : String(option) }))}
           />
         </Box>
       </Stack>

@@ -60,7 +60,10 @@ describe("the pager", () => {
     expect(pageSizes(46)).toEqual([12, 24, 0]);
     expect(pageSizes(5)).toEqual([12, 0]);
     expect(pageSizes(900)).toEqual([12, 24, 48, 96]);
-    expect(pageSize(25, 100), "a size not offered falls back").toBe(0);
+    expect(pageSize(25, 100), "a size not offered falls back to 12, never to the whole list").toBe(12);
+    expect(pageSize(0, 100), "the whole list only on purpose").toBe(0);
+    expect(pageSizes(36, 8)).toEqual([8, 12, 24, 0]);
+    expect(pageSize(8, 36, 8), "a preferred size is offered").toBe(8);
     expect(pageSize(10000, 900)).toBe(12);
     expect(pageSize(24, 46)).toBe(24);
   });

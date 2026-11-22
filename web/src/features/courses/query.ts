@@ -72,29 +72,29 @@ function whole(value: string | null | undefined, fallback: number): number {
   return Number.isInteger(n) && n >= 0 ? n : fallback;
 }
 
-/** The query in the parameters of an address. */
-export function readQuery(params: URLSearchParams): CatalogueQuery {
+/** The query in the parameters of an address; what they leave out is as in `start`. */
+export function readQuery(params: URLSearchParams, start: CatalogueQuery = FRESH): CatalogueQuery {
   return {
-    q: params.get("q") ?? "",
+    q: params.get("q") ?? start.q,
     categories: params.getAll("category"),
     states: params.getAll("state"),
-    sort: oneOf(params.get("sort"), SORTS),
-    view: oneOf(params.get("view"), VIEWS),
+    sort: params.has("sort") ? oneOf(params.get("sort"), SORTS) : start.sort,
+    view: params.has("view") ? oneOf(params.get("view"), VIEWS) : start.view,
     page: whole(params.get("page"), 0),
-    size: whole(params.get("size"), 12),
+    size: whole(params.get("size"), start.size),
   };
 }
 
-/** The parameters of an address for a query, leaving out what is as in a fresh catalogue. */
-export function writeQuery(query: CatalogueQuery): URLSearchParams {
+/** The parameters of an address for a query, leaving out what is as in `start`. */
+export function writeQuery(query: CatalogueQuery, start: CatalogueQuery = FRESH): URLSearchParams {
   const params = new URLSearchParams();
   if (query.q) params.set("q", query.q);
   for (const id of query.categories) params.append("category", id);
   for (const state of query.states) params.append("state", state);
-  if (query.sort !== FRESH.sort) params.set("sort", query.sort);
-  if (query.view !== FRESH.view) params.set("view", query.view);
+  if (query.sort !== start.sort) params.set("sort", query.sort);
+  if (query.view !== start.view) params.set("view", query.view);
   if (query.page > 0) params.set("page", String(query.page));
-  if (query.size !== FRESH.size) params.set("size", String(query.size));
+  if (query.size !== start.size) params.set("size", String(query.size));
   return params;
 }
 

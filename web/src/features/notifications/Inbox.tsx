@@ -51,13 +51,8 @@ import { browserApi } from "../../api/browser";
 import type { Inbox as InboxPage } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { EmptyState } from "../shell/EmptyState";
+import { describe } from "./describe";
 import { PageHeader } from "../shell/PageHeader";
-
-/** What a notification says: its type, in plain words. */
-function describe(type: string): string {
-  const words = type.replace(/[._]/g, " ");
-  return words.charAt(0).toUpperCase() + words.slice(1);
-}
 
 /** `<Inbox inbox={…} />` */
 export function Inbox({ inbox }: { readonly inbox: InboxPage }) {

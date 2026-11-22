@@ -57,10 +57,8 @@ interface Figure {
   readonly href?: string;
 }
 
-/** The props of `Welcome`. */
-export interface WelcomeProps {
-  /** The name to greet. */
-  readonly name: string;
+/** The figures of the welcome. */
+export interface WelcomeFigures {
   /** How many courses the catalogue has. */
   readonly courses: number;
   /** How many categories it has. */
@@ -69,14 +67,26 @@ export interface WelcomeProps {
   readonly unread: number | null;
 }
 
+/** The props of `Welcome`. */
+export interface WelcomeProps {
+  /** The name to greet. */
+  readonly name: string;
+  /** A heading of the scope instead of the greeting. */
+  readonly heading?: string;
+  /** The figures, when the welcome shows them. */
+  readonly figures: WelcomeFigures | null;
+}
+
 /** `<Welcome name="lea" courses={12} categories={3} unread={2} />` */
-export function Welcome({ name, courses, categories, unread }: WelcomeProps) {
+export function Welcome({ name, heading, figures: counts }: WelcomeProps) {
   const { t, number } = useI18n();
-  const figures: Figure[] = [
-    { icon: "school", label: t("stats.courses"), value: courses },
-    { icon: "category", label: t("stats.categories"), value: categories },
-    ...(unread === null ? [] : [{ icon: "notifications", label: t("stats.unread"), value: unread, href: "/notifications" }]),
-  ];
+  const figures: Figure[] = counts
+    ? [
+        { icon: "school", label: t("stats.courses"), value: counts.courses, href: "/courses" },
+        { icon: "category", label: t("stats.categories"), value: counts.categories },
+        ...(counts.unread === null ? [] : [{ icon: "notifications", label: t("stats.unread"), value: counts.unread, href: "/notifications" }]),
+      ]
+    : [];
   return (
     <Box
       component="section"
@@ -84,12 +94,11 @@ export function Welcome({ name, courses, categories, unread }: WelcomeProps) {
       sx={{
         position: "relative",
         overflow: "hidden",
-        mb: 5,
         p: { xs: 3, md: 5 },
         borderRadius: (theme) => `${theme.shape.extraLarge}px`,
         color: "brand.contrastText",
         background:
-          "radial-gradient(circle at 92% -10%, color-mix(in srgb, var(--k-palette-accent-main) 22%, transparent) 0 22%, transparent 46%), radial-gradient(circle at -5% 115%, color-mix(in srgb, var(--k-palette-brand-contrastText) 10%, transparent) 0 28%, transparent 52%), linear-gradient(135deg, var(--k-palette-brand-main), color-mix(in srgb, var(--k-palette-brand-main) 50%, var(--k-palette-surface-scrim)))",
+          "radial-gradient(circle at 92% -10%, color-mix(in srgb, var(--k-palette-accent-main) 22%, transparent) 0 22%, transparent 46%), radial-gradient(circle at -5% 115%, color-mix(in srgb, var(--k-palette-brand-contrastText) 10%, transparent) 0 28%, transparent 52%), var(--k-palette-gradient-bar)",
         boxShadow: 3,
       }}
     >
@@ -110,11 +119,12 @@ export function Welcome({ name, courses, categories, unread }: WelcomeProps) {
         Kampus
       </Typography>
       <Typography id="welcome" variant="h1" sx={{ mt: 1, fontSize: { md: "2.75rem" }, lineHeight: 1.15, maxInlineSize: "18ch" }}>
-        {t("home.greeting", { name })}
+        {heading || t("home.greeting", { name })}
       </Typography>
       <Typography variant="body1" sx={{ mt: 1.5, opacity: 0.9, maxInlineSize: "52ch" }}>
         {t("home.lead")}
       </Typography>
+      {figures.length ? (
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(3, minmax(0, 1fr))", sm: "repeat(3, minmax(0, 170px))" }, gap: 1.5, mt: 4 }}>
         {figures.map((figure) => {
           const tile = (
@@ -154,6 +164,7 @@ export function Welcome({ name, courses, categories, unread }: WelcomeProps) {
           );
         })}
       </Box>
+      ) : null}
     </Box>
   );
 }

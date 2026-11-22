@@ -43,12 +43,11 @@
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
-import NativeSelect from "@mui/material/NativeSelect";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 
-import { Button, FilterGroup, Icon, ListToolbar, Pager, ViewToggle, pageSize } from "@kampus/ui";
+import { Button, FilterGroup, ListToolbar, Pager, PillSelect, ViewToggle, pageSize } from "@kampus/ui";
 
 import { useI18n } from "../../i18n/I18nProvider";
 import { EmptyState } from "../shell/EmptyState";
@@ -61,26 +60,40 @@ export interface CourseCatalogueProps {
   /** The catalogue of the campus. */
   readonly catalogue: Catalogue;
   /** The parameters of the address the page was asked with. */
-  readonly initial: string;
+  readonly initial?: string;
+  /** Its heading; the title of the catalogue when none is given. */
+  readonly heading?: string;
+  /** Whether it goes without a heading, under the head of its page. */
+  readonly titleless?: boolean;
+  /** Whether what the person asks is kept in the address; a widget among others does not. */
+  readonly inAddress?: boolean;
+  /** The layout it starts with. */
+  readonly view?: CatalogueQuery["view"];
+  /** The size of its pages it starts with. */
+  readonly size?: number;
+  /** A link to the page of every course, for a catalogue shown as a widget. */
+  readonly more?: { readonly href: string; readonly label: string };
 }
 
 /** `<CourseCatalogue catalogue={…} initial="q=phys" />` */
-export function CourseCatalogue({ catalogue, initial }: CourseCatalogueProps) {
+export function CourseCatalogue({ catalogue, initial = "", heading, titleless = false, inAddress = true, view, size: startSize, more }: CourseCatalogueProps) {
   const { t, language } = useI18n();
-  const [query, setQuery] = useState<CatalogueQuery>(() => readQuery(new URLSearchParams(initial)));
-  const sortId = useId();
+  const start = useMemo<CatalogueQuery>(() => ({ ...FRESH, ...(view ? { view } : {}), ...(startSize ? { size: startSize } : {}) }), [view, startSize]);
+  const [query, setQuery] = useState<CatalogueQuery>(() => ({ ...start, ...readQuery(new URLSearchParams(initial), start) }));
+  const headingId = useId();
 
   const change = useCallback((next: Partial<CatalogueQuery>) => {
     setQuery((current) => ({ ...current, page: 0, ...next }));
   }, []);
 
   useEffect(() => {
-    const params = writeQuery(query).toString();
+    if (!inAddress) return;
+    const params = writeQuery(query, start).toString();
     window.history.replaceState(null, "", params ? `?${params}` : window.location.pathname);
-  }, [query]);
+  }, [query, inAddress, start]);
 
   const found = useMemo(() => matching(catalogue.courses, query, language), [catalogue.courses, query, language]);
-  const size = pageSize(query.size, found.length);
+  const size = pageSize(query.size, found.length, startSize ?? 0);
   const per = size === 0 ? found.length : size;
   const pages = Math.max(1, Math.ceil(found.length / Math.max(per, 1)));
   const page = Math.min(query.page, pages - 1);
@@ -91,14 +104,23 @@ export function CourseCatalogue({ catalogue, initial }: CourseCatalogueProps) {
   const active = query.categories.length + query.states.length;
 
   return (
-    <Box component="section" aria-labelledby="catalogue">
-      <Stack direction="row" sx={{ alignItems: "baseline", justifyContent: "space-between", mb: 2 }}>
-        <Typography id="catalogue" variant="h2">
-          {t("catalogue.title")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" aria-live="polite">
-          {t("catalogue.found", { n: found.length })}
-        </Typography>
+    <Box component="section" aria-labelledby={titleless ? undefined : headingId}>
+      <Stack direction="row" spacing={2} sx={{ alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "baseline" }}>
+          {titleless ? null : (
+            <Typography id={headingId} variant="h2">
+              {heading || t("catalogue.title")}
+            </Typography>
+          )}
+          <Typography variant="body2" color="text.secondary" aria-live="polite">
+            {t("catalogue.found", { n: found.length })}
+          </Typography>
+        </Stack>
+        {more ? (
+          <Button variant="text" icon="arrow_forward" href={more.href}>
+            {more.label}
+          </Button>
+        ) : null}
       </Stack>
       <ListToolbar
         search={query.q}
@@ -128,24 +150,13 @@ export function CourseCatalogue({ catalogue, initial }: CourseCatalogueProps) {
         }
         view={
           <>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-              <Box component="label" htmlFor={sortId} sx={{ display: "flex", color: "text.secondary" }} title={t("catalogue.sort")}>
-                <Icon name="sort" label={t("catalogue.sort")} />
-              </Box>
-              <NativeSelect
-                id={sortId}
-                value={query.sort}
-                onChange={(event) => change({ sort: event.target.value as CatalogueQuery["sort"] })}
-                disableUnderline
-                sx={{ px: 1.5, borderRadius: 999, border: 1, borderColor: "divider", typography: "body2", bgcolor: "background.paper" }}
-              >
-                {SORTS.map((sort) => (
-                  <option key={sort} value={sort}>
-                    {t(`sort.${sort}`)}
-                  </option>
-                ))}
-              </NativeSelect>
-            </Stack>
+            <PillSelect
+              label={t("catalogue.sort")}
+              icon="sort"
+              value={query.sort}
+              onChange={(sort) => change({ sort: sort as CatalogueQuery["sort"] })}
+              options={SORTS.map((sort) => ({ value: sort, label: t(`sort.${sort}`) }))}
+            />
             <ViewToggle
               label={t("catalogue.view")}
               value={query.view}
@@ -165,7 +176,7 @@ export function CourseCatalogue({ catalogue, initial }: CourseCatalogueProps) {
             message={catalogue.courses.length === 0 ? t("courses.empty") : t("catalogue.nomatch")}
             action={
               catalogue.courses.length > 0 ? (
-                <Button variant="tonal" icon="filter_alt_off" onClick={() => setQuery(FRESH)}>
+                <Button variant="tonal" icon="filter_alt_off" onClick={() => setQuery(start)}>
                   {t("catalogue.reset")}
                 </Button>
               ) : null
@@ -191,6 +202,7 @@ export function CourseCatalogue({ catalogue, initial }: CourseCatalogueProps) {
       )}
       {found.length > 0 ? (
         <Pager
+          preferred={startSize ?? 0}
           total={found.length}
           page={page}
           size={size}
