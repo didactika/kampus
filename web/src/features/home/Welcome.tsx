@@ -117,7 +117,7 @@ export function Welcome({ name, heading, figures: counts }: WelcomeProps) {
       <Typography variant="overline" sx={{ position: "relative", opacity: 0.85, letterSpacing: "0.12em", textTransform: "uppercase" }}>
         {t("app.name")}
       </Typography>
-      <Typography id="welcome" variant="h1" sx={{ position: "relative", mt: 1, fontSize: { md: "2.75rem" }, lineHeight: 1.15, maxInlineSize: "18ch" }}>
+      <Typography id="welcome" variant="h1" sx={{ position: "relative", mt: 1, fontSize: { md: "2.75rem" }, lineHeight: 1.15, maxInlineSize: "30ch" }}>
         {heading || t("home.greeting", { name })}
       </Typography>
       <Typography variant="body1" sx={{ position: "relative", mt: 1.5, opacity: 0.9, maxInlineSize: "52ch" }}>
