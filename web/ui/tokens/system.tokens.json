@@ -1,0 +1,500 @@
+{
+  "$description": "The system tokens of the design system, the same in both schemes: typefaces and type scale, corners, density, spacing, elevation, state layers and motion. A theme of a scope sets the typefaces, the root size, the radius, the density and the motion; everything else follows from them.",
+  "font": {
+    "family": {
+      "$type": "fontFamily",
+      "plain": {
+        "$value": [
+          "IBM Plex Sans",
+          "system-ui",
+          "sans-serif"
+        ],
+        "$description": "Body, labels and controls"
+      },
+      "brand": {
+        "$value": [
+          "Space Grotesk",
+          "IBM Plex Sans",
+          "system-ui",
+          "sans-serif"
+        ],
+        "$description": "Display, headlines and large titles"
+      },
+      "mono": {
+        "$value": [
+          "IBM Plex Mono",
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "monospace"
+        ],
+        "$description": "Codes and identifiers"
+      }
+    },
+    "size": {
+      "root": {
+        "$value": "100%",
+        "$description": "The size every rem follows; a theme sets it from its font size"
+      }
+    }
+  },
+  "type": {
+    "display-large": {
+      "family": {
+        "$value": "{font.family.brand}"
+      },
+      "size": {
+        "$value": "3.5625rem"
+      },
+      "line-height": {
+        "$value": "4rem"
+      },
+      "weight": {
+        "$value": 400
+      },
+      "tracking": {
+        "$value": "-0.015625rem"
+      }
+    },
+    "display-medium": {
+      "family": {
+        "$value": "{font.family.brand}"
+      },
+      "size": {
+        "$value": "2.8125rem"
+      },
+      "line-height": {
+        "$value": "3.25rem"
+      },
+      "weight": {
+        "$value": 400
+      },
+      "tracking": {
+        "$value": "0rem"
+      }
+    },
+    "display-small": {
+      "family": {
+        "$value": "{font.family.brand}"
+      },
+      "size": {
+        "$value": "2.25rem"
+      },
+      "line-height": {
+        "$value": "2.75rem"
+      },
+      "weight": {
+        "$value": 400
+      },
+      "tracking": {
+        "$value": "0rem"
+      }
+    },
+    "headline-large": {
+      "family": {
+        "$value": "{font.family.brand}"
+      },
+      "size": {
+        "$value": "2rem"
+      },
+      "line-height": {
+        "$value": "2.5rem"
+      },
+      "weight": {
+        "$value": 500
+      },
+      "tracking": {
+        "$value": "0rem"
+      }
+    },
+    "headline-medium": {
+      "family": {
+        "$value": "{font.family.brand}"
+      },
+      "size": {
+        "$value": "1.75rem"
+      },
+      "line-height": {
+        "$value": "2.25rem"
+      },
+      "weight": {
+        "$value": 500
+      },
+      "tracking": {
+        "$value": "0rem"
+      }
+    },
+    "headline-small": {
+      "family": {
+        "$value": "{font.family.brand}"
+      },
+      "size": {
+        "$value": "1.5rem"
+      },
+      "line-height": {
+        "$value": "2rem"
+      },
+      "weight": {
+        "$value": 500
+      },
+      "tracking": {
+        "$value": "0rem"
+      }
+    },
+    "title-large": {
+      "family": {
+        "$value": "{font.family.brand}"
+      },
+      "size": {
+        "$value": "1.375rem"
+      },
+      "line-height": {
+        "$value": "1.75rem"
+      },
+      "weight": {
+        "$value": 500
+      },
+      "tracking": {
+        "$value": "0rem"
+      }
+    },
+    "title-medium": {
+      "family": {
+        "$value": "{font.family.plain}"
+      },
+      "size": {
+        "$value": "1rem"
+      },
+      "line-height": {
+        "$value": "1.5rem"
+      },
+      "weight": {
+        "$value": 500
+      },
+      "tracking": {
+        "$value": "0.009375rem"
+      }
+    },
+    "title-small": {
+      "family": {
+        "$value": "{font.family.plain}"
+      },
+      "size": {
+        "$value": "0.875rem"
+      },
+      "line-height": {
+        "$value": "1.25rem"
+      },
+      "weight": {
+        "$value": 500
+      },
+      "tracking": {
+        "$value": "0.00625rem"
+      }
+    },
+    "body-large": {
+      "family": {
+        "$value": "{font.family.plain}"
+      },
+      "size": {
+        "$value": "1rem"
+      },
+      "line-height": {
+        "$value": "1.5rem"
+      },
+      "weight": {
+        "$value": 400
+      },
+      "tracking": {
+        "$value": "0.03125rem"
+      }
+    },
+    "body-medium": {
+      "family": {
+        "$value": "{font.family.plain}"
+      },
+      "size": {
+        "$value": "0.875rem"
+      },
+      "line-height": {
+        "$value": "1.25rem"
+      },
+      "weight": {
+        "$value": 400
+      },
+      "tracking": {
+        "$value": "0.015625rem"
+      }
+    },
+    "body-small": {
+      "family": {
+        "$value": "{font.family.plain}"
+      },
+      "size": {
+        "$value": "0.75rem"
+      },
+      "line-height": {
+        "$value": "1rem"
+      },
+      "weight": {
+        "$value": 400
+      },
+      "tracking": {
+        "$value": "0.025rem"
+      }
+    },
+    "label-large": {
+      "family": {
+        "$value": "{font.family.plain}"
+      },
+      "size": {
+        "$value": "0.875rem"
+      },
+      "line-height": {
+        "$value": "1.25rem"
+      },
+      "weight": {
+        "$value": 500
+      },
+      "tracking": {
+        "$value": "0.00625rem"
+      }
+    },
+    "label-medium": {
+      "family": {
+        "$value": "{font.family.plain}"
+      },
+      "size": {
+        "$value": "0.75rem"
+      },
+      "line-height": {
+        "$value": "1rem"
+      },
+      "weight": {
+        "$value": 500
+      },
+      "tracking": {
+        "$value": "0.03125rem"
+      }
+    },
+    "label-small": {
+      "family": {
+        "$value": "{font.family.plain}"
+      },
+      "size": {
+        "$value": "0.6875rem"
+      },
+      "line-height": {
+        "$value": "1rem"
+      },
+      "weight": {
+        "$value": 500
+      },
+      "tracking": {
+        "$value": "0.03125rem"
+      }
+    }
+  },
+  "radius": {
+    "$value": "12px",
+    "$description": "The medium corner; every other corner is a multiple of it, so 0 makes every shape square"
+  },
+  "shape": {
+    "corner": {
+      "none": {
+        "$value": "0px"
+      },
+      "extra-small": {
+        "$value": "calc(var(--k-radius) / 3)"
+      },
+      "small": {
+        "$value": "calc(var(--k-radius) * 2 / 3)"
+      },
+      "medium": {
+        "$value": "var(--k-radius)"
+      },
+      "large": {
+        "$value": "calc(var(--k-radius) * 4 / 3)"
+      },
+      "extra-large": {
+        "$value": "calc(var(--k-radius) * 7 / 3)"
+      },
+      "full": {
+        "$value": "calc(var(--k-radius) * 100)"
+      }
+    }
+  },
+  "density": {
+    "$value": "0",
+    "$description": "0 is comfortable; -2 is compact, every control two steps of 4px smaller"
+  },
+  "size": {
+    "control": {
+      "$value": "calc(2.5rem + var(--k-density) * 0.25rem)",
+      "$description": "Buttons, chips and tabs"
+    },
+    "field": {
+      "$value": "calc(3rem + var(--k-density) * 0.25rem)",
+      "$description": "Text fields and selects"
+    },
+    "touch-target": {
+      "$value": "3rem",
+      "$description": "The least area a pointer can press"
+    }
+  },
+  "space": {
+    "1": {
+      "$value": "0.25rem"
+    },
+    "2": {
+      "$value": "0.5rem"
+    },
+    "3": {
+      "$value": "0.75rem"
+    },
+    "4": {
+      "$value": "1rem"
+    },
+    "5": {
+      "$value": "1.25rem"
+    },
+    "6": {
+      "$value": "1.5rem"
+    },
+    "8": {
+      "$value": "2rem"
+    },
+    "10": {
+      "$value": "2.5rem"
+    },
+    "12": {
+      "$value": "3rem"
+    },
+    "16": {
+      "$value": "4rem"
+    }
+  },
+  "elevation": {
+    "level0": {
+      "$value": "none"
+    },
+    "level1": {
+      "$value": "0 1px 2px 0 color-mix(in srgb, var(--k-color-shadow) 30%, transparent), 0 1px 3px 1px color-mix(in srgb, var(--k-color-shadow) 15%, transparent)"
+    },
+    "level2": {
+      "$value": "0 1px 2px 0 color-mix(in srgb, var(--k-color-shadow) 30%, transparent), 0 2px 6px 2px color-mix(in srgb, var(--k-color-shadow) 15%, transparent)"
+    },
+    "level3": {
+      "$value": "0 1px 3px 0 color-mix(in srgb, var(--k-color-shadow) 30%, transparent), 0 4px 8px 3px color-mix(in srgb, var(--k-color-shadow) 15%, transparent)"
+    },
+    "level4": {
+      "$value": "0 2px 3px 0 color-mix(in srgb, var(--k-color-shadow) 30%, transparent), 0 6px 10px 4px color-mix(in srgb, var(--k-color-shadow) 15%, transparent)"
+    },
+    "level5": {
+      "$value": "0 4px 4px 0 color-mix(in srgb, var(--k-color-shadow) 30%, transparent), 0 8px 12px 6px color-mix(in srgb, var(--k-color-shadow) 15%, transparent)"
+    }
+  },
+  "state": {
+    "hover": {
+      "$value": "0.08"
+    },
+    "focus": {
+      "$value": "0.1"
+    },
+    "pressed": {
+      "$value": "0.1"
+    },
+    "dragged": {
+      "$value": "0.16"
+    },
+    "disabled-container": {
+      "$value": "0.12"
+    },
+    "disabled-content": {
+      "$value": "0.38"
+    }
+  },
+  "motion": {
+    "$value": "1",
+    "$description": "1 moves; 0, a theme with reduced motion, makes every duration zero"
+  },
+  "easing": {
+    "standard": {
+      "$value": "cubic-bezier(0.2, 0, 0, 1)"
+    },
+    "standard-accelerate": {
+      "$value": "cubic-bezier(0.3, 0, 1, 1)"
+    },
+    "standard-decelerate": {
+      "$value": "cubic-bezier(0, 0, 0, 1)"
+    },
+    "emphasized": {
+      "$value": "cubic-bezier(0.2, 0, 0, 1)"
+    },
+    "emphasized-accelerate": {
+      "$value": "cubic-bezier(0.3, 0, 0.8, 0.15)"
+    },
+    "emphasized-decelerate": {
+      "$value": "cubic-bezier(0.05, 0.7, 0.1, 1)"
+    }
+  },
+  "duration": {
+    "short1": {
+      "$value": "calc(50ms * var(--k-motion))"
+    },
+    "short2": {
+      "$value": "calc(100ms * var(--k-motion))"
+    },
+    "short3": {
+      "$value": "calc(150ms * var(--k-motion))"
+    },
+    "short4": {
+      "$value": "calc(200ms * var(--k-motion))"
+    },
+    "medium1": {
+      "$value": "calc(250ms * var(--k-motion))"
+    },
+    "medium2": {
+      "$value": "calc(300ms * var(--k-motion))"
+    },
+    "medium3": {
+      "$value": "calc(350ms * var(--k-motion))"
+    },
+    "medium4": {
+      "$value": "calc(400ms * var(--k-motion))"
+    },
+    "long1": {
+      "$value": "calc(450ms * var(--k-motion))"
+    },
+    "long2": {
+      "$value": "calc(500ms * var(--k-motion))"
+    }
+  },
+  "gradient": {
+    "brand": {
+      "$value": "linear-gradient(135deg, var(--k-color-primary), var(--k-color-brand) 55%, color-mix(in srgb, var(--k-color-brand) 45%, var(--k-color-scrim)))",
+      "$description": "The gradient of the Kampus icon"
+    },
+    "progress": {
+      "$value": "linear-gradient(90deg, var(--k-color-primary), var(--k-color-accent))",
+      "$description": "What advances"
+    }
+  },
+  "layer": {
+    "app-bar": {
+      "$value": "10"
+    },
+    "drawer": {
+      "$value": "20"
+    },
+    "menu": {
+      "$value": "50"
+    },
+    "dialog": {
+      "$value": "100"
+    },
+    "toast": {
+      "$value": "200"
+    }
+  }
+}

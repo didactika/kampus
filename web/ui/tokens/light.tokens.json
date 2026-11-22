@@ -1,0 +1,141 @@
+{
+  "$description": "The colour roles of the light scheme of the default theme. A theme of a scope replaces them all, grown from its seed colours.",
+  "color": {
+    "$type": "color",
+    "accent": {
+      "$value": "{palette.cyan.700}"
+    },
+    "accent-container": {
+      "$value": "{palette.cyan.100}"
+    },
+    "brand": {
+      "$value": "{palette.brand}"
+    },
+    "danger": {
+      "$value": "{palette.red.700}"
+    },
+    "danger-container": {
+      "$value": "{palette.red.100}"
+    },
+    "info": {
+      "$value": "{palette.sky.700}"
+    },
+    "info-container": {
+      "$value": "{palette.sky.100}"
+    },
+    "inverse-on-surface": {
+      "$value": "{palette.slate.100}"
+    },
+    "inverse-primary": {
+      "$value": "{palette.teal.300}"
+    },
+    "inverse-surface": {
+      "$value": "{palette.slate.800}"
+    },
+    "on-accent": {
+      "$value": "{palette.white}"
+    },
+    "on-accent-container": {
+      "$value": "{palette.cyan.900}"
+    },
+    "on-brand": {
+      "$value": "{palette.white}"
+    },
+    "on-danger": {
+      "$value": "{palette.white}"
+    },
+    "on-danger-container": {
+      "$value": "{palette.red.900}"
+    },
+    "on-info": {
+      "$value": "{palette.white}"
+    },
+    "on-info-container": {
+      "$value": "{palette.sky.900}"
+    },
+    "on-primary": {
+      "$value": "{palette.white}"
+    },
+    "on-primary-container": {
+      "$value": "{palette.teal.900}"
+    },
+    "on-secondary": {
+      "$value": "{palette.white}"
+    },
+    "on-secondary-container": {
+      "$value": "{palette.slate.900}"
+    },
+    "on-success": {
+      "$value": "{palette.white}"
+    },
+    "on-success-container": {
+      "$value": "{palette.green.900}"
+    },
+    "on-surface": {
+      "$value": "{palette.slate.900}"
+    },
+    "on-surface-variant": {
+      "$value": "{palette.slate.600}"
+    },
+    "on-warning": {
+      "$value": "{palette.white}"
+    },
+    "on-warning-container": {
+      "$value": "{palette.amber.900}"
+    },
+    "outline": {
+      "$value": "{palette.slate.500}"
+    },
+    "outline-variant": {
+      "$value": "{palette.slate.300}"
+    },
+    "primary": {
+      "$value": "{palette.teal.700}"
+    },
+    "primary-container": {
+      "$value": "{palette.teal.100}"
+    },
+    "scrim": {
+      "$value": "{palette.slate.950}"
+    },
+    "secondary": {
+      "$value": "{palette.slate.600}"
+    },
+    "secondary-container": {
+      "$value": "{palette.slate.100}"
+    },
+    "shadow": {
+      "$value": "{palette.teal.950}"
+    },
+    "success": {
+      "$value": "{palette.green.700}"
+    },
+    "success-container": {
+      "$value": "{palette.green.100}"
+    },
+    "surface": {
+      "$value": "{palette.slate.50}"
+    },
+    "surface-container": {
+      "$value": "#eaeff5"
+    },
+    "surface-container-high": {
+      "$value": "{palette.slate.200}"
+    },
+    "surface-container-highest": {
+      "$value": "#d7dfe9"
+    },
+    "surface-container-low": {
+      "$value": "{palette.slate.100}"
+    },
+    "surface-container-lowest": {
+      "$value": "{palette.white}"
+    },
+    "warning": {
+      "$value": "{palette.amber.700}"
+    },
+    "warning-container": {
+      "$value": "{palette.amber.100}"
+    }
+  }
+}

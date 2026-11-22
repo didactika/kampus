@@ -1,0 +1,27 @@
+{
+  "name": "@kampus/ui",
+  "version": "0.1.0",
+  "description": "The design system of Kampus: Web Components themed by W3C design tokens",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./tokens.css": "./dist/tokens.css",
+    "./tokens/*": "./tokens/*"
+  },
+  "files": [
+    "dist",
+    "tokens"
+  ],
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "vite build && tsc -p tsconfig.build.json && node scripts/build-tokens.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "lit": "3.3.2"
+  }
+}
