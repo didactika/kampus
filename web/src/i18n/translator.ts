@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU Affero General Public License along with Kampus.
 // If not, see <https://www.gnu.org/licenses/>.
 //
-// @package   web/ui
+// @package   web
 // @copyright 2026 Didactika
 // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
 // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
@@ -64,10 +64,18 @@ export function directionOf(language: string): "ltr" | "rtl" {
 /** Gives a message of a language with `{name}` placeholders filled in. */
 export type Translate = (key: string, values?: Readonly<Record<string, string | number>>) => string;
 
-/** The messages of a language: a missing one falls back to English, then to its key. */
+/**
+ * The texts of a language: a missing one falls back to English, then to its key. When the values carry a count `n`
+ * and the key has plural forms (`<key>.one`, `<key>.other`…, as `Intl.PluralRules` names them), the form of that count
+ * is used.
+ */
 export function translator(language: string): Translate {
+  const rules = new Intl.PluralRules(language);
+  const lookup = (key: string) => BUNDLES[language]?.[key] ?? BUNDLES["en"]?.[key];
   return (key, values = {}) => {
-    const text = BUNDLES[language]?.[key] ?? BUNDLES["en"]?.[key] ?? key;
+    const count = values["n"];
+    const plural = typeof count === "number" ? lookup(`${key}.${rules.select(count)}`) ?? lookup(`${key}.other`) : undefined;
+    const text = plural ?? lookup(key) ?? key;
     return text.replace(/\{(\w+)\}/g, (_, name: string) => String(values[name] ?? ""));
   };
 }

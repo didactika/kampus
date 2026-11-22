@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU Affero General Public License along with Kampus.
 // If not, see <https://www.gnu.org/licenses/>.
 //
-// @package   web/ui
+// @package   web
 // @copyright 2026 Didactika
 // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
 // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
@@ -66,6 +66,12 @@ describe("messages", () => {
     for (const [language, bundle] of Object.entries(BUNDLES)) {
       expect(Object.keys(bundle).filter((key) => !english.includes(key)), language).toEqual([]);
     }
+  });
+
+  it("choose the plural form of a count", () => {
+    expect(translator("es")("course.section.count", { n: 1 })).toBe("1 actividad");
+    expect(translator("es")("course.section.count", { n: 3 })).toBe("3 actividades");
+    expect(translator("en")("catalogue.found", { n: 1 })).toBe("1 course");
   });
 
   it("format numbers in the language", () => {
