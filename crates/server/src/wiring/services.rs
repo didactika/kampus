@@ -48,7 +48,7 @@ use kampus_files::Files;
 use kampus_identity::http::HttpSettings;
 use kampus_identity::{Courier, Identity, PasswordCost, PasswordHasher, SecretKey, SettingsPolicies};
 use kampus_module::ServiceContext;
-use kampus_notify::ports::transport::{LogTransport, MailTransport, Transport};
+use kampus_notify::ports::transport::{LogTransport, MailTransport, PushTransport, Transport};
 use kampus_settings::Settings;
 use kampus_tasks::Tasks;
 use kampus_users::Users;
@@ -75,6 +75,8 @@ pub struct Parts {
     pub scanner: Option<Arc<dyn kampus_scan::Scanner>>,
     /// The mail server of the email channel; none to write mail to the log.
     pub mailer: Option<Arc<dyn kampus_mail::Mailer>>,
+    /// The push services of the push channel; none to write push notifications to the log.
+    pub pusher: Option<Arc<dyn kampus_push::Pusher>>,
 }
 
 impl Parts {
@@ -91,6 +93,7 @@ impl Parts {
             storage: None,
             scanner: None,
             mailer: None,
+            pusher: None,
         }
     }
 }
@@ -157,8 +160,11 @@ impl Services {
             Some(mailer) => Arc::new(MailTransport::new(mailer)),
             None => Arc::new(LogTransport),
         };
-        let notify =
-            kampus_notify::Notify::new(parts.db.clone()).with_transports(email, Arc::new(LogTransport));
+        let push: Arc<dyn Transport> = match parts.pusher.clone() {
+            Some(pusher) => Arc::new(PushTransport::new(pusher)),
+            None => Arc::new(LogTransport),
+        };
+        let notify = kampus_notify::Notify::new(parts.db.clone()).with_transports(email, push);
         let privacy = kampus_privacy::Privacy::new(parts.db.clone(), access.clone())
             .with_modules(MODULES)
             .with_files(files.clone());

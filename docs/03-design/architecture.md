@@ -33,6 +33,7 @@ Modules call **down** the ranking through service APIs, and learn about things *
 | 0 Foundation | `kampus-cache` | Cache port: in-process in front of Redis or Valkey, invalidation by event | common |
 | 0 Foundation | `kampus-scan` | Malware scanning port: content is scanned before it is kept, with a clamd adapter (RN-129) | common |
 | 0 Foundation | `kampus-mail` | Mail port: plain text messages to the addresses of accounts, with an SMTP adapter (RN-149) | common |
+| 0 Foundation | `kampus-push` | Push port: short messages to the browsers and phones of a person, with a Web Push adapter | common |
 | 0 Foundation | `kampus-events` | Event bus with a transactional outbox, event log, listeners (DEC-016) | common, db |
 | 0 Foundation | `kampus-tasks` | Durable job queue and scheduler on the database (DEC-016) | common, db, events |
 | 1 Platform | `kampus-access` | Scopes (with the section scope, DEC-007), principals, roles, permissions, overrides, checks and explanations; configured by its own declarations and tables, not by settings | common, db, cache, events |
@@ -47,7 +48,7 @@ Modules call **down** the ranking through service APIs, and learn about things *
 | 4 Learning | `kampus-activities` | Activity registry, course modules, availability, exceptions (RF-054) | courses, access, files, identity, events |
 | 5 Learning | `kampus-records` | Academic records: grade records, categories, aggregation | activities, enrol |
 | 5 Learning | `kampus-progress` | Activity and course progress | activities, records, enrol |
-| 6 Services | `kampus-notify` | Notifications and messaging through channels | users, customise, tasks, mail |
+| 6 Services | `kampus-notify` | Notifications and messaging through channels | users, customise, tasks, mail, push |
 | 6 Services | `kampus-calendar` | Calendar of campus, course, group and user events | courses, activities |
 | 6 Services | `kampus-privacy` | Data export, deletion and retention requests; every module contributes its own data handler through `Module`, so privacy never depends on the modules it serves | identity, tasks |
 | 7 Edge | `kampus-api` | HTTP API: REST routes, OpenAPI document, tokens and scopes, webhooks, problem details | the service APIs of every module |

@@ -24,6 +24,8 @@ paths:
   /api/v1/notify/campuses/{campus_id}/defaults:
     get: { summary: 'What the campus gives by default for each type and channel (notify.defaults.manage)', responses: { '200': { description: Defaults } } }
     put: { summary: 'Set the default of a type on a channel, locked or not', responses: { '200': { description: Set } } }
+  /api/v1/notify/push-key:
+    get: { summary: 'The public key browsers subscribe with (applicationServerKey)', responses: { '200': { description: 'The key, P-256 in base64url' }, '404': { description: 'The installation sends no push notifications' } } }
   /api/v1/notify/push-subscriptions:
     get: { summary: 'The browsers and phones of the caller that receive push notifications', responses: { '200': { description: Subscriptions } } }
     post: { summary: 'Register a browser or phone, by the endpoint and keys its push service gives', responses: { '201': { description: Registered } } }

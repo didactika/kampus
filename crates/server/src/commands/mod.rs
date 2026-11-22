@@ -214,6 +214,7 @@ fn services(config: &Config, db: &Database, ports: &crate::wiring::ports::Ports)
         storage: ports.storage.clone(),
         scanner: ports.scanner.clone(),
         mailer: ports.mailer.clone(),
+        pusher: ports.pusher.clone(),
         ..Parts::new(db.clone(), site_url, secret_key, Arc::new(LogCourier))
     })))
 }

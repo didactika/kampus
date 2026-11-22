@@ -98,6 +98,9 @@ enum Command {
         /// The other store (`file:///path` or `s3://bucket/prefix`), with the options of the current one.
         url: String,
     },
+    /// Generate a VAPID key for push notifications: the private key for `KAMPUS_PUSH_VAPID_PRIVATE_KEY` and the
+    /// public key browsers subscribe with.
+    PushKey,
     /// A component and one of its commands: `kampus-server identity purge`.
     #[command(external_subcommand)]
     Component(Vec<String>),
@@ -131,6 +134,9 @@ pub async fn run() -> ExitCode {
     let cli = Cli::parse();
     if let Some(Command::Install { non_interactive }) = cli.command {
         return finish(install(!non_interactive).await);
+    }
+    if let Some(Command::PushKey) = cli.command {
+        return finish(push_key());
     }
     let config = match Config::from_environment() {
         Ok(config) => config,
@@ -197,7 +203,7 @@ async fn execute(command: Command, config: &Config) -> kampus_common::Result<()>
     match command {
         Command::Serve => super::serve(config).await,
         Command::Component(arguments) => component(config, &arguments).await,
-        Command::Install { .. } => Ok(()),
+        Command::Install { .. } | Command::PushKey => Ok(()),
         Command::Upgrade { new_installation } => {
             let applied = super::upgrade(config, new_installation).await?;
             report(&format!(
@@ -369,6 +375,18 @@ fn print_statuses(statuses: &[ComponentStatus]) {
             print(&format!("    {problem}"));
         }
     }
+}
+
+/// Prints a new VAPID key and its public key, without reading the configuration.
+fn push_key() -> kampus_common::Result<()> {
+    let private_key = kampus_push_webpush::WebPush::generate_key()?;
+    let public_key = kampus_push::Pusher::public_key(&kampus_push_webpush::WebPush::new(
+        &private_key,
+        "mailto:operator@example.org",
+    )?);
+    print(&format!("KAMPUS_PUSH_VAPID_PRIVATE_KEY={private_key}"));
+    report(&format!("kampus-server: public key {public_key}"));
+    Ok(())
 }
 
 /// Copies every stored file to another store, verifying each.

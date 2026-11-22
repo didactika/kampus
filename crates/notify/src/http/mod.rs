@@ -65,6 +65,7 @@ pub fn routes(context: &ServiceContext) -> Router {
             axum::routing::delete(remove_template),
         )
         .route("/campuses/{id}/defaults", get(defaults).put(set_default))
+        .route("/push-key", get(push_key))
         .route("/push-subscriptions", get(push_subscriptions).post(register_push))
         .route("/push-subscriptions/{id}", axum::routing::delete(remove_push))
         .with_state(shared)
@@ -233,6 +234,12 @@ async fn set_default(
             .await?,
     )
     .into_response())
+}
+
+/// The public key browsers subscribe with.
+async fn push_key(State(shared): State<Shared>) -> ApiResult<Response> {
+    let key = shared.notify()?.push_key()?;
+    Ok(Json(serde_json::json!({ "public_key": key })).into_response())
 }
 
 /// The push subscriptions of the caller.

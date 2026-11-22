@@ -52,6 +52,7 @@ kampus-module = { path = "crates/module" }
 kampus-storage = { path = "crates/storage" }
 kampus-cache = { path = "crates/cache" }
 kampus-mail = { path = "crates/mail" }
+kampus-push = { path = "crates/push" }
 kampus-scan = { path = "crates/scan" }
 kampus-access = { path = "crates/access" }
 argon2 = { version = "0.6.0", default-features = false, features = ["alloc"] }
@@ -66,6 +67,9 @@ redis = { version = "1.8.2", default-features = false, features = ["tokio-comp",
 tempfile = "3.27.0"
 axum = { version = "0.8.9", default-features = false, features = ["http1", "json", "tokio", "query"] }
 base64 = "0.23.1"
+aes-gcm = "0.11.1"
+hkdf = "0.13.0"
+p256 = { version = "0.14.0", default-features = false, features = ["ecdh", "ecdsa", "std"] }
 chacha20poly1305 = { version = "0.11.0", default-features = false, features = ["alloc"] }
 getrandom = "0.4.3"
 hmac = "0.13.0"

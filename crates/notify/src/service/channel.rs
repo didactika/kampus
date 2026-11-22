@@ -332,6 +332,17 @@ impl Notify {
         })
     }
 
+    /// The public key browsers subscribe with (`applicationServerKey`).
+    ///
+    /// # Errors
+    ///
+    /// `not_found` (`notify.push_unavailable`) when the installation sends no push notifications.
+    pub fn push_key(&self) -> Result<String> {
+        self.push
+            .public_key()
+            .ok_or_else(|| Error::not_found("notify.push_unavailable"))
+    }
+
     /// The push subscriptions of the actor.
     ///
     /// # Errors

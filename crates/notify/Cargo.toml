@@ -52,6 +52,7 @@ kampus-db.workspace = true
 kampus-module.workspace = true
 kampus-access.workspace = true
 kampus-mail.workspace = true
+kampus-push.workspace = true
 kampus-courses = { path = "../courses" }
 kampus-events = { path = "../events" }
 kampus-identity = { path = "../identity" }
