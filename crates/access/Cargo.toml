@@ -49,6 +49,7 @@ kind = "module"
 kampus-common.workspace = true
 kampus-db.workspace = true
 kampus-module.workspace = true
+schemars.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sqlx.workspace = true

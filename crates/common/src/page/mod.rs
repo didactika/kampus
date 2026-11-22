@@ -91,6 +91,23 @@ impl Serialize for Cursor {
     }
 }
 
+impl schemars::JsonSchema for Cursor {
+    fn inline_schema() -> bool {
+        true
+    }
+
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        "Cursor".into()
+    }
+
+    fn json_schema(_: &mut schemars::SchemaGenerator) -> schemars::Schema {
+        schemars::json_schema!({
+            "type": "string",
+            "description": "An opaque cursor: pass it as `after` to read the next page."
+        })
+    }
+}
+
 /// A request for one page of a list.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PageRequest {
@@ -149,7 +166,7 @@ impl Default for PageRequest {
 }
 
 /// One page of a list, with the cursor of the next page when there is one.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Page<T> {
     /// The items of the page.
     pub items: Vec<T>,

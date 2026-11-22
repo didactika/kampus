@@ -85,6 +85,22 @@ macro_rules! define_id {
             }
         }
 
+        impl $crate::__private::schemars::JsonSchema for $name {
+            fn inline_schema() -> bool {
+                true
+            }
+
+            fn schema_name() -> ::std::borrow::Cow<'static, str> {
+                stringify!($name).into()
+            }
+
+            fn json_schema(
+                _: &mut $crate::__private::schemars::SchemaGenerator,
+            ) -> $crate::__private::schemars::Schema {
+                $crate::__private::schemars::json_schema!({ "type": "string", "format": "uuid" })
+            }
+        }
+
         impl ::std::str::FromStr for $name {
             type Err = $crate::Error;
 

@@ -61,6 +61,7 @@ kampus-users = { path = "../users" }
 bytes.workspace = true
 axum.workspace = true
 rust_decimal.workspace = true
+schemars.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sqlx.workspace = true

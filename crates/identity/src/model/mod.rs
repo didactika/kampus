@@ -65,7 +65,7 @@ kampus_common::define_id! {
 }
 
 /// How a provider identity that is not linked yet finds its account.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum LinkingPolicy {
     /// Only identities linked before sign in; nothing is linked at sign-in.
@@ -105,7 +105,7 @@ impl FromStr for LinkingPolicy {
 }
 
 /// The kind of a second factor.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum FactorKind {
     /// A code from an authenticator app.
@@ -145,7 +145,7 @@ impl FromStr for FactorKind {
 }
 
 /// A second factor as listed to its owner; its secret never leaves identity.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct SecondFactor {
     /// The factor.
     pub id: FactorId,
@@ -160,7 +160,7 @@ pub struct SecondFactor {
 }
 
 /// The status of an account, a state machine.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AccountStatus {
     /// Invited by a manager; the invitation link sets the password.
@@ -234,7 +234,7 @@ impl FromStr for AccountStatus {
 }
 
 /// Who an account is for.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AccountKind {
     /// A person.
@@ -270,7 +270,7 @@ impl FromStr for AccountKind {
 }
 
 /// An account as read.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Account {
     /// The account, which is also its principal.
     pub id: AccountId,
@@ -303,7 +303,7 @@ pub struct Account {
 }
 
 /// How strongly a session was authenticated.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum MfaLevel {
     /// One factor.
@@ -334,7 +334,7 @@ impl MfaLevel {
 }
 
 /// A session that authenticated a request.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Session {
     /// The session.
     pub id: SessionId,
@@ -351,7 +351,7 @@ pub struct Session {
 }
 
 /// A session as listed to its owner.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct SessionSummary {
     /// The session.
     pub id: SessionId,

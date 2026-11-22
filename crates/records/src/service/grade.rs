@@ -64,7 +64,7 @@ const TEXT_LIMIT: usize = 2000;
 const PAGE_LIMIT: i64 = 200;
 
 /// A grade with the entries that made it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Detail {
     /// The grade.
     pub grade: Grade,
@@ -73,7 +73,7 @@ pub struct Detail {
 }
 
 /// The grades of one person in a report.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct ReportRow {
     /// The person.
     pub account: PrincipalId,
@@ -85,7 +85,7 @@ pub struct ReportRow {
 }
 
 /// A page of the grader report.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Report {
     /// The people of the page, in the order of their ids.
     pub rows: Vec<ReportRow>,

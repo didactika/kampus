@@ -40,15 +40,114 @@ use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use axum::routing::post;
 use axum::{Extension, Json, Router};
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body};
-use serde::Deserialize;
-use serde_json::json;
+use serde::{Deserialize, Serialize};
 
 use super::{Caller, SESSION_COOKIE, Shared, cookie};
 use crate::service::account::SignUp;
+use crate::service::recovery::RecoveryNeeds;
 use crate::service::second_factor::Proof;
 use crate::service::session::NewSession;
 use crate::service::sign_in::{Credential, SignIn, SignInOutcome};
+use crate::{FactorKind, Session};
+
+/// The operations of signing up, in and out, and of recovering an account.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::post(
+        "/auth/sign-up",
+        "Sign up with an email; the answer is the same whether it has an account",
+    )
+    .body::<SignUpBody>()
+    .accepted(),
+    Operation::post(
+        "/auth/confirm",
+        "Confirm a sign-up with its link and the password chosen",
+    )
+    .body::<TokenPassword>()
+    .no_content(),
+    Operation::post(
+        "/auth/invitations/accept",
+        "Accept an invitation with its link and the password chosen",
+    )
+    .body::<TokenPassword>()
+    .no_content(),
+    Operation::post(
+        "/auth/sign-in",
+        "Sign in with a credential; a second factor may follow",
+    )
+    .body::<SignInBody>()
+    .returns::<SignInAnswer>(),
+    Operation::post("/auth/second-factor", "Complete a sign-in with a second factor")
+        .body::<SecondFactorBody>()
+        .returns::<SignInAnswer>(),
+    Operation::post(
+        "/auth/second-factor/email-code",
+        "Send a code by email for a pending sign-in",
+    )
+    .body::<ChallengeBody>()
+    .accepted(),
+    Operation::post(
+        "/auth/step-up",
+        "Prove the password again to raise the session for sensitive changes",
+    )
+    .body::<PasswordBody>()
+    .returns::<SteppedUp>(),
+    Operation::post("/auth/sign-out", "Close the session of the cookie").no_content(),
+    Operation::post(
+        "/auth/recovery",
+        "Send a recovery link; the answer is the same whether the email has an account",
+    )
+    .body::<EmailBody>()
+    .accepted(),
+    Operation::post(
+        "/auth/recovery/needs",
+        "What completing a recovery needs besides its link",
+    )
+    .body::<TokenBody>()
+    .returns::<RecoveryNeeds>(),
+    Operation::post(
+        "/auth/recovery/complete",
+        "Complete a recovery with a new password",
+    )
+    .body::<CompleteRecoveryBody>()
+    .no_content(),
+    Operation::post("/auth/email/confirm", "Confirm a new email with its link")
+        .body::<TokenBody>()
+        .no_content(),
+];
+
+/// What a sign-in answers, by its `status`.
+#[derive(Debug, Serialize, schemars::JsonSchema)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub(super) enum SignInAnswer {
+    /// Signed in; the session cookie is set.
+    SignedIn {
+        /// The session opened.
+        session: Session,
+        /// The recovery codes of a first second factor, shown this once.
+        recovery_codes: Option<Vec<String>>,
+    },
+    /// The credential passed; a second factor must follow.
+    SecondFactorRequired {
+        /// The challenge to complete with `/auth/second-factor`.
+        challenge: String,
+        /// The kinds of second factor that may complete it.
+        methods: Vec<FactorKind>,
+    },
+    /// A provider vouched for an identity that the person must link to their account first.
+    ConfirmLink {
+        /// The sealed identity to link with `/me/identity-links`.
+        link: String,
+    },
+}
+
+/// The session a step-up raised.
+#[derive(Debug, Serialize, schemars::JsonSchema)]
+struct SteppedUp {
+    /// The session.
+    session: Session,
+}
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -68,7 +167,7 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// A sign-up.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct SignUpBody {
     /// The email.
     email: String,
@@ -78,7 +177,7 @@ struct SignUpBody {
 }
 
 /// A one-time token from a link and the password chosen.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct TokenPassword {
     /// The token of the link.
     token: String,
@@ -87,14 +186,14 @@ struct TokenPassword {
 }
 
 /// A one-time token from a link.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct TokenBody {
     /// The token of the link.
     token: String,
 }
 
 /// A sign-in with a password.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct SignInBody {
     /// The username or email.
     name: String,
@@ -103,7 +202,7 @@ struct SignInBody {
 }
 
 /// A second factor, as sent.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub(super) enum ProofBody {
     /// A code of an authenticator app.
@@ -144,7 +243,7 @@ impl From<ProofBody> for Proof {
 }
 
 /// The second factor that completes a sign-in.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct SecondFactorBody {
     /// The challenge of the sign-in.
     challenge: String,
@@ -153,28 +252,28 @@ struct SecondFactorBody {
 }
 
 /// The challenge a code by email is sent for.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ChallengeBody {
     /// The challenge of the sign-in.
     challenge: String,
 }
 
 /// The password, again.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct PasswordBody {
     /// The password.
     password: String,
 }
 
 /// An email.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct EmailBody {
     /// The email.
     email: String,
 }
 
 /// The end of a recovery.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct CompleteRecoveryBody {
     /// The token of the link.
     token: String,
@@ -187,11 +286,10 @@ struct CompleteRecoveryBody {
 /// A response that opens a session: the cookie and what the client may show.
 fn opened(shared: &Shared, session: &NewSession, recovery_codes: Option<&[String]>) -> ApiResult<Response> {
     let cookie = shared.session_cookie(&session.token, session.session.expires_at)?;
-    let body = json!({
-        "status": "signed_in",
-        "session": session.session,
-        "recovery_codes": recovery_codes,
-    });
+    let body = SignInAnswer::SignedIn {
+        session: session.session.clone(),
+        recovery_codes: recovery_codes.map(<[String]>::to_vec),
+    };
     Ok(([(header::SET_COOKIE, cookie)], Json(body)).into_response())
 }
 
@@ -199,12 +297,9 @@ fn opened(shared: &Shared, session: &NewSession, recovery_codes: Option<&[String
 pub(super) fn signed_in(shared: &Shared, outcome: SignInOutcome) -> ApiResult<Response> {
     match outcome {
         SignInOutcome::SignedIn(session) => opened(shared, &session, None),
-        SignInOutcome::SecondFactorRequired { challenge, methods } => Ok(Json(json!({
-            "status": "second_factor_required",
-            "challenge": challenge,
-            "methods": methods,
-        }))
-        .into_response()),
+        SignInOutcome::SecondFactorRequired { challenge, methods } => {
+            Ok(Json(SignInAnswer::SecondFactorRequired { challenge, methods }).into_response())
+        }
     }
 }
 
@@ -291,7 +386,7 @@ async fn step_up(
         .identity()?
         .step_up(caller.session()?, &body.password)
         .await?;
-    Ok(Json(json!({ "session": session })).into_response())
+    Ok(Json(SteppedUp { session }).into_response())
 }
 
 /// Ends the session of the cookie.
@@ -322,7 +417,7 @@ async fn recovery(
 /// What completing a recovery needs.
 async fn recovery_needs(State(shared): State<Shared>, Body(body): Body<TokenBody>) -> ApiResult<Response> {
     let needs = shared.identity()?.recovery_needs(&body.token).await?;
-    Ok(Json(json!({ "methods": needs.methods })).into_response())
+    Ok(Json(needs).into_response())
 }
 
 /// Completes a recovery with a new password.

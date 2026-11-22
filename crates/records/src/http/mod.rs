@@ -45,13 +45,140 @@ use kampus_common::{Error, Result, Timestamp};
 use kampus_courses::{CourseId, Place};
 use kampus_identity::Identity;
 use kampus_identity::http::Caller;
-use kampus_module::ServiceContext;
 use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
+use kampus_module::{Operation, ServiceContext};
 use rust_decimal::Decimal;
 use serde::Deserialize;
 
 use crate::permissions::{GRADE, HIDE, LOCK, MANAGE, OVERRIDE};
 use crate::{Band, CategoryFields, CategoryId, GradeWrite, RecordFields, RecordId, Records, Source};
+
+/// The operations of the routes, one list per file of routes.
+pub const OPERATIONS: &[&[Operation]] = &[RECORDS, GRADES, SCALES];
+
+/// The operations of the tree of categories and grade records.
+const RECORDS: &[Operation] = &[
+    Operation::get(
+        "/courses/{id}/records",
+        "The tree of categories and grade records of a course",
+    )
+    .returns::<crate::Tree>(),
+    Operation::post(
+        "/courses/{id}/records/categories",
+        "Add a category to the records of a course",
+    )
+    .body::<NewCategory>()
+    .creates::<crate::Category>(),
+    Operation::put("/record-categories/{id}", "Replace a category of records")
+        .body::<crate::CategoryFields>()
+        .returns::<crate::Category>(),
+    Operation::delete("/record-categories/{id}", "Delete a category of records").no_content(),
+    Operation::post("/courses/{id}/records/items", "Add a grade record to a course")
+        .body::<NewRecord>()
+        .creates::<crate::Record>(),
+    Operation::get("/records/{id}", "A grade record, with its version as ETag").returns::<crate::Record>(),
+    Operation::put("/records/{id}", "Replace a grade record")
+        .body::<crate::RecordFields>()
+        .returns::<crate::Record>(),
+    Operation::delete("/records/{id}", "Delete a grade record").no_content(),
+    Operation::put("/records/{id}/lock", "Lock a grade record against changes").returns::<crate::Record>(),
+    Operation::delete("/records/{id}/lock", "Unlock a grade record").returns::<crate::Record>(),
+    Operation::get(
+        "/records/{id}/formula",
+        "The formula of a calculated record, if any",
+    )
+    .returns::<Option<crate::Formula>>(),
+    Operation::put("/records/{id}/formula", "Set the formula of a record")
+        .body::<FormulaBody>()
+        .returns::<crate::Formula>(),
+    Operation::delete("/records/{id}/formula", "Remove the formula of a record").no_content(),
+];
+
+/// The operations of grades.
+const GRADES: &[Operation] = &[
+    Operation::put(
+        "/records/{id}/grades",
+        "Set grades of a record, with what changed",
+    )
+    .body::<Grades>()
+    .returns::<Vec<crate::GradeChange>>(),
+    Operation::get(
+        "/records/{id}/grades/{account}",
+        "The grade of a person in a record, with its history",
+    )
+    .returns::<crate::Detail>(),
+    Operation::put(
+        "/records/{id}/grades/{account}/override",
+        "Override the grade of a person",
+    )
+    .body::<Override>()
+    .returns::<crate::GradeChange>(),
+    Operation::delete(
+        "/records/{id}/grades/{account}/override",
+        "Clear the override of a grade",
+    )
+    .returns::<crate::GradeChange>(),
+    Operation::put("/records/{id}/grades/{account}/lock", "Lock a grade").returns::<crate::Grade>(),
+    Operation::delete("/records/{id}/grades/{account}/lock", "Unlock a grade").returns::<crate::Grade>(),
+    Operation::put(
+        "/records/{id}/grades/{account}/hidden",
+        "Hide a grade from its person until a date",
+    )
+    .body::<Hidden>()
+    .returns::<crate::Grade>(),
+    Operation::delete("/records/{id}/grades/{account}/hidden", "Show a hidden grade")
+        .returns::<crate::Grade>(),
+    Operation::put(
+        "/records/{id}/grades/{account}/excluded",
+        "Leave a grade out of the aggregations",
+    )
+    .returns::<crate::Grade>(),
+    Operation::delete(
+        "/records/{id}/grades/{account}/excluded",
+        "Count a grade in the aggregations again",
+    )
+    .returns::<crate::Grade>(),
+    Operation::get(
+        "/courses/{id}/grader-report",
+        "A page of the grader report of a course (query `limit`, `after`)",
+    )
+    .returns::<crate::Report>(),
+    Operation::get("/courses/{id}/exports", "The exports of grades of a course")
+        .returns::<Vec<crate::Export>>(),
+    Operation::post(
+        "/courses/{id}/exports",
+        "Ask for an export of the grades of a course",
+    )
+    .body::<NewExport>()
+    .answers::<crate::Export>(202),
+    Operation::get("/exports/{id}", "An export of grades").returns::<crate::Export>(),
+    Operation::get("/courses/{id}/my-grades", "The grades of the caller in a course")
+        .returns::<Vec<crate::Grade>>(),
+    Operation::get(
+        "/courses/{id}/grades/{account}",
+        "The grades of a person in a course",
+    )
+    .returns::<Vec<crate::Grade>>(),
+];
+
+/// The operations of scales and letters.
+const SCALES: &[Operation] = &[
+    Operation::get("/scopes/{id}/scales", "The scales defined in a scope").returns::<Vec<crate::Scale>>(),
+    Operation::post("/scopes/{id}/scales", "Define a scale in a scope")
+        .body::<NewScale>()
+        .creates::<crate::Scale>(),
+    Operation::get("/scopes/{id}/letters", "The letters defined in a scope, if any")
+        .returns::<Option<crate::LetterSet>>(),
+    Operation::post("/scopes/{id}/letters", "Define the letters of a scope")
+        .body::<NewLetters>()
+        .creates::<crate::LetterSet>(),
+    Operation::get("/courses/{id}/scales", "The scales a course may use").returns::<Vec<crate::Scale>>(),
+    Operation::get(
+        "/courses/{id}/letters",
+        "The letters that apply to a course, if any",
+    )
+    .returns::<Option<crate::LetterSet>>(),
+];
 
 /// The routes of records.
 pub fn routes(context: &ServiceContext) -> Router {
@@ -142,7 +269,7 @@ impl Shared {
 }
 
 /// A category to add.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewCategory {
     /// The category it goes under; the root of the course when left out.
     #[serde(default)]
@@ -156,7 +283,7 @@ struct NewCategory {
 }
 
 /// A grade record to add.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewRecord {
     /// The category it goes in; the root of the course when left out.
     #[serde(default)]
@@ -167,7 +294,7 @@ struct NewRecord {
 }
 
 /// Grades to set.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Grades {
     /// The grades.
     grades: Vec<GradeWrite>,
@@ -177,7 +304,7 @@ struct Grades {
 }
 
 /// An override.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Override {
     /// The grade that counts.
     value: Decimal,
@@ -187,14 +314,14 @@ struct Override {
 }
 
 /// A date a grade is hidden until.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Hidden {
     /// The date.
     until: Timestamp,
 }
 
 /// A page of a report.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Page {
     /// The most people.
     #[serde(default = "fifty")]
@@ -593,7 +720,7 @@ async fn excluding(
 }
 
 /// A scale to define.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewScale {
     /// Its code.
     code: String,
@@ -602,7 +729,7 @@ struct NewScale {
 }
 
 /// A letter set to define.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewLetters {
     /// Its bands.
     bands: Vec<Band>,
@@ -686,7 +813,7 @@ async fn course_letters(
 }
 
 /// The expression of a formula.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct FormulaBody {
     /// The expression, with the records it reads written `[[<record id>]]`.
     expression: String,
@@ -732,7 +859,7 @@ async fn remove_formula(
 }
 
 /// An export to ask for.
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Default, Deserialize, schemars::JsonSchema)]
 struct NewExport {
     /// Also the people who no longer take part.
     #[serde(default)]

@@ -42,14 +42,63 @@ use axum::routing::{delete, get, post};
 use axum::{Extension, Json, Router};
 use kampus_access::ScopeId;
 use kampus_common::{Error, FieldError};
-use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
+use kampus_db::references::ExternalReference;
+use kampus_module::Operation;
+use kampus_module::http::{ApiResult, Body, Identified, id, if_match, with_etag};
 use serde::Deserialize;
-use serde_json::json;
 
 use super::me::{TokenBody, created_token};
 use super::{Caller, Shared};
 use crate::permissions::{ACCOUNT_DELETE, ACCOUNT_INVITE, ACCOUNT_READ, ACCOUNT_SUSPEND, TOKEN_MANAGE_ANY};
 use crate::{AccountId, TokenId};
+
+/// The operations of accounts managed by others.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::post("/campuses/{campus}/accounts", "Invite a person to a campus")
+        .body::<InviteBody>()
+        .creates::<Identified<AccountId>>(),
+    Operation::post(
+        "/campuses/{campus}/service-accounts",
+        "Create a service account for an integration",
+    )
+    .body::<ServiceBody>()
+    .creates::<Identified<AccountId>>(),
+    Operation::get("/accounts/{id}", "An account, with its version as ETag").returns::<crate::Account>(),
+    Operation::post(
+        "/accounts/{id}/transitions",
+        "Suspend, reactivate or delete an account",
+    )
+    .body::<TransitionBody>()
+    .no_content(),
+    Operation::post(
+        "/accounts/{id}/tokens",
+        "Create an API token for an account; shown this once",
+    )
+    .body::<TokenBody>()
+    .creates::<crate::service::api_token::NewToken>(),
+    Operation::get(
+        "/accounts/{id}/references",
+        "The identifiers systems give an account",
+    )
+    .returns::<Vec<ExternalReference>>(),
+    Operation::put(
+        "/accounts/{id}/references/{system}",
+        "Give an account the identifier a system uses for it",
+    )
+    .body::<ExternalId>()
+    .returns::<Vec<ExternalReference>>(),
+    Operation::delete(
+        "/accounts/{id}/references/{system}",
+        "Remove the identifier a system gave an account",
+    )
+    .no_content(),
+    Operation::get(
+        "/campuses/{campus}/accounts/by-reference/{system}/{external_id}",
+        "The account a system knows by an identifier in a campus",
+    )
+    .returns::<crate::Account>(),
+    Operation::delete("/tokens/{id}", "Revoke an API token of any account").no_content(),
+];
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -75,7 +124,7 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// An invitation.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct InviteBody {
     /// The email.
     email: String,
@@ -84,14 +133,14 @@ struct InviteBody {
 }
 
 /// A service account.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ServiceBody {
     /// Its username.
     username: String,
 }
 
 /// A change of status.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct TransitionBody {
     /// `suspended`, `active`, `deletion_scheduled` or `deletion_cancelled`.
     to: String,
@@ -102,7 +151,7 @@ struct TransitionBody {
 
 /// A created account.
 fn created(account: AccountId) -> Response {
-    (StatusCode::CREATED, Json(json!({ "id": account }))).into_response()
+    (StatusCode::CREATED, Json(Identified { id: account })).into_response()
 }
 
 /// Invites a person.
@@ -222,7 +271,7 @@ async fn revoke_token(
 }
 
 /// The identifier a system gives an account.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ExternalId {
     /// The identifier.
     external_id: String,

@@ -41,14 +41,83 @@ use axum::routing::{get, post, put};
 use axum::{Extension, Json, Router};
 use kampus_common::{Error, Result};
 use kampus_identity::http::Caller;
-use kampus_module::ServiceContext;
 use kampus_module::http::{ApiResult, Body, id};
+use kampus_module::{Operation, ServiceContext};
 use serde::Deserialize;
-use serde_json::json;
 
 use crate::{NotificationId, Notify};
 
 mod messaging;
+
+/// The operations of the routes, one list per file of routes.
+pub const OPERATIONS: &[&[Operation]] = &[NOTIFY, messaging::OPERATIONS];
+
+/// The operations of the inbox, preferences, templates and push.
+const NOTIFY: &[Operation] = &[
+    Operation::get(
+        "/inbox",
+        "A page of the notifications of the caller (query `limit`, `after`)",
+    )
+    .returns::<crate::Inbox>(),
+    Operation::post("/inbox/read-all", "Mark every notification of the caller read").returns::<ReadAll>(),
+    Operation::post("/inbox/{id}/read", "Mark a notification read").returns::<crate::Notification>(),
+    Operation::get("/preferences", "How the caller wants each type of notification")
+        .returns::<Vec<crate::Preference>>(),
+    Operation::put(
+        "/preferences/{type_code}/{channel}",
+        "Turn a channel of a type of notification on or off",
+    )
+    .body::<Choice>()
+    .returns::<crate::Preference>(),
+    Operation::get(
+        "/campuses/{id}/templates",
+        "The templates a campus wrote for its notifications",
+    )
+    .returns::<Vec<crate::service::channel::Template>>(),
+    Operation::put(
+        "/campuses/{id}/templates",
+        "Write the template of a type, channel and locale",
+    )
+    .body::<crate::service::channel::Template>()
+    .returns::<crate::service::channel::Template>(),
+    Operation::delete(
+        "/campuses/{id}/templates/{type_code}/{channel}/{locale}",
+        "Go back to the template a module ships",
+    )
+    .no_content(),
+    Operation::get(
+        "/campuses/{id}/defaults",
+        "The channels a campus turns on by default",
+    )
+    .returns::<Vec<crate::service::channel::CampusDefault>>(),
+    Operation::put(
+        "/campuses/{id}/defaults",
+        "Set whether a channel of a type is on by default in a campus",
+    )
+    .body::<crate::service::channel::CampusDefault>()
+    .returns::<crate::service::channel::CampusDefault>(),
+    Operation::get("/push-key", "The public key push subscriptions are made with").returns::<PushKey>(),
+    Operation::get("/push-subscriptions", "The push subscriptions of the caller")
+        .returns::<Vec<crate::service::channel::PushSubscription>>(),
+    Operation::post("/push-subscriptions", "Register a push subscription of a browser")
+        .body::<crate::service::channel::PushSubscription>()
+        .creates::<crate::service::channel::PushSubscription>(),
+    Operation::delete("/push-subscriptions/{id}", "Remove a push subscription").no_content(),
+];
+
+/// How many notifications were marked read.
+#[derive(Debug, serde::Serialize, schemars::JsonSchema)]
+struct ReadAll {
+    /// The notifications that changed.
+    changed: u64,
+}
+
+/// The public key of web push.
+#[derive(Debug, serde::Serialize, schemars::JsonSchema)]
+struct PushKey {
+    /// The key, in base64url.
+    public_key: String,
+}
 
 /// The routes of notify.
 pub fn routes(context: &ServiceContext) -> Router {
@@ -91,7 +160,7 @@ impl Shared {
 }
 
 /// A page of the inbox.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Page {
     /// Only what is not read.
     #[serde(default)]
@@ -110,7 +179,7 @@ const fn twenty() -> i64 {
 }
 
 /// A choice about a type.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Choice {
     /// Whether the person receives it.
     enabled: bool,
@@ -145,7 +214,7 @@ async fn read(
 /// Marks every notification read.
 async fn read_all(State(shared): State<Shared>, Extension(caller): Extension<Caller>) -> ApiResult<Response> {
     let changed = shared.notify()?.mark_all_read(&caller.actor).await?;
-    Ok(Json(json!({ "changed": changed })).into_response())
+    Ok(Json(ReadAll { changed }).into_response())
 }
 
 /// What the caller receives.
@@ -242,7 +311,7 @@ async fn set_default(
 /// The public key browsers subscribe with.
 async fn push_key(State(shared): State<Shared>) -> ApiResult<Response> {
     let key = shared.notify()?.push_key()?;
-    Ok(Json(serde_json::json!({ "public_key": key })).into_response())
+    Ok(Json(PushKey { public_key: key }).into_response())
 }
 
 /// The push subscriptions of the caller.

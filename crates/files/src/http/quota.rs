@@ -40,6 +40,7 @@ use axum::routing::get;
 use axum::{Extension, Json, Router};
 use kampus_access::{PrincipalId, ScopeId};
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id};
 use serde::Deserialize;
 
@@ -52,8 +53,34 @@ pub(super) fn routes() -> Router<Shared> {
         .route("/people/{id}/quota", get(person_quota).put(set_person_quota))
 }
 
+/// The operations of quotas.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get(
+        "/scopes/{scope}/quota",
+        "How much the files of a scope may take, and take",
+    )
+    .returns::<crate::Quota>(),
+    Operation::put(
+        "/scopes/{scope}/quota",
+        "Set the limit of a scope; no limit with null",
+    )
+    .body::<Limit>()
+    .returns::<crate::Quota>(),
+    Operation::get(
+        "/people/{id}/quota",
+        "How much the files of a person may take, and take",
+    )
+    .returns::<crate::Quota>(),
+    Operation::put(
+        "/people/{id}/quota",
+        "Set the limit of a person; no limit with null",
+    )
+    .body::<Limit>()
+    .returns::<crate::Quota>(),
+];
+
 /// A limit to set.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Limit {
     /// The most, in bytes; no limit when null.
     limit_bytes: Option<i64>,

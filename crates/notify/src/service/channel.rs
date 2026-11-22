@@ -53,7 +53,7 @@ const SUBJECT_LIMIT: usize = 200;
 const BODY_LIMIT: usize = 10_000;
 
 /// A template of a campus for a type, a channel and a language.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Template {
     /// The type.
     #[serde(rename = "type")]
@@ -69,7 +69,7 @@ pub struct Template {
 }
 
 /// What a campus sets for a type on a channel.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct CampusDefault {
     /// The type.
     #[serde(rename = "type")]
@@ -84,7 +84,7 @@ pub struct CampusDefault {
 }
 
 /// A browser or phone a person allowed to receive push notifications.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct PushSubscription {
     /// The subscription.
     #[serde(default)]

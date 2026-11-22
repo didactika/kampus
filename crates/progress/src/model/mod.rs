@@ -41,7 +41,9 @@ use kampus_common::Timestamp;
 use serde::{Deserialize, Serialize};
 
 /// What a course module can require of a person.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, schemars::JsonSchema,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum RuleKind {
     /// They mark it done themselves.
@@ -80,7 +82,7 @@ impl RuleKind {
 }
 
 /// The state of a person on a course module.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum State {
     /// They have not done anything.
@@ -129,7 +131,7 @@ impl State {
 }
 
 /// Where a state came from.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Source {
     /// The rules and what the person did.
@@ -160,7 +162,7 @@ impl Source {
 }
 
 /// The state of a person on a course module.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct ActivityState {
     /// The course module.
     pub course_module: ModuleId,
@@ -178,7 +180,7 @@ pub struct ActivityState {
 
 /// A teacher's decision about the state of a person on a course module, which wins over the rules until it
 /// is removed.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Exception {
     /// The course module.
     pub course_module: ModuleId,
@@ -195,7 +197,7 @@ pub struct Exception {
 }
 
 /// One thing a course requires.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Criterion {
     /// A course module of the course done, or passed.
@@ -235,7 +237,7 @@ pub enum Criterion {
 }
 
 /// What a course requires and how.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct CourseCriteria {
     /// `all` of the criteria, or `any` of them.
     #[serde(default = "every")]
@@ -253,7 +255,7 @@ fn every() -> String {
 }
 
 /// A criterion with whether a person meets it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct CriterionState {
     /// The criterion.
     pub id: uuid::Uuid,
@@ -265,7 +267,7 @@ pub struct CriterionState {
 }
 
 /// Where a person stands in a course.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct CourseProgress {
     /// The course.
     pub course: kampus_courses::CourseId,

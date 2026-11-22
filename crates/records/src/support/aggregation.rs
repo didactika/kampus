@@ -54,7 +54,7 @@ use rust_decimal::Decimal;
 use crate::Method;
 
 /// One child of a category as the aggregation sees it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, schemars::JsonSchema)]
 pub struct Child {
     /// What counts of the grade the person has on it; none when they have none, or it is excluded.
     pub grade: Option<Decimal>,
@@ -82,7 +82,7 @@ pub struct Rule {
 }
 
 /// A child that takes part: its share of its range and the child itself.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, schemars::JsonSchema)]
 struct Entry {
     /// The share of its range the grade reaches.
     share: Decimal,

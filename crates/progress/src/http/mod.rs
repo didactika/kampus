@@ -45,12 +45,138 @@ use kampus_activities::ModuleId;
 use kampus_common::{Error, Result};
 use kampus_identity::Identity;
 use kampus_identity::http::Caller;
-use kampus_module::ServiceContext;
 use kampus_module::http::{ApiResult, Body, id};
+use kampus_module::{Operation, ServiceContext};
 use serde::Deserialize;
 
 use crate::permissions::{EXCEPTION, MANAGE};
 use crate::{Progress, RuleKind, State as ProgressState};
+
+/// The operations of the routes, one list per file of routes.
+pub const OPERATIONS: &[&[Operation]] = &[ACTIVITIES, COURSES];
+
+/// The operations of the progress of course modules.
+const ACTIVITIES: &[Operation] = &[
+    Operation::get(
+        "/course-modules/{id}/rules",
+        "The kinds of rule a course module requires to be complete",
+    )
+    .returns::<Vec<crate::RuleKind>>(),
+    Operation::put(
+        "/course-modules/{id}/rules",
+        "Replace the kinds of rule a course module requires",
+    )
+    .body::<Rules>()
+    .returns::<Vec<crate::RuleKind>>(),
+    Operation::get(
+        "/course-modules/{id}/type-rules",
+        "The rules of its type a course module requires, and those its type offers",
+    )
+    .returns::<TypeRulesAnswer>(),
+    Operation::put(
+        "/course-modules/{id}/type-rules",
+        "Replace the rules of its type a course module requires",
+    )
+    .body::<TypeRules>()
+    .returns::<Vec<String>>(),
+    Operation::post(
+        "/course-modules/{id}/views",
+        "Record that the caller viewed a course module",
+    )
+    .returns::<crate::ActivityState>(),
+    Operation::put("/course-modules/{id}/mark", "Mark a course module done by hand")
+        .returns::<crate::ActivityState>(),
+    Operation::delete("/course-modules/{id}/mark", "Take back a mark by hand")
+        .returns::<crate::ActivityState>(),
+    Operation::get(
+        "/course-modules/{id}/states/{account}",
+        "Where a person stands in a course module",
+    )
+    .returns::<crate::ActivityState>(),
+    Operation::get(
+        "/course-modules/{id}/exceptions",
+        "The decisions teachers took on the progress of people",
+    )
+    .returns::<Vec<crate::Exception>>(),
+    Operation::put(
+        "/course-modules/{id}/exceptions/{account}",
+        "Decide the state of a person in a course module",
+    )
+    .body::<Decision>()
+    .returns::<crate::ActivityState>(),
+    Operation::delete(
+        "/course-modules/{id}/exceptions/{account}",
+        "Clear the decision on a person",
+    )
+    .no_content(),
+];
+
+/// The operations of the progress of courses.
+const COURSES: &[Operation] = &[
+    Operation::get(
+        "/courses/{id}/states/{account}",
+        "Where a person stands in every course module of a course",
+    )
+    .returns::<Vec<crate::ActivityState>>(),
+    Operation::get(
+        "/courses/{id}/my-progress",
+        "Where the caller stands in every course module of a course",
+    )
+    .returns::<Vec<crate::ActivityState>>(),
+    Operation::get("/courses/{id}/criteria", "What completes a course").returns::<crate::CourseCriteria>(),
+    Operation::put("/courses/{id}/criteria", "Replace what completes a course")
+        .body::<crate::CourseCriteria>()
+        .returns::<crate::CourseCriteria>(),
+    Operation::get(
+        "/courses/{id}/prerequisites",
+        "The courses that must be complete before a course",
+    )
+    .returns::<crate::Prerequisites>(),
+    Operation::put(
+        "/courses/{id}/prerequisites",
+        "Replace the prerequisites of a course",
+    )
+    .body::<PrerequisitesBody>()
+    .returns::<crate::Prerequisites>(),
+    Operation::get(
+        "/courses/{id}/course-progress",
+        "The progress of every participant in a course",
+    )
+    .returns::<Vec<crate::CourseProgress>>(),
+    Operation::get(
+        "/courses/{id}/course-progress/{account}",
+        "The progress of a person in a course",
+    )
+    .returns::<crate::CourseProgress>(),
+    Operation::get(
+        "/courses/{id}/my-course-progress",
+        "The progress of the caller in a course",
+    )
+    .returns::<crate::CourseProgress>(),
+    Operation::put(
+        "/criteria/{id}/approvals/{account}",
+        "Approve a person on a criterion that needs a person",
+    )
+    .no_content(),
+];
+
+/// The rules of its type a course module requires, and those its type offers.
+#[derive(Debug, serde::Serialize, schemars::JsonSchema)]
+struct TypeRulesAnswer {
+    /// The codes of the rules it requires.
+    required: Vec<String>,
+    /// The rules its type offers.
+    offered: Vec<OfferedRule>,
+}
+
+/// A rule the type of a course module offers.
+#[derive(Debug, serde::Serialize, schemars::JsonSchema)]
+struct OfferedRule {
+    /// Its code.
+    code: &'static str,
+    /// What it asks for.
+    summary: &'static str,
+}
 
 /// The routes of progress.
 pub fn routes(context: &ServiceContext) -> Router {
@@ -115,14 +241,14 @@ impl Shared {
 }
 
 /// The rules to set.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Rules {
     /// What the course module requires.
     kinds: Vec<RuleKind>,
 }
 
 /// A decision about a person.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Decision {
     /// The state it sets.
     state: ProgressState,
@@ -371,7 +497,7 @@ async fn approve(
 }
 
 /// The courses a course requires first.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct PrerequisitesBody {
     /// The courses.
     requires: Vec<kampus_courses::CourseId>,
@@ -409,7 +535,7 @@ async fn set_prerequisites(
 }
 
 /// The rules of its type a course module requires.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct TypeRules {
     /// Their codes.
     rules: Vec<String>,
@@ -422,11 +548,14 @@ async fn type_rules(
     Path(module): Path<String>,
 ) -> ApiResult<Response> {
     let (required, offered) = shared.progress()?.type_rules(&caller.actor, id(&module)?).await?;
-    let offered: Vec<serde_json::Value> = offered
+    let offered = offered
         .iter()
-        .map(|r| serde_json::json!({ "code": r.code, "summary": r.summary }))
+        .map(|rule| OfferedRule {
+            code: rule.code,
+            summary: rule.summary,
+        })
         .collect();
-    Ok(Json(serde_json::json!({ "required": required, "offered": offered })).into_response())
+    Ok(Json(TypeRulesAnswer { required, offered }).into_response())
 }
 
 /// Replaces the rules of its type a course module requires.

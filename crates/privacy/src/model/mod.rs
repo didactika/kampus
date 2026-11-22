@@ -50,7 +50,7 @@ kampus_common::define_id! {
 }
 
 /// A policy of a campus, as of its latest version.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Policy {
     /// The policy.
     pub id: PolicyId,
@@ -69,7 +69,7 @@ pub struct Policy {
 }
 
 /// One part of a request: a data category and where it stands.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Item {
     /// The data category.
     pub category: String,
@@ -80,7 +80,7 @@ pub struct Item {
 }
 
 /// A request to export or to delete the personal data of an account.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Request {
     /// The request.
     pub id: RequestId,
@@ -112,7 +112,7 @@ kampus_common::define_id! {
 }
 
 /// A suspension of deletion for an account, or for a whole campus.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Hold {
     /// The hold.
     pub id: HoldId,
@@ -129,7 +129,7 @@ pub struct Hold {
 }
 
 /// A kind of personal data and how long the campus keeps it after the account is deleted.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Retention {
     /// The data category, `<module>.<what>`.
     pub category: String,

@@ -55,6 +55,7 @@ kampus-identity = { path = "../identity" }
 kampus-files = { path = "../files" }
 kampus-events = { path = "../events" }
 jiff.workspace = true
+schemars.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sqlx.workspace = true

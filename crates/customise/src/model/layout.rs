@@ -43,7 +43,7 @@ use serde_json::Value;
 use super::Origin;
 
 /// A widget in a region of a layout, with its settings.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Placement {
     /// The region of the page kind.
     pub region: String,
@@ -58,7 +58,7 @@ pub struct Placement {
 }
 
 /// The layout of a page kind in a scope.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, schemars::JsonSchema)]
 pub struct Layout {
     /// The page kind.
     pub page_kind: String,
@@ -72,7 +72,7 @@ pub struct Layout {
 }
 
 /// An item of a navigation menu, with the items under it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct MenuItem {
     /// What it says.
     pub label: String,
@@ -87,7 +87,7 @@ pub struct MenuItem {
 }
 
 /// A navigation menu in a scope.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Menu {
     /// The kind of menu.
     pub kind: String,

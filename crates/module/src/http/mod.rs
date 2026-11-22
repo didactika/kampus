@@ -38,11 +38,39 @@
 use axum::http::{HeaderMap, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
 use kampus_common::{Error, ErrorKind, FieldError};
-use serde_json::json;
+use std::collections::BTreeMap;
 
 tokio::task_local! {
     /// The id of the request being served, set by the server around every request.
     pub static REQUEST_ID: String;
+}
+
+/// The problem details (RFC 9457) every error is answered with, as `application/problem+json`.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, schemars::JsonSchema)]
+pub struct Problem {
+    /// The address of the kind of problem (`https://kampus.didactika.org/problems/not_found`).
+    #[serde(rename = "type")]
+    pub kind: String,
+    /// The kind of problem, which decides how a client handles it.
+    pub title: ErrorKind,
+    /// The HTTP status.
+    pub status: u16,
+    /// What went wrong, as a stable code a client can translate (`courses.code_taken`); `internal` for an
+    /// internal error, which exposes nothing else.
+    pub code: String,
+    /// The values the message of the code is written with.
+    pub params: BTreeMap<String, String>,
+    /// Every failing field of a validation problem.
+    pub fields: Vec<FieldError>,
+    /// The id of the request, to find it in the logs.
+    pub request_id: String,
+}
+
+/// The answer that names what an operation created or found by its identifier: `{ "id": ... }`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, schemars::JsonSchema)]
+pub struct Identified<T> {
+    /// The identifier.
+    pub id: T,
 }
 
 /// An error answered as problem details.
@@ -106,15 +134,23 @@ pub fn problem(error: &Error) -> Response {
     if internal {
         tracing::error!(error = %error, request_id, "internal error");
     }
-    let body = json!({
-        "type": format!("https://kampus.didactika.org/problems/{}", error.kind()),
-        "title": error.kind().as_str(),
-        "status": status.as_u16(),
-        "code": if internal { "internal" } else { error.code() },
-        "params": if internal { json!({}) } else { json!(error.params().iter().cloned().collect::<std::collections::BTreeMap<_, _>>()) },
-        "fields": if internal { json!([]) } else { json!(error.fields()) },
-        "request_id": request_id,
-    });
+    let body = Problem {
+        kind: format!("https://kampus.didactika.org/problems/{}", error.kind()),
+        title: error.kind(),
+        status: status.as_u16(),
+        code: if internal { "internal" } else { error.code() }.to_owned(),
+        params: if internal {
+            BTreeMap::new()
+        } else {
+            error.params().iter().cloned().collect()
+        },
+        fields: if internal {
+            Vec::new()
+        } else {
+            error.fields().to_vec()
+        },
+        request_id,
+    };
     let mut response = (status, axum::Json(body)).into_response();
     response.headers_mut().insert(
         axum::http::header::CONTENT_TYPE,

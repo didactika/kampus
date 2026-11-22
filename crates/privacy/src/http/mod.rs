@@ -43,11 +43,62 @@ use axum::{Extension, Json, Router};
 use kampus_access::PrincipalId;
 use kampus_common::{Error, Result};
 use kampus_identity::http::Caller;
-use kampus_module::ServiceContext;
 use kampus_module::http::{ApiResult, Body, id};
+use kampus_module::{Operation, ServiceContext};
 use serde::Deserialize;
 
 use crate::Privacy;
+
+/// The operations of the routes, one list per file of routes.
+pub const OPERATIONS: &[&[Operation]] = &[PRIVACY];
+
+/// The operations of requests, holds, retention and policies.
+const PRIVACY: &[Operation] = &[
+    Operation::get(
+        "/requests",
+        "The privacy requests of the caller, or of everyone for an officer",
+    )
+    .returns::<Vec<crate::Request>>(),
+    Operation::post(
+        "/requests",
+        "Ask for an export or the deletion of personal data; it runs in the background",
+    )
+    .body::<NewRequest>()
+    .answers::<crate::Request>(202),
+    Operation::get("/requests/{id}", "A privacy request").returns::<crate::Request>(),
+    Operation::get("/requests/awaiting", "The deletions that wait for an approval")
+        .returns::<Vec<crate::Request>>(),
+    Operation::get("/requests/{id}/package", "The package of a finished export")
+        .returns::<serde_json::Value>(),
+    Operation::post("/requests/{id}/decision", "Approve or reject a deletion")
+        .body::<Decision>()
+        .returns::<crate::Request>(),
+    Operation::get("/holds", "The legal holds").returns::<Vec<crate::Hold>>(),
+    Operation::post("/holds", "Place a legal hold that keeps data from deletion")
+        .body::<NewHold>()
+        .creates::<crate::Hold>(),
+    Operation::post("/holds/{id}/release", "Release a legal hold").returns::<crate::Hold>(),
+    Operation::get("/retention", "How long each category of personal data is kept")
+        .returns::<Vec<crate::Retention>>(),
+    Operation::put(
+        "/retention/{category}",
+        "Set how long a category of personal data is kept",
+    )
+    .body::<KeepDays>()
+    .returns::<Vec<crate::Retention>>(),
+    Operation::get("/policies", "The published policies").returns::<Vec<crate::Policy>>(),
+    Operation::post("/policies", "Publish a version of a policy")
+        .body::<NewPolicy>()
+        .creates::<crate::Policy>(),
+    Operation::get("/policies/pending", "The policies the caller has yet to accept")
+        .returns::<Vec<crate::Policy>>(),
+    Operation::post(
+        "/policies/{code}/acceptance",
+        "Accept the current version of a policy",
+    )
+    .body::<Acceptance>()
+    .returns::<crate::Policy>(),
+];
 
 /// The routes of privacy.
 pub fn routes(context: &ServiceContext) -> Router {
@@ -87,7 +138,7 @@ impl Shared {
 }
 
 /// A request to make.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewRequest {
     /// Whose data; the caller when left out.
     #[serde(default)]
@@ -156,7 +207,7 @@ async fn package(
 }
 
 /// A version to publish.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewPolicy {
     /// The code of the policy.
     code: String,
@@ -167,7 +218,7 @@ struct NewPolicy {
 }
 
 /// The version being accepted.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Acceptance {
     /// The version.
     version: i32,
@@ -213,14 +264,14 @@ async fn accept(
 }
 
 /// The decision on a deletion.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Decision {
     /// Whether the deletion goes ahead.
     approve: bool,
 }
 
 /// A hold to place.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewHold {
     /// The account it protects; the whole campus of the caller when left out.
     #[serde(default)]
@@ -281,7 +332,7 @@ async fn release(
 }
 
 /// The days to keep a data category.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct KeepDays {
     /// Days after the account is deleted; none keeps the data for ever.
     #[serde(default)]

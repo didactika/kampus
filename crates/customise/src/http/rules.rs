@@ -42,11 +42,26 @@ use axum::routing::get;
 use axum::{Extension, Json, Router};
 use kampus_access::ScopeId;
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
 
 use super::Shared;
 use crate::permissions::RULE_MANAGE;
 use crate::{RuleId, RuleSpec};
+
+/// The operations of rules.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get("/scopes/{scope}/rules", "The rules of a scope").returns::<Vec<crate::Rule>>(),
+    Operation::post("/scopes/{scope}/rules", "Create a rule in a scope")
+        .body::<crate::RuleSpec>()
+        .creates::<crate::Rule>(),
+    Operation::get("/rules/{id}", "A rule, with its version as ETag").returns::<crate::Rule>(),
+    Operation::put("/rules/{id}", "Replace a rule")
+        .body::<crate::RuleSpec>()
+        .returns::<crate::Rule>(),
+    Operation::delete("/rules/{id}", "Delete a rule").no_content(),
+    Operation::get("/rules/{id}/runs", "The last runs of a rule").returns::<Vec<crate::RuleRun>>(),
+];
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {

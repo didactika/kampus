@@ -43,12 +43,44 @@ use axum::{Extension, Json, Router};
 use kampus_access::{PrincipalId, ScopeId};
 use kampus_db::references::ExternalReference;
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id};
 use serde::Deserialize;
 
 use super::Shared;
 use crate::permissions::{ENROLMENT_MANAGE, ENROLMENT_READ};
 use crate::{EnrolmentId, InstanceId, Period};
+
+/// The operations of the identifiers systems give enrolments.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get(
+        "/enrolments/{id}/references",
+        "The identifiers systems give an enrolment",
+    )
+    .returns::<Vec<ExternalReference>>(),
+    Operation::put(
+        "/enrolments/{id}/references/{system}",
+        "Give an enrolment the identifier a system uses for it",
+    )
+    .body::<ExternalId>()
+    .returns::<Vec<ExternalReference>>(),
+    Operation::delete(
+        "/enrolments/{id}/references/{system}",
+        "Remove the identifier a system gave an enrolment",
+    )
+    .no_content(),
+    Operation::get(
+        "/campuses/{campus}/enrolments/by-reference/{system}/{external_id}",
+        "The enrolment a system knows by an identifier in a campus",
+    )
+    .returns::<crate::Enrolment>(),
+    Operation::put(
+        "/enrolment-instances/{id}/enrolments/by-reference/{system}/{external_id}",
+        "Update the enrolment a system knows by an identifier; 201 when it was created in the instance",
+    )
+    .body::<EnrolmentByReference>()
+    .returns::<crate::Enrolment>(),
+];
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -66,14 +98,14 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// The identifier a system gives an enrolment.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ExternalId {
     /// The identifier.
     external_id: String,
 }
 
 /// A person to enrol, or whose enrolment changes, by its identifier.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct EnrolmentByReference {
     /// The account.
     account: PrincipalId,

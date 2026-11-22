@@ -65,6 +65,7 @@ pub const PLATFORM_VERSION: &str = PLATFORM.version;
 /// Re-exports used by the macros of this crate, so that crates using them need no extra dependency.
 #[doc(hidden)]
 pub mod __private {
+    pub use schemars;
     pub use serde;
     pub use uuid;
 }

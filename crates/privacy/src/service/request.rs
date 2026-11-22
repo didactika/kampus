@@ -76,7 +76,7 @@ fn request(row: &PgRow) -> Request {
 }
 
 /// What a request is opened with.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, schemars::JsonSchema)]
 pub(crate) struct Opening<'a> {
     /// `export` or `deletion`.
     pub kind: &'static str,

@@ -43,13 +43,44 @@ use axum::{Extension, Json, Router};
 use kampus_access::ScopeId;
 use kampus_db::references::ExternalReference;
 use kampus_identity::http::Caller;
-use kampus_module::http::{ApiResult, Body, id};
+use kampus_module::Operation;
+use kampus_module::http::{ApiResult, Body, Identified, id};
 use serde::Deserialize;
-use serde_json::json;
 
 use super::{GroupBody, Shared};
 use crate::GroupKind;
 use crate::permissions::GROUP_MANAGE;
+
+/// The operations of the identifiers systems give groups.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get(
+        "/system-groups/{id}/references",
+        "The identifiers systems give a group",
+    )
+    .returns::<Vec<ExternalReference>>(),
+    Operation::put(
+        "/system-groups/{id}/references/{system}",
+        "Give a group the identifier a system uses for it",
+    )
+    .body::<ExternalId>()
+    .returns::<Vec<ExternalReference>>(),
+    Operation::delete(
+        "/system-groups/{id}/references/{system}",
+        "Remove the identifier a system gave a group",
+    )
+    .no_content(),
+    Operation::get(
+        "/campuses/{campus}/system-groups/by-reference/{system}/{external_id}",
+        "The group a system knows by an identifier in a campus",
+    )
+    .returns::<crate::SystemGroup>(),
+    Operation::put(
+        "/scopes/{scope}/system-groups/by-reference/{system}/{external_id}",
+        "The group a system knows by an identifier; 201 when it was created in the scope",
+    )
+    .body::<GroupBody>()
+    .returns::<Identified<crate::GroupId>>(),
+];
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -67,7 +98,7 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// The identifier a system gives a group.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ExternalId {
     /// The identifier.
     external_id: String,
@@ -151,5 +182,5 @@ async fn ensure(
     } else {
         StatusCode::OK
     };
-    Ok((status, Json(json!({ "id": group }))).into_response())
+    Ok((status, Json(Identified { id: group })).into_response())
 }

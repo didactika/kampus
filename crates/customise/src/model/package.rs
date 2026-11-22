@@ -55,7 +55,9 @@ kampus_common::define_id! {
 pub const FORMAT: u16 = 1;
 
 /// A kind of customisation a package holds.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, schemars::JsonSchema,
+)]
 #[serde(rename_all = "snake_case")]
 pub enum PackageKind {
     /// Words of terms.
@@ -75,7 +77,7 @@ pub enum PackageKind {
 }
 
 /// The word a scope gives a term in a language.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct PackageTerm {
     /// The term.
     pub code: String,
@@ -91,7 +93,7 @@ pub struct PackageTerm {
 }
 
 /// The value a scope gives a feature flag.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct PackageFlag {
     /// The flag.
     pub code: String,
@@ -103,7 +105,7 @@ pub struct PackageFlag {
 }
 
 /// A custom field a scope defines.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct PackageField {
     /// The kind of entity it belongs to.
     pub kind: String,
@@ -113,7 +115,7 @@ pub struct PackageField {
 }
 
 /// The layout a scope gives a page kind.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct PackageLayout {
     /// The page kind.
     pub page_kind: String,
@@ -125,7 +127,7 @@ pub struct PackageLayout {
 }
 
 /// The menu a scope gives a kind of menu.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct PackageMenu {
     /// The kind of menu.
     pub kind: String,
@@ -137,7 +139,7 @@ pub struct PackageMenu {
 }
 
 /// The tokens a scope sets in its theme.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct PackageTheme {
     /// The tokens, by name.
     pub tokens: BTreeMap<String, Value>,
@@ -147,7 +149,7 @@ pub struct PackageTheme {
 }
 
 /// A package of customisations.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Package {
     /// The format it is written in.
     pub format: u16,
@@ -192,7 +194,7 @@ impl Package {
 }
 
 /// A package as exported, with the checksum of its contents.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, schemars::JsonSchema)]
 pub struct Exported {
     /// The package.
     pub package: Package,
@@ -201,7 +203,7 @@ pub struct Exported {
 }
 
 /// What an import would do to one customisation of the scope.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Difference {
     /// The kind of customisation.
     pub kind: PackageKind,
@@ -214,7 +216,7 @@ pub struct Difference {
 }
 
 /// An import of a package into a scope.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, schemars::JsonSchema)]
 pub struct Import {
     /// The import.
     pub id: ImportId,

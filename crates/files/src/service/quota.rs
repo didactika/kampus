@@ -46,7 +46,7 @@ use crate::permissions::QUOTA_MANAGE;
 use crate::{Files, sql};
 
 /// How much files may take and take.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Quota {
     /// The most, in bytes; no limit when absent.
     pub limit_bytes: Option<i64>,
