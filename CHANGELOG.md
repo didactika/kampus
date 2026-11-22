@@ -62,6 +62,8 @@ All notable changes to Kampus are recorded here, following [Keep a Changelog](ht
 
 ### Added
 
+- Widgets for the page of a course (`courses.course`): `progress.course` (the progress of the reader), `records.grades` (their grades) and `calendar.upcoming` (the dates ahead, 7 to 90 days), beside `courses.outline`, `courses.summary` and `customise.text`.
+
 - `@kampus/sdk` (`web/sdk`): the types of every route and schema of the API, generated with openapi-typescript from a snapshot of the document the server serves (`web/sdk/openapi.json`); a server test fails when the API changes and the snapshot does not. The web client reads the API through these types, which found that it read the type of course modules and notifications under the wrong name.
 
 - The home of a site is a page kind of customisation, `customise.dashboard`, with the regions `top`, `main` and `side`, so each scope arranges it with widgets. New widgets for it: `customise.welcome` (a greeting with the figures of the reader), `courses.catalogue` (the courses of the campus to search, filter and open; heading, view and page size) and `notify.inbox` (the latest notifications); `customise.text` fits it too. Reading a layout says whether the reader may change it there (`editable`: they hold `customise.layout.manage` and no scope above locks it) and then lists the widgets they may place with their declared settings; reading a menu says whether it is editable.
