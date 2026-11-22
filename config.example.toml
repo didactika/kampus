@@ -54,6 +54,10 @@ url = "valkey://localhost:6379"
 [scan]
 url = "clamd://localhost:3310"
 
+[mail]
+url = "smtp://localhost:1025"
+from = "Kampus <no-reply@kampus.localhost>"
+
 [security]
 secret_key = "replace with: kampus-server install, which generates it"
 

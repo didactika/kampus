@@ -34,10 +34,14 @@
 
 //! Channels: a person who turns email or push on receives a notification there through a delivery job, with
 //! the template of their campus; a campus default that is locked cannot be changed; a delivery without an
-//! address is given up.
+//! address, or one the mail server refuses for good, is given up.
+
+use std::sync::Arc;
 
 use kampus_common::ErrorKind;
+use kampus_mail::{Mail, Mailer};
 use kampus_module::ServiceContext;
+use kampus_notify::ports::transport::MailTransport;
 use kampus_notify::service::channel::{CampusDefault, PushSubscription, Template};
 use serde_json::json;
 
@@ -219,6 +223,51 @@ async fn a_locked_default_of_the_campus_wins_over_the_person() {
             .unwrap_err()
             .kind(),
         ErrorKind::PermissionDenied
+    );
+    w.drop().await;
+}
+
+/// A mail server that refuses every message for good.
+#[derive(Debug)]
+struct Refusing;
+
+#[async_trait::async_trait]
+impl Mailer for Refusing {
+    async fn send(&self, _: &Mail) -> kampus_common::Result<()> {
+        Err(kampus_common::Error::validation(
+            "mail.rejected",
+            vec![kampus_common::FieldError::new("to", "rejected")],
+        ))
+    }
+
+    async fn check(&self) -> kampus_common::Result<()> {
+        Ok(())
+    }
+}
+
+#[tokio::test]
+async fn email_goes_through_the_mail_port_and_a_refusal_for_good_is_not_tried_again() {
+    let w = world().await;
+    let notify = w
+        .notify
+        .clone()
+        .with_transports(Arc::new(MailTransport::new(Arc::new(Refusing))), w.push.clone());
+    notify.set_preference(&w.lea, GRADE, "email", true).await.unwrap();
+    notify
+        .notify(GRADE, who(&w.lea), json!({}), Some("e1"))
+        .await
+        .unwrap();
+    assert_eq!(notify.deliver(&services(&w)).await.unwrap(), 1);
+    let (state, error): (String, Option<String>) = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "select state, last_error from {}.\"delivery\" where channel = 'email'",
+        w.db.prefix().schema("notify")
+    )))
+    .fetch_one(w.db.pool())
+    .await
+    .unwrap();
+    assert_eq!(
+        (state.as_str(), error.as_deref()),
+        ("dead", Some("mail.rejected"))
     );
     w.drop().await;
 }

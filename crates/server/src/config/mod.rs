@@ -162,6 +162,10 @@ pub struct Config {
     pub cache_url: Option<String>,
     /// The malware scanner (`clamd://host:port`); without it uploads are kept unscanned.
     pub scan_url: Option<String>,
+    /// The mail server (`smtp://host:port`, `smtps://host:port`); without it mail is written to the log.
+    pub mail_url: Option<String>,
+    /// The options of the mail adapter (`from`, `username`, `password`).
+    pub mail_options: BTreeMap<String, String>,
     /// The key that seals secrets, for roles that run the services.
     pub secret_key: Option<SecretKey>,
     /// How campuses are served.
@@ -175,6 +179,9 @@ const STORAGE_OPTIONS: &[&str] = &[
     "s3_access_key_id",
     "s3_secret_access_key",
 ];
+
+/// The options of the mail adapters that the configuration passes on.
+const MAIL_OPTIONS: &[&str] = &["from", "username", "password"];
 
 /// Reads values by key, from the environment first, and gathers every problem.
 struct Reader<'a, F> {
@@ -276,6 +283,22 @@ impl<F: Fn(&str) -> Option<String>> Reader<'_, F> {
         (url, options, self.value("cache.url"))
     }
 
+    /// The `[mail]` section: a server needs the sender of its messages.
+    fn mail(&mut self) -> (Option<String>, BTreeMap<String, String>) {
+        let url = self.value("mail.url");
+        let options: BTreeMap<String, String> = MAIL_OPTIONS
+            .iter()
+            .filter_map(|option| {
+                self.value(&format!("mail.{option}"))
+                    .map(|v| ((*option).to_owned(), v))
+            })
+            .collect();
+        if url.is_some() && !options.contains_key("from") {
+            self.fail("mail.from", "required");
+        }
+        (url, options)
+    }
+
     /// The `[security]` and `[tenancy]` sections.
     fn security(&mut self, runs_services: bool) -> (Option<SecretKey>, Tenancy) {
         let secret_key = match self.value("security.secret_key") {
@@ -367,6 +390,7 @@ impl Config {
         let (database_url, database_prefix, database_pool_size) = reader.database();
         let (storage_url, storage_options, cache_url) = reader.storage(runs_services);
         let scan_url = reader.value("scan.url");
+        let (mail_url, mail_options) = reader.mail();
         let (secret_key, tenancy) = reader.security(runs_services);
         let (log_level, log_format) = reader.log();
         if !reader.fields.is_empty() {
@@ -388,6 +412,8 @@ impl Config {
             storage_options,
             cache_url,
             scan_url,
+            mail_url,
+            mail_options,
             secret_key,
             tenancy,
         })

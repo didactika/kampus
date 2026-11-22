@@ -73,9 +73,16 @@ The job model of [tasks](../../00-domain-model/tasks.md) (DEC-060): `enqueue` in
 
 Operations: `index`, `remove`, `query` (text, filters, permissions filter, pagination). Documents are declared by modules with the fields to index; results are always filtered by what the requester may see before they are returned. First adapter: PostgreSQL full-text search; next: Meilisearch, OpenSearch or Elasticsearch. The index is rebuilt by a job and is never a source of truth.
 
-## Mail
+## Mail (`kampus-mail`)
 
-Operations: `send` (rendered message, headers, attachments by file id). Mail is always sent by a job (RN-149). First adapter: SMTP; next: provider APIs. Bounces and complaints are reported back as events when the adapter supports them (capability).
+| Aspect | Contract |
+| --- | --- |
+| Operation | `send(mail)` sends one plain text message in UTF-8; `check()` answers readiness |
+| Message | Up to 50 plain addresses, a subject folded onto one line and cut to 200 characters, a text; an address that could break a header is refused before anything is sent (`mail.invalid`) |
+| Errors | `mail.rejected` when the server refuses a message for good, so it is not tried again; `mail.failed` when it cannot be sent now |
+| Use | Mail is always sent by a job (RN-149): the email channel of notify sends each delivery through it |
+| Without a mail server | The email channel writes to the log what it would send |
+| First adapter | SMTP (`kampus-mail-smtp`): `smtp://host:port` in the clear, `?tls=required` for STARTTLS, `smtps://` over TLS; the sender in `KAMPUS_MAIL_FROM`, sign in with `KAMPUS_MAIL_USERNAME` and `KAMPUS_MAIL_PASSWORD`. Next: provider APIs, attachments, and bounces reported back as events (capability) |
 
 ## Configuration
 
@@ -87,6 +94,6 @@ Operations: `send` (rendered message, headers, attachments by file id). Mail is 
 | Sessions | `KAMPUS_SESSIONS_URL` | empty for the database, `redis://` |
 | Task queue | `KAMPUS_QUEUE_URL` | empty for the database |
 | Search | `KAMPUS_SEARCH_URL` | empty for the database |
-| Mail | `KAMPUS_MAIL_URL` | `smtp://`, provider schemes |
+| Mail | `KAMPUS_MAIL_URL` | `smtp://`, `smtps://`; empty to log mail instead of sending it |
 
 The full list is in [project configuration](../project-configuration.md#deployment-configuration).

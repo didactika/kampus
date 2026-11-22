@@ -67,6 +67,7 @@ kampus-privacy = { path = "../privacy" }
 # adapters:start
 kampus-cache-moka = { path = "../cache/adapters/moka" }
 kampus-cache-redis = { path = "../cache/adapters/redis" }
+kampus-mail-smtp = { path = "../mail/adapters/smtp" }
 kampus-scan-clamd = { path = "../scan/adapters/clamd" }
 kampus-storage-opendal = { path = "../storage/adapters/opendal" }
 # adapters:end
@@ -75,6 +76,7 @@ kampus-db.workspace = true
 kampus-module.workspace = true
 kampus-cache.workspace = true
 kampus-storage.workspace = true
+kampus-mail.workspace = true
 kampus-scan.workspace = true
 axum.workspace = true
 clap.workspace = true

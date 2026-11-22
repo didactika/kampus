@@ -36,10 +36,11 @@
 //! email address or the push endpoints of their devices. Delivery jobs call it after the change that caused
 //! the notification is committed, and retry it when it fails.
 
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
 use kampus_common::Result;
+use kampus_mail::{Mail, Mailer};
 
 /// One notification, rendered for a channel, on its way to its recipient.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -108,5 +109,28 @@ impl Transport for LogTransport {
             "notification not sent: no transport configured for its channel"
         );
         Ok(())
+    }
+}
+
+/// Sends the email channel through the mail port: one message to the address of the account.
+#[derive(Debug, Clone)]
+pub struct MailTransport {
+    /// What sends the messages.
+    mailer: Arc<dyn Mailer>,
+}
+
+impl MailTransport {
+    /// The email channel over a mailer.
+    #[must_use]
+    pub fn new(mailer: Arc<dyn Mailer>) -> Self {
+        Self { mailer }
+    }
+}
+
+#[async_trait]
+impl Transport for MailTransport {
+    async fn send(&self, envelope: &Envelope) -> Result<()> {
+        let mail = Mail::new(envelope.to.clone(), &envelope.subject, &envelope.body)?;
+        self.mailer.send(&mail).await
     }
 }

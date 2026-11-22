@@ -213,6 +213,7 @@ fn services(config: &Config, db: &Database, ports: &crate::wiring::ports::Ports)
     Ok(Some(Services::build(Parts {
         storage: ports.storage.clone(),
         scanner: ports.scanner.clone(),
+        mailer: ports.mailer.clone(),
         ..Parts::new(db.clone(), site_url, secret_key, Arc::new(LogCourier))
     })))
 }
