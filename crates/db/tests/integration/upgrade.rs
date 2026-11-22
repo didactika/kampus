@@ -133,6 +133,7 @@ async fn drop_installation(db: &Database) {
         .await
         .unwrap();
     }
+    db.close().await;
 }
 
 #[tokio::test]

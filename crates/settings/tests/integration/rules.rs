@@ -177,6 +177,7 @@ impl World {
             .await
             .unwrap();
         }
+        self.db.close().await;
     }
 }
 
