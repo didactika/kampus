@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU Affero General Public License along with Kampus.
 // If not, see <https://www.gnu.org/licenses/>.
 //
-// @package   web/ui
+// @package   web
 // @copyright 2026 Didactika
 // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
 // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
@@ -42,7 +42,7 @@ import type { Metadata } from "next";
 
 import { optional } from "../../api/server";
 import type { Layout } from "../../api/types";
-import { Dashboard } from "../../features/dashboard/Dashboard";
+import { ArrangedPage } from "../../features/layouts/ArrangedPage";
 import { DASHBOARD, DEFAULT_DASHBOARD } from "../../features/dashboard/default-layout";
 import { currentAccount } from "../../features/session/current-account";
 import { requestI18n } from "../../i18n/server";
@@ -59,23 +59,24 @@ const REGIONS = ["top", "main", "side"];
 
 /** The home of the campus of the person. */
 export default async function HomePage() {
-  const account = (await currentAccount())!;
+  const [account, { t }] = [(await currentAccount())!, await requestI18n()];
   const layout = await optional<Layout | null>(`/customise/scopes/${account.campus}/layouts/${DASHBOARD}`, null);
   const placements = layout?.placements.length ? layout.placements : DEFAULT_DASHBOARD;
   const widgets = await Promise.all(
     placements.map(async (placement) => {
       const Widget = WIDGETS[placement.widget];
-      return { placement, node: Widget ? await Widget({ settings: placement.settings, campus: account.campus }) : null };
+      return { placement, node: Widget ? await Widget({ settings: placement.settings, context: { campus: account.campus } }) : null };
     }),
   );
   return (
-    <Dashboard
+    <ArrangedPage
       scope={account.campus}
       pageKind={DASHBOARD}
       regions={layout?.regions.length ? layout.regions : REGIONS}
       widgets={widgets}
       editable={layout?.editable ?? false}
       available={(layout?.widgets ?? []).filter((w) => w.code in WIDGETS)}
+      editingText={t("dashboard.editing")}
     />
   );
 }

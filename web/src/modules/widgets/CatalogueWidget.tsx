@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU Affero General Public License along with Kampus.
 // If not, see <https://www.gnu.org/licenses/>.
 //
-// @package   web/ui
+// @package   web
 // @copyright 2026 Didactika
 // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
 // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
@@ -38,11 +38,11 @@
 import { catalogueOf } from "../../features/courses/catalogue";
 import { CourseCatalogue } from "../../features/courses/CourseCatalogue";
 import { requestI18n } from "../../i18n/server";
-import { number, text, type WidgetProps } from "./registry";
+import { number, text, type WidgetProps } from "./widget";
 
 /** `courses.catalogue` */
-export async function CatalogueWidget({ settings, campus }: WidgetProps) {
-  const [{ t }, catalogue] = await Promise.all([requestI18n(), catalogueOf(campus)]);
+export async function CatalogueWidget({ settings, context }: WidgetProps) {
+  const [{ t }, catalogue] = await Promise.all([requestI18n(), catalogueOf(context.campus)]);
   return (
     <CourseCatalogue
       catalogue={catalogue}

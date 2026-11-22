@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU Affero General Public License along with Kampus.
 // If not, see <https://www.gnu.org/licenses/>.
 //
-// @package   web/ui
+// @package   web
 // @copyright 2026 Didactika
 // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
 // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
@@ -38,7 +38,7 @@
 import { optional } from "../../api/server";
 import type { Inbox } from "../../api/types";
 import { LatestNotifications } from "../../features/notifications/LatestNotifications";
-import { number, type WidgetProps } from "./registry";
+import { number, type WidgetProps } from "./widget";
 
 /** `notify.inbox` */
 export async function InboxWidget({ settings }: WidgetProps) {

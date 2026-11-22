@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU Affero General Public License along with Kampus.
 // If not, see <https://www.gnu.org/licenses/>.
 //
-// @package   web/ui
+// @package   web
 // @copyright 2026 Didactika
 // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
 // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
@@ -39,4 +39,9 @@ export const WIDGET_ICONS: Readonly<Record<string, string>> = {
   "customise.text": "description",
   "courses.catalogue": "school",
   "notify.inbox": "notifications",
+  "courses.outline": "menu_book",
+  "courses.summary": "info",
+  "progress.course": "trending_up",
+  "records.grades": "check_circle",
+  "calendar.upcoming": "calendar_month",
 };

@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU Affero General Public License along with Kampus.
 // If not, see <https://www.gnu.org/licenses/>.
 //
-// @package   web/ui
+// @package   web
 // @copyright 2026 Didactika
 // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
 // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
@@ -38,38 +38,26 @@
  * what it needs for the person of the request; a widget with no entry here is skipped, so a page never breaks.
  */
 
-import type { ReactNode } from "react";
-
+import { CalendarWidget } from "./CalendarWidget";
 import { CatalogueWidget } from "./CatalogueWidget";
+import { GradesWidget } from "./GradesWidget";
 import { InboxWidget } from "./InboxWidget";
+import { OutlineWidget } from "./OutlineWidget";
+import { ProgressWidget } from "./ProgressWidget";
+import { SummaryWidget } from "./SummaryWidget";
 import { TextWidget } from "./TextWidget";
 import { WelcomeWidget } from "./WelcomeWidget";
-
-/** What a widget receives: its settings, with the defaults its module declares, and the campus of the page. */
-export interface WidgetProps {
-  readonly settings: Readonly<Record<string, unknown>>;
-  readonly campus: string;
-}
-
-/** A widget: a server component. */
-export type Widget = (props: WidgetProps) => Promise<ReactNode> | ReactNode;
+import type { Widget } from "./widget";
 
 /** The widgets, by code. */
 export const WIDGETS: Readonly<Record<string, Widget>> = {
   "customise.welcome": WelcomeWidget,
   "customise.text": TextWidget,
   "courses.catalogue": CatalogueWidget,
+  "courses.outline": OutlineWidget,
+  "courses.summary": SummaryWidget,
+  "progress.course": ProgressWidget,
+  "records.grades": GradesWidget,
+  "calendar.upcoming": CalendarWidget,
   "notify.inbox": InboxWidget,
 };
-
-/** A setting of a widget as text. */
-export function text(settings: WidgetProps["settings"], key: string): string {
-  const value = settings[key];
-  return typeof value === "string" ? value : "";
-}
-
-/** A setting of a widget as a number. */
-export function number(settings: WidgetProps["settings"], key: string, fallback: number): number {
-  const value = settings[key];
-  return typeof value === "number" ? value : fallback;
-}

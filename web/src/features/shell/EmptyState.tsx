@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU Affero General Public License along with Kampus.
 // If not, see <https://www.gnu.org/licenses/>.
 //
-// @package   web/ui
+// @package   web
 // @copyright 2026 Didactika
 // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
 // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
@@ -48,10 +48,20 @@ export interface EmptyStateProps {
   readonly message: string;
   /** What to do, as a button. */
   readonly action?: ReactNode;
+  /** A short line for a small card, instead of the centred block of a page. */
+  readonly compact?: boolean;
 }
 
 /** `<EmptyState icon="school" message="There are no courses to show." />` */
-export function EmptyState({ icon, message, action }: EmptyStateProps) {
+export function EmptyState({ icon, message, action, compact = false }: EmptyStateProps) {
+  if (compact) {
+    return (
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, py: 1.5, color: "text.secondary" }}>
+        <Icon name={icon} size="small" />
+        <Typography variant="body2">{message}</Typography>
+      </Box>
+    );
+  }
   return (
     <Box sx={{ display: "grid", justifyItems: "center", gap: 2, py: 6, px: 2, textAlign: "center", color: "text.secondary" }}>
       <Box sx={{ display: "grid", placeItems: "center", inlineSize: 64, blockSize: 64, borderRadius: "50%", bgcolor: "secondary.container", color: "secondary.onContainer" }}>

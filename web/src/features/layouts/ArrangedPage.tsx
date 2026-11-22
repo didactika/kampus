@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU Affero General Public License along with Kampus.
 // If not, see <https://www.gnu.org/licenses/>.
 //
-// @package   web/ui
+// @package   web
 // @copyright 2026 Didactika
 // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
 // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
@@ -36,10 +36,10 @@
 "use client";
 
 /**
- * The home of a campus: its widgets in their regions (top across the page, then the main column and the side). A
- * person who may arrange it gets "Customise page": every widget then shows its controls (move it up, down or to
- * another region, change its settings, remove it), each region offers to add a widget, and the arrangement is saved
- * for the campus, or put back to the default.
+ * A page arranged with widgets in its regions (top across the page, then the main column and the side), such as the
+ * home of a campus or the page of a course. A person who may arrange it gets "Customise page": every widget then shows
+ * its controls (move it up, down or to another region, change its settings, remove it), each region offers to add a
+ * widget, and the arrangement is saved for the scope, or put back to the default.
  */
 
 import Alert from "@mui/material/Alert";
@@ -81,9 +81,9 @@ interface Draft {
   readonly node: ReactNode | null;
 }
 
-/** The props of `Dashboard`. */
-export interface DashboardProps {
-  /** The scope the home belongs to. */
+/** The props of `ArrangedPage`. */
+export interface ArrangedPageProps {
+  /** The scope the page is arranged for. */
   readonly scope: string;
   /** The page kind. */
   readonly pageKind: string;
@@ -95,6 +95,8 @@ export interface DashboardProps {
   readonly editable: boolean;
   /** The widgets the reader may add. */
   readonly available: readonly AvailableWidget[];
+  /** What the bar of the editor says: who sees what is saved. */
+  readonly editingText: string;
 }
 
 let keys = 0;
@@ -102,8 +104,8 @@ let keys = 0;
 /** The settings a widget declares, as the API sends them. */
 const settingsOf = (widget: AvailableWidget | undefined): DeclaredSetting[] => (widget?.settings ?? []) as DeclaredSetting[];
 
-/** `<Dashboard scope="…" regions={["top", "main", "side"]} widgets={…} editable available={…} />` */
-export function Dashboard({ scope, pageKind, regions, widgets, editable, available }: DashboardProps) {
+/** `<ArrangedPage scope="…" pageKind="customise.dashboard" regions={["top", "main", "side"]} widgets={…} … />` */
+export function ArrangedPage({ scope, pageKind, regions, widgets, editable, available, editingText }: ArrangedPageProps) {
   const { t } = useI18n();
   const router = useRouter();
   const toast = useToast();
@@ -202,7 +204,7 @@ export function Dashboard({ scope, pageKind, regions, widgets, editable, availab
             </Stack>
           }
         >
-          {t("dashboard.editing")}
+          {editingText}
         </Alert>
       ) : null}
       <Grid container spacing={3}>

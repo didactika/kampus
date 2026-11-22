@@ -23,7 +23,7 @@
 // You should have received a copy of the GNU Affero General Public License along with Kampus.
 // If not, see <https://www.gnu.org/licenses/>.
 //
-// @package   web/ui
+// @package   web
 // @copyright 2026 Didactika
 // @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
 // @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
@@ -40,14 +40,14 @@ import type { Inbox } from "../../api/types";
 import { catalogueOf } from "../../features/courses/catalogue";
 import { Welcome } from "../../features/home/Welcome";
 import { currentAccount } from "../../features/session/current-account";
-import { text, type WidgetProps } from "./registry";
+import { text, type WidgetProps } from "./widget";
 
 /** `customise.welcome` */
-export async function WelcomeWidget({ settings, campus }: WidgetProps) {
+export async function WelcomeWidget({ settings, context }: WidgetProps) {
   const account = await currentAccount();
   const figures = settings["figures"] !== false;
   const [catalogue, inbox] = figures
-    ? await Promise.all([catalogueOf(campus), optional<Inbox | null>("/notify/inbox?limit=1", null)])
+    ? await Promise.all([catalogueOf(context.campus), optional<Inbox | null>("/notify/inbox?limit=1", null)])
     : [null, null];
   return (
     <Welcome
