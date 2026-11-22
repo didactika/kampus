@@ -217,6 +217,7 @@ impl World {
             .await
             .unwrap();
         }
+        self.db.close().await;
     }
 
     /// Uploads content as Ana through the whole pipeline.

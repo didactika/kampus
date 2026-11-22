@@ -306,5 +306,6 @@ impl Site {
             .await
             .unwrap();
         }
+        self.db.close().await;
     }
 }

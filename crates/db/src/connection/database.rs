@@ -41,6 +41,15 @@ use sqlx::postgres::{PgPool, PgPoolOptions};
 
 use crate::Prefix;
 
+/// The longest wait for a connection of the pool before an operation fails as unavailable.
+const ACQUIRE_TIMEOUT: Duration = Duration::from_secs(30);
+
+/// How long a connection may stay idle in the pool before it is closed.
+const IDLE_TIMEOUT: Duration = Duration::from_mins(2);
+
+/// How long a connection may stay open before it is replaced.
+const MAX_LIFETIME: Duration = Duration::from_mins(30);
+
 /// A transaction: every service operation is one.
 pub type Transaction = sqlx::Transaction<'static, sqlx::Postgres>;
 
@@ -115,13 +124,21 @@ pub struct Database {
 impl Database {
     /// Connects to the database of an installation.
     ///
+    /// The pool opens connections as they are needed, up to `pool_size`, and closes the ones left idle for
+    /// `IDLE_TIMEOUT` or open for `MAX_LIFETIME`, so an idle process gives its connections back. Getting a
+    /// connection waits at most `ACQUIRE_TIMEOUT`, retrying while the server has no free connection slot, so a
+    /// database that is busy for a moment slows operations down instead of failing them.
+    ///
     /// # Errors
     ///
     /// An `unavailable` error when the database cannot be reached.
     pub async fn connect(url: &str, prefix: Prefix, pool_size: u32) -> Result<Self> {
         let pool = PgPoolOptions::new()
             .max_connections(pool_size.max(1))
-            .acquire_timeout(Duration::from_secs(10))
+            .min_connections(0)
+            .acquire_timeout(ACQUIRE_TIMEOUT)
+            .idle_timeout(IDLE_TIMEOUT)
+            .max_lifetime(MAX_LIFETIME)
             .connect(url)
             .await
             .map_err(|error| Error::unavailable("db.connect").with_source(error))?;

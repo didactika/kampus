@@ -34,7 +34,7 @@
 
 ## Toolchain
 
-Everything runs in containers: nothing but Git and Docker is needed on the host. The `rust` service of `compose.yaml` is a toolbox with the pinned toolchain (`rust-toolchain.toml`), `cargo deny` and `cargo audit`, next to PostgreSQL 17.
+Everything runs in containers: nothing but Git and Docker is needed on the host. The `rust` service of `compose.yaml` is a toolbox with the pinned toolchain (`rust-toolchain.toml`), `cargo deny` and `cargo audit`, next to PostgreSQL 17. It runs 16 tests at a time (`RUST_TEST_THREADS`), so one run needs about 50 connections; tests reach the development PostgreSQL (300 connections) through PgBouncer in session mode, which caps them at 200, so several runs can share it.
 
 ```bash
 docker compose up -d postgres                     # PostgreSQL 17 on localhost:55432 (kampus / kampus)

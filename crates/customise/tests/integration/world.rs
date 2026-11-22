@@ -278,6 +278,7 @@ impl World {
             .await
             .unwrap();
         }
+        self.db.close().await;
     }
 
     /// A field of a type, defined in the campus.

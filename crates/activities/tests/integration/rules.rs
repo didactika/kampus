@@ -277,6 +277,7 @@ impl World {
             .await
             .unwrap();
         }
+        self.db.close().await;
     }
 
     /// Adds a page at the end of a section.
