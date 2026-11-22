@@ -52,6 +52,9 @@ pub const DEFAULTS_MANAGE: &str = "notify.defaults.manage";
 /// Write to anyone of a campus, whatever its rule of messaging says.
 pub const MESSAGE_ANYONE: &str = "notify.message.anyone";
 
+/// Attach files to messages.
+pub const MESSAGE_ATTACH: &str = "notify.message.attach";
+
 /// The permissions of this module.
 pub const PERMISSIONS: &[PermissionDeclaration] = &[
     PermissionDeclaration {
@@ -64,6 +67,12 @@ pub const PERMISSIONS: &[PermissionDeclaration] = &[
         code: DEFAULTS_MANAGE,
         kind: PermissionKind::Write,
         risks: &[Risk::Configuration],
+        lowest_kind: ScopeKind::Campus,
+    },
+    PermissionDeclaration {
+        code: MESSAGE_ATTACH,
+        kind: PermissionKind::Write,
+        risks: &[Risk::Spam],
         lowest_kind: ScopeKind::Campus,
     },
     PermissionDeclaration {

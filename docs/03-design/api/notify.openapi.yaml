@@ -44,7 +44,7 @@ paths:
     delete: { summary: 'Leave a group conversation', responses: { '204': { description: Left } } }
   /api/v1/notify/conversations/{conversation_id}/messages:
     get: { summary: Messages not deleted by the caller, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
-    post: { summary: 'Send a message in rich text, sanitised (RN-155); refused when blocked or not allowed (RN-153)', responses: { '201': { description: Sent }, '403': { description: Not allowed } } }
+    post: { summary: 'Send a message: body in rich text, sanitised, and up to 10 files the caller uploaded to the area notify.message (RN-155); refused when blocked or not allowed (RN-153)', responses: { '201': { description: Sent }, '403': { description: Not allowed } } }
   /api/v1/notify/messages/{message_id}:
     delete: { summary: 'Delete for the caller; purged when every member deleted it (RN-154)', responses: { '204': { description: Deleted } } }
   /api/v1/notify/blocks:

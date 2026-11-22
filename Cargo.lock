@@ -2296,6 +2296,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "axum",
+ "bytes",
  "kampus-access",
  "kampus-activities",
  "kampus-common",

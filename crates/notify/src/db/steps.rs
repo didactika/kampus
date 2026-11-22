@@ -347,6 +347,33 @@ pub const STEPS: &[Step] = &[
             }),
         ],
     },
+    Step {
+        sequence: 4,
+        name: "the files attached to messages",
+        revert: &[],
+        action: None,
+        changes: &[Change::CreateTable(Table {
+            name: "message_file",
+            columns: &[
+                Column::new("message_id", Type::Uuid),
+                Column::new("file_id", Type::Uuid),
+                Column::new("position", Type::Integer),
+            ],
+            primary_key: &["message_id", "file_id"],
+            unique: &[&["file_id"]],
+            foreign_keys: &[
+                ForeignKey {
+                    columns: &["message_id"],
+                    module: None,
+                    table: "message",
+                    references: &["id"],
+                    on_delete: OnDelete::Cascade,
+                },
+                other(&["file_id"], "files", "file", OnDelete::Cascade),
+            ],
+            ..Table::EMPTY
+        })],
+    },
 ];
 
 /// What a conversation is: between two people, of a group someone gathered, or of a group of a course.

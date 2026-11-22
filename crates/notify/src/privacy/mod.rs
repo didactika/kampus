@@ -69,13 +69,12 @@ fn export(run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
     })
 }
 
-/// What erasing an account deletes, by name in the report, table and column: messages before the memberships
-/// whose deletions they carry.
+/// What erasing an account deletes besides its messages, which go with their files first: by name in the report,
+/// table and column.
 const ERASED: &[(&str, &str, &str)] = &[
     ("notification", "notification", "recipient_id"),
     ("preference", "preference", "account_id"),
     ("push_subscription", "push_subscription", "account_id"),
-    ("message", "message", "author_id"),
     ("message_deletion", "message_deletion", "account_id"),
     ("member", "member", "account_id"),
     ("block", "block", "account_id"),
@@ -100,8 +99,18 @@ impl Notify {
     ///
     /// `unavailable` when the database fails.
     pub async fn erase_personal_data(&self, account: PrincipalId) -> Result<Value> {
+        let authored: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+            "select id from {} where author_id = $1",
+            self.table("message")
+        )))
+        .bind(account.as_uuid())
+        .fetch_all(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        let messages = self.remove_messages(&authored).await?;
         let mut tx = self.db.begin().await?;
         let mut report = serde_json::Map::new();
+        report.insert("message".to_owned(), json!(messages));
         for (key, table, column) in ERASED {
             let deleted = sqlx::query(sql(format!(
                 "delete from {} where \"{column}\" = $1",
