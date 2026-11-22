@@ -49,7 +49,7 @@ kampus_common::define_id! {
 }
 
 /// Where a course module stands.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ModuleState {
     /// In its section.
@@ -59,7 +59,7 @@ pub enum ModuleState {
 }
 
 /// A course module: one activity or material placed in a section, with a scope of its own under it.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, schemars::JsonSchema)]
 pub struct Module {
     /// The course module.
     pub id: ModuleId,
@@ -90,7 +90,7 @@ pub struct Module {
 }
 
 /// A course module to add, or the new values of one.
-#[derive(Debug, Clone, PartialEq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, schemars::JsonSchema)]
 pub struct ModuleFields {
     /// Its title.
     pub title: String,
@@ -116,7 +116,7 @@ const fn shown() -> Visibility {
 }
 
 /// A type of activity or material, as registered.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct ActivityType {
     /// Its code.
     pub code: String,
@@ -131,7 +131,7 @@ pub struct ActivityType {
 }
 
 /// A course module in the recycle bin.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct BinItem {
     /// The course module.
     pub module: ModuleId,
@@ -149,7 +149,7 @@ pub struct BinItem {
 }
 
 /// How the children of a node of a tree of conditions combine.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Operator {
     /// Every child holds.
@@ -187,7 +187,7 @@ impl Operator {
 }
 
 /// A node of a tree of access conditions.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct ConditionNode {
     /// How it combines its children, or `leaf`.
     pub operator: Operator,
@@ -206,7 +206,7 @@ pub struct ConditionNode {
 }
 
 /// The access conditions of a course module or a section.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Conditions {
     /// Whether people who do not meet them still see it listed, without its content.
     #[serde(default = "listed")]

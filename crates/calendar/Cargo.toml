@@ -61,6 +61,7 @@ kampus-courses = { path = "../courses" }
 kampus-events = { path = "../events" }
 kampus-identity = { path = "../identity" }
 axum.workspace = true
+schemars.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sqlx.workspace = true

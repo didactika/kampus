@@ -48,7 +48,7 @@ kampus_common::define_id! {
 }
 
 /// How a field of the payload is compared.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Operator {
     /// Equal to the value.
@@ -62,7 +62,7 @@ pub enum Operator {
 }
 
 /// A comparison of a field of the payload of the event.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Comparison {
     /// A field the event type declares.
     pub field: String,
@@ -74,7 +74,7 @@ pub struct Comparison {
 }
 
 /// When a rule runs: a tree of comparisons.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Condition {
     /// Every condition holds.
@@ -109,7 +109,7 @@ impl Condition {
 }
 
 /// An action of a rule, with its parameters.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct RuleAction {
     /// The action a module declares, by code.
     pub action: String,
@@ -119,7 +119,7 @@ pub struct RuleAction {
 }
 
 /// A rule to write.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct RuleSpec {
     /// Its name.
     pub name: String,
@@ -141,7 +141,7 @@ const fn enabled() -> bool {
 }
 
 /// A rule of a scope; it reacts to the events of its scope and of the scopes below.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Rule {
     /// The rule.
     pub id: RuleId,
@@ -164,7 +164,7 @@ pub struct Rule {
 }
 
 /// One evaluation of a rule for an event.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct RuleRun {
     /// The event.
     pub event: uuid::Uuid,

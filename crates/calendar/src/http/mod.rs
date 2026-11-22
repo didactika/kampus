@@ -43,12 +43,76 @@ use kampus_access::ScopeId;
 use kampus_common::{Error, Result, Timestamp};
 use kampus_identity::Identity;
 use kampus_identity::http::Caller;
-use kampus_module::ServiceContext;
 use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
+use kampus_module::{Operation, ServiceContext};
 use serde::Deserialize;
 
 use crate::permissions::MANAGE;
 use crate::{Calendar, EntryFields, EntryId};
+
+/// The operations of the routes, one list per file of routes.
+pub const OPERATIONS: &[&[Operation]] = &[CALENDAR];
+
+/// The operations of entries, feeds and subscriptions.
+const CALENDAR: &[Operation] = &[
+    Operation::get(
+        "/entries",
+        "The entries and dates the caller sees in a window (query `from`, `to`)",
+    )
+    .returns::<Vec<crate::Item>>(),
+    Operation::post("/entries", "Add an entry to a calendar")
+        .body::<NewEntry>()
+        .creates::<crate::Entry>(),
+    Operation::get("/entries/{id}", "An entry, with its version as ETag").returns::<crate::Entry>(),
+    Operation::put("/entries/{id}", "Replace an entry")
+        .body::<crate::EntryFields>()
+        .returns::<crate::Entry>(),
+    Operation::delete("/entries/{id}", "Delete an entry").no_content(),
+    Operation::put(
+        "/entries/{id}/occurrences/{at}",
+        "Move or cancel one occurrence of a repeating entry",
+    )
+    .body::<crate::OccurrenceChange>()
+    .no_content(),
+    Operation::delete(
+        "/entries/{id}/occurrences/{at}",
+        "Restore one occurrence of a repeating entry",
+    )
+    .no_content(),
+    Operation::get("/courses/{id}/calendar", "The calendar of a course in a window")
+        .returns::<Vec<crate::Item>>(),
+    Operation::get("/feeds", "The calendar feeds of the caller").returns::<Vec<crate::Feed>>(),
+    Operation::post("/feeds", "Make a calendar feed; its secret address is shown once")
+        .body::<NewFeed>()
+        .creates::<NewFeedAnswer>(),
+    Operation::delete("/feeds/{id}", "Revoke a calendar feed").no_content(),
+    Operation::get("/feed/{secret}", "The calendar of a feed, as iCalendar").returns_media("text/calendar"),
+    Operation::get(
+        "/scopes/{id}/subscriptions",
+        "The external calendars a scope subscribes to",
+    )
+    .returns::<Vec<crate::Subscription>>(),
+    Operation::post(
+        "/scopes/{id}/subscriptions",
+        "Subscribe a scope to an external calendar",
+    )
+    .body::<NewSubscription>()
+    .creates::<crate::Subscription>(),
+    Operation::delete("/subscriptions/{id}", "Remove a subscription with its events").no_content(),
+    Operation::post("/subscriptions/{id}/refresh", "Read a subscription again now")
+        .returns::<crate::service::subscription::Refreshed>(),
+];
+
+/// A new feed, with its secret address, shown once.
+#[derive(Debug, serde::Serialize, schemars::JsonSchema)]
+struct NewFeedAnswer {
+    /// The feed.
+    feed: crate::Feed,
+    /// Its secret.
+    secret: String,
+    /// The address of its calendar.
+    url: String,
+}
 
 /// The routes of calendar.
 pub fn routes(context: &ServiceContext) -> Router {
@@ -92,7 +156,7 @@ impl Shared {
 }
 
 /// A window of time, and the scope to look in.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Window {
     /// The scope; the personal entries of the caller when left out.
     #[serde(default)]
@@ -104,7 +168,7 @@ struct Window {
 }
 
 /// A window of time.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Span {
     /// The start of the window.
     from: Timestamp,
@@ -113,7 +177,7 @@ struct Span {
 }
 
 /// An entry to create.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewEntry {
     /// The scope it belongs to; a personal entry when left out.
     #[serde(default)]
@@ -247,7 +311,7 @@ async fn restore_occurrence(
 }
 
 /// A feed to make.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewFeed {
     /// What its owner calls it.
     name: String,
@@ -268,7 +332,11 @@ async fn create_feed(
     let url = format!("/api/v1/{}/feed/{secret}", crate::module::NAME);
     Ok((
         StatusCode::CREATED,
-        Json(serde_json::json!({ "feed": feed, "secret": secret, "url": url })),
+        Json(NewFeedAnswer {
+            feed,
+            secret: secret.clone(),
+            url,
+        }),
     )
         .into_response())
 }
@@ -298,7 +366,7 @@ async fn feed_calendar(State(shared): State<Shared>, Path(secret): Path<String>)
 }
 
 /// A subscription to make.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewSubscription {
     /// Where the calendar is read from.
     url: String,
@@ -365,8 +433,5 @@ async fn refresh(
         .calendar()?
         .refresh_now(&caller.actor, id(&subscription)?)
         .await?;
-    Ok(
-        Json(serde_json::json!({ "added": done.added, "changed": done.changed, "removed": done.removed }))
-            .into_response(),
-    )
+    Ok(Json(done).into_response())
 }

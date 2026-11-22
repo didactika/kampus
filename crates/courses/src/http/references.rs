@@ -43,13 +43,59 @@ use axum::{Extension, Json, Router};
 use kampus_access::ScopeId;
 use kampus_db::references::ExternalReference;
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id};
 use serde::Deserialize;
-use serde_json::json;
 
 use super::Shared;
 use crate::permissions::{CATEGORY_MANAGE, COURSE_CREATE};
-use crate::{CategoryFields, CategoryId, CourseFields, RecordKind};
+use crate::{Category, CategoryFields, CategoryId, Course, CourseFields, RecordKind};
+
+/// The operations of the identifiers systems give categories, courses, sections, groups and group sets.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get(
+        "/{kind}/{id}/references",
+        "The identifiers systems give a record (kind: categories, courses, sections, groups, group-sets)",
+    )
+    .returns::<Vec<ExternalReference>>(),
+    Operation::put(
+        "/{kind}/{id}/references/{system}",
+        "Give a record the identifier a system uses for it",
+    )
+    .body::<ExternalId>()
+    .returns::<Vec<ExternalReference>>(),
+    Operation::delete(
+        "/{kind}/{id}/references/{system}",
+        "Remove the identifier a system gave a record",
+    )
+    .no_content(),
+    Operation::get(
+        "/campuses/{campus}/{kind}/by-reference/{system}/{external_id}",
+        "The record of a kind a system knows by an identifier in a campus",
+    )
+    .returns::<Found>(),
+    Operation::put(
+        "/campuses/{campus}/categories/by-reference/{system}/{external_id}",
+        "Update the category a system knows by an identifier; 201 when it was created last under its parent",
+    )
+    .body::<CategoryByReference>()
+    .returns::<Category>(),
+    Operation::put(
+        "/categories/{category}/courses/by-reference/{system}/{external_id}",
+        "Update the course a system knows by an identifier; 201 when it was created last in the category",
+    )
+    .body::<CourseFields>()
+    .returns::<Course>(),
+];
+
+/// The record a system knows by an identifier.
+#[derive(Debug, serde::Serialize, schemars::JsonSchema)]
+struct Found {
+    /// Its kind.
+    kind: RecordKind,
+    /// Its id.
+    id: uuid::Uuid,
+}
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -79,14 +125,14 @@ fn kind(segment: &str) -> kampus_common::Result<RecordKind> {
 }
 
 /// The identifier a system gives a record.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ExternalId {
     /// The identifier.
     external_id: String,
 }
 
 /// A category to create or update by its identifier.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct CategoryByReference {
     /// Its parent when it is created; the top of the campus when absent.
     #[serde(default)]
@@ -155,7 +201,7 @@ async fn find(
         .await?
         .ok_or_else(|| kampus_common::Error::not_found("references.not_found"))?;
     courses.external_references(&caller.actor, kind, found).await?;
-    Ok(Json(json!({ "kind": kind, "id": found })).into_response())
+    Ok(Json(Found { kind, id: found }).into_response())
 }
 
 /// Updates the category a system knows by an identifier, or creates it.

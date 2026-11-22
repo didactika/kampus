@@ -53,7 +53,7 @@ use crate::{Progress, events, sql};
 const MAX_PREREQUISITES: usize = 20;
 
 /// The prerequisites around a course.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Prerequisites {
     /// The course.
     pub course: CourseId,

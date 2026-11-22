@@ -61,6 +61,7 @@ pub(crate) static QUIZ_MODULE: Module = Module {
     jobs: &[],
     schedules: &[],
     routes: None,
+    operations: &[],
     plugin_types: &[],
     activity_types: &[ActivityTypeDeclaration {
         code: QUIZ,

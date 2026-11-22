@@ -44,7 +44,7 @@ kampus_common::define_id! {
 }
 
 /// The person behind an account.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Profile {
     /// The given name.
     pub given_name: Option<String>,
@@ -61,7 +61,7 @@ pub struct Profile {
 }
 
 /// The fields of a profile a person or a manager edits; every field is replaced.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, schemars::JsonSchema)]
 pub struct ProfileFields {
     /// The given name.
     pub given_name: Option<String>,
@@ -76,7 +76,7 @@ pub struct ProfileFields {
 }
 
 /// The profile field a rule of a system group compares.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum RuleField {
     /// The given name.
@@ -103,7 +103,7 @@ impl RuleField {
 }
 
 /// The rule of a system group: the people of its campus whose profile field equals a value.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct GroupRule {
     /// The field compared.
     pub field: RuleField,
@@ -112,7 +112,7 @@ pub struct GroupRule {
 }
 
 /// How the members of a system group are chosen.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub enum GroupKind {
     /// By hand.
     Manual,
@@ -121,7 +121,7 @@ pub enum GroupKind {
 }
 
 /// Where a membership comes from; a rule or a sync removes only the memberships it made.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Origin {
     /// Added by a person.
@@ -155,7 +155,7 @@ impl Origin {
 }
 
 /// A system group.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct SystemGroup {
     /// The group.
     pub id: GroupId,
@@ -170,7 +170,7 @@ pub struct SystemGroup {
 }
 
 /// A member of a system group, once per origin.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Member {
     /// The account.
     pub account: AccountId,

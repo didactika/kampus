@@ -8,7 +8,7 @@ info:
     Conventions of DEC-025 and DEC-026.
 paths:
   /api/v1/integrations/openapi.json:
-    get: { summary: The OpenAPI document generated from the declared routes, responses: { '200': { description: Document } } }
+    get: { summary: 'The OpenAPI document generated from the routes the modules mounted and the operations they declare next to them, with the JSON schemas of request bodies and success answers derived from their Rust types, and the shared Problem schema of errors', responses: { '200': { description: Document } } }
   /api/v1/integrations/api-scopes:
     get: { summary: Declared API scopes, responses: { '200': { description: Scopes } } }
   /api/v1/integrations/api-clients:

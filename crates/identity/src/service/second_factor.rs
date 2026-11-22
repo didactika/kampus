@@ -85,7 +85,7 @@ pub enum Proof {
 }
 
 /// A new secret for an authenticator app, to show as a QR code.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, schemars::JsonSchema)]
 pub struct TotpSetup {
     /// The secret in base32.
     pub secret: String,

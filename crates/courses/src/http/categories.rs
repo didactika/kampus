@@ -41,12 +41,46 @@ use axum::routing::{get, post};
 use axum::{Extension, Json, Router};
 use kampus_access::ScopeId;
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
 use serde::Deserialize;
 
 use super::{Shared, hidden};
 use crate::permissions::CATEGORY_MANAGE;
-use crate::{CategoryFields, CategoryId, Place};
+use crate::{Category, CategoryFields, CategoryId, Place};
+
+/// The operations of categories.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get(
+        "/campuses/{campus}/categories",
+        "Categories under a parent (query `parent`, the top when absent), as the caller sees them",
+    )
+    .returns::<Vec<Category>>(),
+    Operation::post(
+        "/campuses/{campus}/categories",
+        "Create a category under a parent and at a place",
+    )
+    .body::<NewCategory>()
+    .creates::<Category>(),
+    Operation::get(
+        "/categories/{id}",
+        "A category the caller sees, with its version as ETag",
+    )
+    .returns::<Category>(),
+    Operation::put(
+        "/categories/{id}",
+        "Replace the name, code, description and visibility of a category",
+    )
+    .body::<CategoryFields>()
+    .returns::<Category>(),
+    Operation::delete("/categories/{id}", "Delete an empty category").no_content(),
+    Operation::post(
+        "/categories/{id}/move",
+        "Move a category under another parent and/or between two siblings",
+    )
+    .body::<MoveBody>()
+    .returns::<Category>(),
+];
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -57,7 +91,7 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// A move: the new parent and the place among the siblings.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct MoveBody {
     /// The new parent; the top when absent.
     #[serde(default)]
@@ -68,14 +102,14 @@ struct MoveBody {
 }
 
 /// The parent a list is under.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Parent {
     /// The parent category; the top of the campus when absent.
     parent: Option<CategoryId>,
 }
 
 /// A new category.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewCategory {
     /// Its parent; the top of the campus when absent.
     #[serde(default)]

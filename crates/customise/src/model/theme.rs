@@ -136,7 +136,7 @@ pub const CONTRAST_PAIRS: &[(&str, &str)] = &[
 pub const MIN_CONTRAST: f64 = 4.5;
 
 /// The theme of a scope: every token with its value and where it came from.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, schemars::JsonSchema)]
 pub struct Theme {
     /// Every token, by name.
     pub tokens: BTreeMap<String, Value>,

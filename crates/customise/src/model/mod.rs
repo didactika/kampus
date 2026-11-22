@@ -57,7 +57,7 @@ kampus_common::define_id! {
 }
 
 /// Where a resolved customisation came from.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 #[serde(tag = "from", rename_all = "snake_case")]
 pub enum Origin {
     /// No scope sets it: what its module declares.
@@ -72,7 +72,7 @@ pub enum Origin {
 }
 
 /// The word for a term in a scope and a language.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Term {
     /// The term.
     pub code: String,
@@ -87,7 +87,7 @@ pub struct Term {
 }
 
 /// Whether a feature is on in a scope.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Flag {
     /// The feature.
     pub code: String,
@@ -98,7 +98,7 @@ pub struct Flag {
 }
 
 /// The type of a custom field.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum FieldType {
     /// Text, at most its length.
@@ -158,7 +158,7 @@ impl FromStr for FieldType {
 }
 
 /// Who sees the value of a custom field.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum FieldVisibility {
     /// Whoever sees the entity.
@@ -168,7 +168,7 @@ pub enum FieldVisibility {
 }
 
 /// A choice of a custom field.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Choice {
     /// Its code, stable while its label changes.
     pub code: String,
@@ -177,7 +177,7 @@ pub struct Choice {
 }
 
 /// A custom field of a kind of entity, defined in a scope.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Field {
     /// The field.
     pub id: FieldId,
@@ -205,7 +205,7 @@ pub struct Field {
 }
 
 /// A custom field to define.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct FieldSpec {
     /// Its code.
     pub code: String,
@@ -234,7 +234,7 @@ const fn public() -> FieldVisibility {
 }
 
 /// A custom field with its value for one entity.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, schemars::JsonSchema)]
 pub struct FieldEntry {
     /// The field.
     pub field: Field,

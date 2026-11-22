@@ -54,7 +54,7 @@ pub const MAX_MEMBERS: usize = 50;
 const MAX_TITLE: usize = 200;
 
 /// What a person asks to open.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, schemars::JsonSchema)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum Opening {
     /// The conversation with one other person.

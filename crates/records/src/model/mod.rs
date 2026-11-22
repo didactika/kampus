@@ -68,7 +68,7 @@ kampus_common::define_id! {
 }
 
 /// How a category aggregates its children.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Method {
     /// The mean of the grades.
@@ -124,7 +124,7 @@ impl Method {
 }
 
 /// A node of the tree of records of a course, which aggregates its children.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Category {
     /// The category.
     pub id: CategoryId,
@@ -149,7 +149,7 @@ pub struct Category {
 }
 
 /// What a person sets on a category.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, schemars::JsonSchema)]
 pub struct CategoryFields {
     /// Its name.
     pub name: String,
@@ -178,7 +178,7 @@ const fn yes() -> bool {
 }
 
 /// What a grade record stands for.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum RecordKind {
     /// A grade an activity gives.
@@ -214,7 +214,7 @@ impl RecordKind {
 }
 
 /// What a grade is made of.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum GradeType {
     /// A number between the minimum and the maximum.
@@ -247,7 +247,7 @@ impl GradeType {
 }
 
 /// One graded thing of a course.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Record {
     /// The record.
     pub id: RecordId,
@@ -294,7 +294,7 @@ pub struct Record {
 }
 
 /// What a person sets on a grade record.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, schemars::JsonSchema)]
 pub struct RecordFields {
     /// Its title.
     pub title: String,
@@ -366,7 +366,7 @@ impl RecordFields {
 }
 
 /// Where the change of a grade came from.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Source {
     /// The activity the record grades.
@@ -402,7 +402,7 @@ impl Source {
 }
 
 /// The current grade of a person on a record.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Grade {
     /// The record.
     pub record: RecordId,
@@ -428,7 +428,7 @@ pub struct Grade {
 }
 
 /// An immutable change to the grade of a person.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Entry {
     /// The entry.
     pub id: EntryId,
@@ -451,7 +451,7 @@ pub struct Entry {
 }
 
 /// A grade a source gives to a person.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, schemars::JsonSchema)]
 pub struct GradeWrite {
     /// The person.
     pub account: PrincipalId,
@@ -467,7 +467,7 @@ pub struct GradeWrite {
 }
 
 /// What happened to a grade a source wrote.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct GradeChange {
     /// The grade after it.
     pub grade: Grade,
@@ -476,7 +476,7 @@ pub struct GradeChange {
 }
 
 /// The records of a course: its categories and its grade records, each in its place.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Tree {
     /// The categories, the root first.
     pub categories: Vec<Category>,
@@ -486,7 +486,7 @@ pub struct Tree {
 
 /// An ordered list of items used instead of numbers; a new version is a new row, and a record keeps the
 /// version it was graded with.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Scale {
     /// The version of the scale.
     pub id: ScaleId,
@@ -501,7 +501,7 @@ pub struct Scale {
 }
 
 /// One band of a letter set: from this percentage up, the grade is this letter.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Band {
     /// The lowest percentage of the band.
     pub min_percent: Decimal,
@@ -510,7 +510,7 @@ pub struct Band {
 }
 
 /// Bands that turn a percentage into a letter.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct LetterSet {
     /// The version of the set.
     pub id: LetterSetId,
@@ -528,7 +528,7 @@ kampus_common::define_id! {
 }
 
 /// An export of the grades of a course, as a file for the person who asked.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Export {
     /// The export.
     pub id: ExportId,

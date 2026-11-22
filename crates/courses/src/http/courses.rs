@@ -40,13 +40,62 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post, put};
 use axum::{Extension, Json, Router};
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
 use serde::Deserialize;
-use serde_json::json;
 
 use super::{Shared, hidden};
 use crate::permissions::{COURSE_ARCHIVE, COURSE_CREATE, COURSE_DELETE, COURSE_UPDATE};
-use crate::{CategoryId, CourseFields, CourseId, CourseState, Place};
+use crate::{CategoryId, Course, CourseFields, CourseId, CourseState, Place};
+use kampus_access::PrincipalId;
+
+/// The operations of courses.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get(
+        "/categories/{id}/courses",
+        "Courses of a category the caller sees",
+    )
+    .returns::<Vec<Course>>(),
+    Operation::post(
+        "/categories/{id}/courses",
+        "Create a course as a draft, with its first section",
+    )
+    .body::<NewCourse>()
+    .creates::<Course>(),
+    Operation::get(
+        "/courses/{id}",
+        "A course with its owners, with its version as ETag",
+    )
+    .returns::<WithOwners>(),
+    Operation::put(
+        "/courses/{id}",
+        "Replace the names, code, summary, layout, dates and visibility of a course",
+    )
+    .body::<CourseFields>()
+    .returns::<Course>(),
+    Operation::put(
+        "/courses/{id}/state",
+        "Publish, take back to draft, archive, unarchive or schedule deletion",
+    )
+    .body::<StateBody>()
+    .returns::<Course>(),
+    Operation::post(
+        "/courses/{id}/move",
+        "Move a course to another category and/or another place",
+    )
+    .body::<MoveBody>()
+    .returns::<Course>(),
+];
+
+/// A course with the people who own it.
+#[derive(Debug, serde::Serialize, schemars::JsonSchema)]
+struct WithOwners {
+    /// The course.
+    #[serde(flatten)]
+    course: Course,
+    /// Its owners.
+    owners: Vec<PrincipalId>,
+}
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -58,7 +107,7 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// A new course.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewCourse {
     /// Where among the courses of the category.
     #[serde(default)]
@@ -69,14 +118,14 @@ struct NewCourse {
 }
 
 /// A change of state.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct StateBody {
     /// The state to go to.
     to: CourseState,
 }
 
 /// A move of a course.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct MoveBody {
     /// The category it goes to.
     category: CategoryId,
@@ -125,10 +174,7 @@ async fn read(
     }
     let owners = courses.owners(course.id).await?;
     let version = course.version;
-    let mut body =
-        serde_json::to_value(&course).map_err(|_| kampus_common::Error::internal("courses.json"))?;
-    body["owners"] = json!(owners);
-    Ok(with_etag(Json(body), version))
+    Ok(with_etag(Json(WithOwners { course, owners }), version))
 }
 
 /// Replaces the fields of a course.

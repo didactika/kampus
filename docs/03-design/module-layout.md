@@ -41,6 +41,7 @@ pub const MODULE: Module = Module {
     jobs: crate::jobs::JOBS,
     schedules: crate::jobs::SCHEDULES,
     routes: Some(crate::http::routes),
+    operations: crate::http::OPERATIONS,
 };
 ```
 
@@ -61,6 +62,7 @@ pub const MODULE: Module = Module {
 | `events`, `listeners` | `src/events/mod.rs`, `src/observers/mod.rs` | Publishes nothing itself: it records the types, and runs the listeners in the worker roles (see [events and listeners](#events-and-listeners)) |
 | `jobs`, `schedules` | `src/jobs/mod.rs` | Runs the jobs in the worker roles and fires the schedules in the scheduler roles (see [background jobs](#background-jobs)) |
 | `routes` | `src/http/mod.rs`, `None` without routes | Serves them under `/api/v1`, behind the campus of the request and its authentication (see [routes](#routes)) |
+| `operations` | `src/http/mod.rs` (`OPERATIONS`, one list per file of routes), `&[]` without routes | Describes each route in the OpenAPI document of `GET /api/v1/openapi.json`: summary, request body and success answer with their JSON schemas (see [routes](#routes)) |
 
 ## The folders
 
@@ -124,8 +126,25 @@ A browser authenticates with the `kampus_session` cookie (HttpOnly, SameSite=Lax
 | `id::<T>(segment)` | An identifier from the path; one that does not parse is `not_found`, as an unknown one |
 | `if_match(headers)` | The version an update was made on; required (DEC-026), `precondition_failed` without it |
 | `with_etag(response, version)` | Answers a resource with its version as `ETag` |
+| `Identified<T>` | The answer `{ "id": ... }` of what an operation created or found |
+| `Problem` | The problem details every error answers with, and their schema in the OpenAPI document |
 
 The routes of a module live in `src/http/`: `mod.rs` with `routes` and what its handlers share, and one file per area (`auth.rs`, `me.rs`, `accounts.rs`). The OpenAPI fragment of the module in `docs/03-design/api/` lists every route. Tests of routes go through the server, in `crates/server/tests/integration/`, as a client sees them.
+
+Next to its routes, each file declares the operations they answer, and `mod.rs` lists them all in `OPERATIONS`, which the descriptor exposes as `operations`:
+
+```rust
+/// The operations of quotas.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get("/scopes/{scope}/quota", "How much the files of a scope may take, and take")
+        .returns::<crate::Quota>(),
+    Operation::put("/scopes/{scope}/quota", "Set the limit of a scope; no limit with null")
+        .body::<Limit>()
+        .returns::<crate::Quota>(),
+];
+```
+
+An operation has the method and the path of its route, as `routes` writes it, a summary, what the request carries (`body::<T>()` for JSON, `body_media(...)` for bytes) and the success answer (`returns::<T>()` for `200`, `creates::<T>()` for `201`, `answers::<T>(status)`, `returns_media(...)`, `accepted()` and `no_content()` for `202` and `204` with nothing, `redirects(status)`). The types of the bodies derive `schemars::JsonSchema` beside `Serialize` or `Deserialize`, so their schemas, with their documentation comments as descriptions, follow the code; an answer is a typed value, never loose JSON. The server builds `GET /api/v1/openapi.json` from the routes it mounted and these operations, with the schemas of answers under `components/schemas` and `Problem` as the answer of every error. A unit test of the server fails when a route has no operation, an operation has no route or no documented answer, or a reference to a schema does not resolve.
 
 ## Events and listeners
 

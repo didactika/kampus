@@ -46,6 +46,20 @@ use time::format_description::well_known::Rfc3339;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub struct Timestamp(#[serde(with = "time::serde::rfc3339")] OffsetDateTime);
 
+impl schemars::JsonSchema for Timestamp {
+    fn inline_schema() -> bool {
+        true
+    }
+
+    fn schema_name() -> std::borrow::Cow<'static, str> {
+        "Timestamp".into()
+    }
+
+    fn json_schema(_: &mut schemars::SchemaGenerator) -> schemars::Schema {
+        schemars::json_schema!({ "type": "string", "format": "date-time" })
+    }
+}
+
 impl Timestamp {
     /// Converts any instant to UTC and drops what is finer than a microsecond.
     #[must_use]
