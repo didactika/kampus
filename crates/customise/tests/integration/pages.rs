@@ -76,6 +76,16 @@ async fn a_layout_keeps_to_the_regions_and_widgets_of_its_page_and_fills_default
     let empty = c.layout(&w.admin, "testing.page", w.section).await.unwrap();
     assert_eq!((empty.placements.len(), empty.origin), (0, Origin::Declared));
     assert_eq!(empty.regions, ["main", "side"]);
+    assert!(empty.editable, "an administrator may arrange the page");
+    assert!(
+        empty.widgets.iter().any(|widget| widget.code == "testing.clock"),
+        "and is offered the widgets of the page with their settings"
+    );
+    let reader = c.layout(&w.nobody, "testing.page", w.section).await.unwrap();
+    assert!(
+        !reader.editable && reader.widgets.is_empty(),
+        "a reader only reads"
+    );
     let layout = c
         .set_layout(
             &w.admin,
@@ -135,6 +145,13 @@ async fn a_locked_layout_holds_below_and_a_widget_no_longer_declared_is_skipped(
         .await
         .unwrap_err();
     assert_eq!(refused.kind(), ErrorKind::Conflict);
+    assert!(
+        !c.layout(&w.admin, "testing.page", w.course)
+            .await
+            .unwrap()
+            .editable,
+        "a lock above leaves nothing to arrange below"
+    );
     let denied = c
         .set_layout(&w.nobody, "testing.page", w.campus, Vec::new(), false)
         .await
@@ -169,6 +186,8 @@ async fn a_menu_shows_each_reader_only_the_items_they_may_see() {
     assert_eq!(menu.items[1].children[0].label, "Theme");
     let seen = c.menu(&w.nobody, "testing.menu", w.course).await.unwrap();
     assert_eq!(seen.items.len(), 1, "the hidden item takes its children with it");
+    assert!(!seen.editable);
+    assert!(menu.editable);
     assert_eq!(seen.items[0].children[0].target, "/contact");
     let mut deep = item("1", "/1", None);
     let mut two = item("2", "/2", None);

@@ -32,9 +32,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The kinds of menu and the widgets customisation declares.
+//! The kinds of menu, the page kind of the home and the widgets customisation declares.
 
-use kampus_module::{MenuKindDeclaration, ValueKind, WidgetDeclaration, WidgetSetting};
+use kampus_module::{MenuKindDeclaration, PageKindDeclaration, ValueKind, WidgetDeclaration, WidgetSetting};
+
+/// The page kind of the home of a site: what every person sees first, arranged with widgets per scope.
+pub const DASHBOARD: &str = "customise.dashboard";
+
+/// The page kinds of this module.
+pub const PAGE_KINDS: &[PageKindDeclaration] = &[PageKindDeclaration {
+    code: DASHBOARD,
+    summary: "The home of the site",
+    regions: &["top", "main", "side"],
+}];
 
 /// The kinds of menu of every site.
 pub const MENU_KINDS: &[MenuKindDeclaration] = &[
@@ -49,24 +59,44 @@ pub const MENU_KINDS: &[MenuKindDeclaration] = &[
 ];
 
 /// The widgets of this module.
-pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
-    code: "customise.text",
-    summary: "A heading and a text, on any page",
-    page_kinds: &[],
-    settings: &[
-        WidgetSetting {
-            key: "heading",
-            kind: ValueKind::Text {
-                max: 100,
-                default: "",
+pub const WIDGETS: &[WidgetDeclaration] = &[
+    WidgetDeclaration {
+        code: "customise.welcome",
+        summary: "A greeting in the colours of the brand, with the figures of the reader",
+        page_kinds: &[DASHBOARD],
+        settings: &[
+            WidgetSetting {
+                key: "heading",
+                kind: ValueKind::Text {
+                    max: 100,
+                    default: "",
+                },
             },
-        },
-        WidgetSetting {
-            key: "text",
-            kind: ValueKind::Text {
-                max: 2000,
-                default: "",
+            WidgetSetting {
+                key: "figures",
+                kind: ValueKind::Boolean { default: true },
             },
-        },
-    ],
-}];
+        ],
+    },
+    WidgetDeclaration {
+        code: "customise.text",
+        summary: "A heading and a text, on any page",
+        page_kinds: &[],
+        settings: &[
+            WidgetSetting {
+                key: "heading",
+                kind: ValueKind::Text {
+                    max: 100,
+                    default: "",
+                },
+            },
+            WidgetSetting {
+                key: "text",
+                kind: ValueKind::Text {
+                    max: 2000,
+                    default: "",
+                },
+            },
+        ],
+    },
+];

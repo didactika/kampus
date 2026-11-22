@@ -46,7 +46,7 @@ use sqlx::{PgConnection, Row};
 
 use super::{is_code, principal, refuse_below_lock};
 use crate::permissions::LAYOUT_MANAGE;
-use crate::{Customise, Layout, Origin, Placement, sql};
+use crate::{AvailableWidget, Customise, Layout, Origin, Placement, sql};
 
 /// The most widgets a layout holds.
 const MAX_PLACEMENTS: usize = 50;
@@ -145,12 +145,28 @@ impl Customise {
             .nearest(&mut conn, ("layout", "page_kind_code"), page_kind, scope)
             .await?
         else {
+            let editable = self
+                .editable(actor, LAYOUT_MANAGE, &Origin::Declared, scope)
+                .await?;
+            let widgets = if editable {
+                self.available(&mut conn, page_kind).await?
+            } else {
+                Vec::new()
+            };
             return Ok(Layout {
                 page_kind: page_kind.to_owned(),
                 regions,
                 placements: Vec::new(),
                 origin: Origin::Declared,
+                editable,
+                widgets,
             });
+        };
+        let editable = self.editable(actor, LAYOUT_MANAGE, &origin, scope).await?;
+        let widgets = if editable {
+            self.available(&mut conn, page_kind).await?
+        } else {
+            Vec::new()
         };
         let rows = sqlx::query(sql(format!(
             "select p.region, p.widget_code, p.settings, p.permission, w.page_kinds, w.settings as declared
@@ -186,7 +202,32 @@ impl Customise {
             regions,
             placements,
             origin,
+            editable,
+            widgets,
         })
+    }
+
+    /// The widgets that may be placed on a page kind, with their settings as declared.
+    async fn available(&self, conn: &mut PgConnection, page_kind: &str) -> Result<Vec<AvailableWidget>> {
+        let rows = sqlx::query(sql(format!(
+            "select code, summary, page_kinds, settings from {} where retired_at is null order by code",
+            self.table("widget")
+        )))
+        .fetch_all(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(rows
+            .iter()
+            .filter(|row| {
+                let declared = widget(row, "settings");
+                declared.page_kinds.is_empty() || declared.page_kinds.iter().any(|p| p == page_kind)
+            })
+            .map(|row| AvailableWidget {
+                code: row.get("code"),
+                summary: row.get("summary"),
+                settings: widget(row, "settings").settings,
+            })
+            .collect())
     }
 
     /// Replaces the layout of a page kind in a scope, locked or not; needs `customise.layout.manage` there.

@@ -130,6 +130,9 @@ impl Customise {
                 kind: kind.to_owned(),
                 items: Vec::new(),
                 origin: Origin::Declared,
+                editable: self
+                    .editable(actor, MENU_MANAGE, &Origin::Declared, scope)
+                    .await?,
             });
         };
         let rows = sqlx::query(sql(format!(
@@ -165,10 +168,12 @@ impl Customise {
                 },
             });
         }
+        let editable = self.editable(actor, MENU_MANAGE, &origin, scope).await?;
         Ok(Menu {
             kind: kind.to_owned(),
             items: tree(&stored, None),
             origin,
+            editable,
         })
     }
 

@@ -54,7 +54,7 @@ pub const MODULE: Module = Module {
     terms: &[],
     flags: &[],
     field_kinds: &[],
-    page_kinds: &[],
+    page_kinds: crate::settings::customise::PAGE_KINDS,
     widgets: crate::settings::customise::WIDGETS,
     menu_kinds: crate::settings::customise::MENU_KINDS,
     rule_actions: &[],
