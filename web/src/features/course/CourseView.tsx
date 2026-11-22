@@ -200,7 +200,7 @@ export function CourseView({ course, categoryPath, sections, modules, progress, 
                           <ListItem key={module.id} disableGutters sx={{ py: 1, borderTop: 1, borderColor: "divider" }} secondaryAction={state ? <StatusBadge tone={TONES[state] ?? "neutral"} label={t(`state.${state}`)} /> : null}>
                             <ListItemIcon sx={{ minInlineSize: 48 }}>
                               <Box sx={{ display: "grid", placeItems: "center", inlineSize: 36, blockSize: 36, borderRadius: 2, bgcolor: isDone(state) ? "success.container" : "primary.container", color: isDone(state) ? "success.onContainer" : "primary.onContainer" }}>
-                                <Icon name={isDone(state) ? "check" : (TYPE_ICONS[module.type_code] ?? "auto_stories")} size="small" />
+                                <Icon name={isDone(state) ? "check" : (TYPE_ICONS[module.type] ?? "auto_stories")} size="small" />
                               </Box>
                             </ListItemIcon>
                             <ListItemText primary={module.title} slotProps={{ primary: { variant: "subtitle1" } }} />
