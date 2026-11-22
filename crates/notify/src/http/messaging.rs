@@ -118,7 +118,11 @@ impl Listing {
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Writing {
     /// What it says, in rich text.
+    #[serde(default)]
     body: String,
+    /// The files uploaded to the area of messages to attach, in order.
+    #[serde(default)]
+    files: Vec<uuid::Uuid>,
 }
 
 /// Whether a conversation is muted.
@@ -191,7 +195,17 @@ async fn send(
 ) -> ApiResult<Response> {
     let sent = shared
         .notify()?
-        .send_message(&caller.actor, id::<ConversationId>(&conversation)?, &writing.body)
+        .send_message(
+            &caller.actor,
+            id::<ConversationId>(&conversation)?,
+            &writing.body,
+            &writing
+                .files
+                .iter()
+                .copied()
+                .map(kampus_files::FileId::from_uuid)
+                .collect::<Vec<_>>(),
+        )
         .await?;
     Ok((StatusCode::CREATED, Json(sent)).into_response())
 }

@@ -94,13 +94,18 @@ async fn a_direct_conversation_exists_once_and_its_messages_are_sanitised_and_no
 
     let sent = w
         .notify
-        .send_message(&w.lea, opened.id, "<p>Hi <b>Max</b><script>alert(1)</script></p>")
+        .send_message(
+            &w.lea,
+            opened.id,
+            "<p>Hi <b>Max</b><script>alert(1)</script></p>",
+            &[],
+        )
         .await
         .unwrap();
     assert_eq!(sent.body, "<p>Hi Max</p>", "only the elements of rich text stay");
     assert_eq!(
         w.notify
-            .send_message(&w.lea, opened.id, "<p> </p><script>x</script>")
+            .send_message(&w.lea, opened.id, "<p> </p><script>x</script>", &[])
             .await
             .unwrap_err()
             .code(),
@@ -133,7 +138,7 @@ async fn a_direct_conversation_exists_once_and_its_messages_are_sanitised_and_no
 
     w.notify.mute(&w.max, opened.id, true).await.unwrap();
     w.notify
-        .send_message(&w.lea, opened.id, "Still there?")
+        .send_message(&w.lea, opened.id, "Still there?", &[])
         .await
         .unwrap();
     assert_eq!(
@@ -180,11 +185,11 @@ async fn a_block_or_the_rule_of_the_campus_stops_writing() {
     w.notify.block(&w.max, who(&w.lea)).await.unwrap();
     for refused in [
         w.notify
-            .send_message(&w.lea, opened.id, "Hello")
+            .send_message(&w.lea, opened.id, "Hello", &[])
             .await
             .unwrap_err(),
         w.notify
-            .send_message(&w.max, opened.id, "Hello")
+            .send_message(&w.max, opened.id, "Hello", &[])
             .await
             .unwrap_err(),
     ] {
@@ -196,7 +201,10 @@ async fn a_block_or_the_rule_of_the_campus_stops_writing() {
     }
     assert_eq!(w.notify.blocked(&w.max).await.unwrap(), [who(&w.lea)]);
     w.notify.unblock(&w.max, who(&w.lea)).await.unwrap();
-    w.notify.send_message(&w.lea, opened.id, "Hello").await.unwrap();
+    w.notify
+        .send_message(&w.lea, opened.id, "Hello", &[])
+        .await
+        .unwrap();
     assert_eq!(
         w.notify.block(&w.lea, who(&w.lea)).await.unwrap_err().code(),
         "notify.block_invalid"
@@ -209,7 +217,7 @@ async fn a_block_or_the_rule_of_the_campus_stops_writing() {
     );
     assert_eq!(
         w.notify
-            .send_message(&w.lea, opened.id, "Hello")
+            .send_message(&w.lea, opened.id, "Hello", &[])
             .await
             .unwrap_err()
             .code(),
@@ -220,7 +228,7 @@ async fn a_block_or_the_rule_of_the_campus_stops_writing() {
         .expect("whoever may write to anyone of the campus still writes");
     set(&w, "notify.messaging", json!("campus")).await;
     w.notify
-        .send_message(&w.lea, opened.id, "Hello again")
+        .send_message(&w.lea, opened.id, "Hello again", &[])
         .await
         .unwrap();
     w.drop().await;
@@ -270,7 +278,7 @@ async fn the_conversation_of_a_group_follows_its_members() {
         opened.id
     );
     w.notify
-        .send_message(&w.max, opened.id, "Lab at five")
+        .send_message(&w.max, opened.id, "Lab at five", &[])
         .await
         .unwrap();
 
@@ -328,9 +336,13 @@ async fn a_group_conversation_gathers_people_and_a_message_everyone_deleted_is_p
         .unwrap_err();
     assert_eq!(invalid.code(), "notify.conversation_invalid");
 
-    let first = w.notify.send_message(&w.admin, opened.id, "First").await.unwrap();
+    let first = w
+        .notify
+        .send_message(&w.admin, opened.id, "First", &[])
+        .await
+        .unwrap();
     w.notify
-        .send_message(&w.admin, opened.id, "Second")
+        .send_message(&w.admin, opened.id, "Second", &[])
         .await
         .unwrap();
     for actor in [&w.admin, &w.lea] {
@@ -368,5 +380,75 @@ async fn a_group_conversation_gathers_people_and_a_message_everyone_deleted_is_p
 
     let report = w.notify.erase_personal_data(who(&w.lea)).await.unwrap();
     assert_eq!(report["deleted"]["member"], 1);
+    w.drop().await;
+}
+
+/// A file a person uploaded to the area of messages.
+async fn upload(w: &World, actor: &Actor, name: &str) -> kampus_files::File {
+    let content: &'static [u8] = b"lab notes";
+    let upload = w
+        .files
+        .open_upload(
+            actor,
+            ("notify.message", w.campus),
+            name,
+            i64::try_from(content.len()).unwrap(),
+            None,
+        )
+        .await
+        .unwrap();
+    w.files
+        .send_upload(actor, upload.id, bytes::Bytes::from_static(content))
+        .await
+        .unwrap();
+    w.files.complete_upload(actor, upload.id).await.unwrap()
+}
+
+#[tokio::test]
+async fn files_of_a_message_are_read_by_its_members_and_go_with_the_message() {
+    let w = world().await;
+    let services = kampus_module::ServiceContext::default().with(w.notify.clone());
+    let opened = direct(&w, &w.lea, &w.max).await.unwrap();
+    let notes = upload(&w, &w.lea, "notes.txt").await;
+    let theirs = upload(&w, &w.max, "other.txt").await;
+    assert_eq!(
+        w.notify
+            .send_message(&w.lea, opened.id, "", &[theirs.id])
+            .await
+            .unwrap_err()
+            .code(),
+        "files.file_not_found",
+        "only one's own uploads"
+    );
+    let sent = w
+        .notify
+        .send_message(&w.lea, opened.id, "", &[notes.id])
+        .await
+        .unwrap();
+    assert_eq!(sent.files, [notes.id.as_uuid()], "a message may be only a file");
+    let listed = w
+        .notify
+        .messages(&w.max, opened.id, &PageRequest::default())
+        .await
+        .unwrap();
+    assert_eq!(listed.items[0].files, [notes.id.as_uuid()]);
+    let read = |actor: &Actor| {
+        let principal = Some(who(actor).as_uuid());
+        let files = w.files.clone();
+        let services = services.clone();
+        async move { files.file(principal, notes.id, &services).await }
+    };
+    assert!(read(&w.max).await.is_ok(), "the other member reads it");
+    assert_eq!(read(&w.admin).await.unwrap_err().code(), "files.file_not_found");
+
+    for actor in [&w.lea, &w.max] {
+        w.notify.delete_message(actor, sent.id).await.unwrap();
+    }
+    assert_eq!(w.notify.purge_messages().await.unwrap(), 1);
+    assert_eq!(
+        read(&w.lea).await.unwrap_err().code(),
+        "files.file_not_found",
+        "the file went with the message"
+    );
     w.drop().await;
 }

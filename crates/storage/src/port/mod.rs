@@ -114,8 +114,19 @@ pub struct ObjectInfo {
 /// The optional features of an adapter.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Capabilities {
-    /// The store can sign URLs that read a blob directly, for a limited time.
+    /// The store can sign URLs, at an address browsers reach, that read a blob directly for a limited time.
     pub presign_read: bool,
+}
+
+/// The headers a store answers a signed read with, in place of those it keeps with the blob.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ReadHeaders {
+    /// The `Content-Type` of the response.
+    pub content_type: Option<String>,
+    /// The `Content-Disposition` of the response.
+    pub content_disposition: Option<String>,
+    /// The `Cache-Control` of the response.
+    pub cache_control: Option<String>,
 }
 
 /// The file storage port.
@@ -166,12 +177,18 @@ pub trait Storage: Send + Sync + fmt::Debug {
     /// A `not_found` error when the source is missing, an `unavailable` error when the store fails.
     async fn copy(&self, from: &StorageKey, to: &StorageKey) -> Result<()>;
 
-    /// Signs a URL that reads a blob for a limited time, when the adapter can.
+    /// Signs a URL, at an address browsers reach, that reads a blob for a limited time and is answered
+    /// with the given headers, when the adapter can.
     ///
     /// # Errors
     ///
     /// An `unavailable` error when the store fails.
-    async fn presign_read(&self, key: &StorageKey, ttl: Duration) -> Result<Option<String>>;
+    async fn presign_read(
+        &self,
+        key: &StorageKey,
+        ttl: Duration,
+        headers: &ReadHeaders,
+    ) -> Result<Option<String>>;
 
     /// Checks that the store answers, for readiness.
     ///

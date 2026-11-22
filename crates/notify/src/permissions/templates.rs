@@ -37,13 +37,14 @@
 
 use kampus_module::{RoleTemplateDeclaration, Value};
 
-use super::{DEFAULTS_MANAGE, MESSAGE_ANYONE, TEMPLATE_MANAGE};
+use super::{DEFAULTS_MANAGE, MESSAGE_ANYONE, MESSAGE_ATTACH, TEMPLATE_MANAGE};
 
 /// Running the notifications of a campus.
 const RUNNING: &[(&str, Value)] = &[
     (TEMPLATE_MANAGE, Value::Allow),
     (DEFAULTS_MANAGE, Value::Allow),
     (MESSAGE_ANYONE, Value::Allow),
+    (MESSAGE_ATTACH, Value::Allow),
 ];
 
 /// The values of this module in the role templates.
@@ -57,5 +58,10 @@ pub const TEMPLATES: &[RoleTemplateDeclaration] = &[
         code: "campus_administrator",
         version: 1,
         values: RUNNING,
+    },
+    RoleTemplateDeclaration {
+        code: "authenticated_user",
+        version: 1,
+        values: &[(MESSAGE_ATTACH, Value::Allow)],
     },
 ];

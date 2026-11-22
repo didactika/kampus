@@ -83,6 +83,8 @@ pub struct Notify {
     push: Arc<dyn Transport>,
     /// Courses, for the conversations of groups and the rule of shared courses.
     courses: Option<kampus_courses::Courses>,
+    /// Files, for the files attached to messages.
+    files: Option<kampus_files::Files>,
 }
 
 impl std::fmt::Debug for Notify {
@@ -102,6 +104,7 @@ impl Notify {
             email: Arc::new(LogTransport),
             push: Arc::new(LogTransport),
             courses: None,
+            files: None,
         }
     }
 
@@ -116,6 +119,15 @@ impl Notify {
     pub fn with_courses(self, courses: kampus_courses::Courses) -> Self {
         Self {
             courses: Some(courses),
+            ..self
+        }
+    }
+
+    /// The same with files, which keeps the files attached to messages.
+    #[must_use]
+    pub fn with_files(self, files: kampus_files::Files) -> Self {
+        Self {
+            files: Some(files),
             ..self
         }
     }

@@ -56,6 +56,7 @@ kampus-push.workspace = true
 kampus-courses = { path = "../courses" }
 kampus-settings = { path = "../settings" }
 kampus-events = { path = "../events" }
+kampus-files = { path = "../files" }
 kampus-identity = { path = "../identity" }
 kampus-progress = { path = "../progress" }
 kampus-records = { path = "../records" }
@@ -72,10 +73,10 @@ time.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
+bytes.workspace = true
 kampus-activities = { path = "../activities" }
 kampus-tasks = { path = "../tasks" }
 kampus-customise = { path = "../customise" }
-kampus-files = { path = "../files" }
 kampus-storage.workspace = true
 kampus-storage-opendal = { path = "../storage/adapters/opendal" }
 rust_decimal.workspace = true

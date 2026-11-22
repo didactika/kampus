@@ -32,7 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Integration tests: against PostgreSQL and a local store. One file per topic of `kampus-files`.
+//! Integration tests: against PostgreSQL, and a store on the local disk or in an S3-compatible bucket. One
+//! file per topic of `kampus-files`.
 
 #![allow(
     clippy::unwrap_used,
@@ -41,3 +42,5 @@
 )]
 
 mod rules;
+mod store_links;
+mod world;

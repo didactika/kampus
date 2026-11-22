@@ -75,6 +75,7 @@ bytes.workspace = true
 kampus-storage.workspace = true
 kampus-common.workspace = true
 kampus-storage-opendal = { path = "../storage/adapters/opendal" }
+reqwest.workspace = true
 serde_json.workspace = true
 sqlx.workspace = true
 tempfile.workspace = true

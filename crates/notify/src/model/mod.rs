@@ -135,6 +135,8 @@ pub struct Message {
     pub author: PrincipalId,
     /// What it says, in sanitised rich text.
     pub body: String,
+    /// The files attached to it, in order.
+    pub files: Vec<uuid::Uuid>,
     /// When it was sent.
     pub sent_at: Timestamp,
 }

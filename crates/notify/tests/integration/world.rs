@@ -53,7 +53,7 @@ use serde_json::json;
 const PASSWORD: &str = "a long and quiet river";
 
 /// The modules whose types these tests use.
-static MODULES: &[&kampus_module::Module] = &[&kampus_activities::MODULE];
+static MODULES: &[&kampus_module::Module] = &[&kampus_activities::MODULE, &kampus_notify::MODULE];
 
 /// A campus with a course, its administrator and two learners.
 pub(crate) struct World {
@@ -75,6 +75,8 @@ pub(crate) struct World {
     pub(crate) courses: Courses,
     /// Activities, to place the activities that give grades.
     pub(crate) activities: Activities,
+    /// Files, for the files of messages.
+    pub(crate) files: Files,
     /// The database.
     pub(crate) db: Database,
     /// The course.
@@ -152,7 +154,7 @@ pub(crate) async fn world() -> World {
     files.sync_declarations(&modules).await.unwrap();
     let courses = Courses::new(db.clone(), access.clone(), clock.clone(), Arc::new(CampusMembers));
     let activities =
-        Activities::new(db.clone(), access.clone(), courses.clone(), files).with_modules(MODULES);
+        Activities::new(db.clone(), access.clone(), courses.clone(), files.clone()).with_modules(MODULES);
     activities.sync_declarations(&modules).await.unwrap();
     let records = Records::new(db.clone(), access.clone(), courses.clone(), activities.clone());
     let progress = Progress::new(
@@ -166,7 +168,8 @@ pub(crate) async fn world() -> World {
     let push = Arc::new(MemoryTransport::default());
     let notify = Notify::new(db.clone())
         .with_transports(email.clone(), push.clone())
-        .with_courses(courses.clone());
+        .with_courses(courses.clone())
+        .with_files(files.clone());
     notify
         .sync_declarations(&[
             &kampus_records::MODULE,
@@ -268,6 +271,7 @@ pub(crate) async fn world() -> World {
         campus,
         courses,
         activities,
+        files,
         db,
         course,
         admin,

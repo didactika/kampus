@@ -32,8 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Messages: written in sanitised rich text by someone who takes part in a conversation and may still write
-//! to the other person of a direct one; the other members are notified. Deleting removes a message for the
+//! Messages: written in sanitised rich text, with files attached, by someone who takes part in a conversation
+//! and may still write to the other person of a direct one; the other members are notified. Deleting removes a message for the
 //! person who deletes it, and a job purges messages every member deleted or the campus keeps no longer.
 
 use kampus_access::{Actor, PrincipalId};
@@ -45,6 +45,7 @@ use sqlx::postgres::PgRow;
 
 use super::conversation::{cursor, not_allowed, position};
 use super::person;
+use crate::settings::files::MESSAGE_AREA;
 use crate::settings::notifications::MESSAGE_RECEIVED;
 use crate::{ConversationId, Message, MessageId, Notify, sql};
 
@@ -53,6 +54,15 @@ pub const MAX_BODY: usize = 20_000;
 
 /// The characters of a message its notification shows.
 const PREVIEW: usize = 140;
+
+/// The most files of one message.
+pub const MAX_FILES: usize = 10;
+
+/// The columns of a message, with its files in order.
+const fn columns() -> &'static str {
+    "m.id, m.conversation_id, m.author_id, m.body, m.sent_at, coalesce((select array_agg(f.file_id order by f.position)
+         from {files} f where f.message_id = m.id), '{}') as files"
+}
 
 /// How many messages one statement of the purge removes.
 const PURGE_BATCH: i64 = 1000;
@@ -64,23 +74,27 @@ fn message(row: &PgRow) -> Message {
         conversation: ConversationId::from_uuid(row.get("conversation_id")),
         author: PrincipalId::from_uuid(row.get("author_id")),
         body: row.get("body"),
+        files: row.get("files"),
         sent_at: Timestamp::from_offset_date_time(row.get("sent_at")),
     }
 }
 
 impl Notify {
-    /// Sends a message to a conversation and notifies the other members who did not mute it.
+    /// Sends a message to a conversation, with files the actor uploaded to the area of messages, and notifies
+    /// the other members who did not mute it.
     ///
     /// # Errors
     ///
     /// `not_found` (`notify.conversation_not_found`) for a conversation the actor does not take part in,
     /// `permission_denied` (`notify.message_not_allowed`) when they may no longer write to the other person
-    /// of a direct conversation, `validation` (`notify.message_invalid`) for an empty or too long message.
+    /// of a direct conversation, `validation` (`notify.message_invalid`) for a message without text or files,
+    /// too long or with too many files, and the errors of attaching a file.
     pub async fn send_message(
         &self,
         actor: &Actor,
         conversation: ConversationId,
         body: &str,
+        files: &[kampus_files::FileId],
     ) -> Result<Message> {
         let me = person(actor)?;
         let found = self.membership(me, conversation).await?;
@@ -94,24 +108,31 @@ impl Notify {
         }
         let body = sanitise_rich(body.trim());
         let plain = plain_of_rich(&body);
-        if plain.is_empty() || body.len() > MAX_BODY {
+        let wrong = if plain.is_empty() && files.is_empty() {
+            Some(("body", "required"))
+        } else if body.len() > MAX_BODY {
+            Some(("body", "max_length"))
+        } else if files.len() > MAX_FILES {
+            Some(("files", "max_items"))
+        } else {
+            None
+        };
+        if let Some((field, rule)) = wrong {
             return Err(Error::validation(
                 "notify.message_invalid",
-                vec![FieldError::new(
-                    "body",
-                    if plain.is_empty() {
-                        "required"
-                    } else {
-                        "max_length"
-                    },
-                )],
+                vec![FieldError::new(field, rule)],
             ));
         }
+        let attachments = match (files.is_empty(), self.files.as_ref()) {
+            (true, _) => None,
+            (false, Some(store)) => Some(store),
+            (false, None) => return Err(Error::unavailable("notify.files_unavailable")),
+        };
         let id = MessageId::generate();
         let mut tx = self.db.begin().await?;
         let row = sqlx::query(sql(format!(
             "insert into {} (id, conversation_id, author_id, body) values ($1, $2, $3, $4)
-             returning id, conversation_id, author_id, body, sent_at",
+             returning id, conversation_id, author_id, body, sent_at, '{{}}'::uuid[] as files",
             self.table("message")
         )))
         .bind(id.as_uuid())
@@ -131,8 +152,28 @@ impl Notify {
         .execute(&mut *tx)
         .await
         .map_err(kampus_db::classify)?;
+        if let Some(store) = attachments {
+            for (position, file) in files.iter().enumerate() {
+                store
+                    .attach_in(&mut tx, *file, MESSAGE_AREA, Some(me.as_uuid()))
+                    .await?;
+                sqlx::query(sql(format!(
+                    "insert into {} (message_id, file_id, position) values ($1, $2, $3)",
+                    self.table("message_file")
+                )))
+                .bind(id.as_uuid())
+                .bind(file.as_uuid())
+                .bind(i32::try_from(position).unwrap_or(i32::MAX))
+                .execute(&mut *tx)
+                .await
+                .map_err(kampus_db::classify)?;
+            }
+        }
         tx.commit().await.map_err(kampus_db::classify)?;
-        let sent = message(&row);
+        let sent = Message {
+            files: files.iter().map(kampus_files::FileId::as_uuid).collect(),
+            ..message(&row)
+        };
         let payload = json!({
             "conversation": conversation.as_uuid(),
             "message": id.as_uuid(),
@@ -169,11 +210,12 @@ impl Notify {
         self.membership(me, conversation).await?;
         let (at, after) = position(page.after())?;
         let rows = sqlx::query(sql(format!(
-            "select m.id, m.conversation_id, m.author_id, m.body, m.sent_at from {} m
+            "select {} from {} m
              where m.conversation_id = $1 and not exists
                  (select 1 from {} d where d.message_id = m.id and d.account_id = $2)
                and ($3::timestamptz is null or (m.sent_at, m.id) < ($3, $4))
              order by m.sent_at desc, m.id desc limit $5",
+            columns().replace("{files}", &self.table("message_file")),
             self.table("message"),
             self.table("message_deletion")
         )))
@@ -245,24 +287,23 @@ impl Notify {
     pub async fn purge_messages(&self) -> Result<u64> {
         let mut purged = 0;
         loop {
-            let removed = sqlx::query(sql(format!(
-                "delete from {m} where id in (select x.id from {m} x where not exists
+            let due: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+                "select x.id from {m} x where not exists
                      (select 1 from {mb} mb where mb.conversation_id = x.conversation_id and not exists
                          (select 1 from {d} d where d.message_id = x.id and d.account_id = mb.account_id))
-                 limit $1)",
+                 limit $1",
                 m = self.table("message"),
                 mb = self.table("member"),
                 d = self.table("message_deletion")
             )))
             .bind(PURGE_BATCH)
-            .execute(self.db.pool())
+            .fetch_all(self.db.pool())
             .await
-            .map_err(kampus_db::classify)?
-            .rows_affected();
-            purged += removed;
-            if removed == 0 {
+            .map_err(kampus_db::classify)?;
+            if due.is_empty() {
                 break;
             }
+            purged += self.remove_messages(&due).await?;
         }
         let campuses: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
             "select distinct campus_id from {}",
@@ -278,19 +319,56 @@ impl Notify {
             if days == 0 {
                 continue;
             }
-            purged += sqlx::query(sql(format!(
-                "delete from {} m using {} c where c.id = m.conversation_id and c.campus_id = $1
+            let old: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+                "select m.id from {} m join {} c on c.id = m.conversation_id where c.campus_id = $1
                      and m.sent_at < now() - make_interval(days => $2)",
                 self.table("message"),
                 self.table("conversation")
             )))
             .bind(campus)
             .bind(i32::try_from(days).unwrap_or(i32::MAX))
-            .execute(self.db.pool())
+            .fetch_all(self.db.pool())
             .await
-            .map_err(kampus_db::classify)?
-            .rows_affected();
+            .map_err(kampus_db::classify)?;
+            for chunk in old.chunks(usize::try_from(PURGE_BATCH).unwrap_or(1000)) {
+                purged += self.remove_messages(chunk).await?;
+            }
         }
         Ok(purged)
+    }
+
+    /// Removes messages with their files, whose content goes to the trash when nothing else uses it.
+    pub(crate) async fn remove_messages(&self, ids: &[uuid::Uuid]) -> Result<u64> {
+        let mut tx = self.db.begin().await?;
+        let files: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+            "delete from {} where message_id = any($1) returning file_id",
+            self.table("message_file")
+        )))
+        .bind(ids)
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(kampus_db::classify)?;
+        if let Some(store) = self.files.as_ref() {
+            for file in files {
+                match store
+                    .detach_in(&mut tx, kampus_files::FileId::from_uuid(file))
+                    .await
+                {
+                    Err(error) if error.kind() != kampus_common::ErrorKind::NotFound => return Err(error),
+                    _ => {}
+                }
+            }
+        }
+        let removed = sqlx::query(sql(format!(
+            "delete from {} where id = any($1)",
+            self.table("message")
+        )))
+        .bind(ids)
+        .execute(&mut *tx)
+        .await
+        .map_err(kampus_db::classify)?
+        .rows_affected();
+        tx.commit().await.map_err(kampus_db::classify)?;
+        Ok(removed)
     }
 }
