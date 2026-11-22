@@ -32,6 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
+"use client";
 
 /**
  * An icon by name, in the colour of the text around it. It is decorative unless it has a label, which names it for
@@ -41,8 +42,8 @@
 import Box, { type BoxProps } from "@mui/material/Box";
 import { useSyncExternalStore } from "react";
 
-import "../../icons/core.js";
-import { iconOf, onIconsChange } from "../../icons/registry.js";
+import "../../icons/core";
+import { iconOf, onIconsChange } from "../../icons/registry";
 
 /** The sizes of an icon: 20, 24 and 32 pixels at the default size of text. */
 const SIZES = { small: "1.25rem", medium: "1.5rem", large: "2rem" } as const;

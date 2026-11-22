@@ -36,8 +36,15 @@ FROM node:24-slim AS build
 WORKDIR /repo
 COPY . .
 RUN npm ci --no-audit --no-fund
+ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build -w @kampus/web
 
-FROM nginx:1.27-alpine
-COPY web/nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /repo/web/dist /usr/share/nginx/html
+FROM node:24-slim
+WORKDIR /app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0
+COPY --from=build --chown=node:node /repo/web/.next/standalone ./
+COPY --from=build --chown=node:node /repo/web/.next/static ./web/.next/static
+COPY --from=build --chown=node:node /repo/web/public ./web/public
+USER node
+EXPOSE 3000
+CMD ["node", "web/server.js"]

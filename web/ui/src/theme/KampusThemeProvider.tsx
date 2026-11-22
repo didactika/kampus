@@ -32,6 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
+"use client";
 
 /** The provider every page of Kampus is wrapped in: the MUI theme of its scope, its baseline and its scheme. */
 
@@ -39,8 +40,8 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { ThemeProvider } from "@mui/material/styles";
 import { useMemo, type ReactNode } from "react";
 
-import { createKampusTheme } from "./create-theme.js";
-import { DIDACTIKA, type ScopeTheme } from "./scope-theme.js";
+import { createKampusTheme } from "./create-theme";
+import { DIDACTIKA, type ScopeTheme } from "./scope-theme";
 
 /** The props of `KampusThemeProvider`. */
 export interface KampusThemeProviderProps {

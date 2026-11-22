@@ -42,7 +42,7 @@
 import dark from "../../tokens/dark.tokens.json";
 import light from "../../tokens/light.tokens.json";
 import reference from "../../tokens/reference.tokens.json";
-import { roles, type TokenNode } from "../tokens/tokens.js";
+import { roles, type TokenNode } from "../tokens/tokens";
 
 /** The colour roles of one scheme, by name (`primary`, `on-primary-container`, `surface-container-high`…). */
 export type Roles = Readonly<Record<string, string>>;

@@ -40,9 +40,9 @@
 
 import { createTheme, type PaletteOptions, type Theme } from "@mui/material/styles";
 
-import "./augment.js";
-import { componentStyles } from "./components.js";
-import { DIDACTIKA, DIDACTIKA_TOKENS, type Roles, type ScopeTheme, type ThemeTokens } from "./scope-theme.js";
+import "./augment";
+import { componentStyles } from "./components";
+import { DIDACTIKA, DIDACTIKA_TOKENS, type Roles, type ScopeTheme, type ThemeTokens } from "./scope-theme";
 
 /** The colours with a role of their own, as the server names them, and as MUI's palette names them. */
 const COLOURS = [
@@ -60,8 +60,8 @@ function role(roles: Roles, name: string): string {
   return roles[name] ?? "#ff00ff";
 }
 
-/** The MUI palette of one scheme. */
-export function paletteOf(roles: Roles): PaletteOptions {
+/** The MUI palette of one scheme; papers sit one tone above the page, white in light and lighter in dark. */
+export function paletteOf(roles: Roles, mode: "light" | "dark" = "light"): PaletteOptions {
   const colours = Object.fromEntries(
     COLOURS.map(([kampus, mui]) => [
       mui,
@@ -76,7 +76,10 @@ export function paletteOf(roles: Roles): PaletteOptions {
   return {
     ...colours,
     brand: { main: role(roles, "brand"), contrastText: role(roles, "on-brand") },
-    background: { default: role(roles, "surface"), paper: role(roles, "surface-container-lowest") },
+    background: {
+      default: role(roles, "surface"),
+      paper: role(roles, mode === "light" ? "surface-container-lowest" : "surface-container-low"),
+    },
     text: { primary: role(roles, "on-surface"), secondary: role(roles, "on-surface-variant") },
     divider: role(roles, "outline-variant"),
     surface: {
@@ -150,7 +153,7 @@ export function createKampusTheme(scope: ScopeTheme = DIDACTIKA): Theme {
   const theme = createTheme({
     cssVariables: { colorSchemeSelector: "data-theme", cssVarPrefix: "k" },
     defaultColorScheme: tokens.scheme === "dark" ? "dark" : "light",
-    colorSchemes: { light: { palette: paletteOf(scope.light) }, dark: { palette: paletteOf(scope.dark) } },
+    colorSchemes: { light: { palette: paletteOf(scope.light, "light") }, dark: { palette: paletteOf(scope.dark, "dark") } },
     shape: {
       borderRadius: radius,
       small: Math.round((radius * 2) / 3),

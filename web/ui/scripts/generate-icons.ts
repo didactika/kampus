@@ -45,6 +45,7 @@ import { createRequire } from "node:module";
 const NAMES = [
   "add",
   "arrow_back",
+  "brightness_auto",
   "calendar_month",
   "check",
   "check_circle",
@@ -84,7 +85,7 @@ const NAMES = [
 ];
 
 const require = createRequire(import.meta.url);
-const header = readFileSync(new URL("../src/icons/registry.ts", import.meta.url), "utf8").split("\n").slice(0, 34).join("\n");
+const header = readFileSync(new URL("../src/icons/registry.ts", import.meta.url), "utf8").split("\n").slice(0, 33).join("\n");
 const entries = NAMES.map((name) => {
   const svg = readFileSync(require.resolve(`@material-symbols/svg-400/rounded/${name}.svg`), "utf8");
   const path = /<path d="([^"]+)"/.exec(svg)?.[1];

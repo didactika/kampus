@@ -131,7 +131,7 @@ export function componentStyles({ compact, still, fontSize }: ComponentOptions):
       styleOverrides: {
         root: ({ theme }) => ({
           borderRadius: theme.shape.borderRadius,
-          backgroundColor: vars(theme).surface.containerLowest,
+          backgroundColor: vars(theme).background.paper,
         }),
       },
     },

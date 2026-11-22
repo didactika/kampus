@@ -35,4 +35,4 @@
 
 /** `Toasts`, a component of the design system. */
 
-export * from "./Toasts.js";
+export * from "./Toasts";

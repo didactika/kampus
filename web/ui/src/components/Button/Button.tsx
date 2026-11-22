@@ -32,6 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
+"use client";
 
 /**
  * A button with the meaning Didactika gives it: `filled` is the main action of an area (one per area), `tonal` and
@@ -42,7 +43,7 @@
 
 import MuiButton, { type ButtonProps as MuiButtonProps } from "@mui/material/Button";
 
-import { Icon } from "../Icon/index.js";
+import { Icon } from "../Icon/index";
 
 /** How much a button stands out, from the most to the least. */
 export type ButtonVariant = "filled" | "tonal" | "elevated" | "outlined" | "text";

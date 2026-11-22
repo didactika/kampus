@@ -41,7 +41,7 @@ import { describe, expect, it } from "vitest";
 import dark from "../tokens/dark.tokens.json";
 import light from "../tokens/light.tokens.json";
 import reference from "../tokens/reference.tokens.json";
-import { contrast, flatten, roles, type TokenNode } from "../src/index.js";
+import { contrast, flatten, roles, type TokenNode } from "../src/index";
 
 const documents = {
   reference: reference as TokenNode,

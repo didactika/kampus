@@ -39,8 +39,8 @@
  * details, `history` opens versions.
  */
 
-import { defineIcons } from "./registry.js";
-import { SYMBOLS } from "./symbols.generated.js";
+import { defineIcons } from "./registry";
+import { SYMBOLS } from "./symbols.generated";
 
 /** The icons of the design system, by name. */
 export const CORE_ICONS: Readonly<Record<string, string>> = SYMBOLS;

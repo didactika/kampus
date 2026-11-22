@@ -32,6 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
+"use client";
 
 /**
  * The results of asynchronous actions, as short messages at the foot of the page, one at a time and in order. Each is
@@ -43,7 +44,7 @@ import IconButton from "@mui/material/IconButton";
 import Snackbar from "@mui/material/Snackbar";
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 
-import { Icon } from "../Icon/index.js";
+import { Icon } from "../Icon/index";
 
 /** What a message tells. */
 export type ToastTone = "info" | "success" | "warning" | "danger";

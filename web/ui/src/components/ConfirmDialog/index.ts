@@ -35,4 +35,4 @@
 
 /** `ConfirmDialog`, a component of the design system. */
 
-export * from "./ConfirmDialog.js";
+export * from "./ConfirmDialog";

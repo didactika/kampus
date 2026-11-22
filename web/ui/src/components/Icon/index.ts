@@ -35,4 +35,4 @@
 
 /** `Icon`, a component of the design system. */
 
-export * from "./Icon.js";
+export * from "./Icon";

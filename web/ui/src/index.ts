@@ -38,20 +38,20 @@
  * the tokens of Didactika's theme, and icons by name that a theme can override.
  */
 
-export * from "./components/Button/index.js";
-export * from "./components/ButtonGroup/index.js";
-export * from "./components/ConfirmDialog/index.js";
-export * from "./components/Icon/index.js";
-export * from "./components/Loading/index.js";
-export * from "./components/SelectField/index.js";
-export * from "./components/StatusBadge/index.js";
-export * from "./components/TextField/index.js";
-export * from "./components/Toasts/index.js";
-export { CORE_ICONS } from "./icons/core.js";
-export { defineIcons, iconNames, iconOf, onIconsChange, overrideIcons, type IconSource } from "./icons/registry.js";
-export type { SurfaceRoles } from "./theme/augment.js";
-export { createKampusTheme, paletteOf } from "./theme/create-theme.js";
-export { KampusThemeProvider, type KampusThemeProviderProps } from "./theme/KampusThemeProvider.js";
-export { DIDACTIKA, DIDACTIKA_TOKENS, type Roles, type ScopeTheme, type ThemeTokens } from "./theme/scope-theme.js";
-export { contrast, luminance } from "./tokens/contrast.js";
-export { flatten, paths, roles, type Token, type TokenNode } from "./tokens/tokens.js";
+export * from "./components/Button/index";
+export * from "./components/ButtonGroup/index";
+export * from "./components/ConfirmDialog/index";
+export * from "./components/Icon/index";
+export * from "./components/Loading/index";
+export * from "./components/SelectField/index";
+export * from "./components/StatusBadge/index";
+export * from "./components/TextField/index";
+export * from "./components/Toasts/index";
+export { CORE_ICONS } from "./icons/core";
+export { defineIcons, iconNames, iconOf, onIconsChange, overrideIcons, type IconSource } from "./icons/registry";
+export type { SurfaceRoles } from "./theme/augment";
+export { createKampusTheme, paletteOf } from "./theme/create-theme";
+export { KampusThemeProvider, type KampusThemeProviderProps } from "./theme/KampusThemeProvider";
+export { DIDACTIKA, DIDACTIKA_TOKENS, type Roles, type ScopeTheme, type ThemeTokens } from "./theme/scope-theme";
+export { contrast, luminance } from "./tokens/contrast";
+export { flatten, paths, roles, type Token, type TokenNode } from "./tokens/tokens";

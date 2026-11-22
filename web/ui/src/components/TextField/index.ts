@@ -35,4 +35,4 @@
 
 /** `TextField`, a component of the design system. */
 
-export * from "./TextField.js";
+export * from "./TextField";

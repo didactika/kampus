@@ -32,6 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
+"use client";
 
 /**
  * The question asked before an action that removes or stops something. Its title asks, its body says what stays and
@@ -45,7 +46,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useId, type ReactNode } from "react";
 
-import { Button, type ButtonTone } from "../Button/index.js";
+import { Button, type ButtonTone } from "../Button/index";
 
 /** The props of `ConfirmDialog`. */
 export interface ConfirmDialogProps {

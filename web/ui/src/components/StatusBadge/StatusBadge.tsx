@@ -32,6 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
+"use client";
 
 /** A state or a count, as a small pill tinted with the colour of its state, never white on white. */
 

@@ -32,6 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
+"use client";
 
 /**
  * Buttons that belong together. Connected, they touch as one control, with full corners at the ends; standard, they

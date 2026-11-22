@@ -32,6 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
+"use client";
 
 /**
  * A list to choose one from, with its label above it like a text field. It is the native list of the browser, so it
@@ -45,7 +46,7 @@ import NativeSelect, { type NativeSelectProps } from "@mui/material/NativeSelect
 import OutlinedInput from "@mui/material/OutlinedInput";
 import { useId } from "react";
 
-import { Icon } from "../Icon/index.js";
+import { Icon } from "../Icon/index";
 
 /** One option of a `SelectField`. */
 export interface SelectOption {

@@ -35,4 +35,4 @@
 
 /** `Loading`, a component of the design system. */
 
-export * from "./Loading.js";
+export * from "./Loading";

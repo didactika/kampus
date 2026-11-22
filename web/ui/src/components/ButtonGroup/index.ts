@@ -35,4 +35,4 @@
 
 /** `ButtonGroup`, a component of the design system. */
 
-export * from "./ButtonGroup.js";
+export * from "./ButtonGroup";

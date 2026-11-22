@@ -35,4 +35,4 @@
 
 /** `SelectField`, a component of the design system. */
 
-export * from "./SelectField.js";
+export * from "./SelectField";

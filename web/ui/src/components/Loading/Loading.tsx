@@ -32,6 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
+"use client";
 
 /**
  * The expressive loading indicator, for waits too short to measure: a shape in the primary colour that turns and

@@ -60,7 +60,7 @@ import {
   overrideIcons,
   useToast,
   type ScopeTheme,
-} from "../src/index.js";
+} from "../src/index";
 
 /** A tree in the theme of a scope. */
 function themed(node: ReactNode, theme: ScopeTheme = DIDACTIKA) {

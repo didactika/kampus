@@ -35,4 +35,4 @@
 
 /** `StatusBadge`, a component of the design system. */
 
-export * from "./StatusBadge.js";
+export * from "./StatusBadge";

@@ -35,4 +35,4 @@
 
 /** `Button`, a component of the design system. */
 
-export * from "./Button.js";
+export * from "./Button";
