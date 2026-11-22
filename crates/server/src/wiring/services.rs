@@ -48,6 +48,7 @@ use kampus_files::Files;
 use kampus_identity::http::HttpSettings;
 use kampus_identity::{Courier, Identity, PasswordCost, PasswordHasher, SecretKey, SettingsPolicies};
 use kampus_module::ServiceContext;
+use kampus_notify::ports::transport::{LogTransport, MailTransport, Transport};
 use kampus_settings::Settings;
 use kampus_tasks::Tasks;
 use kampus_users::Users;
@@ -72,6 +73,8 @@ pub struct Parts {
     pub storage: Option<Arc<dyn kampus_storage::Storage>>,
     /// The malware scanner uploads go through; none to keep them unscanned.
     pub scanner: Option<Arc<dyn kampus_scan::Scanner>>,
+    /// The mail server of the email channel; none to write mail to the log.
+    pub mailer: Option<Arc<dyn kampus_mail::Mailer>>,
 }
 
 impl Parts {
@@ -87,6 +90,7 @@ impl Parts {
             password_cost: None,
             storage: None,
             scanner: None,
+            mailer: None,
         }
     }
 }
@@ -149,7 +153,12 @@ impl Services {
         )
         .with_customise(customise.clone());
         let learning = Learning::build(&parts.db, &access, &courses, &files);
-        let notify = kampus_notify::Notify::new(parts.db.clone());
+        let email: Arc<dyn Transport> = match parts.mailer.clone() {
+            Some(mailer) => Arc::new(MailTransport::new(mailer)),
+            None => Arc::new(LogTransport),
+        };
+        let notify =
+            kampus_notify::Notify::new(parts.db.clone()).with_transports(email, Arc::new(LogTransport));
         let privacy = kampus_privacy::Privacy::new(parts.db.clone(), access.clone())
             .with_modules(MODULES)
             .with_files(files.clone());

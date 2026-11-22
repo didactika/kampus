@@ -57,6 +57,8 @@ pub struct Ports {
     pub cache: Arc<dyn Cache>,
     /// The malware scanner, when one is configured.
     pub scanner: Option<Arc<dyn kampus_scan::Scanner>>,
+    /// The mail server, when one is configured.
+    pub mailer: Option<Arc<dyn kampus_mail::Mailer>>,
 }
 
 impl Ports {
@@ -92,6 +94,20 @@ impl Ports {
             ),
             None => None,
         };
+        let mailer = match &config.mail_url {
+            Some(url) => Some(
+                kampus_mail::open(
+                    adapters::MAIL,
+                    AdapterSettings {
+                        url: url.clone(),
+                        prefix: prefix.clone(),
+                        options: config.mail_options.clone(),
+                    },
+                )
+                .await?,
+            ),
+            None => None,
+        };
         let local = kampus_cache::open(
             adapters::CACHE,
             AdapterSettings {
@@ -120,6 +136,7 @@ impl Ports {
             storage,
             cache,
             scanner,
+            mailer,
         })
     }
 
@@ -146,6 +163,7 @@ impl Ports {
             storage: Some(storage),
             cache,
             scanner: None,
+            mailer: None,
         })
     }
 }

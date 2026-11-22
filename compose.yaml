@@ -106,6 +106,8 @@ services:
       KAMPUS_STORAGE_S3_ACCESS_KEY_ID: kampus
       KAMPUS_STORAGE_S3_SECRET_ACCESS_KEY: kampus-secret
       KAMPUS_CACHE_URL: valkey://valkey:6379
+      KAMPUS_MAIL_URL: smtp://mailpit:1025
+      KAMPUS_MAIL_FROM: Kampus <no-reply@kampus.localhost>
     depends_on:
       postgres:
         condition: service_healthy
@@ -137,6 +139,11 @@ services:
     volumes:
       - ./tools/dev/oidc/config.json:/config/oidc.json:ro
 
+  mailpit:
+    image: axllent/mailpit:v1.27.9
+    ports:
+      - "58025:8025"
+
   clamav:
     image: clamav/clamav:1.4.3
     profiles: ["scan"]
@@ -157,6 +164,8 @@ services:
       KAMPUS_TEST_S3_ENDPOINT: http://s3:8333
       KAMPUS_TEST_CACHE_URL: redis://valkey:6379
       KAMPUS_TEST_OIDC_URL: http://oidc:8080
+      KAMPUS_TEST_SMTP_URL: smtp://mailpit:1025
+      KAMPUS_TEST_MAILPIT_URL: http://mailpit:8025
       CARGO_TARGET_DIR: /target
     volumes:
       - .:/work
@@ -171,6 +180,8 @@ services:
       valkey:
         condition: service_healthy
       oidc:
+        condition: service_started
+      mailpit:
         condition: service_started
 
 volumes:

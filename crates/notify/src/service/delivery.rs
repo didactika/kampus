@@ -34,10 +34,11 @@
 
 //! Deliveries: one per notification and channel that is not the inbox, sent by a job after the change that
 //! caused it is committed. The text comes from the template of the campus of the person in their language,
-//! or from the summary of the type; a failed delivery is tried again later, and given up after its attempts.
+//! or from the summary of the type; a failed delivery is tried again later, and given up after its attempts or
+//! when the transport refuses it for good.
 
 use kampus_access::PrincipalId;
-use kampus_common::Result;
+use kampus_common::{ErrorKind, Result};
 use kampus_module::ServiceContext;
 use serde_json::Value;
 use sqlx::Row;
@@ -177,7 +178,11 @@ impl Notify {
             let outcome = self.send_one(notification, &channel, services).await;
             let (state, error, retry_minutes) = match &outcome {
                 Ok(()) => ("sent", None, 0),
-                Err(e) if e.code() == "notify.no_address" || attempts >= MAX_ATTEMPTS => {
+                Err(e)
+                    if e.code() == "notify.no_address"
+                        || e.kind() == ErrorKind::Validation
+                        || attempts >= MAX_ATTEMPTS =>
+                {
                     ("dead", Some(e.code().to_owned()), 0)
                 }
                 Err(e) => (
