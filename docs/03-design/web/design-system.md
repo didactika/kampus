@@ -7,6 +7,8 @@ sourceOfTruth: model
 
 # Kampus design system
 
+This document is the source of the design system until it gets its own documentation site, in a repository of its own, like Didactika's design system for its plugins.
+
 How every screen of Kampus looks and behaves: in the shell, in the UI modules of Kampus modules and in plugins. It is implemented by `@kampus/ui` (`web/ui`) on React and MUI (DEC-089), with Didactika's identity (DEC-013), and themed per scope by configuration (RN-217).
 
 ## Principles
@@ -107,8 +109,11 @@ A theme overrides any icon by name with the address of an image, drawn as a mask
 | --- | --- |
 | Frame | The app bar of the brand with the main navigation, the appearance and the account; on a narrow window the navigation folds into a drawer; a link skips to the content |
 | Page header | An optional way back, the title, one line that says what the page is for, and the actions of the page at its end |
-| Lists | A toolbar with a search that applies as the person types and a Filters button with the number of filters on, then the actions of the page. The table has a fixed height and a sticky head, with the pager under it (12, 24, 48, 96, and All up to 500 rows). The name of a row opens it. An action a row cannot take is disabled, never hidden. A selection gets a floating bar |
-| Cards of items | A grid of cards that open their item, with its code, its name and the start of its description |
+| Lists | A toolbar with a search that applies as the person types and a Filters button with the number of filters on, then the actions of the page. The table has a fixed height and a sticky head, with the pager under it (12, 24, 48, 96, and All up to 500 rows). The name of a row opens it. An action a row cannot take is disabled, never hidden. A selection gets a floating bar. What the person asks (search, filters, order, layout, page) stays in the address, so a view can be shared |
+| Cards of items | A grid of cards that open their item: a cover, its code and place ("CHE-132 · Chemistry"), its name, the start of its description and its facts (dates, language), with its state on the cover only when it is not the usual one. The same items can be shown as a list of rows (`ViewToggle`) |
+| Covers | `CoverArt`: an item without an image of its own gets a cover composed from the colour roles of the theme, chosen from its id (the same item always looks the same, neighbours differ), with an icon of its subject |
+| Welcome | The home opens with a band in the colours of the brand that greets the person and shows their figures at a glance, each a way into its page |
+| Progress | `ProgressRing` for the whole (a course), a thin bar for its parts (a section) |
 | Wizards | A stepper and the step in a card, with Previous and Next at its foot |
 | Empty, loading and failure | Empty says why and what to do; loading shows the indicator; a failure says so, offers to try again, and leaves the frame working |
 
