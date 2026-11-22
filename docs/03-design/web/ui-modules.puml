@@ -4,7 +4,7 @@ skinparam linetype ortho
 title Web client: shell, UI modules and extension points
 
 node "Browser" {
-  package "Shell (SvelteKit)" {
+  package "Shell (Next.js, React)" {
     [Router] as router
     [Layout engine] as layout
     [Navigation] as nav
@@ -12,21 +12,21 @@ node "Browser" {
     [Help and tours] as help
     [Error boundaries] as eb
   }
-  package "UI modules (ES modules, loaded on demand)" {
+  package "UI modules (built in, pages loaded lazily)" {
     [courses UI] as cui
     [records UI] as rui
     [activity plugin UI] as pui
   }
-  [Design system @kampus/ui] as ds
+  [Design system @kampus/ui (MUI)] as ds
+  [Generated registry of UI modules] as manifest
   [Generated API client] as client
 }
 
 node "kampus-server" {
   [kampus-api] as api
-  [UI manifests and import map] as manifest
 }
 
-router --> manifest : import map
+router --> manifest : routes and contributions
 layout --> cui : region:course:main
 layout --> pui : activity:<type>
 nav --> rui : menu:course

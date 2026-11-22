@@ -1,6 +1,6 @@
 ---
 id: DEC-075
-status: accepted
+status: superseded
 ---
 
 # DEC-075 A Web Components design system with W3C tokens and accessibility checked in CI
@@ -14,3 +14,4 @@ status: accepted
   - Accessibility scans, contrast checks and visual regression run in CI.
 - Consequences: Every module looks and behaves the same in every theme; themes change tokens, never code.
 - Affected artifacts: `web/ui`, every UI module.
+- Superseded by: DEC-089. `@kampus/ui` is a React design system built on MUI and themed by Didactika. Its tokens, accessibility checks and right-to-left support remain.

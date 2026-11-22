@@ -10,7 +10,7 @@ status: accepted
 - Options considered: one process for everything; one image per module; one image whose process takes a role (chosen).
 - Decision:
   - One container image of `kampus-server`, started as `server` (HTTP), `worker` (jobs and listeners) or `scheduler` (one active instance, by database lease). A small installation runs the three roles in one process.
-  - The web client is a separate, stateless container (SvelteKit server-side rendering) behind the same reverse proxy.
+  - The web client is a separate, stateless container (Next.js server-side rendering, DEC-089) behind the same reverse proxy.
   - State lives only in the ports: database, file storage and cache. Every role is stateless and scales horizontally.
   - Deployment configuration is a file plus `KAMPUS_*` environment variables, validated at start-up for the role being started.
   - Migrations follow expand and contract, so a minor upgrade rolls instance by instance.
