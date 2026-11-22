@@ -41,6 +41,7 @@
  */
 
 import AppBar from "@mui/material/AppBar";
+import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
@@ -53,6 +54,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Stack from "@mui/material/Stack";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
@@ -62,9 +64,10 @@ import { useId, useState, type ReactNode } from "react";
 import { Icon } from "@kampus/ui";
 
 import { browserApi } from "../../api/browser";
-import type { Me, MenuItem as MenuEntry } from "../../api/types";
+import type { Me, MenuItem as MenuEntry, Profile } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { SchemeMenu } from "../../theme/SchemeMenu";
+import { initialsOf, nameOf } from "../account/names";
 
 /** A place of the main navigation. */
 interface Place {
@@ -97,6 +100,8 @@ function holds(href: string, path: string): boolean {
 export interface CampusFrameProps {
   /** The signed-in account. */
   readonly account: Me;
+  /** The profile of the account, for its name and initials. */
+  readonly profile: Profile | null;
   /** The main menu the campus set; the default places when it set none. */
   readonly menu: readonly MenuEntry[];
   /** The page. */
@@ -104,7 +109,7 @@ export interface CampusFrameProps {
 }
 
 /** The frame of the pages of a campus. */
-export function CampusFrame({ account, menu, children }: CampusFrameProps) {
+export function CampusFrame({ account, profile, menu, children }: CampusFrameProps) {
   const { t } = useI18n();
   const places: Place[] = menu.length
     ? placesOf(menu)
@@ -226,16 +231,46 @@ export function CampusFrame({ account, menu, children }: CampusFrameProps) {
             aria-expanded={accountMenu ? true : undefined}
             onClick={(event) => setAccountMenu(event.currentTarget)}
           >
-            <Icon name="person" />
+            <Avatar sx={{ inlineSize: 34, blockSize: 34, fontSize: "0.8125rem", fontWeight: 700, bgcolor: "color-mix(in srgb, currentColor 20%, transparent)", color: "inherit", border: "1px solid color-mix(in srgb, currentColor 35%, transparent)" }}>
+              {initialsOf(profile, account)}
+            </Avatar>
           </IconButton>
-          <Menu id={menuId} anchorEl={accountMenu} open={Boolean(accountMenu)} onClose={() => setAccountMenu(null)}>
-            <Box sx={{ px: 2, py: 1 }}>
-              <Typography variant="subtitle2">{account.username}</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {account.email}
-              </Typography>
-            </Box>
-            <Divider />
+          <Menu
+            id={menuId}
+            anchorEl={accountMenu}
+            open={Boolean(accountMenu)}
+            onClose={() => setAccountMenu(null)}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+            slotProps={{ paper: { sx: { minInlineSize: 260, mt: 1 } } }}
+          >
+            <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", px: 1.5, py: 1.25 }}>
+              <Avatar sx={{ inlineSize: 40, blockSize: 40, fontSize: "0.875rem", fontWeight: 700, backgroundImage: "var(--k-palette-gradient-primary)", color: "primary.contrastText" }}>
+                {initialsOf(profile, account)}
+              </Avatar>
+              <Box sx={{ minInlineSize: 0 }}>
+                <Typography variant="subtitle2" noWrap>
+                  {nameOf(profile, account)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" noWrap component="p">
+                  {account.email}
+                </Typography>
+              </Box>
+            </Stack>
+            <Divider sx={{ my: 0.5 }} />
+            <MenuItem component={Link} href="/account" onClick={() => setAccountMenu(null)}>
+              <ListItemIcon>
+                <Icon name="person" size="small" />
+              </ListItemIcon>
+              {t("account.title")}
+            </MenuItem>
+            <MenuItem component={Link} href="/notifications/preferences" onClick={() => setAccountMenu(null)}>
+              <ListItemIcon>
+                <Icon name="tune" size="small" />
+              </ListItemIcon>
+              {t("nav.preferences")}
+            </MenuItem>
+            <Divider sx={{ my: 0.5 }} />
             <MenuItem onClick={() => void signOut()}>
               <ListItemIcon>
                 <Icon name="logout" size="small" />

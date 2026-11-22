@@ -44,6 +44,10 @@ import type { Schema } from "@kampus/sdk";
 export type Me = Schema<"Account">;
 /** A category of courses. */
 export type Category = Schema<"Category">;
+/** The profile of the person: names, language and time zone. */
+export type Profile = Schema<"Profile">;
+/** An open session of the person. */
+export type SessionSummary = Schema<"SessionSummary">;
 /** A course. */
 export type Course = Schema<"Course">;
 /** A course with its owners, as one course is read. */

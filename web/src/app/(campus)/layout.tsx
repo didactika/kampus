@@ -38,7 +38,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { optional } from "../../api/server";
-import type { Menu } from "../../api/types";
+import type { Menu, Profile } from "../../api/types";
 import { CampusFrame } from "../../features/navigation/CampusFrame";
 import { currentAccount } from "../../features/session/current-account";
 
@@ -46,9 +46,12 @@ import { currentAccount } from "../../features/session/current-account";
 export default async function CampusLayout({ children }: { readonly children: ReactNode }) {
   const account = await currentAccount();
   if (!account) redirect("/sign-in");
-  const menu = await optional<Menu | null>(`/customise/scopes/${account.campus}/menus/customise.main`, null);
+  const [menu, profile] = await Promise.all([
+    optional<Menu | null>(`/customise/scopes/${account.campus}/menus/customise.main`, null),
+    optional<Profile | null>("/users/me/profile", null),
+  ]);
   return (
-    <CampusFrame account={account} menu={menu?.items ?? []}>
+    <CampusFrame account={account} profile={profile} menu={menu?.items ?? []}>
       {children}
     </CampusFrame>
   );

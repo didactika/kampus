@@ -62,6 +62,8 @@ All notable changes to Kampus are recorded here, following [Keep a Changelog](ht
 
 ### Added
 
+- The account of the person in the web client (`/account`): their profile (names, display name, language and time zone, saved against the version read) and its security (changing the password, and the open sessions, named by browser and system, each of which can be closed). The language of the profile chooses the language of the interface before the browser does. The bar shows an avatar with the initials of the person and a menu to the account, the notification preferences and signing out. Texts can have plural forms.
+
 - Widgets for the page of a course (`courses.course`): `progress.course` (the progress of the reader), `records.grades` (their grades) and `calendar.upcoming` (the dates ahead, 7 to 90 days), beside `courses.outline`, `courses.summary` and `customise.text`.
 
 - `@kampus/sdk` (`web/sdk`): the types of every route and schema of the API, generated with openapi-typescript from a snapshot of the document the server serves (`web/sdk/openapi.json`); a server test fails when the API changes and the snapshot does not. The web client reads the API through these types, which found that it read the type of course modules and notifications under the wrong name.

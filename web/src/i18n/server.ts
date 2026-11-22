@@ -33,15 +33,29 @@
 // ------------------------------------------------------------------------------
 
 
-/** The language of the request a server component renders, and its messages and formatters. */
+/** The language of the request a server component renders (the profile of the person first), and its messages and formatters. */
 
 import { headers } from "next/headers";
+import { cache } from "react";
 
-import { directionOf, formatDate, formatDay, formatNumber, formatRelative, languageOf, translator } from "./translator";
+import { optional } from "../api/server";
+import type { Profile } from "../api/types";
+
+import { LANGUAGES, directionOf, formatDate, formatDay, formatNumber, formatRelative, languageOf, translator } from "./translator";
+
+/** The profile of the person of the request, once per request; none when nobody is signed in. */
+const profile = cache(() => optional<Profile | null>("/users/me/profile", null));
+
+/** The language of the request: the one of the profile of the person when the client speaks it, the browser's otherwise. */
+const requestLanguage = cache(async () => {
+  const chosen = (await profile())?.language_code?.toLowerCase();
+  const spoken = chosen ? LANGUAGES.find((l) => l === chosen || chosen.startsWith(`${l}-`)) : undefined;
+  return spoken ?? languageOf((await headers()).get("accept-language"));
+});
 
 /** The language of the request, its direction and its messages. */
 export async function requestI18n() {
-  const language = languageOf((await headers()).get("accept-language"));
+  const language = await requestLanguage();
   return {
     language,
     direction: directionOf(language),

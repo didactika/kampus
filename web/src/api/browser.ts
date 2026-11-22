@@ -41,9 +41,9 @@
 import { answer } from "./problem";
 
 /** Asks the API from the browser. */
-export async function browserApi<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
+export async function browserApi<T>(path: string, init: { method?: string; body?: unknown; headers?: Readonly<Record<string, string>> } = {}): Promise<T> {
   const method = init.method ?? "GET";
-  const headers: Record<string, string> = { Accept: "application/json" };
+  const headers: Record<string, string> = { Accept: "application/json", ...init.headers };
   if (method !== "GET") headers["X-Kampus"] = "1";
   if (init.body !== undefined) headers["Content-Type"] = "application/json";
   const response = await fetch(`/api/v1${path}`, {
