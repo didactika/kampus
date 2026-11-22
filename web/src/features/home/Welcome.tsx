@@ -98,7 +98,7 @@ export function Welcome({ name, heading, figures: counts }: WelcomeProps) {
         borderRadius: (theme) => `${theme.shape.extraLarge}px`,
         color: "brand.contrastText",
         background:
-          "radial-gradient(circle at 92% -10%, color-mix(in srgb, var(--k-palette-accent-main) 22%, transparent) 0 22%, transparent 46%), radial-gradient(circle at -5% 115%, color-mix(in srgb, var(--k-palette-brand-contrastText) 10%, transparent) 0 28%, transparent 52%), var(--k-palette-gradient-bar)",
+          "radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--k-palette-accent-main) 30%, transparent) 0 14%, transparent 44%), radial-gradient(circle at -5% 115%, color-mix(in srgb, var(--k-palette-brand-contrastText) 10%, transparent) 0 28%, transparent 52%), var(--k-palette-gradient-bar)",
         boxShadow: 3,
       }}
     >
@@ -106,26 +106,25 @@ export function Welcome({ name, heading, figures: counts }: WelcomeProps) {
         aria-hidden
         sx={{
           position: "absolute",
-          insetInlineEnd: { xs: -60, md: 40 },
-          insetBlockStart: { xs: -40, md: 24 },
-          inlineSize: 220,
-          blockSize: 220,
-          borderRadius: "38% 62% 55% 45% / 45% 40% 60% 55%",
-          border: "2px solid color-mix(in srgb, currentColor 25%, transparent)",
-          rotate: "12deg",
+          inset: 0,
+          opacity: 0.2,
+          backgroundImage: "radial-gradient(currentColor 1px, transparent 1.5px)",
+          backgroundSize: "22px 22px",
+          maskImage: "linear-gradient(250deg, black, transparent 55%)",
+          pointerEvents: "none",
         }}
       />
-      <Typography variant="overline" sx={{ opacity: 0.85, letterSpacing: "0.12em", textTransform: "uppercase" }}>
-        Kampus
+      <Typography variant="overline" sx={{ position: "relative", opacity: 0.85, letterSpacing: "0.12em", textTransform: "uppercase" }}>
+        {t("app.name")}
       </Typography>
-      <Typography id="welcome" variant="h1" sx={{ mt: 1, fontSize: { md: "2.75rem" }, lineHeight: 1.15, maxInlineSize: "18ch" }}>
+      <Typography id="welcome" variant="h1" sx={{ position: "relative", mt: 1, fontSize: { md: "2.75rem" }, lineHeight: 1.15, maxInlineSize: "18ch" }}>
         {heading || t("home.greeting", { name })}
       </Typography>
-      <Typography variant="body1" sx={{ mt: 1.5, opacity: 0.9, maxInlineSize: "52ch" }}>
+      <Typography variant="body1" sx={{ position: "relative", mt: 1.5, opacity: 0.9, maxInlineSize: "52ch" }}>
         {t("home.lead")}
       </Typography>
       {figures.length ? (
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(3, minmax(0, 1fr))", sm: "repeat(3, minmax(0, 170px))" }, gap: 1.5, mt: 4 }}>
+      <Box sx={{ position: "relative", display: "grid", gridTemplateColumns: { xs: "repeat(3, minmax(0, 1fr))", sm: "repeat(3, minmax(0, 170px))" }, gap: 1.5, mt: 4 }}>
         {figures.map((figure) => {
           const tile = (
             <Stack
