@@ -67,3 +67,23 @@ fn a_fixed_clock_answers_its_instant_until_moved() {
     clock.set(later);
     assert_eq!(clock.now(), later);
 }
+
+#[test]
+fn the_system_clock_never_goes_back() {
+    let threads: Vec<_> = (0..4)
+        .map(|_| {
+            std::thread::spawn(|| {
+                let clock = kampus_common::SystemClock;
+                let mut previous = clock.now();
+                for _ in 0..10_000 {
+                    let now = clock.now();
+                    assert!(now >= previous, "{now} came after {previous}");
+                    previous = now;
+                }
+            })
+        })
+        .collect();
+    for thread in threads {
+        thread.join().unwrap();
+    }
+}

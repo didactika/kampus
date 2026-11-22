@@ -37,6 +37,7 @@
 
 use std::fmt;
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicI64, Ordering};
 
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
@@ -108,13 +109,29 @@ pub trait Clock: Send + Sync {
     fn now(&self) -> Timestamp;
 }
 
-/// The clock of the operating system.
+/// The latest instant the system clock answered in this process, in microseconds since the Unix epoch.
+static LATEST_MICROS: AtomicI64 = AtomicI64::new(i64::MIN);
+
+/// The clock of the operating system, that never goes back within a process.
+///
+/// The wall clock of a host can step back when it is corrected (a virtual machine resyncing with its
+/// host, an NTP adjustment). A grant or an enrolment that starts "now" would then not be valid yet for
+/// the next check; this clock answers the latest instant it already gave until the wall clock is past
+/// it again.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct SystemClock;
 
 impl Clock for SystemClock {
     fn now(&self) -> Timestamp {
-        Timestamp::from_offset_date_time(OffsetDateTime::now_utc())
+        let wall = OffsetDateTime::now_utc();
+        let Ok(micros) = i64::try_from(wall.unix_timestamp_nanos() / 1_000) else {
+            return Timestamp::from_offset_date_time(wall);
+        };
+        let latest = LATEST_MICROS.fetch_max(micros, Ordering::AcqRel).max(micros);
+        OffsetDateTime::from_unix_timestamp_nanos(i128::from(latest) * 1_000).map_or_else(
+            |_| Timestamp::from_offset_date_time(wall),
+            Timestamp::from_offset_date_time,
+        )
     }
 }
 

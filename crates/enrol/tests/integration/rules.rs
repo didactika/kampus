@@ -189,7 +189,7 @@ async fn world() -> World {
         db.clone(),
         access.clone(),
         clock.clone(),
-        Arc::new(Participation::new(db.clone())),
+        Arc::new(Participation::new(db.clone(), clock.clone())),
     );
     let enrol = Enrol::new(
         db.clone(),

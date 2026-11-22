@@ -269,13 +269,14 @@ impl Access {
         sqlx::query_scalar(sql(format!(
             "select exists (select 1 from {} g join {} c on c.ancestor_id = g.scope_id
              where c.descendant_id = $3 and g.principal_id = $1 and g.role_id = $2
-                 and g.valid_from <= now() and (g.valid_until is null or g.valid_until > now()))",
+                 and g.valid_from <= $4 and (g.valid_until is null or g.valid_until > $4))",
             self.table("grant"),
             self.table("scope_closure")
         )))
         .bind(principal.as_uuid())
         .bind(role.as_uuid())
         .bind(scope.as_uuid())
+        .bind(self.now().as_offset_date_time())
         .fetch_one(self.db.pool())
         .await
         .map_err(kampus_db::classify)
