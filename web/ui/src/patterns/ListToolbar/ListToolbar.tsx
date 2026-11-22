@@ -99,8 +99,8 @@ export function ListToolbar(props: ListToolbarProps) {
   }
 
   return (
-    <Stack direction={{ xs: "column", md: "row" }} spacing={1.5} sx={{ alignItems: { md: "center" }, mb: 3 }}>
-      <Stack direction="row" spacing={1.5} sx={{ flex: 1, alignItems: "center" }}>
+    <Stack direction={{ xs: "column", md: "row" }} spacing={1} sx={{ alignItems: { md: "center" }, mb: 3 }}>
+      <Stack direction="row" spacing={1} sx={{ flex: 1, alignItems: "center", minInlineSize: 0 }}>
         <OutlinedInput
           value={text}
           onChange={(event) => typed(event.target.value)}
@@ -108,10 +108,10 @@ export function ListToolbar(props: ListToolbarProps) {
           inputProps={{ "aria-label": searchLabel, type: "search" }}
           startAdornment={
             <InputAdornment position="start">
-              <Icon name="search" />
+              <Icon name="search" size="small" />
             </InputAdornment>
           }
-          sx={{ flex: 1, maxInlineSize: 520, borderRadius: (theme) => `${theme.shape.full}px`, bgcolor: "background.paper" }}
+          sx={{ flex: "0 1 340px", minInlineSize: 180, borderRadius: (theme) => `${theme.shape.full}px`, pl: 1.5, "& input": { pl: 0.5 } }}
         />
         {filters ? (
           <>
@@ -123,6 +123,7 @@ export function ListToolbar(props: ListToolbarProps) {
                 aria-expanded={anchor ? true : undefined}
                 aria-controls={anchor ? panel : undefined}
                 onClick={(event) => setAnchor(event.currentTarget)}
+                sx={{ borderRadius: (theme) => `${theme.shape.full}px`, px: 2 }}
               >
                 {filtersLabel}
               </Button>
@@ -153,7 +154,7 @@ export function ListToolbar(props: ListToolbarProps) {
         ) : null}
       </Stack>
       {view || actions ? (
-        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", justifyContent: "flex-end" }}>
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap", rowGap: 1 }}>
           {view}
           {actions}
         </Stack>

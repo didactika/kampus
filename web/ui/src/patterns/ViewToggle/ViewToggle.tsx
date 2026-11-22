@@ -70,15 +70,13 @@ export function ViewToggle({ label, options, value, onChange }: ViewToggleProps)
   return (
     <ToggleButtonGroup
       exclusive
-      size="small"
       aria-label={label}
       value={value}
       onChange={(_, next: string | null) => next && onChange(next)}
       sx={{
-        "& .MuiToggleButton-root": { px: 1.5, borderColor: "divider" },
+        "& .MuiToggleButton-root": { px: 1.25, py: 0 },
         "& .MuiToggleButton-root:first-of-type": { borderStartStartRadius: 999, borderEndStartRadius: 999 },
         "& .MuiToggleButton-root:last-of-type": { borderStartEndRadius: 999, borderEndEndRadius: 999 },
-        "& .Mui-selected": { bgcolor: "secondary.container", color: "secondary.onContainer" },
       }}
     >
       {options.map((option) => (

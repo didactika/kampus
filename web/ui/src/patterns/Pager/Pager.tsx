@@ -42,12 +42,13 @@
  */
 
 import IconButton from "@mui/material/IconButton";
-import NativeSelect from "@mui/material/NativeSelect";
+import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useId } from "react";
 
 import { Icon } from "../../components/Icon";
+import { PillSelect } from "../PillSelect";
 
 /** The sizes a page can have; 0 is the whole list. */
 export const PAGE_SIZES = [12, 24, 48, 96] as const;
@@ -101,22 +102,17 @@ export function Pager({ total, page, size, onPage, onSize, labels }: PagerProps)
   return (
     <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" }, justifyContent: "space-between", mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }}>
       <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-        <Typography component="label" htmlFor={select} variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" aria-hidden>
           {labels.perPage}
         </Typography>
-        <NativeSelect
-          id={select}
-          value={String(size)}
-          onChange={(event) => onSize(Number(event.target.value))}
-          disableUnderline
-          sx={{ px: 1.5, borderRadius: (theme) => `${theme.shape.full}px`, border: 1, borderColor: "divider", typography: "body2" }}
-        >
-          {pageSizes(total).map((option) => (
-            <option key={option} value={option}>
-              {option === 0 ? labels.all : option}
-            </option>
-          ))}
-        </NativeSelect>
+        <Box id={select}>
+          <PillSelect
+            label={labels.perPage}
+            value={String(size)}
+            onChange={(value) => onSize(Number(value))}
+            options={pageSizes(total).map((option) => ({ value: String(option), label: option === 0 ? labels.all : String(option) }))}
+          />
+        </Box>
       </Stack>
       <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
         <Typography variant="body2" color="text.secondary" aria-live="polite" sx={{ mr: 1 }}>

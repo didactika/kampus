@@ -112,12 +112,12 @@ pub const TOKENS: &[Token] = &[
     Token {
         name: "font_family",
         kind: TokenKind::FontFamily,
-        default: "\"IBM Plex Sans\", system-ui, sans-serif",
+        default: "\"Inter Variable\", Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
     },
     Token {
         name: "font_family_brand",
         kind: TokenKind::FontFamily,
-        default: "\"Space Grotesk\", \"IBM Plex Sans\", system-ui, sans-serif",
+        default: "\"Inter Variable\", Inter, system-ui, -apple-system, \"Segoe UI\", sans-serif",
     },
     Token {
         name: "font_size",

@@ -48,7 +48,7 @@ Rules listen to `events.any`, the type `kampus-events` declares so that a listen
 | Tokens | Kind | Default (Didactika, DEC-013) |
 | --- | --- | --- |
 | `brand`, `primary`, `secondary`, `accent`, `neutral`, `danger`, `success`, `warning`, `info` | Seed colour `#rrggbb` | `#00555a`, `#0f766e`, `#475569`, `#06b6d4`, `#64748b`, `#b91c1c`, `#15803d`, `#b45309`, `#0369a1` |
-| `font_family`, `font_family_brand` | Font families: letters, digits, spaces, commas, hyphens and quotes, at most 200 characters | `"IBM Plex Sans", system-ui, sans-serif`; `"Space Grotesk", "IBM Plex Sans", system-ui, sans-serif` |
+| `font_family`, `font_family_brand` | Font families: letters, digits, spaces, commas, hyphens and quotes, at most 200 characters | `"Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", sans-serif` for both |
 | `font_size` | Pixels, 12–24 | 16 |
 | `radius` | Pixels, 0–28: the medium corner; the other corners are multiples of it | 12 |
 | `density` | `comfortable` or `compact` | `comfortable` |

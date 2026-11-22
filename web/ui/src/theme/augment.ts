@@ -68,6 +68,16 @@ export interface SurfaceRoles {
   shadow: string;
 }
 
+/** The gradients of Didactika's theme. */
+export interface GradientRoles {
+  /** The main action and progress: the primary colour towards information. */
+  primary: string;
+  /** The bar of the brand at the top of every page. */
+  bar: string;
+  /** A soft wash behind something the person points at. */
+  soft: string;
+}
+
 declare module "@mui/material/styles" {
   interface PaletteColor {
     /** A softer background of the colour. */
@@ -83,11 +93,13 @@ declare module "@mui/material/styles" {
     accent: PaletteColor;
     brand: PaletteColor;
     surface: SurfaceRoles;
+    gradient: GradientRoles;
   }
   interface PaletteOptions {
     accent?: SimplePaletteColorOptions;
     brand?: SimplePaletteColorOptions;
     surface?: Partial<SurfaceRoles>;
+    gradient?: Partial<GradientRoles>;
   }
   interface Shape {
     /** Fields, menus and chips. */

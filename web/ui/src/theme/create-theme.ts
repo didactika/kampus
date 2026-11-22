@@ -73,9 +73,21 @@ export function paletteOf(roles: Roles, mode: "light" | "dark" = "light"): Palet
       },
     ]),
   );
+  const mix = (a: string, b: string, at: number) => `color-mix(in srgb, ${a} ${at}%, ${b})`;
+  const primary = role(roles, "primary");
+  const info = role(roles, "info");
+  const brand = role(roles, "brand");
   return {
     ...colours,
-    brand: { main: role(roles, "brand"), contrastText: role(roles, "on-brand") },
+    brand: { main: brand, contrastText: role(roles, "on-brand") },
+    gradient: {
+      primary: `linear-gradient(135deg, ${primary} 0%, ${mix(primary, info, 62)} 100%)`,
+      bar:
+        mode === "light"
+          ? `linear-gradient(135deg, ${primary} 0%, ${mix(primary, info, 62)} 100%)`
+          : `linear-gradient(135deg, ${brand} 0%, ${mix(brand, role(roles, "info-container"), 62)} 100%)`,
+      soft: `linear-gradient(135deg, ${role(roles, "primary-container")} 0%, ${mix(info, role(roles, "surface-container-lowest"), mode === "light" ? 12 : 22)} 100%)`,
+    },
     background: {
       default: role(roles, "surface"),
       paper: role(roles, mode === "light" ? "surface-container-lowest" : "surface-container-low"),
@@ -102,46 +114,53 @@ export function paletteOf(roles: Roles, mode: "light" | "dark" = "light"): Palet
   } as PaletteOptions;
 }
 
-/** The shadows of the five levels of elevation, tinted with the shadow role of the scheme. */
+/**
+ * The shadows of the levels of elevation, tinted with the primary colour as Didactika's theme draws them: a fine
+ * contact shadow and a wide, soft one of the brand.
+ */
 function shadows(): Theme["shadows"] {
-  const tint = (alpha: number) => `color-mix(in srgb, var(--k-palette-surface-shadow) ${alpha}%, transparent)`;
+  const ink = (alpha: number) => `color-mix(in srgb, var(--k-palette-surface-scrim) ${alpha}%, transparent)`;
+  const tint = (alpha: number) => `color-mix(in srgb, var(--k-palette-primary-main) ${alpha}%, transparent)`;
   const levels = [
     "none",
-    `0 1px 2px 0 ${tint(30)}, 0 1px 3px 1px ${tint(15)}`,
-    `0 1px 2px 0 ${tint(30)}, 0 2px 6px 2px ${tint(15)}`,
-    `0 1px 3px 0 ${tint(30)}, 0 4px 8px 3px ${tint(15)}`,
-    `0 2px 3px 0 ${tint(30)}, 0 6px 10px 4px ${tint(15)}`,
-    `0 4px 4px 0 ${tint(30)}, 0 8px 12px 6px ${tint(15)}`,
+    `0 1px 2px ${ink(6)}, 0 4px 12px -4px ${tint(14)}`,
+    `0 2px 6px ${ink(6)}, 0 10px 28px ${tint(16)}`,
+    `0 4px 12px ${ink(8)}, 0 18px 40px -10px ${tint(24)}`,
+    `0 4px 12px ${ink(8)}, 0 24px 56px -12px ${tint(30)}`,
+    `0 6px 16px ${ink(10)}, 0 32px 72px -16px ${tint(36)}`,
   ];
   return Array.from({ length: 25 }, (_, at) => levels[Math.min(at, levels.length - 1)]!) as Theme["shadows"];
 }
 
-/** The type scale: brand fonts for headings, text fonts for the rest, sizes in rem. */
+/**
+ * The type scale of Didactika's theme: Inter, headings in bold with tight tracking, buttons in semibold, text with an
+ * open line height; sizes in rem, so they follow the size of the theme.
+ */
 function typography(tokens: ThemeTokens) {
-  const brand = tokens.font_family_brand;
-  const style = (fontFamily: string, size: number, line: number, fontWeight: number, tracking = 0) => ({
-    fontFamily,
+  const heading = (size: number, line: number) => ({
+    fontFamily: tokens.font_family_brand,
     fontSize: `${size}rem`,
-    lineHeight: `${line}rem`,
-    fontWeight,
-    letterSpacing: `${tracking}rem`,
+    lineHeight: line,
+    fontWeight: 700,
+    letterSpacing: "-0.02em",
   });
+  const text = (size: number, line: number, fontWeight = 400) => ({ fontSize: `${size}rem`, lineHeight: line, fontWeight });
   return {
     fontFamily: tokens.font_family,
     htmlFontSize: 16,
-    h1: style(brand, 2, 2.5, 500),
-    h2: style(brand, 1.75, 2.25, 500),
-    h3: style(brand, 1.5, 2, 500),
-    h4: style(brand, 1.375, 1.75, 500),
-    h5: style(tokens.font_family, 1, 1.5, 500, 0.009375),
-    h6: style(tokens.font_family, 0.875, 1.25, 500, 0.00625),
-    subtitle1: style(tokens.font_family, 1, 1.5, 500, 0.009375),
-    subtitle2: style(tokens.font_family, 0.875, 1.25, 500, 0.00625),
-    body1: style(tokens.font_family, 1, 1.5, 400, 0.03125),
-    body2: style(tokens.font_family, 0.875, 1.25, 400, 0.015625),
-    caption: style(tokens.font_family, 0.75, 1, 400, 0.025),
-    overline: { ...style(tokens.font_family, 0.6875, 1, 500, 0.03125), textTransform: "none" as const },
-    button: { ...style(tokens.font_family, 0.875, 1.25, 500, 0.00625), textTransform: "none" as const },
+    h1: heading(2.25, 1.15),
+    h2: heading(1.625, 1.25),
+    h3: heading(1.375, 1.3),
+    h4: heading(1.125, 1.35),
+    h5: heading(1, 1.4),
+    h6: heading(0.875, 1.4),
+    subtitle1: text(1, 1.5, 600),
+    subtitle2: text(0.875, 1.45, 600),
+    body1: text(1, 1.6),
+    body2: text(0.875, 1.55),
+    caption: text(0.75, 1.45),
+    overline: { ...text(0.6875, 1.4, 600), letterSpacing: "0.06em", textTransform: "uppercase" as const },
+    button: { ...text(0.875, 1.4, 600), letterSpacing: "-0.005em", textTransform: "none" as const },
   };
 }
 

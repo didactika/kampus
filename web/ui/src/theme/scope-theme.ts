@@ -84,8 +84,8 @@ function rolesOf(scheme: unknown): Roles {
 
 /** Didactika's tokens, the defaults of every theme. */
 export const DIDACTIKA_TOKENS: ThemeTokens = {
-  font_family: '"IBM Plex Sans", system-ui, sans-serif',
-  font_family_brand: '"Space Grotesk", "IBM Plex Sans", system-ui, sans-serif',
+  font_family: '"Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", sans-serif',
+  font_family_brand: '"Inter Variable", Inter, system-ui, -apple-system, "Segoe UI", sans-serif',
   font_size: 16,
   radius: 12,
   density: "comfortable",

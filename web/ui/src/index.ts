@@ -51,6 +51,7 @@ export * from "./patterns/CoverArt";
 export * from "./patterns/FilterGroup";
 export * from "./patterns/ListToolbar";
 export * from "./patterns/Pager";
+export * from "./patterns/PillSelect";
 export * from "./patterns/ProgressRing";
 export * from "./patterns/ViewToggle";
 export { CORE_ICONS } from "./icons/core";
