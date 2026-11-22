@@ -54,25 +54,28 @@ In light, cards are white over a slate page; in dark, cards are one tone above t
 
 ## Typography
 
-IBM Plex Sans for text and controls; Space Grotesk for page titles, section titles and the brand. Sizes are in rem, so the font size of the theme scales everything.
+Inter, as Didactika's theme uses it, with its contextual alternates (`calt`, `cv11`, `ss03`). Headings are bold with tight tracking (−0.02em), buttons semibold, text with an open line height of 1.6. Sizes are in rem, so the font size of the theme scales everything.
 
 | MUI variant | Use | Size / line |
 | --- | --- | --- |
-| `h1` | The title of a page | 2 / 2.5 rem, Space Grotesk |
-| `h2`, `h3` | Sections of a page | 1.75 and 1.5 rem, Space Grotesk |
-| `h4` | Titles of cards and dialogs | 1.375 rem, Space Grotesk |
-| `subtitle1`, `subtitle2` | Labels of lists and fields | 1 and 0.875 rem, medium |
-| `body1`, `body2` | Text | 1 and 0.875 rem |
-| `caption`, `overline` | Notes, codes, short names | 0.75 and 0.6875 rem |
-| `button` | Buttons, sentence case | 0.875 rem, medium |
+| `h1` | The title of a page | 2.25 rem / 1.15, bold |
+| `h2`, `h3` | Sections of a page | 1.625 and 1.375 rem, bold |
+| `h4` | Titles of cards and dialogs | 1.125 rem, bold |
+| `subtitle1`, `subtitle2` | Labels of lists and fields | 1 and 0.875 rem, semibold |
+| `body1`, `body2` | Text | 1 and 0.875 rem, line 1.6 |
+| `caption`, `overline` | Notes; codes and small titles in capitals | 0.75 and 0.6875 rem |
+| `button` | Buttons, sentence case | 0.875 rem, semibold |
 
 ## Shape, density and motion
 
 | Aspect | Rule |
 | --- | --- |
-| Corners | From the radius of the theme (12 px by default): fields, menus and chips at two thirds, cards at one, sheets at four thirds, dialogs at seven thirds; buttons and badges are pills. Radius 0 makes everything square |
+| Corners | From the radius of the theme (12 px by default): buttons, fields and menus items at two thirds (8 px), menus and alerts at one, cards at four thirds, dialogs at seven thirds. Only the chrome of a list is a pill (its search, Filters, order, view, page size, row actions and badges). Radius 0 makes everything square |
+| Sizes | Every control is 36 px tall (32 px when compact); a large button 44 px; the chrome of a toolbar is all the same height, so no element of it is bigger than the rest |
+| Gradient | The main action, the bar of the brand, the active tab and progress carry the gradient of the primary colour towards information; a soft wash of it marks what the pointer is on |
+| Focus | One ring for everything that takes focus: 3 px of the primary colour at 30% |
 | Density | `comfortable` (40 px controls, 48 px fields) or `compact` (32 px controls and small MUI sizes) |
-| Elevation | Five levels of shadow tinted with the theme; cards are outlined by default and raise on hover when they open something |
+| Elevation | Shadows tinted with the primary colour: a fine contact shadow and a wide soft one. Cards have a hairline and the lowest level; menus and popovers float higher; dialogs highest. The main action rises a pixel with a shadow of its colour on hover |
 | Motion | Short and purposeful: buttons narrow their corners while pressed with a spring; dialogs and toasts enter with emphasis. Reduced motion, from the theme or the system, removes it |
 
 ## Components
@@ -107,7 +110,9 @@ A theme overrides any icon by name with the address of an image, drawn as a mask
 
 | Pattern | Rule |
 | --- | --- |
-| Frame | The app bar of the brand with the main navigation, the appearance and the account; on a narrow window the navigation folds into a drawer; a link skips to the content |
+| Frame | The bar of the brand with the main navigation, the appearance and the account; on a narrow window the navigation folds into a drawer; a link skips to the content. The navigation is the main menu of the campus (`customise.main`), with its submenus; Home, Courses and Notifications until the campus sets one |
+| Home | A page of widgets the campus arranges (`customise.dashboard`: top, main and side). Whoever may arrange it gets "Customise page": move a widget up, down or to another region, change its settings in a form made from what its module declares, remove it, add one from those the page accepts, save, or restore the default. The default home is the welcome, the catalogue and the latest notifications |
+| Sign-in | Two halves: the brand of the campus with what Kampus offers and a glimpse of the product, and the form, with the password that can be shown. On a narrow window the brand becomes a band above the form |
 | Page header | An optional way back, the title, one line that says what the page is for, and the actions of the page at its end |
 | Lists | A toolbar with a search that applies as the person types and a Filters button with the number of filters on, then the actions of the page. The table has a fixed height and a sticky head, with the pager under it (12, 24, 48, 96, and All up to 500 rows). The name of a row opens it. An action a row cannot take is disabled, never hidden. A selection gets a floating bar. What the person asks (search, filters, order, layout, page) stays in the address, so a view can be shared |
 | Cards of items | A grid of cards that open their item: a cover, its code and place ("CHE-132 · Chemistry"), its name, the start of its description and its facts (dates, language), with its state on the cover only when it is not the usual one. The same items can be shown as a list of rows (`ViewToggle`) |
