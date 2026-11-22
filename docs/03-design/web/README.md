@@ -24,6 +24,8 @@ The client is one npm workspace at the root of the repository (`package.json`), 
 
 `npm run check`, `npm test` and `npm run build` at the root run every package; CI runs them in the job *Web client*. Everything is TypeScript in strict mode; tests live in `tests/` of each package, never next to the code.
 
+The end-to-end tests of the shell (`web/tests/e2e/`) drive a real browser against a running Kampus: they sign in once, walk the home, the catalogue, a course, the notifications and the account, and check every page against WCAG 2.2 AA with axe in the light and the dark scheme. They read the address and the account from the environment, never from the code: `KAMPUS_E2E_URL` (default `http://localhost:3100`), `KAMPUS_E2E_USER` and `KAMPUS_E2E_PASSWORD`; `npm run e2e -w @kampus/web` runs them, and the image `mcr.microsoft.com/playwright:v1.65.1-noble` has the browsers they need.
+
 ## Folder structure
 
 Every package keeps one layout, so a module or a plugin looks the same as the shell from inside, and a new one starts from the same skeleton. Folders hold one concern each; a component is a folder named like it, with an `index.ts` that is its only entry.

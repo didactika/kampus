@@ -31,6 +31,7 @@
     ]
   },
   "include": [
+    "playwright.config.ts",
     "next-env.d.ts",
     "src",
     "tests",

@@ -14,7 +14,8 @@
     "precheck": "npm run strings",
     "check": "tsc --noEmit",
     "pretest": "npm run strings",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@emotion/cache": "11.14.0",
