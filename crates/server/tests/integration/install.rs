@@ -56,7 +56,7 @@ fn variables(prefix: &str, files: &str) -> HashMap<String, String> {
         ("KAMPUS_SITE_URL", "https://campus.example"),
         ("KAMPUS_STORAGE_URL", files),
         ("KAMPUS_ADMIN_EMAIL", "admin@campus.example"),
-        ("KAMPUS_ADMIN_PASSWORD", "a long and quiet river"),
+        ("KAMPUS_ADMIN_PASSWORD", "a-long-and-quiet-river"),
     ]
     .into_iter()
     .map(|(k, v)| (k.to_owned(), v.to_owned()))
@@ -128,7 +128,7 @@ async fn install_creates_the_installation_once_and_its_administrator_signs_in() 
             kampus_access::ScopeId::from_uuid(campus),
             SignIn {
                 name: "admin".to_owned(),
-                credential: Credential::Password("a long and quiet river".to_owned()),
+                credential: Credential::Password("a-long-and-quiet-river".to_owned()),
                 client: Client::default(),
             },
         )
