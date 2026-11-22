@@ -84,6 +84,11 @@ entity message {
   body
   sent_at
 }
+entity message_file {
+  message_id <<FK>>
+  file_id <<FK>>
+  position
+}
 entity message_deletion {
   message_id <<FK>>
   account_id <<FK>>
@@ -102,4 +107,5 @@ delivery }o--|| notification
 member }o--|| conversation
 message }o--|| conversation
 message_deletion }o--|| message
+message_file }o--|| message
 @enduml

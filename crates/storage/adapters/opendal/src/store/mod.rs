@@ -40,7 +40,7 @@ use std::time::Duration;
 use async_trait::async_trait;
 use bytes::Bytes;
 use kampus_common::{Error, Result};
-use kampus_storage::{Capabilities, ObjectInfo, Storage, StorageKey, verify};
+use kampus_storage::{Capabilities, ObjectInfo, ReadHeaders, Storage, StorageKey, verify};
 use opendal::{ErrorKind as DalKind, Operator, services};
 
 /// The settings of an S3-compatible store.
@@ -58,6 +58,9 @@ pub struct S3Config {
     pub access_key_id: String,
     /// The secret key.
     pub secret_access_key: String,
+    /// The address browsers reach the store at (`https://files.example.org`), which signed links point
+    /// to; without it the store signs no links.
+    pub public_url: Option<String>,
 }
 
 /// A file store on OpenDAL.
@@ -65,6 +68,8 @@ pub struct S3Config {
 pub struct OpendalStorage {
     /// The OpenDAL operator of the backend.
     operator: Operator,
+    /// The same backend at the address browsers reach, which only signs links.
+    public: Option<Operator>,
 }
 
 impl OpendalStorage {
@@ -81,27 +86,36 @@ impl OpendalStorage {
             .atomic_write_dir(&format!("{}/.incoming", root.trim_end_matches('/')));
         Ok(Self {
             operator: Operator::new(builder).map_err(unavailable)?,
+            public: None,
         })
     }
 
-    /// A store in an S3-compatible bucket.
+    /// A store in an S3-compatible bucket, which signs links at its public address when it has one.
     ///
     /// # Errors
     ///
     /// An `unavailable` error when the backend cannot be configured.
     pub fn s3(config: &S3Config) -> Result<Self> {
         opendal::install_default();
-        let mut builder = services::S3::default()
-            .bucket(&config.bucket)
-            .region(&config.region)
-            .root(&config.root)
-            .access_key_id(&config.access_key_id)
-            .secret_access_key(&config.secret_access_key);
-        if let Some(endpoint) = &config.endpoint {
-            builder = builder.endpoint(endpoint);
-        }
+        let at = |endpoint: Option<&str>| {
+            let mut builder = services::S3::default()
+                .bucket(&config.bucket)
+                .region(&config.region)
+                .root(&config.root)
+                .access_key_id(&config.access_key_id)
+                .secret_access_key(&config.secret_access_key);
+            if let Some(endpoint) = endpoint {
+                builder = builder.endpoint(endpoint);
+            }
+            Operator::new(builder).map_err(unavailable)
+        };
         Ok(Self {
-            operator: Operator::new(builder).map_err(unavailable)?,
+            operator: at(config.endpoint.as_deref())?,
+            public: config
+                .public_url
+                .as_deref()
+                .map(|url| at(Some(url)))
+                .transpose()?,
         })
     }
 }
@@ -110,7 +124,10 @@ impl OpendalStorage {
 impl Storage for OpendalStorage {
     fn capabilities(&self) -> Capabilities {
         Capabilities {
-            presign_read: self.operator.info().capability().presign_read,
+            presign_read: self
+                .public
+                .as_ref()
+                .is_some_and(|public| public.info().capability().presign_read),
         }
     }
 
@@ -171,16 +188,27 @@ impl Storage for OpendalStorage {
             .map_err(unavailable)
     }
 
-    async fn presign_read(&self, key: &StorageKey, ttl: Duration) -> Result<Option<String>> {
-        if !self.capabilities().presign_read {
+    async fn presign_read(
+        &self,
+        key: &StorageKey,
+        ttl: Duration,
+        headers: &ReadHeaders,
+    ) -> Result<Option<String>> {
+        let Some(public) = self.public.as_ref().filter(|_| self.capabilities().presign_read) else {
             return Ok(None);
+        };
+        let mut request = public.presign_read_with(key.as_str(), ttl);
+        if let Some(value) = &headers.content_type {
+            request = request.override_content_type(value);
         }
-        let request = self
-            .operator
-            .presign_read(key.as_str(), ttl)
-            .await
-            .map_err(unavailable)?;
-        Ok(Some(request.uri().to_string()))
+        if let Some(value) = &headers.content_disposition {
+            request = request.override_content_disposition(value);
+        }
+        if let Some(value) = &headers.cache_control {
+            request = request.override_cache_control(value);
+        }
+        let signed = request.await.map_err(unavailable)?;
+        Ok(Some(signed.uri().to_string()))
     }
 
     async fn check(&self) -> Result<()> {

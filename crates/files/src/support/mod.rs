@@ -32,7 +32,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! What the services of files share: the media type of content and the signature of links.
+//! What the services of files share: the media type of content, the headers it is served with and the
+//! signature of links.
 
+pub mod headers;
 pub mod sign;
 pub mod sniff;

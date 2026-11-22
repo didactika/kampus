@@ -166,7 +166,8 @@ impl Services {
         };
         let notify = kampus_notify::Notify::new(parts.db.clone())
             .with_transports(email, push)
-            .with_courses(courses.clone());
+            .with_courses(courses.clone())
+            .with_files(files.clone());
         let privacy = kampus_privacy::Privacy::new(parts.db.clone(), access.clone())
             .with_modules(MODULES)
             .with_files(files.clone());

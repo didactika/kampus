@@ -99,6 +99,10 @@ pub const KEYS: &[Key] = &[
     key("storage.s3_region", "The region of the S3 store"),
     secret("storage.s3_access_key_id", "The access key of the S3 store"),
     secret("storage.s3_secret_access_key", "The secret key of the S3 store"),
+    key(
+        "storage.public_url",
+        "The address browsers reach the S3 store at; it then serves files that cannot run itself",
+    ),
     secret(
         "cache.url",
         "The shared cache: redis:// or valkey://; in-process when absent",

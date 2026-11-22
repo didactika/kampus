@@ -2208,6 +2208,7 @@ dependencies = [
  "kampus-storage",
  "kampus-storage-opendal",
  "kampus-tasks",
+ "reqwest 0.13.5",
  "serde",
  "serde_json",
  "sha2 0.11.1",
@@ -2295,6 +2296,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "axum",
+ "bytes",
  "kampus-access",
  "kampus-activities",
  "kampus-common",
@@ -2556,6 +2558,7 @@ dependencies = [
  "kampus-common",
  "kampus-storage",
  "opendal",
+ "reqwest 0.13.5",
  "tempfile",
  "tokio",
  "uuid",

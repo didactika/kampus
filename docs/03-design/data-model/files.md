@@ -26,6 +26,8 @@ PostgreSQL schema `files`, owned by `kampus-files`, following DEC-014, DEC-021, 
 
 Opening an upload checks that the file would fit every quota it would count in, and refuses it with `files.quota_exceeded`; files nobody attached never count, since they are removed within a day. With a scanner configured (`KAMPUS_SCAN_URL`), every upload is scanned before it is kept and infected content is refused with `files.infected`; without one, blobs stay `unscanned`. Thumbnails decode within limits (12 000 pixels a side, 256 MB), so a crafted image cannot exhaust a worker; the original is never changed. `kampus-server copy-storage <url>` copies every blob to another store, verifying each by its hash, before the operator switches `KAMPUS_STORAGE_URL` (RN-136).
 
+Links to files and to their conversions last five minutes (RN-131). When the store signs links at its public address (`KAMPUS_STORAGE_PUBLIC_URL`) and the content cannot run (raster images, PDF, audio, video and plain text), the link is one the store signs, answered with the media type of the blob, an inline disposition with the name of the file and private caching for the life of the link, so browsers read it from the store directly. Everything else, and every file when the store signs no links, is read through `/api/v1/files/content/{id}`, behind a signature of the file and the expiry, with `nosniff`, a sandboxing content security policy and an attachment for active content, headers a store cannot set (RN-132).
+
 ## Anti-patterns avoided (DEC-014)
 
 | Avoided | How |
