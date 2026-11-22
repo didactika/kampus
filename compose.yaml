@@ -55,23 +55,24 @@ services:
       retries: 30
 
   s3:
-    image: chrislusf/seaweedfs:3.97
-    command: ["server", "-s3", "-dir=/data", "-master.volumeSizeLimitMB=64"]
+    image: chrislusf/seaweedfs:4.54
+    command: ["server", "-s3", "-dir=/data", "-master.volumeSizeLimitMB=64", "-s3.config=/etc/seaweedfs/s3.json"]
     ports:
       - "58333:8333"
     volumes:
       - s3-data:/data
+      - ./tools/dev/s3/s3.json:/etc/seaweedfs/s3.json:ro
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/healthz"]
       interval: 2s
       timeout: 3s
       retries: 30
 
   s3-buckets:
-    image: curlimages/curl:8.11.1
+    image: chrislusf/seaweedfs:4.54
     entrypoint: ["sh", "-c"]
     command:
-      - for bucket in kampus kampus-test; do code=$$(curl -s -o /dev/null -w "%{http_code}" -X PUT http://s3:8333/$$bucket); [ "$$code" = 200 ] || [ "$$code" = 409 ] || exit 1; done
+      - for bucket in kampus kampus-test; do echo "s3.bucket.create -name $bucket" | weed shell -master=s3:9333 -filer=s3:8888 || exit 1; done
     depends_on:
       s3:
         condition: service_healthy
