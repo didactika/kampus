@@ -55,6 +55,7 @@ kampus-mail = { path = "crates/mail" }
 kampus-push = { path = "crates/push" }
 kampus-scan = { path = "crates/scan" }
 kampus-access = { path = "crates/access" }
+ammonia = "4.2.5"
 argon2 = { version = "0.6.0", default-features = false, features = ["alloc"] }
 async-trait = "0.1.92"
 bytes = "1.12.2"

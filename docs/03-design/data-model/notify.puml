@@ -61,9 +61,13 @@ entity push_subscription {
 }
 entity conversation {
   id <<PK>>
+  campus_id <<FK>>
   kind
-  course_group_id <<FK>>
+  title
   direct_key
+  course_group_id <<FK>>
+  created_by <<FK>>
+  created_at
 }
 entity member {
   conversation_id <<FK>>
@@ -71,7 +75,7 @@ entity member {
   joined_at
   left_at
   muted
-  last_read_message_id
+  last_read_at
 }
 entity message {
   id <<PK>>
@@ -88,6 +92,7 @@ entity message_deletion {
 entity block {
   account_id <<FK>>
   blocked_id <<FK>>
+  created_at
 }
 
 preference }o--|| notification_type

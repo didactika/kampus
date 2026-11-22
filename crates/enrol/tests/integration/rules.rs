@@ -777,6 +777,7 @@ async fn courses_hear_who_takes_part() {
         .await
         .unwrap();
     let ana = w.person("ana@example.org").await;
+    let ben = w.person("ben@example.org").await;
     assert_eq!(
         error(w.courses.add_member(&w.admin, red.id, id(&ana)).await).1,
         "courses.member_not_participant",
@@ -786,7 +787,17 @@ async fn courses_hear_who_takes_part() {
         .enrol(&w.admin, manual.id, &[id(&ana)], Period::default())
         .await
         .unwrap();
+    assert!(
+        !w.courses.share_a_course(id(&ana), id(&ben)).await.unwrap(),
+        "only one of them takes part"
+    );
+    w.enrol
+        .enrol(&w.admin, manual.id, &[id(&ben)], Period::default())
+        .await
+        .unwrap();
+    assert!(w.courses.share_a_course(id(&ana), id(&ben)).await.unwrap());
     w.courses.add_member(&w.admin, red.id, id(&ana)).await.unwrap();
+    assert_eq!(w.courses.group_members_of(red.id).await.unwrap(), [id(&ana)]);
     w.courses
         .transition_course(&w.admin, w.course.id, CourseState::Published, None)
         .await

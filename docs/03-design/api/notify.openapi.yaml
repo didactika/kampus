@@ -33,12 +33,22 @@ paths:
     delete: { summary: 'Remove a browser or phone', responses: { '204': { description: Removed } } }
   /api/v1/notify/conversations:
     get: { summary: The caller's conversations, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
-    post: { summary: 'Open a direct or group conversation; a direct one is unique per pair (RN-152)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Created }, '200': { description: Already exists } } }
+    post: { summary: 'Open a conversation: kind direct with an account (unique per pair, RN-152), group with a title and members, or course_group with a group the caller belongs to', responses: { '201': { description: 'The conversation, the same one for a pair or a group that already has it' }, '403': { description: Not allowed } } }
+  /api/v1/notify/conversations/{conversation_id}:
+    get: { summary: 'A conversation of the caller, with its members and what they did not read', responses: { '200': { description: The conversation }, '404': { description: 'Not one of the caller' } } }
+  /api/v1/notify/conversations/{conversation_id}/read:
+    post: { summary: 'Mark every message of the conversation read', responses: { '204': { description: Read } } }
+  /api/v1/notify/conversations/{conversation_id}/mute:
+    put: { summary: 'Turn the notifications of the conversation off or on', responses: { '204': { description: Changed } } }
+  /api/v1/notify/conversations/{conversation_id}/membership:
+    delete: { summary: 'Leave a group conversation', responses: { '204': { description: Left } } }
   /api/v1/notify/conversations/{conversation_id}/messages:
     get: { summary: Messages not deleted by the caller, parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
-    post: { summary: 'Send a message, refused when blocked or not allowed (RN-153)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Sent }, '403': { description: Not allowed } } }
+    post: { summary: 'Send a message in rich text, sanitised (RN-155); refused when blocked or not allowed (RN-153)', responses: { '201': { description: Sent }, '403': { description: Not allowed } } }
   /api/v1/notify/messages/{message_id}:
     delete: { summary: 'Delete for the caller; purged when every member deleted it (RN-154)', responses: { '204': { description: Deleted } } }
+  /api/v1/notify/blocks:
+    get: { summary: The accounts the caller blocked, responses: { '200': { description: Accounts } } }
   /api/v1/notify/blocks/{account_id}:
     put: { summary: Block an account, responses: { '204': { description: Blocked } } }
     delete: { summary: Unblock, responses: { '204': { description: Unblocked } } }

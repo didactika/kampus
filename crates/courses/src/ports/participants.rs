@@ -55,6 +55,9 @@ pub trait Participants: Send + Sync {
 
     /// Since when the account takes part in the course without a break, when it does.
     async fn since(&self, course: CourseId, account: PrincipalId) -> Result<Option<Timestamp>>;
+
+    /// Whether two accounts take part in a course together now.
+    async fn together(&self, one: PrincipalId, other: PrincipalId) -> Result<bool>;
 }
 
 /// Everyone of the course's campus takes part and nobody is counted, until enrolment answers.
@@ -77,5 +80,9 @@ impl Participants for CampusMembers {
 
     async fn since(&self, _course: CourseId, _account: PrincipalId) -> Result<Option<Timestamp>> {
         Ok(None)
+    }
+
+    async fn together(&self, _one: PrincipalId, _other: PrincipalId) -> Result<bool> {
+        Ok(true)
     }
 }

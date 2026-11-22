@@ -32,8 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The entities of notify: a notification in the inbox of a person, and the choice a person has made about a
-//! type of notification.
+//! The entities of notify: a notification in the inbox of a person, the choice a person has made about a
+//! type of notification, and the conversations and messages between people.
 
 use kampus_access::PrincipalId;
 use kampus_common::Timestamp;
@@ -91,4 +91,50 @@ pub struct Inbox {
     pub unread: i64,
     /// Where the next page starts, when there is one.
     pub next: Option<NotificationId>,
+}
+
+kampus_common::define_id! {
+    /// Identifies a conversation.
+    pub struct ConversationId;
+}
+
+kampus_common::define_id! {
+    /// Identifies a message.
+    pub struct MessageId;
+}
+
+/// A conversation between people: two, a group someone gathered, or the members of a group of a course.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Conversation {
+    /// The conversation.
+    pub id: ConversationId,
+    /// `direct`, `group` or `course_group`.
+    pub kind: String,
+    /// Its title, for a group.
+    pub title: Option<String>,
+    /// The group of a course it belongs to.
+    pub course_group: Option<uuid::Uuid>,
+    /// Who takes part now.
+    pub members: Vec<PrincipalId>,
+    /// When its last message was sent, if any.
+    pub last_message_at: Option<Timestamp>,
+    /// How many messages the person has not read.
+    pub unread: i64,
+    /// Whether the person turned its notifications off.
+    pub muted: bool,
+}
+
+/// One message of a conversation.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Message {
+    /// The message.
+    pub id: MessageId,
+    /// Its conversation.
+    pub conversation: ConversationId,
+    /// Who wrote it.
+    pub author: PrincipalId,
+    /// What it says, in sanitised rich text.
+    pub body: String,
+    /// When it was sent.
+    pub sent_at: Timestamp,
 }

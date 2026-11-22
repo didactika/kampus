@@ -48,6 +48,7 @@ pub mod id;
 pub mod page;
 pub mod platform;
 pub mod request;
+pub mod text;
 
 pub use adapter::AdapterSettings;
 pub use clock::{Clock, FixedClock, SystemClock, Timestamp};

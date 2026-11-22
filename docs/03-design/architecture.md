@@ -48,7 +48,7 @@ Modules call **down** the ranking through service APIs, and learn about things *
 | 4 Learning | `kampus-activities` | Activity registry, course modules, availability, exceptions (RF-054) | courses, access, files, identity, events |
 | 5 Learning | `kampus-records` | Academic records: grade records, categories, aggregation | activities, enrol |
 | 5 Learning | `kampus-progress` | Activity and course progress | activities, records, enrol |
-| 6 Services | `kampus-notify` | Notifications and messaging through channels | users, customise, tasks, mail, push |
+| 6 Services | `kampus-notify` | Notifications and messaging through channels | users, settings, courses, customise, tasks, mail, push |
 | 6 Services | `kampus-calendar` | Calendar of campus, course, group and user events | courses, activities |
 | 6 Services | `kampus-privacy` | Data export, deletion and retention requests; every module contributes its own data handler through `Module`, so privacy never depends on the modules it serves | identity, tasks |
 | 7 Edge | `kampus-api` | HTTP API: REST routes, OpenAPI document, tokens and scopes, webhooks, problem details | the service APIs of every module |

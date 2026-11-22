@@ -32,7 +32,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The personal data notify keeps and how to export it, for the privacy module.
+//! The personal data notify keeps and how to export and erase it, for the privacy module.
 
 use kampus_access::PrincipalId;
 use kampus_common::Result;
@@ -44,7 +44,7 @@ use crate::{Notify, sql};
 /// The handlers of this module.
 pub const HANDLERS: &[PrivacyHandlerDeclaration] = &[PrivacyHandlerDeclaration {
     code: "notify.notifications",
-    purpose: "Notifications and choices about them",
+    purpose: "Notifications, choices about them, devices, conversations, messages and blocks",
     export,
     erase,
 }];
@@ -69,8 +69,32 @@ fn export(run: PrivacyRun<'_>) -> PrivacyFuture<'_> {
     })
 }
 
+/// What erasing an account deletes, by name in the report, table and column: messages before the memberships
+/// whose deletions they carry.
+const ERASED: &[(&str, &str, &str)] = &[
+    ("notification", "notification", "recipient_id"),
+    ("preference", "preference", "account_id"),
+    ("push_subscription", "push_subscription", "account_id"),
+    ("message", "message", "author_id"),
+    ("message_deletion", "message_deletion", "account_id"),
+    ("member", "member", "account_id"),
+    ("block", "block", "account_id"),
+    ("blocked_by", "block", "blocked_id"),
+];
+
+/// What exporting an account reads, by name, table and column.
+const EXPORTED: &[(&str, &str, &str)] = &[
+    ("notification", "notification", "recipient_id"),
+    ("preference", "preference", "account_id"),
+    ("push_subscription", "push_subscription", "account_id"),
+    ("member", "member", "account_id"),
+    ("message", "message", "author_id"),
+    ("block", "block", "account_id"),
+];
+
 impl Notify {
-    /// Deletes the notifications and choices of an account; returns how many of each.
+    /// Deletes the notifications, choices, devices, messages, memberships and blocks of an account; returns how
+    /// many of each.
     ///
     /// # Errors
     ///
@@ -78,7 +102,7 @@ impl Notify {
     pub async fn erase_personal_data(&self, account: PrincipalId) -> Result<Value> {
         let mut tx = self.db.begin().await?;
         let mut report = serde_json::Map::new();
-        for (table, column) in [("notification", "recipient_id"), ("preference", "account_id")] {
+        for (key, table, column) in ERASED {
             let deleted = sqlx::query(sql(format!(
                 "delete from {} where \"{column}\" = $1",
                 self.table(table)
@@ -88,8 +112,16 @@ impl Notify {
             .await
             .map_err(kampus_db::classify)?
             .rows_affected();
-            report.insert(table.to_owned(), json!(deleted));
+            report.insert((*key).to_owned(), json!(deleted));
         }
+        sqlx::query(sql(format!(
+            "update {} set created_by = null where created_by = $1",
+            self.table("conversation")
+        )))
+        .bind(account.as_uuid())
+        .execute(&mut *tx)
+        .await
+        .map_err(kampus_db::classify)?;
         tx.commit().await.map_err(kampus_db::classify)?;
         Ok(json!({ "deleted": report }))
     }
@@ -101,14 +133,9 @@ impl Notify {
     /// `unavailable` when the database fails.
     pub async fn personal_data(&self, account: PrincipalId) -> Result<Value> {
         let mut data = serde_json::Map::new();
-        data.insert(
-            "notification".to_owned(),
-            self.rows_of("notification", "recipient_id", account).await?,
-        );
-        data.insert(
-            "preference".to_owned(),
-            self.rows_of("preference", "account_id", account).await?,
-        );
+        for (key, table, column) in EXPORTED {
+            data.insert((*key).to_owned(), self.rows_of(table, column, account).await?);
+        }
         Ok(json!(data))
     }
 

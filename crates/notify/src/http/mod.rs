@@ -48,6 +48,8 @@ use serde_json::json;
 
 use crate::{NotificationId, Notify};
 
+mod messaging;
+
 /// The routes of notify.
 pub fn routes(context: &ServiceContext) -> Router {
     let shared = Shared {
@@ -68,12 +70,13 @@ pub fn routes(context: &ServiceContext) -> Router {
         .route("/push-key", get(push_key))
         .route("/push-subscriptions", get(push_subscriptions).post(register_push))
         .route("/push-subscriptions/{id}", axum::routing::delete(remove_push))
+        .merge(messaging::routes())
         .with_state(shared)
 }
 
 /// What the handlers share.
 #[derive(Debug, Clone)]
-struct Shared {
+pub(crate) struct Shared {
     /// The service.
     notify: Option<Notify>,
 }

@@ -34,7 +34,7 @@
 
 //! Notifications of Kampus: modules declare the types of notification they send, listeners create them after
 //! the change that causes them commits, and each person reads them in an inbox and chooses which types they
-//! receive. Nothing is sent inside the request that causes it.
+//! receive. People also write to each other in conversations. Nothing is sent inside the request that causes it.
 
 pub mod db;
 pub mod events;
@@ -47,6 +47,7 @@ pub mod permissions;
 pub mod ports;
 pub mod privacy;
 pub mod service;
+pub mod settings;
 
 use std::sync::Arc;
 
@@ -54,7 +55,9 @@ use kampus_db::Database;
 
 use crate::ports::transport::{LogTransport, Transport};
 
-pub use model::{Inbox, Notification, NotificationId, Preference};
+pub use model::{
+    Conversation, ConversationId, Inbox, Message, MessageId, Notification, NotificationId, Preference,
+};
 pub use module::MODULE;
 
 /// The channel every notification reaches: the inbox of the person.
@@ -78,6 +81,8 @@ pub struct Notify {
     email: Arc<dyn Transport>,
     /// The transport of push notifications.
     push: Arc<dyn Transport>,
+    /// Courses, for the conversations of groups and the rule of shared courses.
+    courses: Option<kampus_courses::Courses>,
 }
 
 impl std::fmt::Debug for Notify {
@@ -96,6 +101,7 @@ impl Notify {
             db,
             email: Arc::new(LogTransport),
             push: Arc::new(LogTransport),
+            courses: None,
         }
     }
 
@@ -103,6 +109,15 @@ impl Notify {
     #[must_use]
     pub fn with_transports(self, email: Arc<dyn Transport>, push: Arc<dyn Transport>) -> Self {
         Self { email, push, ..self }
+    }
+
+    /// The same with courses, which conversations of groups and the rule of shared courses read.
+    #[must_use]
+    pub fn with_courses(self, courses: kampus_courses::Courses) -> Self {
+        Self {
+            courses: Some(courses),
+            ..self
+        }
     }
 
     /// The quoted name of a table of this module.

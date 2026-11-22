@@ -32,12 +32,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The service API of notify, one file per area: the types modules declare, the notifications of an inbox
-//! and the preferences of a person.
+//! The service API of notify, one file per area: the types modules declare, the notifications of an inbox,
+//! the preferences of a person, and the conversations, messages and blocks between people.
 
+pub mod block;
 pub mod channel;
+pub mod conversation;
 pub mod delivery;
 pub mod inbox;
+pub mod message;
 pub mod preference;
 pub mod types;
 

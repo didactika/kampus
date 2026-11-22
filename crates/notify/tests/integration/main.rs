@@ -41,6 +41,7 @@
 )]
 
 mod channels;
+mod conversations;
 mod inbox;
 mod listeners;
 mod world;

@@ -48,3 +48,4 @@ mod id;
 mod page;
 mod platform;
 mod request;
+mod text;

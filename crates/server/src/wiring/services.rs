@@ -164,7 +164,9 @@ impl Services {
             Some(pusher) => Arc::new(PushTransport::new(pusher)),
             None => Arc::new(LogTransport),
         };
-        let notify = kampus_notify::Notify::new(parts.db.clone()).with_transports(email, push);
+        let notify = kampus_notify::Notify::new(parts.db.clone())
+            .with_transports(email, push)
+            .with_courses(courses.clone());
         let privacy = kampus_privacy::Privacy::new(parts.db.clone(), access.clone())
             .with_modules(MODULES)
             .with_files(files.clone());
