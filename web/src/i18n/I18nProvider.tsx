@@ -38,7 +38,7 @@
 
 import { createContext, useContext, useMemo, type ReactNode } from "react";
 
-import { formatDate, formatDay, formatNumber, translator, type Translate } from "./translator";
+import { formatDate, formatDay, formatNumber, formatRelative, translator, type Translate } from "./translator";
 
 /** What a component needs to speak the language of the page. */
 export interface I18n {
@@ -50,6 +50,8 @@ export interface I18n {
   readonly date: (iso: string) => string;
   /** A day in it. */
   readonly day: (iso: string) => string;
+  /** How long ago a moment was, in it. */
+  readonly relative: (iso: string) => string;
   /** A number in it. */
   readonly number: (value: string | number) => string;
 }
@@ -64,6 +66,7 @@ export function I18nProvider({ language, children }: { readonly language: string
       t: translator(language),
       date: (iso) => formatDate(language, iso),
       day: (iso) => formatDay(language, iso),
+      relative: (iso) => formatRelative(language, iso),
       number: (n) => formatNumber(language, n),
     }),
     [language],

@@ -32,7 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-/** The notifications of the person. */
+
+/** The notifications of the person: all of them, or the unread ones with `?unread=1`. */
 
 import type { Metadata } from "next";
 
@@ -47,7 +48,14 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("notifications.title") };
 }
 
-/** The inbox, read on the server. */
-export default async function NotificationsPage() {
-  return <Inbox inbox={await serverApi<InboxPage>("/notify/inbox?limit=50")} />;
+/** The props of the page. */
+interface NotificationsProps {
+  readonly searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+/** The first page of the inbox, read on the server. */
+export default async function NotificationsPage({ searchParams }: NotificationsProps) {
+  const unreadOnly = (await searchParams)["unread"] === "1";
+  const inbox = await serverApi<InboxPage>(`/notify/inbox?limit=20${unreadOnly ? "&unread=true" : ""}`);
+  return <Inbox key={unreadOnly ? "unread" : "all"} inbox={inbox} unreadOnly={unreadOnly} />;
 }

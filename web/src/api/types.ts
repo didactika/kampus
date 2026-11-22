@@ -79,7 +79,7 @@ export interface Section {
 export interface CourseModule {
   readonly id: string;
   readonly title: string;
-  readonly type_code: string;
+  readonly type: string;
 }
 
 /** A grade of the caller. */
@@ -119,15 +119,26 @@ export interface CalendarItem {
 export interface Notification {
   readonly id: string;
   readonly type: string;
-  readonly payload: Record<string, unknown>;
+  readonly payload: Readonly<Record<string, unknown>>;
   readonly created_at: string;
   readonly read_at: string | null;
+}
+
+/** How the person wants a type of notification on a channel. */
+export interface Preference {
+  readonly type: string;
+  readonly summary: string;
+  readonly channel: string;
+  readonly enabled: boolean;
+  readonly required: boolean;
+  readonly locked: boolean;
 }
 
 /** A page of the inbox. */
 export interface Inbox {
   readonly notifications: Notification[];
   readonly unread: number;
+  readonly next: string | null;
 }
 
 /** A widget in a region of a page, with its settings. */

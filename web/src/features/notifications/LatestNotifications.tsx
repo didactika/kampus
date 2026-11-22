@@ -37,26 +37,27 @@
 
 /** A short list of the latest notifications, for a widget: unread ones stand out, and a link leads to the inbox. */
 
-import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { useId } from "react";
 
-import { Button, Icon, StatusBadge } from "@kampus/ui";
+import { Button, StatusBadge } from "@kampus/ui";
 
 import type { Inbox } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { EmptyState } from "../shell/EmptyState";
-import { describe } from "./describe";
+import { NotificationRow } from "./NotificationRow";
 
 /** `<LatestNotifications inbox={…} />` */
 export function LatestNotifications({ inbox }: { readonly inbox: Inbox }) {
-  const { t, date } = useI18n();
+  const { t } = useI18n();
+  const heading = useId();
   return (
-    <Card component="section" aria-labelledby="latest-notifications">
+    <Card component="section" aria-labelledby={heading}>
       <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", px: 2.5, pt: 2, pb: 1 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-          <Typography id="latest-notifications" variant="h4" component="h2">
+          <Typography id={heading} variant="h4" component="h2">
             {t("widget.notify.inbox")}
           </Typography>
           {inbox.unread > 0 ? <StatusBadge tone="primary" label={String(inbox.unread)} /> : null}
@@ -68,21 +69,9 @@ export function LatestNotifications({ inbox }: { readonly inbox: Inbox }) {
       {inbox.notifications.length === 0 ? (
         <EmptyState icon="notifications" message={t("notifications.empty")} />
       ) : (
-        <Stack component="ul" sx={{ listStyle: "none", m: 0, p: 1 }}>
+        <Stack spacing={0.5} sx={{ p: 1 }}>
           {inbox.notifications.map((n) => (
-            <Stack component="li" key={n.id} direction="row" spacing={1.5} sx={{ alignItems: "flex-start", p: 1.5, borderRadius: 2, bgcolor: n.read_at ? "transparent" : "primary.container" }}>
-              <Box sx={{ display: "grid", placeItems: "center", inlineSize: 36, blockSize: 36, borderRadius: 2, flex: "none", bgcolor: n.read_at ? "surface.containerHigh" : "background.paper", color: "primary.main" }}>
-                <Icon name="notifications" size="small" />
-              </Box>
-              <Box sx={{ minInlineSize: 0 }}>
-                <Typography variant="subtitle2" noWrap>
-                  {describe(t, n.type)}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  <time dateTime={n.created_at}>{date(n.created_at)}</time>
-                </Typography>
-              </Box>
-            </Stack>
+            <NotificationRow key={n.id} notification={n} dense />
           ))}
         </Stack>
       )}

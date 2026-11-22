@@ -82,6 +82,18 @@ export function formatDay(language: string, iso: string): string {
   return new Intl.DateTimeFormat(language, { dateStyle: "medium" }).format(new Date(iso));
 }
 
+/** How long ago a moment was, in a language ("2 hours ago"), or its date and time after a week. */
+export function formatRelative(language: string, iso: string, now = Date.now()): string {
+  const seconds = Math.round((new Date(iso).getTime() - now) / 1000);
+  const steps: [Intl.RelativeTimeFormatUnit, number][] = [["second", 60], ["minute", 60], ["hour", 24], ["day", 7]];
+  let value = seconds;
+  for (const [unit, size] of steps) {
+    if (Math.abs(value) < size) return new Intl.RelativeTimeFormat(language, { numeric: "auto" }).format(value, unit);
+    value = Math.round(value / size);
+  }
+  return formatDate(language, iso);
+}
+
 /** A number in a language. */
 export function formatNumber(language: string, value: string | number): string {
   return new Intl.NumberFormat(language, { maximumFractionDigits: 5 }).format(Number(value));
