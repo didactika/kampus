@@ -461,7 +461,11 @@ async fn passwords_follow_the_policy_and_are_hashed() {
         .await
         .unwrap_err();
     assert!(rejected.fields().iter().any(|f| f.rule == "contains_name"));
-    for blank in ["a long and quiet river", "a-long-and-quiet	river", " a-long-and-quiet-river"] {
+    for blank in [
+        "a long and quiet river",
+        "a-long-and-quiet	river",
+        " a-long-and-quiet-river",
+    ] {
         let rejected = w.identity.accept_invitation(&token, blank).await.unwrap_err();
         assert_eq!(rejected.code(), "identity.password_rejected");
         assert!(
