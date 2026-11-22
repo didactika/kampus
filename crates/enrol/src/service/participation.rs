@@ -33,33 +33,56 @@
 // ------------------------------------------------------------------------------
 
 //! Active participation: a person takes part in a course when one of their enrolments in it is active,
-//! its instance is enabled and the database clock is within its period. Every module asks the same
+//! its instance is enabled and the clock of the service is within its period: the same clock that gave
+//! the enrolment its start, so one that starts now takes part at once. Every module asks the same
 //! question here, and courses through its participants port.
+
+use std::sync::Arc;
 
 use async_trait::async_trait;
 use kampus_access::PrincipalId;
-use kampus_common::{Result, Timestamp};
+use kampus_common::{Clock, Result, Timestamp};
 use kampus_courses::{CourseId, Participants};
 use kampus_db::Database;
 
 use crate::{Enrol, sql, table};
 
-/// The condition of an active enrolment `e` of an instance `i`, in SQL.
-pub(crate) const ACTIVE: &str = "e.status = 'active' and i.enabled and e.starts_at <= now() \
-    and (e.ends_at is null or now() < e.ends_at)";
+/// The condition of an active enrolment `e` of an instance `i` at the instant bound to `now` (a
+/// parameter such as `$3`), in SQL.
+pub(crate) fn active(now: &str) -> String {
+    format!(
+        "e.status = 'active' and i.enabled and e.starts_at <= {now}::timestamptz \
+         and (e.ends_at is null or {now}::timestamptz < e.ends_at)"
+    )
+}
 
 /// Answers who takes part in a course for the modules that cannot depend on enrolment.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Participation {
     /// The database of the installation.
     db: Database,
+    /// Where "now" comes from, the clock enrolments take their start from.
+    clock: Arc<dyn Clock>,
+}
+
+impl std::fmt::Debug for Participation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Participation")
+            .field("db", &self.db)
+            .finish_non_exhaustive()
+    }
 }
 
 impl Participation {
-    /// Reads participation from an installation.
+    /// Reads participation from an installation, at the instants of a clock.
     #[must_use]
-    pub const fn new(db: Database) -> Self {
-        Self { db }
+    pub fn new(db: Database, clock: Arc<dyn Clock>) -> Self {
+        Self { db, clock }
+    }
+
+    /// The current instant, for binding.
+    fn now(&self) -> time::OffsetDateTime {
+        self.clock.now().as_offset_date_time()
     }
 
     /// Whether the account takes part in the course now.
@@ -70,12 +93,14 @@ impl Participation {
     pub async fn is_active(&self, course: CourseId, account: PrincipalId) -> Result<bool> {
         sqlx::query_scalar(sql(format!(
             "select exists (select 1 from {} e join {} i on i.id = e.instance_id
-             where i.course_id = $1 and e.account_id = $2 and {ACTIVE})",
+             where i.course_id = $1 and e.account_id = $2 and {})",
             table(&self.db, "enrolment"),
-            table(&self.db, "instance")
+            table(&self.db, "instance"),
+            active("$3")
         )))
         .bind(course.as_uuid())
         .bind(account.as_uuid())
+        .bind(self.now())
         .fetch_one(self.db.pool())
         .await
         .map_err(kampus_db::classify)
@@ -103,14 +128,16 @@ impl Participation {
 impl Participants for Participation {
     async fn together(&self, one: PrincipalId, other: PrincipalId) -> Result<bool> {
         sqlx::query_scalar(sql(format!(
-            "select exists (select 1 from {e} e join {i} i on i.id = e.instance_id where e.account_id = $1 and {ACTIVE}
+            "select exists (select 1 from {e} e join {i} i on i.id = e.instance_id where e.account_id = $1 and {active}
                  and i.course_id in (select i.course_id from {e} e join {i} i on i.id = e.instance_id
-                                     where e.account_id = $2 and {ACTIVE}))",
+                                     where e.account_id = $2 and {active}))",
             e = table(&self.db, "enrolment"),
-            i = table(&self.db, "instance")
+            i = table(&self.db, "instance"),
+            active = active("$3")
         )))
         .bind(one.as_uuid())
         .bind(other.as_uuid())
+        .bind(self.now())
         .fetch_one(self.db.pool())
         .await
         .map_err(kampus_db::classify)
@@ -127,11 +154,13 @@ impl Participants for Participation {
     async fn accounts(&self, course: CourseId) -> Result<Vec<PrincipalId>> {
         let found: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
             "select distinct e.account_id from {} e join {} i on i.id = e.instance_id
-             where i.course_id = $1 and {ACTIVE} order by e.account_id",
+             where i.course_id = $1 and {} order by e.account_id",
             table(&self.db, "enrolment"),
-            table(&self.db, "instance")
+            table(&self.db, "instance"),
+            active("$2")
         )))
         .bind(course.as_uuid())
+        .bind(self.now())
         .fetch_all(self.db.pool())
         .await
         .map_err(kampus_db::classify)?;
@@ -141,12 +170,14 @@ impl Participants for Participation {
     async fn since(&self, course: CourseId, account: PrincipalId) -> Result<Option<Timestamp>> {
         let since: Option<time::OffsetDateTime> = sqlx::query_scalar(sql(format!(
             "select min(e.starts_at) from {} e join {} i on i.id = e.instance_id
-             where i.course_id = $1 and e.account_id = $2 and {ACTIVE}",
+             where i.course_id = $1 and e.account_id = $2 and {}",
             table(&self.db, "enrolment"),
-            table(&self.db, "instance")
+            table(&self.db, "instance"),
+            active("$3")
         )))
         .bind(course.as_uuid())
         .bind(account.as_uuid())
+        .bind(self.now())
         .fetch_one(self.db.pool())
         .await
         .map_err(kampus_db::classify)?;
@@ -161,7 +192,7 @@ impl Enrol {
     ///
     /// `unavailable` when the database fails.
     pub async fn is_active_participant(&self, course: CourseId, account: PrincipalId) -> Result<bool> {
-        Participation::new(self.db.clone())
+        Participation::new(self.db.clone(), self.clock.clone())
             .is_active(course, account)
             .await
     }

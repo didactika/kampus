@@ -7,6 +7,7 @@ All notable changes to Kampus are recorded here, following [Keep a Changelog](ht
 ### Changed
 
 - The development and CI store is SeaweedFS 4.54 with an identity, so it checks signatures and applies the type, disposition and cache control a signed link asks for; tests of store-signed links check what the store answers and that changed or unsigned links are refused. Run `docker compose up -d s3 s3-buckets` once to recreate the local store.
+- The examples and tests of external references use `lms` as the other system.
 - The HTTP API of every module lives under the name of its module: `/api/v1/<module>/…` (for example `/api/v1/identity/auth/sign-in`, `/api/v1/users/me/profile`, `/api/v1/courses/courses/{id}`, `/api/v1/enrol/courses/{id}/participants`, `/api/v1/customise/scopes/{scope}/terms/{code}`). The server mounts each module under its name, so routes of two modules never collide, whatever either adds later. The package routes of customisation are now `/api/v1/customise/scopes/{scope}/packages`, `/api/v1/customise/scopes/{scope}/imports` and `/api/v1/customise/imports/{id}[/apply]`.
 - The development PostgreSQL has 512 MB of shared memory, and every integration test drops the installation it creates, so the test database no longer grows run after run.
 - Every component keeps its version data in its own `version.toml`, in the same form as the platform's; `kampus_common::manifest!()` reads it, and no version data is written in code.
@@ -17,6 +18,10 @@ All notable changes to Kampus are recorded here, following [Keep a Changelog](ht
 - Crate folders drop the project prefix (`crates/common`, `crates/db`, `crates/server`…), and adapters become sub-plugins of their port in `crates/<port>/adapters/<name>`, registered by URL scheme in a registry `tools/repo-check --fix` writes; external adapters are declared in `crates/server/adapters.toml` (DEC-086).
 - The server opens the file storage and the cache from its configuration, through the adapters of the build, and its readiness checks both.
 - Kampus is free software under the GNU Affero General Public License, version 3 or later (DEC-085), instead of a proprietary licence.
+
+### Fixed
+
+- A role granted or an enrolment made "now" is valid at once even when the wall clock of the host steps back (a virtual machine resyncing with its host, an NTP correction): the system clock never answers an earlier instant than one it already gave in the process, and active participation and `Access::holds_role` compare with that clock instead of the database one, so the start and the check come from the same clock. `Participation::new` takes the clock.
 
 ### Upgrade
 

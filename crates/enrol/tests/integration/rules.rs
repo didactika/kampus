@@ -189,7 +189,7 @@ async fn world() -> World {
         db.clone(),
         access.clone(),
         clock.clone(),
-        Arc::new(Participation::new(db.clone())),
+        Arc::new(Participation::new(db.clone(), clock.clone())),
     );
     let enrol = Enrol::new(
         db.clone(),
@@ -908,15 +908,15 @@ async fn a_person_is_enrolled_and_found_by_the_identifier_a_system_gives_the_enr
         .await
         .unwrap();
     assert_eq!(found, Some(enrolment.id));
-    let moodle = kampus_db::references::ExternalReference::new("moodle", "9").unwrap();
+    let lms = kampus_db::references::ExternalReference::new("lms", "9").unwrap();
     let both = w
         .enrol
-        .set_enrolment_reference(&w.admin, enrolment.id, &moodle)
+        .set_enrolment_reference(&w.admin, enrolment.id, &lms)
         .await
         .unwrap();
     assert_eq!(both.len(), 2);
     w.enrol
-        .remove_enrolment_reference(&w.admin, enrolment.id, "moodle")
+        .remove_enrolment_reference(&w.admin, enrolment.id, "lms")
         .await
         .unwrap();
     assert_eq!(
