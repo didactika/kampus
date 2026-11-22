@@ -24,7 +24,7 @@ paths:
     put: { summary: 'Replace the placements, locked or not (RN-216)', responses: { '200': { description: The layout as it now resolves }, '409': { description: Locked above }, '422': { description: 'Unknown region or widget, a widget not offered for the page kind, or a setting it does not declare' } } }
     delete: { summary: 'Remove the layout of the scope; the one above applies again', responses: { '200': { description: The layout as it now resolves } } }
   /api/v1/customise/scopes/{scope_id}/menus/{menu_kind}:
-    get: { summary: "Resolved menu with the items the caller's permissions show, and origin", responses: { '200': { description: Menu }, '404': { description: Unknown kind of menu } } }
+    get: { summary: "Resolved menu with the items the caller's permissions show, and origin; whether the caller may change it here (editable)", responses: { '200': { description: Menu }, '404': { description: Unknown kind of menu } } }
     put: { summary: 'Replace the items, nested at most 3 deep and 100 in all, locked or not', responses: { '200': { description: The menu as it now resolves }, '409': { description: Locked above }, '422': { description: 'Empty label, a target that is neither a path nor a web address, too many or too deep' } } }
     delete: { summary: 'Remove the menu of the scope; the one above applies again', responses: { '200': { description: The menu as it now resolves } } }
   /api/v1/customise/scopes/{scope_id}/theme:
