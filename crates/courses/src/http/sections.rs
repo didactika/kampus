@@ -40,12 +40,55 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{get, post};
 use axum::{Extension, Json, Router};
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
 use serde::Deserialize;
 
 use super::{Shared, hidden};
 use crate::permissions::SECTION_MANAGE;
-use crate::{Place, SectionFields, SectionId};
+use crate::{Place, Section, SectionFields, SectionId};
+
+/// The operations of sections.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get(
+        "/courses/{id}/sections",
+        "The sections of a course the caller sees, depth first",
+    )
+    .returns::<Vec<Section>>(),
+    Operation::post(
+        "/courses/{id}/sections",
+        "Add a section under a parent and at a place among its siblings",
+    )
+    .body::<NewSection>()
+    .creates::<Section>(),
+    Operation::get(
+        "/sections/{id}",
+        "A section the caller sees, with its version as ETag",
+    )
+    .returns::<Section>(),
+    Operation::put(
+        "/sections/{id}",
+        "Replace the title, summary and visibility of a section",
+    )
+    .body::<SectionFields>()
+    .returns::<Section>(),
+    Operation::delete(
+        "/sections/{id}",
+        "Delete a section with the sections in it, recoverably",
+    )
+    .no_content(),
+    Operation::post(
+        "/sections/{id}/move",
+        "Move a section with its subtree under another parent and/or place",
+    )
+    .body::<MoveBody>()
+    .returns::<Section>(),
+    Operation::post(
+        "/sections/{id}/restore",
+        "Restore a deleted section with the sections deleted with it",
+    )
+    .returns::<Section>(),
+];
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -57,7 +100,7 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// A move: the new parent and the place among the siblings.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct MoveBody {
     /// The new parent; the top when absent.
     #[serde(default)]
@@ -68,7 +111,7 @@ struct MoveBody {
 }
 
 /// A new section.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewSection {
     /// The section it goes in; the top of the course when absent.
     #[serde(default)]

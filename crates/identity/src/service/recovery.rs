@@ -48,7 +48,7 @@ use crate::{AccountKind, AccountStatus, FactorKind, Identity, Message, Notice};
 const LINKS_PER_HOUR: i64 = 3;
 
 /// What completing a recovery needs, so the client asks for it before the new password.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, schemars::JsonSchema)]
 pub struct RecoveryNeeds {
     /// The kinds of second factor that may be given; empty when the link alone is enough. Recovery codes
     /// work whenever this is not empty; email codes never do, since the link came by email.

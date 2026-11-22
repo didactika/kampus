@@ -68,7 +68,7 @@ kampus_common::define_id! {
 
 /// Whether a node is shown. It is the node's own setting: what learners see also depends on every
 /// ancestor, and nothing is ever copied down.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(tag = "mode", rename_all = "snake_case")]
 pub enum Visibility {
     /// Shown.
@@ -146,7 +146,7 @@ impl Visibility {
 }
 
 /// The lifecycle state of a course.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum CourseState {
     /// Being prepared.
@@ -190,7 +190,7 @@ impl FromStr for CourseState {
 }
 
 /// Who sees a group and its members.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum GroupVisibility {
     /// Everyone in the course.
@@ -234,7 +234,7 @@ impl GroupVisibility {
 }
 
 /// Where a group membership comes from; a module removes only what it added.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 #[serde(tag = "kind", content = "module", rename_all = "snake_case")]
 pub enum MemberOrigin {
     /// Added by a person.
@@ -244,7 +244,7 @@ pub enum MemberOrigin {
 }
 
 /// A course category.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Category {
     /// The category.
     pub id: CategoryId,
@@ -269,7 +269,7 @@ pub struct Category {
 }
 
 /// The fields of a category a manager edits.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, schemars::JsonSchema)]
 pub struct CategoryFields {
     /// Its name.
     pub name: String,
@@ -290,7 +290,7 @@ const fn shown() -> Visibility {
 }
 
 /// A course.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Course {
     /// The course.
     pub id: CourseId,
@@ -329,7 +329,7 @@ pub struct Course {
 }
 
 /// The fields of a course its teachers edit.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, schemars::JsonSchema)]
 pub struct CourseFields {
     /// Its short name.
     pub short_name: String,
@@ -359,7 +359,7 @@ pub struct CourseFields {
 }
 
 /// A section of a course.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Section {
     /// The section.
     pub id: SectionId,
@@ -382,7 +382,7 @@ pub struct Section {
 }
 
 /// The fields of a section its teachers edit.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, schemars::JsonSchema)]
 pub struct SectionFields {
     /// Its title.
     #[serde(default)]
@@ -396,7 +396,7 @@ pub struct SectionFields {
 }
 
 /// A group of a course.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Group {
     /// The group.
     pub id: GroupId,
@@ -417,7 +417,7 @@ pub struct Group {
 }
 
 /// The fields of a group.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, schemars::JsonSchema)]
 pub struct GroupFields {
     /// Its name.
     pub name: String,
@@ -441,7 +441,7 @@ const fn everyone() -> GroupVisibility {
 }
 
 /// A member of a group, once per origin.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Member {
     /// The account.
     pub account: PrincipalId,
@@ -450,7 +450,7 @@ pub struct Member {
 }
 
 /// A group set of a course.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct GroupSet {
     /// The set.
     pub id: GroupSetId,
@@ -465,7 +465,7 @@ pub struct GroupSet {
 }
 
 /// Where a node goes among its siblings.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, schemars::JsonSchema)]
 #[serde(tag = "at", content = "sibling", rename_all = "snake_case")]
 pub enum Place<T> {
     /// First.

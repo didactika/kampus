@@ -58,7 +58,7 @@ kampus_common::define_id! {
 }
 
 /// The methods this module provides.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Method {
     /// People enrolled by someone who manages the course.
@@ -99,7 +99,7 @@ impl FromStr for Method {
 }
 
 /// What happens to an enrolment when its period ends.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ExpiryAction {
     /// The enrolment is suspended and kept.
@@ -133,7 +133,7 @@ impl ExpiryAction {
 }
 
 /// The status of an enrolment.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Status {
     /// Takes part while the instance is enabled and now is within the period.
@@ -164,7 +164,7 @@ impl Status {
 }
 
 /// A method configured in a course.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Instance {
     /// The instance.
     pub id: InstanceId,
@@ -199,7 +199,7 @@ pub struct Instance {
 }
 
 /// The fields of an instance its course managers set.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, schemars::JsonSchema)]
 pub struct InstanceFields {
     /// Its name.
     pub name: String,
@@ -239,7 +239,7 @@ const fn suspend() -> ExpiryAction {
 }
 
 /// A person's enrolment through an instance.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Enrolment {
     /// The enrolment.
     pub id: EnrolmentId,
@@ -264,7 +264,7 @@ pub struct Enrolment {
 }
 
 /// A change to an enrolment.
-#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, schemars::JsonSchema)]
 pub struct EnrolmentChange {
     /// Its status.
     pub status: Status,
@@ -280,7 +280,7 @@ pub struct EnrolmentChange {
 }
 
 /// The period of a new enrolment; the instance's default when absent.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize, schemars::JsonSchema)]
 pub struct Period {
     /// When it starts; now when absent.
     #[serde(default)]
@@ -291,7 +291,7 @@ pub struct Period {
 }
 
 /// The state of a request to join.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum RequestState {
     /// Waiting for a decision.
@@ -318,7 +318,7 @@ impl RequestState {
 }
 
 /// A request to join a course through an instance.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Request {
     /// The request.
     pub id: RequestId,
@@ -337,7 +337,7 @@ pub struct Request {
 }
 
 /// The outcome of enrolling oneself.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 #[serde(tag = "outcome", rename_all = "snake_case")]
 pub enum Joined {
     /// Enrolled.
@@ -353,7 +353,7 @@ pub enum Joined {
 }
 
 /// What a sync of an instance with its source did.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, schemars::JsonSchema)]
 pub struct Synced {
     /// Enrolments added.
     pub added: usize,

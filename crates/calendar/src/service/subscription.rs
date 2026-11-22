@@ -66,7 +66,7 @@ const URL_LIMIT: usize = 2000;
 const COLUMNS: &str = "id, scope_id, url, title, refresh_minutes, last_refreshed_at, last_error";
 
 /// What a read changed.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize, schemars::JsonSchema)]
 pub struct Refreshed {
     /// Events added.
     pub added: u64,

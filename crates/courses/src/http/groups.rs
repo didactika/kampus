@@ -41,12 +41,57 @@ use axum::routing::{get, put};
 use axum::{Extension, Json, Router};
 use kampus_access::PrincipalId;
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id, if_match, with_etag};
 use serde::Deserialize;
 
 use super::Shared;
 use crate::permissions::GROUPS_MANAGE;
-use crate::{CourseId, GroupFields, GroupId, GroupSetId};
+use crate::{CourseId, Group, GroupFields, GroupId, GroupSet, GroupSetId, Member};
+
+/// The operations of groups and group sets.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get(
+        "/courses/{id}/groups",
+        "The groups of a course the caller may see",
+    )
+    .returns::<Vec<Group>>(),
+    Operation::post(
+        "/courses/{id}/groups",
+        "Create a group, optionally limited to a section",
+    )
+    .body::<GroupFields>()
+    .creates::<Group>(),
+    Operation::get(
+        "/groups/{id}",
+        "A group the caller sees, with its version as ETag",
+    )
+    .returns::<Group>(),
+    Operation::put("/groups/{id}", "Replace a group")
+        .body::<GroupFields>()
+        .returns::<Group>(),
+    Operation::delete("/groups/{id}", "Delete a group").no_content(),
+    Operation::get("/groups/{id}/members", "The members of a group with their origin")
+        .returns::<Vec<Member>>(),
+    Operation::post("/groups/{id}/members", "Add a participant to a group by hand")
+        .body::<MemberBody>()
+        .no_content(),
+    Operation::delete("/groups/{id}/members/{account}", "Remove a manual membership").no_content(),
+    Operation::get(
+        "/courses/{id}/group-sets",
+        "The group sets of a course with their groups",
+    )
+    .returns::<Vec<GroupSet>>(),
+    Operation::post("/courses/{id}/group-sets", "Create a group set")
+        .body::<SetBody>()
+        .creates::<GroupSet>(),
+    Operation::put(
+        "/group-sets/{id}/groups/{group}",
+        "Put a group of the same course in a set",
+    )
+    .no_content(),
+    Operation::delete("/group-sets/{id}/groups/{group}", "Take a group out of a set").no_content(),
+];
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -66,14 +111,14 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// A member to add.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct MemberBody {
     /// The account.
     account: PrincipalId,
 }
 
 /// A new group set.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct SetBody {
     /// Its name.
     name: String,

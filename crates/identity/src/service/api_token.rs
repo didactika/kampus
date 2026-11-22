@@ -49,7 +49,7 @@ use crate::{AccountId, AccountStatus, Identity, Session, TokenId, later, sql};
 const USED_EVERY: time::Duration = time::Duration::minutes(1);
 
 /// A permission a token carries, in a scope and its descendants.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct TokenScope {
     /// The permission.
     pub permission: String,
@@ -69,7 +69,7 @@ pub struct TokenRequest {
 }
 
 /// A created token; the token itself is shown this once.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, schemars::JsonSchema)]
 pub struct NewToken {
     /// The token.
     pub id: TokenId,
@@ -95,7 +95,7 @@ pub struct TokenAuth {
 }
 
 /// A token as listed.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct TokenSummary {
     /// The token.
     pub id: TokenId,

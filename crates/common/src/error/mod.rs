@@ -43,7 +43,7 @@ use serde::{Deserialize, Serialize};
 pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// The kind of an error, which decides how every client handles it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ErrorKind {
     /// The object does not exist, or the caller may not know it exists.
@@ -107,7 +107,7 @@ impl fmt::Display for ErrorKind {
 }
 
 /// One failing field of a validation error: which field, and which rule it breaks.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct FieldError {
     /// The field, as the caller named it (`limit`, `profile.time_zone`).
     pub field: String,

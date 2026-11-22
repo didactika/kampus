@@ -44,6 +44,7 @@ use axum::routing::get;
 use axum::{Extension, Json, Router};
 use kampus_access::ScopeId;
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id};
 use serde::Deserialize;
 use serde_json::Value;
@@ -51,6 +52,49 @@ use serde_json::Value;
 use super::Shared;
 use crate::permissions::{LAYOUT_MANAGE, MENU_MANAGE, THEME_MANAGE};
 use crate::{MenuItem, Placement};
+
+/// The operations of layouts, menus and themes.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get(
+        "/scopes/{scope}/layouts/{page_kind}",
+        "The layout of a kind of page in a scope",
+    )
+    .returns::<crate::Layout>(),
+    Operation::put(
+        "/scopes/{scope}/layouts/{page_kind}",
+        "Place widgets in the regions of a kind of page",
+    )
+    .body::<LayoutBody>()
+    .returns::<crate::Layout>(),
+    Operation::delete(
+        "/scopes/{scope}/layouts/{page_kind}",
+        "Go back to the layout the scope inherits",
+    )
+    .returns::<crate::Layout>(),
+    Operation::get("/scopes/{scope}/menus/{kind}", "A navigation menu of a scope").returns::<crate::Menu>(),
+    Operation::put(
+        "/scopes/{scope}/menus/{kind}",
+        "Replace the items of a navigation menu",
+    )
+    .body::<MenuBody>()
+    .returns::<crate::Menu>(),
+    Operation::delete(
+        "/scopes/{scope}/menus/{kind}",
+        "Go back to the menu the scope inherits",
+    )
+    .returns::<crate::Menu>(),
+    Operation::get("/scopes/{scope}/theme", "The theme of a scope").returns::<crate::Theme>(),
+    Operation::put("/scopes/{scope}/theme", "Set the tokens of the theme of a scope")
+        .body::<ThemeBody>()
+        .returns::<crate::Theme>(),
+    Operation::delete("/scopes/{scope}/theme", "Go back to the theme the scope inherits")
+        .returns::<crate::Theme>(),
+    Operation::get(
+        "/scopes/{scope}/theme.css",
+        "The theme of a scope as CSS custom properties",
+    )
+    .returns_media("text/css"),
+];
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -71,7 +115,7 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// A layout to set.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct LayoutBody {
     /// Its widgets, by region and in order.
     placements: Vec<Placement>,
@@ -81,7 +125,7 @@ struct LayoutBody {
 }
 
 /// A menu to set.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct MenuBody {
     /// Its items, in order.
     items: Vec<MenuItem>,
@@ -91,7 +135,7 @@ struct MenuBody {
 }
 
 /// A theme to set.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ThemeBody {
     /// The tokens this scope sets.
     tokens: BTreeMap<String, Value>,

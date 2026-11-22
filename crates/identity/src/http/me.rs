@@ -41,13 +41,80 @@ use axum::response::{IntoResponse, Response};
 use axum::routing::{delete, get, post};
 use axum::{Extension, Json, Router};
 use kampus_common::Timestamp;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id, with_etag};
-use serde::Deserialize;
-use serde_json::json;
+use serde::{Deserialize, Serialize};
 
 use super::{Caller, Shared};
+use crate::service::api_token::NewToken;
 use crate::service::api_token::{TokenRequest, TokenScope};
-use crate::service::second_factor::FactorAdded;
+use crate::service::second_factor::{FactorAdded, TotpSetup};
+use crate::{Account, FactorId, SecondFactor, SessionSummary};
+
+/// The operations of the account of the caller.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get("/me", "The account of the caller, with its version as ETag").returns::<Account>(),
+    Operation::post("/me/password", "Change the password, proving the current one")
+        .body::<PasswordChange>()
+        .no_content(),
+    Operation::post("/me/email", "Change the email; a link to the new one confirms it")
+        .body::<EmailBody>()
+        .accepted(),
+    Operation::get("/me/sessions", "The open sessions of the caller").returns::<Vec<SessionSummary>>(),
+    Operation::delete("/me/sessions/{id}", "Close a session of the caller").no_content(),
+    Operation::get("/me/tokens", "The API tokens of the caller")
+        .returns::<Vec<crate::service::api_token::TokenSummary>>(),
+    Operation::post("/me/tokens", "Create an API token; shown this once")
+        .body::<TokenBody>()
+        .creates::<NewToken>(),
+    Operation::delete("/me/tokens/{id}", "Revoke an API token of the caller").no_content(),
+    Operation::get("/me/second-factors", "The second factors of the caller").returns::<Vec<SecondFactor>>(),
+    Operation::post(
+        "/me/second-factors/totp",
+        "A new secret for an authenticator app, to confirm",
+    )
+    .returns::<TotpSetup>(),
+    Operation::post(
+        "/me/second-factors/totp/confirm",
+        "Add an authenticator app with a code it shows",
+    )
+    .body::<TotpBody>()
+    .creates::<Added>(),
+    Operation::post(
+        "/me/second-factors/email",
+        "Add codes by email as a second factor",
+    )
+    .body::<LabelBody>()
+    .creates::<Added>(),
+    Operation::delete("/me/second-factors/{id}", "Remove a second factor").no_content(),
+    Operation::post(
+        "/me/recovery-codes",
+        "A new set of recovery codes, replacing the old ones",
+    )
+    .creates::<RecoveryCodes>(),
+    Operation::post(
+        "/me/identity-links",
+        "Link an identity a provider vouched for to the account",
+    )
+    .body::<LinkBody>()
+    .no_content(),
+];
+
+/// An added second factor.
+#[derive(Debug, Serialize, schemars::JsonSchema)]
+struct Added {
+    /// The factor.
+    id: FactorId,
+    /// A new set of recovery codes, shown this once, when the account had none.
+    recovery_codes: Option<Vec<String>>,
+}
+
+/// A new set of recovery codes, shown this once.
+#[derive(Debug, Serialize, schemars::JsonSchema)]
+struct RecoveryCodes {
+    /// The codes.
+    recovery_codes: Vec<String>,
+}
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -69,7 +136,7 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// A change of password.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct PasswordChange {
     /// The current password.
     current: String,
@@ -78,14 +145,14 @@ struct PasswordChange {
 }
 
 /// A new email.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct EmailBody {
     /// The email.
     email: String,
 }
 
 /// A permission a new token carries.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ScopeBody {
     /// The permission.
     permission: String,
@@ -94,7 +161,7 @@ struct ScopeBody {
 }
 
 /// A token to create.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 pub(super) struct TokenBody {
     /// Its name.
     name: String,
@@ -126,14 +193,14 @@ impl TokenBody {
 }
 
 /// The name of a factor.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct LabelBody {
     /// The name.
     label: String,
 }
 
 /// An authenticator app to confirm.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct TotpBody {
     /// Its name.
     label: String,
@@ -144,7 +211,7 @@ struct TotpBody {
 }
 
 /// A provider link to confirm.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct LinkBody {
     /// The sealed link.
     link: String,
@@ -152,23 +219,17 @@ struct LinkBody {
 
 /// A created token: shown this once.
 pub(super) fn created_token(token: &crate::service::api_token::NewToken) -> Response {
-    (
-        StatusCode::CREATED,
-        Json(json!({
-            "id": token.id,
-            "prefix": token.prefix,
-            "token": token.token,
-            "expires_at": token.expires_at,
-        })),
-    )
-        .into_response()
+    (StatusCode::CREATED, Json(token)).into_response()
 }
 
 /// An added factor, with the recovery codes of a first factor.
 fn added(factor: &FactorAdded) -> Response {
     (
         StatusCode::CREATED,
-        Json(json!({ "id": factor.factor, "recovery_codes": factor.recovery_codes })),
+        Json(Added {
+            id: factor.factor,
+            recovery_codes: factor.recovery_codes.clone(),
+        }),
     )
         .into_response()
 }
@@ -272,7 +333,7 @@ async fn second_factors(
 /// A new secret for an authenticator app.
 async fn new_totp(State(shared): State<Shared>, Extension(caller): Extension<Caller>) -> ApiResult<Response> {
     let setup = shared.identity()?.new_totp_secret(caller.session()?).await?;
-    Ok(Json(json!({ "secret": setup.secret, "uri": setup.uri })).into_response())
+    Ok(Json(setup).into_response())
 }
 
 /// Adds an authenticator app once a current code proves it.
@@ -323,7 +384,13 @@ async fn recovery_codes(
         .identity()?
         .regenerate_recovery_codes(caller.session()?)
         .await?;
-    Ok((StatusCode::CREATED, Json(json!({ "recovery_codes": codes }))).into_response())
+    Ok((
+        StatusCode::CREATED,
+        Json(RecoveryCodes {
+            recovery_codes: codes,
+        }),
+    )
+        .into_response())
 }
 
 /// Links a provider identity the person confirmed.

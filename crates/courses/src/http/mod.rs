@@ -50,6 +50,16 @@ use kampus_identity::Identity;
 use kampus_identity::http::Caller;
 use kampus_module::ServiceContext;
 
+/// The operations of the routes, one list per file of routes.
+pub const OPERATIONS: &[&[kampus_module::Operation]] = &[
+    categories::OPERATIONS,
+    courses::OPERATIONS,
+    fields::OPERATIONS,
+    sections::OPERATIONS,
+    groups::OPERATIONS,
+    references::OPERATIONS,
+];
+
 /// The routes of courses.
 pub fn routes(context: &ServiceContext) -> Router {
     let shared = Shared {

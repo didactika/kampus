@@ -84,6 +84,7 @@ axum.workspace = true
 clap.workspace = true
 rpassword.workspace = true
 semver.workspace = true
+schemars.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true

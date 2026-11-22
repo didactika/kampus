@@ -42,11 +42,31 @@ use axum::routing::{get, put};
 use axum::{Extension, Json, Router};
 use kampus_files::FileId;
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id};
 use serde::Deserialize;
-use serde_json::json;
 
 use super::Shared;
+
+/// The operations of pictures.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::put(
+        "/me/picture",
+        "Set the picture of the caller from an uploaded file",
+    )
+    .body::<PictureBody>()
+    .no_content(),
+    Operation::delete("/me/picture", "Remove the picture of the caller").no_content(),
+    Operation::get("/accounts/{id}/picture", "The file of the picture of an account")
+        .returns::<PictureFile>(),
+];
+
+/// The picture of an account.
+#[derive(Debug, serde::Serialize, schemars::JsonSchema)]
+struct PictureFile {
+    /// The file of the picture.
+    file: FileId,
+}
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -56,7 +76,7 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// The file to make one's picture.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct PictureBody {
     /// A file uploaded into `users.picture`.
     file: FileId,
@@ -85,5 +105,5 @@ async fn read(State(shared): State<Shared>, Path(account): Path<String>) -> ApiR
         .picture(id(&account)?)
         .await?
         .ok_or_else(|| kampus_common::Error::not_found("users.picture_not_found"))?;
-    Ok(Json(json!({ "file": file })).into_response())
+    Ok(Json(PictureFile { file }).into_response())
 }

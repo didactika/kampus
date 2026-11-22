@@ -42,12 +42,47 @@ use axum::{Extension, Json, Router};
 use kampus_access::PrincipalId;
 use kampus_common::PageRequest;
 use kampus_identity::http::Caller;
+use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, id};
 use serde::Deserialize;
 
 use super::Shared;
 use crate::service::conversation::Opening;
 use crate::{ConversationId, MessageId};
+
+/// The operations of messaging.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get(
+        "/conversations",
+        "A page of the conversations of the caller (query `limit`, `after`)",
+    )
+    .returns::<kampus_common::Page<crate::Conversation>>(),
+    Operation::post("/conversations", "Open a conversation with a person or a group")
+        .body::<Opening>()
+        .creates::<crate::Conversation>(),
+    Operation::get("/conversations/{id}", "A conversation of the caller").returns::<crate::Conversation>(),
+    Operation::get(
+        "/conversations/{id}/messages",
+        "A page of the messages of a conversation, newest first",
+    )
+    .returns::<kampus_common::Page<crate::Message>>(),
+    Operation::post("/conversations/{id}/messages", "Send a message to a conversation")
+        .body::<Writing>()
+        .creates::<crate::Message>(),
+    Operation::post(
+        "/conversations/{id}/read",
+        "Mark a conversation read up to its last message",
+    )
+    .no_content(),
+    Operation::put("/conversations/{id}/mute", "Mute or unmute a conversation")
+        .body::<Muting>()
+        .no_content(),
+    Operation::delete("/conversations/{id}/membership", "Leave a conversation").no_content(),
+    Operation::delete("/messages/{id}", "Delete a message the caller sent").no_content(),
+    Operation::get("/blocks", "The people the caller blocked").returns::<Vec<PrincipalId>>(),
+    Operation::put("/blocks/{account}", "Block a person from messaging the caller").no_content(),
+    Operation::delete("/blocks/{account}", "Unblock a person").no_content(),
+];
 
 /// The routes of messaging, under those of notify.
 pub(super) fn routes() -> Router<Shared> {
@@ -64,7 +99,7 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// A page of a list.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Listing {
     /// How many items.
     limit: Option<u32>,
@@ -80,14 +115,14 @@ impl Listing {
 }
 
 /// A message to send.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Writing {
     /// What it says, in rich text.
     body: String,
 }
 
 /// Whether a conversation is muted.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Muting {
     /// Muted or not.
     muted: bool,

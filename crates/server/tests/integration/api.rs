@@ -522,6 +522,9 @@ async fn the_api_describes_the_routes_it_really_serves() {
     assert!(privacy["get"].is_object() && privacy["post"].is_object());
     assert!(answer.body["paths"]["/privacy/holds/{id}/release"]["post"].is_object());
     assert!(answer.body["paths"]["/privacy/nothing"].is_null());
+    assert!(privacy["post"]["requestBody"]["content"]["application/json"]["schema"].is_object());
+    assert!(privacy["post"]["responses"]["202"]["content"]["application/json"]["schema"]["$ref"].is_string());
+    assert!(answer.body["components"]["schemas"]["Problem"]["properties"]["code"].is_object());
     assert!(
         answer.body["tags"]
             .as_array()

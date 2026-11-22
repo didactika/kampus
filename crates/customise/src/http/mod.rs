@@ -48,12 +48,56 @@ use kampus_access::ScopeId;
 use kampus_common::{Error, Result};
 use kampus_identity::Identity;
 use kampus_identity::http::Caller;
-use kampus_module::ServiceContext;
 use kampus_module::http::{ApiResult, Body, id};
+use kampus_module::{Operation, ServiceContext};
 use serde::Deserialize;
 
 use crate::permissions::{FIELD_MANAGE, FLAG_MANAGE, TERM_MANAGE};
 use crate::{Customise, FieldId, FieldSpec};
+
+/// The operations of the routes, one list per file of routes.
+pub const OPERATIONS: &[&[kampus_module::Operation]] = &[
+    CUSTOMISE,
+    pages::OPERATIONS,
+    rules::OPERATIONS,
+    packages::OPERATIONS,
+];
+
+/// The operations of terms, flags and custom fields.
+const CUSTOMISE: &[kampus_module::Operation] = &[
+    Operation::get(
+        "/scopes/{scope}/terms/{code}",
+        "A term of a scope in a language (query `language`)",
+    )
+    .returns::<crate::Term>(),
+    Operation::put("/scopes/{scope}/terms/{code}", "Rename a term in a scope")
+        .body::<Rename>()
+        .returns::<crate::Term>(),
+    Operation::delete(
+        "/scopes/{scope}/terms/{code}",
+        "Take back the name a scope gave a term (query `language`)",
+    )
+    .returns::<crate::Term>(),
+    Operation::get("/scopes/{scope}/flags", "The features of a scope, on or off")
+        .returns::<Vec<crate::Flag>>(),
+    Operation::get("/scopes/{scope}/flags/{code}", "A feature of a scope").returns::<crate::Flag>(),
+    Operation::put(
+        "/scopes/{scope}/flags/{code}",
+        "Turn a feature of a scope on or off, and lock it",
+    )
+    .body::<FlagBody>()
+    .returns::<crate::Flag>(),
+    Operation::get(
+        "/scopes/{scope}/fields",
+        "The custom fields of a kind of entity in a scope (query `kind`)",
+    )
+    .returns::<Vec<crate::Field>>(),
+    Operation::post("/scopes/{scope}/fields", "Create a custom field in a scope")
+        .body::<NewField>()
+        .creates::<crate::Field>(),
+    Operation::get("/fields/{id}", "A custom field").returns::<crate::Field>(),
+    Operation::delete("/fields/{id}", "Delete a custom field with its values").no_content(),
+];
 
 /// The routes of customisation.
 pub fn routes(context: &ServiceContext) -> Router {
@@ -109,7 +153,7 @@ impl Shared {
 }
 
 /// The language a term is read in.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Language {
     /// A BCP 47 tag; English when absent.
     #[serde(default = "english")]
@@ -122,7 +166,7 @@ fn english() -> String {
 }
 
 /// The word a scope gives a term.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Rename {
     /// The language.
     #[serde(default = "english")]
@@ -137,7 +181,7 @@ struct Rename {
 }
 
 /// The value a scope gives a flag.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct FlagBody {
     /// Whether the feature is on.
     enabled: bool,
@@ -147,14 +191,14 @@ struct FlagBody {
 }
 
 /// The kind of entity fields are listed for.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct Kind {
     /// The kind, such as `courses.course`.
     kind: String,
 }
 
 /// A custom field to add.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct NewField {
     /// The kind of entity it belongs to.
     kind: String,

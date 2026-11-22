@@ -69,4 +69,5 @@ pub const MODULE: Module = Module {
     jobs: &[],
     schedules: &[],
     routes: Some(crate::http::routes),
+    operations: crate::http::OPERATIONS,
 };

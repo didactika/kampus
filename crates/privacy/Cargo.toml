@@ -57,6 +57,7 @@ kampus-tasks = { path = "../tasks" }
 kampus-files = { path = "../files" }
 bytes.workspace = true
 axum.workspace = true
+schemars.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sqlx.workspace = true

@@ -69,4 +69,5 @@ pub const MODULE: Module = Module {
     jobs: &[],
     schedules: &[],
     routes: None,
+    operations: &[],
 };

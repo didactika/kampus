@@ -42,14 +42,39 @@ use axum::routing::get;
 use axum::{Extension, Json, Router};
 use kampus_access::ScopeId;
 use kampus_common::Error;
-use kampus_module::http::{ApiResult, Body, id};
+use kampus_module::Operation;
+use kampus_module::http::{ApiResult, Body, Identified, id};
 use serde::Deserialize;
-use serde_json::json;
 
 use super::{Caller, FLOW_COOKIE, Shared, cookie};
 use crate::permissions::PROVIDER_MANAGE;
 use crate::service::oidc::{OidcOutcome, ProviderConfig};
 use crate::{LinkingPolicy, ProviderId};
+
+/// The operations of signing in through identity providers.
+pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get(
+        "/campuses/{campus}/identity-providers",
+        "The identity providers of a campus",
+    )
+    .returns::<Vec<crate::service::oidc::Provider>>(),
+    Operation::post(
+        "/campuses/{campus}/identity-providers",
+        "Add an identity provider to a campus",
+    )
+    .body::<ProviderBody>()
+    .creates::<Identified<ProviderId>>(),
+    Operation::get(
+        "/auth/oidc/{provider}/start",
+        "Send the browser to the provider to sign in",
+    )
+    .redirects(303),
+    Operation::get(
+        "/auth/oidc/{provider}/callback",
+        "Finish a sign-in with what the provider sent back",
+    )
+    .returns::<super::auth::SignInAnswer>(),
+];
 
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
@@ -63,7 +88,7 @@ pub(super) fn routes() -> Router<Shared> {
 }
 
 /// A provider to configure.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct ProviderBody {
     /// The issuer URL.
     issuer: String,
@@ -76,7 +101,7 @@ struct ProviderBody {
 }
 
 /// What a provider sends back.
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct CallbackQuery {
     /// The authorization code.
     code: String,
@@ -114,7 +139,7 @@ async fn add_provider(
             },
         )
         .await?;
-    Ok((StatusCode::CREATED, Json(json!({ "id": provider }))).into_response())
+    Ok((StatusCode::CREATED, Json(Identified { id: provider })).into_response())
 }
 
 /// Sends the browser to the provider, keeping the state of the sign-in in a cookie.
@@ -158,7 +183,7 @@ async fn callback(
     let mut response = match outcome {
         OidcOutcome::SignedIn(outcome) => super::auth::signed_in(&shared, outcome)?,
         OidcOutcome::ConfirmLink { link } => {
-            Json(json!({ "status": "confirm_link", "link": link })).into_response()
+            Json(super::auth::SignInAnswer::ConfirmLink { link }).into_response()
         }
     };
     response

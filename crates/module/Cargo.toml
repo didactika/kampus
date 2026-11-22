@@ -49,6 +49,7 @@ kind = "foundation"
 kampus-common.workspace = true
 kampus-db.workspace = true
 axum.workspace = true
+schemars.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true

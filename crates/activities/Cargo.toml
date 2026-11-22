@@ -57,6 +57,7 @@ kampus-files = { path = "../files" }
 kampus-identity = { path = "../identity" }
 kampus-users = { path = "../users" }
 axum.workspace = true
+schemars.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sqlx.workspace = true
