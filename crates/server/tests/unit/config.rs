@@ -177,3 +177,23 @@ fn the_file_is_written_by_sections_and_read_back_the_same() {
     assert_eq!(problems, []);
     assert_eq!(again, values);
 }
+
+#[test]
+fn the_public_address_of_the_store_reaches_the_adapter_and_is_an_address() {
+    let mut vars = BASE.to_vec();
+    vars.push(("KAMPUS_STORAGE_PUBLIC_URL", "https://files.campus.example"));
+    let config = load(&vars, None).unwrap();
+    assert_eq!(
+        config.storage_options.get("public_url").map(String::as_str),
+        Some("https://files.campus.example")
+    );
+    let mut wrong = BASE.to_vec();
+    wrong.push(("KAMPUS_STORAGE_PUBLIC_URL", "files.campus.example"));
+    let error = load(&wrong, None).unwrap_err();
+    let fields: Vec<_> = error
+        .fields()
+        .iter()
+        .map(|f| (f.field.as_str(), f.rule.as_str()))
+        .collect();
+    assert_eq!(fields, [("KAMPUS_STORAGE_PUBLIC_URL", "url")]);
+}

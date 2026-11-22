@@ -37,7 +37,8 @@ Every piece of infrastructure is a **port** (a Rust trait in a foundation crate)
 
 | Aspect | Contract |
 | --- | --- |
-| Operations | `put` (streamed, with expected hash), `get` (streamed, ranges), `head`, `delete`, `presign_get`, `presign_put` (capability), `copy` |
+| Operations | `put` (streamed, with expected hash), `get` (streamed, ranges), `head`, `delete`, `copy`, `presign_read` (capability), later `presign_put` (capability) |
+| Signed reads | `presign_read` signs a link at the address browsers reach the store at, answered with the `Content-Type`, `Content-Disposition` and `Cache-Control` the caller asks for in place of those kept with the blob; an adapter has the capability only when it knows that address (`KAMPUS_STORAGE_PUBLIC_URL`). A store cannot add `nosniff` or a content security policy, so `kampus-files` asks for these links only for content that cannot run (RN-131, RN-132) |
 | Guarantees | A `put` is visible only once complete; keys are content hashes chosen by `kampus-files` (DEC-053), so overwrites never happen |
 | First adapters | Local disk and S3-compatible, both through Apache OpenDAL (`kampus-storage-opendal`). Next: Azure Blob, Google Cloud Storage, WebDAV, SFTP, through the same adapter |
 | Moving backends | A job copies, verifies the hash, switches and deletes (RN-136) |
@@ -100,7 +101,7 @@ Operations: `index`, `remove`, `query` (text, filters, permissions filter, pagin
 | Port | Variable | Schemes |
 | --- | --- | --- |
 | Database | `KAMPUS_DATABASE_URL` | `postgres://` (first), later `mysql://`, `sqlite://` |
-| File storage | `KAMPUS_STORAGE_URL` | `file://`, `s3://` |
+| File storage | `KAMPUS_STORAGE_URL` | `file://`, `s3://`; `KAMPUS_STORAGE_PUBLIC_URL` is the address browsers reach an S3 store at, for signed reads |
 | Cache | `KAMPUS_CACHE_URL` | `redis://`, `valkey://`; empty for in-process only |
 | Sessions | `KAMPUS_SESSIONS_URL` | empty for the database, `redis://` |
 | Task queue | `KAMPUS_QUEUE_URL` | empty for the database |

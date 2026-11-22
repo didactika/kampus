@@ -44,7 +44,8 @@ pub use store::{OpendalStorage, S3Config};
 
 /// The registration of this adapter: `file:///path` stores on the local disk; `s3://bucket/prefix`
 /// in an S3-compatible bucket, with the options `s3_endpoint`, `s3_region`, `s3_access_key_id` and
-/// `s3_secret_access_key`.
+/// `s3_secret_access_key`, and `public_url`, the address browsers reach the bucket at, with which it signs
+/// links that read blobs directly.
 pub const ADAPTER: kampus_storage::Adapter = kampus_storage::Adapter {
     manifest: kampus_common::manifest!(),
     name: "opendal",
@@ -85,5 +86,6 @@ fn open(settings: &kampus_common::AdapterSettings) -> Result<OpendalStorage> {
         root: format!("/{root}"),
         access_key_id,
         secret_access_key,
+        public_url: option("public_url"),
     })
 }

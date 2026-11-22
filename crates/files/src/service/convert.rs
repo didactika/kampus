@@ -166,7 +166,11 @@ impl Files {
         .await
         .map_err(kampus_db::classify)?;
         let state: String = row.get("state");
-        let link = (state == "done").then(|| self.link(id, Part::Conversion(kind)));
+        let link = if state == "done" {
+            Some(self.link(&found, Part::Conversion(kind)).await?)
+        } else {
+            None
+        };
         Ok(Conversion {
             kind: (*kind).to_owned(),
             state,

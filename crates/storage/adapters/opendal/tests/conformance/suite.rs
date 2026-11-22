@@ -54,12 +54,13 @@ async fn the_local_disk_conforms() {
 async fn an_s3_compatible_store_conforms() {
     let endpoint = std::env::var("KAMPUS_TEST_S3_ENDPOINT").expect("KAMPUS_TEST_S3_ENDPOINT is set");
     let storage = OpendalStorage::s3(&S3Config {
-        endpoint: Some(endpoint),
+        endpoint: Some(endpoint.clone()),
         region: "us-east-1".into(),
         bucket: "kampus-test".into(),
         root: "/conformance".into(),
         access_key_id: "kampus".into(),
         secret_access_key: "kampus-secret".into(),
+        public_url: Some(endpoint),
     })
     .unwrap();
     conformance::run(&storage, &namespace()).await;

@@ -32,18 +32,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Serving: after the check that the requester may read a file, a link that reads it for a few minutes,
-//! which the API serves behind a signature of the file and the moment the link stops working, with the
-//! headers that keep content from running. Links signed by the store itself wait for a setting of its
-//! public address, since they would skip those headers and point inside the deployment.
+//! Serving: after the check that the requester may read a file, a link that reads it for a few minutes.
+//! When the store signs links at its public address and the content cannot run, the store signs it and
+//! answers with the type, disposition and caching the API would set; otherwise the API serves it behind a
+//! signature of the file and the moment the link stops working, with the headers that keep content from
+//! running, which a store cannot set.
 
 use bytes::Bytes;
 use kampus_common::{Error, Result, Timestamp};
 use kampus_module::ServiceContext;
-use kampus_storage::StorageKey;
+use kampus_storage::{ReadHeaders, StorageKey};
 use sqlx::Row;
 
-use crate::support::sign;
+use crate::support::{headers, sign, sniff};
 use crate::{File, FileId, Files, LINK_LIFETIME, SignedUrl, sql};
 
 /// What a link reads: the original, or a conversion of it.
@@ -78,26 +79,59 @@ impl Files {
         services: &ServiceContext,
     ) -> Result<SignedUrl> {
         let found = self.file(principal, id, services).await?;
-        Ok(self.link(found.id, Part::Original))
+        self.link(&found, Part::Original).await
     }
 
-    /// A link to a part of a file, signed for a few minutes.
-    pub(crate) fn link(&self, id: FileId, part: Part<'_>) -> SignedUrl {
+    /// A link to a part of a file, signed for a few minutes: by the store when it signs links and the
+    /// content cannot run, by the API otherwise.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for a conversion that is gone, `unavailable` when the database or storage fails.
+    pub(crate) async fn link(&self, found: &File, part: Part<'_>) -> Result<SignedUrl> {
         let expires = time::OffsetDateTime::now_utc() + LINK_LIFETIME;
+        let expires_at = Timestamp::from_offset_date_time(expires);
+        if let Some(url) = self.store_link(found, part).await? {
+            return Ok(SignedUrl { url, expires_at });
+        }
+        let id = found.id;
         let unix = expires.unix_timestamp();
         let signature = sign::signature(&self.signing_key, id.as_uuid(), part.name(), unix);
         let kind = match part {
             Part::Original => String::new(),
             Part::Conversion(kind) => format!("&kind={kind}"),
         };
-        SignedUrl {
+        Ok(SignedUrl {
             url: format!(
                 "{}/{}/content/{id}?expires={unix}&signature={signature}{kind}",
                 self.api_url.trim_end_matches('/'),
                 crate::module::NAME,
             ),
-            expires_at: Timestamp::from_offset_date_time(expires),
+            expires_at,
+        })
+    }
+
+    /// A link the store signs to a part of a file, answered with the headers the API would set, when the
+    /// store signs links and the content cannot run without the headers only the API sets.
+    async fn store_link(&self, found: &File, part: Part<'_>) -> Result<Option<String>> {
+        let Some(storage) = self.storage.as_ref().filter(|s| s.capabilities().presign_read) else {
+            return Ok(None);
+        };
+        let (key, media_type) = match part {
+            Part::Original => (self.key_of(found.id).await?, found.media_type.clone()),
+            Part::Conversion(kind) => self.converted_key(found.id, kind).await?,
+        };
+        if !sniff::inert(&media_type) {
+            return Ok(None);
         }
+        let read = ReadHeaders {
+            content_disposition: Some(headers::disposition(&found.name, &media_type)),
+            content_type: Some(media_type),
+            cache_control: Some(headers::CACHE_CONTROL.to_owned()),
+        };
+        storage
+            .presign_read(&key, LINK_LIFETIME.unsigned_abs(), &read)
+            .await
     }
 
     /// The content behind a link that is valid and has not expired: the file, its media type and its

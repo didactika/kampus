@@ -107,3 +107,21 @@ pub fn active(media_type: &str) -> bool {
             | "application/javascript"
     )
 }
+
+/// Whether content of a type can never run in a browser, even without the headers the API serves it with,
+/// so the store may serve it directly: raster images, PDF, audio, video and plain text.
+#[must_use]
+pub fn inert(media_type: &str) -> bool {
+    matches!(
+        media_type,
+        "image/png"
+            | "image/jpeg"
+            | "image/gif"
+            | "image/webp"
+            | "application/pdf"
+            | "audio/mpeg"
+            | "audio/ogg"
+            | "video/mp4"
+            | "text/plain"
+    )
+}
