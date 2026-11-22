@@ -38,11 +38,11 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   build: {
     lib: { entry: "src/index.ts", formats: ["es"], fileName: "index" },
-    rollupOptions: { external: [/^lit(\/.*)?$/] },
+    rollupOptions: { external: [/^react(-dom)?(\/.*)?$/, /^@mui\//, /^@emotion\//] },
     emptyOutDir: true,
   },
   test: {
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.{ts,tsx}"],
     browser: {
       enabled: true,
       headless: true,

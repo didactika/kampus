@@ -33,8 +33,7 @@
 // ------------------------------------------------------------------------------
 
 /**
- * The default theme resolves, every pair of colours that carries text or an edge meets WCAG 2.2 AA in both schemes,
- * and the stylesheet keeps references between system tokens, so a theme that changes one changes those that follow it.
+ * The default theme resolves, and every pair of colours that carries text or an edge meets WCAG 2.2 AA in both schemes.
  */
 
 import { describe, expect, it } from "vitest";
@@ -42,12 +41,10 @@ import { describe, expect, it } from "vitest";
 import dark from "../tokens/dark.tokens.json";
 import light from "../tokens/light.tokens.json";
 import reference from "../tokens/reference.tokens.json";
-import system from "../tokens/system.tokens.json";
-import { contrast, flatten, roles, stylesheet, type TokenNode } from "../src/index.js";
+import { contrast, flatten, roles, type TokenNode } from "../src/index.js";
 
 const documents = {
   reference: reference as TokenNode,
-  system: system as TokenNode,
   light: light as TokenNode,
   dark: dark as TokenNode,
 };
@@ -99,18 +96,6 @@ describe("the default theme", () => {
     expect(roles["primary"]).toBe("#0f766e");
     expect(roles["surface"]).toBe("#f8fafc");
     expect(scheme(documents.dark)["surface"]).toBe("#0f172a");
-  });
-
-  it("writes the light roles, the dark ones for the system and on request, and the system tokens", () => {
-    const css = stylesheet(documents);
-    expect(css).toContain("--k-color-primary: #0f766e;");
-    expect(css).toContain('@media (prefers-color-scheme: dark) {\n  :root:not([data-theme="light"]) {\n    --k-color-accent: #67e8f9;');
-    expect(css).toContain(':root[data-theme="dark"] {\n  --k-color-accent: #67e8f9;');
-    expect(css).toContain('--k-font-family-plain: "IBM Plex Sans", system-ui, sans-serif;');
-    expect(css).toContain("--k-type-body-large-family: var(--k-font-family-plain);");
-    expect(css).toContain("--k-type-headline-small-family: var(--k-font-family-brand);");
-    expect(css).toContain("--k-shape-corner-medium: var(--k-radius);");
-    expect(css).not.toContain("--k-palette-");
   });
 
   it("refuses a token that refers to itself or to nothing", () => {

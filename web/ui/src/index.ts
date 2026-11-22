@@ -32,41 +32,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
+
 /**
- * The design system of Kampus: Web Components that follow the patterns of Material 3, themed only by design
- * tokens and usable from any framework. Importing this module defines every element; the tokens of the default theme
- * come from `@kampus/ui/tokens.css`, and the theme of a scope, which the server serves as the same custom
- * properties, replaces them. Icons are Material Symbols by name, and a theme can override any of them.
+ * The design system of Kampus: React components on MUI with Didactika's look and meaning, the MUI theme of a scope,
+ * the tokens of Didactika's theme, and icons by name that a theme can override.
  */
 
-export { KAlert, type Tone } from "./components/alert/alert.js";
-export { KBadge } from "./components/badge/badge.js";
-export { KButton, type ButtonSize, type ButtonTone, type ButtonVariant } from "./components/button/button.js";
-export { KButtonGroup } from "./components/button-group/button-group.js";
-export { KLoading } from "./components/loading/loading.js";
-export { KCard, type CardVariant } from "./components/card/card.js";
-export { KCheckbox } from "./components/checkbox/checkbox.js";
-export { KDialog } from "./components/dialog/dialog.js";
-export { KIcon } from "./components/icon/icon.js";
-export { KInput, type InputType } from "./components/input/input.js";
-export { KSelect, type SelectOption } from "./components/select/select.js";
-export { KSpinner } from "./components/spinner/spinner.js";
-export { KTabPanel, KTabs } from "./components/tabs/tabs.js";
-export { KTextarea } from "./components/textarea/textarea.js";
-export { KToasts, toast } from "./components/toast/toast.js";
-export { FormControl } from "./forms/form-control.js";
+export * from "./components/Button/index.js";
+export * from "./components/ButtonGroup/index.js";
+export * from "./components/ConfirmDialog/index.js";
+export * from "./components/Icon/index.js";
+export * from "./components/Loading/index.js";
+export * from "./components/SelectField/index.js";
+export * from "./components/StatusBadge/index.js";
+export * from "./components/TextField/index.js";
+export * from "./components/Toasts/index.js";
 export { CORE_ICONS } from "./icons/core.js";
 export { defineIcons, iconNames, iconOf, onIconsChange, overrideIcons, type IconSource } from "./icons/registry.js";
-export { type TypeRole } from "./styles/typography.js";
+export type { SurfaceRoles } from "./theme/augment.js";
+export { createKampusTheme, paletteOf } from "./theme/create-theme.js";
+export { KampusThemeProvider, type KampusThemeProviderProps } from "./theme/KampusThemeProvider.js";
+export { DIDACTIKA, DIDACTIKA_TOKENS, type Roles, type ScopeTheme, type ThemeTokens } from "./theme/scope-theme.js";
 export { contrast, luminance } from "./tokens/contrast.js";
-export {
-  declarations,
-  flatten,
-  paths,
-  property,
-  roles,
-  stylesheet,
-  type ThemeDocuments,
-  type Token,
-  type TokenNode,
-} from "./tokens/tokens.js";
+export { flatten, paths, roles, type Token, type TokenNode } from "./tokens/tokens.js";

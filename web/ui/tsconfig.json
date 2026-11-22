@@ -9,12 +9,11 @@
     "noImplicitOverride": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "experimentalDecorators": true,
-    "useDefineForClassFields": false,
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
+    "jsx": "react-jsx",
     "types": ["node", "vite/client"]
   },
-  "include": ["src", "tests", "scripts", "vite.config.ts"]
+  "include": ["src", "tests", "vite.config.ts"]
 }

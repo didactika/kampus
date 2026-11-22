@@ -33,9 +33,8 @@
 // ------------------------------------------------------------------------------
 
 /**
- * W3C design tokens as CSS custom properties. The default theme is four documents: the reference palettes, the
- * system tokens, and the colour roles of the light and the dark scheme. Only the system tokens and the roles become
- * properties, so a theme of a scope, which sets the same properties, replaces the whole look.
+ * W3C design tokens: Didactika's reference palettes and the colour roles of the light and the dark scheme, read and
+ * resolved so the MUI theme and the contrast checks use them.
  */
 
 /** A group or a token of a W3C design tokens document. */
@@ -53,18 +52,6 @@ export interface Token {
   readonly value: unknown;
   /** The path of the token its value refers to. */
   readonly alias: string | undefined;
-}
-
-/** The documents of a theme. */
-export interface ThemeDocuments {
-  /** The palettes the roles are taken from. */
-  readonly reference: TokenNode;
-  /** The tokens the same in both schemes. */
-  readonly system: TokenNode;
-  /** The colour roles of the light scheme. */
-  readonly light: TokenNode;
-  /** The colour roles of the dark scheme. */
-  readonly dark: TokenNode;
 }
 
 /** Whether a node is a token rather than a group. */
@@ -115,40 +102,8 @@ export function flatten(...documents: TokenNode[]): Token[] {
   return [...raw.values()].map((token) => ({ ...token, value: resolve(token.path, raw, new Set()) }));
 }
 
-/** The custom property of a token: `color.primary` is `--k-color-primary`. */
-export function property(path: string): string {
-  return `--k-${path.replaceAll(".", "-")}`;
-}
-
-/** The CSS value of a token: a reference to a token that is a property too stays a reference, so it follows it. */
-function cssValue(token: Token, properties: Set<string>): string {
-  if (token.alias && properties.has(token.alias)) return `var(${property(token.alias)})`;
-  if (Array.isArray(token.value)) return token.value.map((v) => (/\s/.test(String(v)) ? `"${v}"` : String(v))).join(", ");
-  return String(token.value);
-}
-
-/** Tokens as declarations of custom properties, each line indented. */
-export function declarations(tokens: Token[], indent = "  ", properties = new Set<string>()): string {
-  return tokens.map((token) => `${indent}${property(token.path)}: ${cssValue(token, properties)};`).join("\n");
-}
-
 /** The colour roles of a scheme document, resolved against the palettes. */
 export function roles(reference: TokenNode, scheme: TokenNode): Token[] {
   const own = paths(scheme);
   return flatten(reference, scheme).filter((token) => own.has(token.path));
-}
-
-/**
- * The stylesheet of a theme: the system tokens and the light roles on the root, the dark roles when the system asks
- * for them and the page does not force light, and on `[data-theme="dark"]`.
- */
-export function stylesheet({ reference, system, light, dark }: ThemeDocuments): string {
-  const own = flatten(system);
-  const names = new Set(own.map((token) => token.path));
-  return [
-    `:root {\n${declarations(own, "  ", names)}\n${declarations(roles(reference, light))}\n  color-scheme: light dark;\n}`,
-    `@media (prefers-color-scheme: dark) {\n  :root:not([data-theme="light"]) {\n${declarations(roles(reference, dark), "    ")}\n  }\n}`,
-    `:root[data-theme="dark"] {\n${declarations(roles(reference, dark))}\n  color-scheme: dark;\n}`,
-    `:root[data-theme="light"] {\n  color-scheme: light;\n}`,
-  ].join("\n\n");
 }
