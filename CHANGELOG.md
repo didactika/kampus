@@ -6,6 +6,7 @@ All notable changes to Kampus are recorded here, following [Keep a Changelog](ht
 
 ### Changed
 
+- The development PostgreSQL syncs its data directory with `syncfs` when it starts after a crash, so it is ready in seconds however many files the test database left behind.
 - The buckets of the development store are created only when missing, so starting the compose file again no longer fails.
 - The web client is an npm workspace at the root of the repository: the shell in `web/`, the design system in `web/ui/`, the API client in `web/sdk/` and the UI module of each Kampus module in `crates/<module>/web/`. CI checks, tests and builds it (job *Web client*); its image builds from the root (`web/Dockerfile`).
 - The development and CI store is SeaweedFS 4.54 with an identity, so it checks signatures and applies the type, disposition and cache control a signed link asks for; tests of store-signed links check what the store answers and that changed or unsigned links are refused. Run `docker compose up -d s3 s3-buckets` once to recreate the local store.
