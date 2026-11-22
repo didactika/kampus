@@ -32,15 +32,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-/** The page where a person signs in, on the surface of the theme with the mark of the brand. */
+
+/** The page where a person signs in: the brand and what Kampus offers on one side, the form on the other. */
 
 import Box from "@mui/material/Box";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
+import { BrandPanel } from "../../../features/session/BrandPanel";
 import { currentAccount } from "../../../features/session/current-account";
 import { SignInForm } from "../../../features/session/SignInForm";
 import { requestI18n } from "../../../i18n/server";
+import { SchemeMenu } from "../../../theme/SchemeMenu";
 
 /** The title of the page, in the language of the request. */
 export async function generateMetadata(): Promise<Metadata> {
@@ -52,18 +55,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function SignInPage() {
   if (await currentAccount()) redirect("/");
   return (
-    <Box
-      component="main"
-      sx={{
-        minBlockSize: "100dvh",
-        display: "grid",
-        placeItems: "center",
-        p: 2,
-        background:
-          "radial-gradient(circle at 20% 10%, var(--k-palette-primary-container), transparent 45%), radial-gradient(circle at 85% 90%, var(--k-palette-accent-container), transparent 40%), var(--k-palette-surface-main)",
-      }}
-    >
-      <SignInForm />
+    <Box component="main" sx={{ minBlockSize: "100dvh", display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1.15fr) minmax(420px, 1fr)" } }}>
+      <BrandPanel />
+      <Box sx={{ position: "relative", display: "grid", placeItems: "center", p: { xs: 3, sm: 6 }, bgcolor: "background.paper" }}>
+        <Box sx={{ position: "absolute", top: 16, insetInlineEnd: 16, color: "text.secondary" }}>
+          <SchemeMenu />
+        </Box>
+        <SignInForm />
+      </Box>
     </Box>
   );
 }
