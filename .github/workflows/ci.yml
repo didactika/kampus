@@ -173,9 +173,9 @@ jobs:
           key: test-${{ hashFiles('rust-toolchain.toml', 'Cargo.lock') }}
       - name: Start an S3-compatible store with the test bucket
         run: |
-          docker run -d --name s3 -p 8333:8333 chrislusf/seaweedfs:3.97 server -s3 -dir=/data -master.volumeSizeLimitMB=64
-          for attempt in $(seq 1 60); do curl -fs -o /dev/null http://127.0.0.1:8333/ && break; sleep 2; done
-          curl -fsS -X PUT http://127.0.0.1:8333/kampus-test
+          docker run -d --name s3 -p 8333:8333 -v "$PWD/tools/dev/s3/s3.json:/etc/seaweedfs/s3.json:ro" chrislusf/seaweedfs:4.54 server -s3 -dir=/data -master.volumeSizeLimitMB=64 -s3.config=/etc/seaweedfs/s3.json
+          for attempt in $(seq 1 60); do curl -fs -o /dev/null http://127.0.0.1:8333/healthz && break; sleep 2; done
+          docker exec s3 sh -c 'echo "s3.bucket.create -name kampus-test" | weed shell -master=127.0.0.1:9333 -filer=127.0.0.1:8888'
       - name: Start an OpenID provider for the tests
         run: |
           docker run -d --name oidc -p 8080:8080 -e JSON_CONFIG_PATH=/config/oidc.json -v "$PWD/tools/dev/oidc/config.json:/config/oidc.json:ro" ghcr.io/navikt/mock-oauth2-server:2.1.10

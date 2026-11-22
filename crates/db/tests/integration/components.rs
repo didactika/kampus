@@ -166,6 +166,7 @@ async fn drop_installation(db: &Database) {
         .await
         .unwrap();
     }
+    db.close().await;
 }
 
 /// The notes module with these steps.

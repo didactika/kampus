@@ -119,6 +119,7 @@ async fn readiness_waits_for_the_upgrade() {
         .await
         .unwrap();
     }
+    db.close().await;
 }
 
 #[tokio::test]

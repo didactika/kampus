@@ -55,7 +55,7 @@ const MAX_EXTERNAL_ID: usize = 255;
 /// The identifier a system gives a record.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct ExternalReference {
-    /// The system, such as `sis` or `moodle`: lowercase letters, digits, `_`, `-` and `.`.
+    /// The system, such as `sis` or `lms`: lowercase letters, digits, `_`, `-` and `.`.
     pub system: String,
     /// The identifier the system gives the record.
     pub external_id: String,

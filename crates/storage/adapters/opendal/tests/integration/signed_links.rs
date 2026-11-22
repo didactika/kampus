@@ -96,15 +96,37 @@ async fn a_signed_link_points_to_the_public_address_and_carries_the_headers_aske
     }
     let response = reqwest::get(&url).await.unwrap();
     assert_eq!(response.status(), 200);
-    assert_eq!(
+    let header = |name: &str| {
         response
             .headers()
-            .get("content-type")
-            .and_then(|v| v.to_str().ok()),
+            .get(name)
+            .and_then(|v| v.to_str().ok())
+            .map(str::to_owned)
+    };
+    assert_eq!(
+        header("content-type").as_deref(),
         Some("image/png"),
         "the store answers with the type asked for, not the one it keeps"
     );
+    assert_eq!(
+        header("content-disposition").as_deref(),
+        Some("inline; filename=\"the picture.png\""),
+        "and with the disposition asked for"
+    );
+    assert_eq!(header("cache-control").as_deref(), Some("private, max-age=300"));
     assert_eq!(response.bytes().await.unwrap(), content);
+    let tampered = url.replace("max-age%3D300", "max-age%3D99999");
+    assert_eq!(
+        reqwest::get(&tampered).await.unwrap().status(),
+        403,
+        "a link whose headers were changed is refused"
+    );
+    let unsigned = url.split('?').next().unwrap().to_owned();
+    assert_eq!(
+        reqwest::get(&unsigned).await.unwrap().status(),
+        403,
+        "the store gives nothing without a signature"
+    );
     storage.delete(&key).await.unwrap();
 }
 

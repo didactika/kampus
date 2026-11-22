@@ -37,6 +37,7 @@ name: kampus
 services:
   postgres:
     image: postgres:17
+    command: ["postgres", "-c", "max_connections=300"]
     shm_size: 512mb
     stop_grace_period: 60s
     environment:
@@ -54,24 +55,49 @@ services:
       timeout: 3s
       retries: 30
 
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.26.1-p0
+    environment:
+      DB_HOST: postgres
+      DB_USER: kampus
+      DB_PASSWORD: kampus
+      AUTH_TYPE: scram-sha-256
+      POOL_MODE: session
+      MAX_CLIENT_CONN: "2000"
+      DEFAULT_POOL_SIZE: "200"
+      MAX_DB_CONNECTIONS: "200"
+      QUERY_WAIT_TIMEOUT: "300"
+      SERVER_IDLE_TIMEOUT: "30"
+    ports:
+      - "56432:5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U kampus -d kampus"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
   s3:
-    image: chrislusf/seaweedfs:3.97
-    command: ["server", "-s3", "-dir=/data", "-master.volumeSizeLimitMB=64"]
+    image: chrislusf/seaweedfs:4.54
+    command: ["server", "-s3", "-dir=/data", "-master.volumeSizeLimitMB=64", "-s3.config=/etc/seaweedfs/s3.json"]
     ports:
       - "58333:8333"
     volumes:
       - s3-data:/data
+      - ./tools/dev/s3/s3.json:/etc/seaweedfs/s3.json:ro
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/healthz"]
       interval: 2s
       timeout: 3s
       retries: 30
 
   s3-buckets:
-    image: curlimages/curl:8.11.1
+    image: chrislusf/seaweedfs:4.54
     entrypoint: ["sh", "-c"]
     command:
-      - for bucket in kampus kampus-test; do code=$$(curl -s -o /dev/null -w "%{http_code}" -X PUT http://s3:8333/$$bucket); [ "$$code" = 200 ] || [ "$$code" = 409 ] || exit 1; done
+      - for bucket in kampus kampus-test; do echo "s3.bucket.create -name $bucket" | weed shell -master=s3:9333 -filer=s3:8888 || exit 1; done
     depends_on:
       s3:
         condition: service_healthy
@@ -166,19 +192,22 @@ services:
     image: kampus-dev:1.100.0
     working_dir: /work
     environment:
-      KAMPUS_TEST_DATABASE_URL: postgres://kampus:kampus@postgres:5432/kampus_test
+      KAMPUS_TEST_DATABASE_URL: postgres://kampus:kampus@pgbouncer:5432/kampus_test
       KAMPUS_TEST_S3_ENDPOINT: http://s3:8333
       KAMPUS_TEST_CACHE_URL: redis://valkey:6379
       KAMPUS_TEST_OIDC_URL: http://oidc:8080
       KAMPUS_TEST_SMTP_URL: smtp://mailpit:1025
       KAMPUS_TEST_MAILPIT_URL: http://mailpit:8025
       CARGO_TARGET_DIR: /target
+      RUST_TEST_THREADS: "16"
     volumes:
       - .:/work
       - cargo-registry:/usr/local/cargo/registry
       - cargo-git:/usr/local/cargo/git
       - target:/target
     depends_on:
+      pgbouncer:
+        condition: service_healthy
       postgres:
         condition: service_healthy
       s3-buckets:
