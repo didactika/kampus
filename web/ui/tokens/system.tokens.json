@@ -340,6 +340,14 @@
     "touch-target": {
       "$value": "3rem",
       "$description": "The least area a pointer can press"
+    },
+    "control-small": {
+      "$value": "calc(2rem + var(--k-density) * 0.25rem)",
+      "$description": "Small buttons: dense toolbars and rows"
+    },
+    "control-large": {
+      "$value": "calc(3.5rem + var(--k-density) * 0.25rem)",
+      "$description": "Large buttons: the main action of a page that invites it"
     }
   },
   "space": {
@@ -436,6 +444,21 @@
     },
     "emphasized-decelerate": {
       "$value": "cubic-bezier(0.05, 0.7, 0.1, 1)"
+    },
+    "spring-fast-spatial": {
+      "$value": "cubic-bezier(0.42, 1.67, 0.21, 0.9)",
+      "$description": "Expressive: small moves that overshoot a little, such as a button changing shape"
+    },
+    "spring-default-spatial": {
+      "$value": "cubic-bezier(0.38, 1.21, 0.22, 1)",
+      "$description": "Expressive: moves of a surface, such as a card or a sheet"
+    },
+    "spring-fast-effects": {
+      "$value": "cubic-bezier(0.31, 0.94, 0.34, 1)",
+      "$description": "Expressive: colour and opacity, no overshoot"
+    },
+    "spring-default-effects": {
+      "$value": "cubic-bezier(0.34, 0.8, 0.34, 1)"
     }
   },
   "duration": {
@@ -468,6 +491,18 @@
     },
     "long2": {
       "$value": "calc(500ms * var(--k-motion))"
+    },
+    "spring-fast-spatial": {
+      "$value": "calc(350ms * var(--k-motion))"
+    },
+    "spring-default-spatial": {
+      "$value": "calc(500ms * var(--k-motion))"
+    },
+    "spring-fast-effects": {
+      "$value": "calc(150ms * var(--k-motion))"
+    },
+    "spring-default-effects": {
+      "$value": "calc(200ms * var(--k-motion))"
     }
   },
   "gradient": {

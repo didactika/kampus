@@ -41,7 +41,9 @@
 
 export { KAlert, type Tone } from "./components/alert/alert.js";
 export { KBadge } from "./components/badge/badge.js";
-export { KButton, type ButtonTone, type ButtonVariant } from "./components/button/button.js";
+export { KButton, type ButtonSize, type ButtonTone, type ButtonVariant } from "./components/button/button.js";
+export { KButtonGroup } from "./components/button-group/button-group.js";
+export { KLoading } from "./components/loading/loading.js";
 export { KCard, type CardVariant } from "./components/card/card.js";
 export { KCheckbox } from "./components/checkbox/checkbox.js";
 export { KDialog } from "./components/dialog/dialog.js";

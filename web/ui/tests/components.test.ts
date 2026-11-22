@@ -167,6 +167,18 @@ describe("a theme of a scope", () => {
   });
 });
 
+describe("expressive buttons", () => {
+  it("connect in a group with full corners at the ends and small ones between", async () => {
+    const host = await mount(`<k-button-group connected label="View"><k-button>List</k-button><k-button>Grid</k-button><k-button>Map</k-button></k-button-group>`);
+    const group = host.querySelector("k-button-group")!;
+    expect(group.getAttribute("role")).toBe("group");
+    expect(group.getAttribute("aria-label")).toBe("View");
+    const [first, middle] = [...host.querySelectorAll("k-button")].map((b) => getComputedStyle(b.shadowRoot!.querySelector("button")!));
+    expect(Number.parseFloat(first!.borderTopLeftRadius)).toBeGreaterThan(Number.parseFloat(first!.borderTopRightRadius));
+    expect(middle!.borderTopLeftRadius).toBe(middle!.borderTopRightRadius);
+  });
+});
+
 describe("icons", () => {
   it("draw a Material Symbol by name, hidden unless labelled, and follow the overrides of a theme", async () => {
     const host = await mount(`<k-icon name="delete"></k-icon><k-icon name="edit" label="Edit"></k-icon>`);
@@ -284,6 +296,8 @@ describe("accessibility", () => {
         <k-card variant="elevated" heading="Chemistry"></k-card>
         <k-card variant="filled" heading="Biology"></k-card>
         <k-spinner label="Loading courses"></k-spinner>
+        <k-loading label="Loading grades"></k-loading> <k-loading contained label="Saving"></k-loading>
+        <k-button-group connected label="View"><k-button>List</k-button><k-button size="small">Grid</k-button><k-button size="large">Map</k-button></k-button-group>
         <p><k-icon name="info"></k-icon> <k-icon name="delete" label="Delete"></k-icon></p>
         <k-tabs label="Course"><k-tab-panel label="Content">Sections</k-tab-panel><k-tab-panel label="Grades">Grades</k-tab-panel></k-tabs>`);
       const select = document.querySelector("k-select")!;

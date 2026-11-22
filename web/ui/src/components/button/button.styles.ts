@@ -69,13 +69,30 @@ export const buttonStyles = css`
     min-inline-size: var(--k-size-control);
     padding-block: 0;
     padding-inline: var(--k-space-6);
-    border-radius: var(--k-shape-corner-full);
+    border-start-start-radius: var(--k-button-start-radius, var(--k-shape-corner-full));
+    border-end-start-radius: var(--k-button-start-radius, var(--k-shape-corner-full));
+    border-start-end-radius: var(--k-button-end-radius, var(--k-shape-corner-full));
+    border-end-end-radius: var(--k-button-end-radius, var(--k-shape-corner-full));
     border: 1px solid transparent;
     cursor: pointer;
     user-select: none;
     transition:
-      box-shadow var(--k-duration-short4) var(--k-easing-standard),
-      background-color var(--k-duration-short4) var(--k-easing-standard);
+      border-radius var(--k-duration-spring-fast-spatial) var(--k-easing-spring-fast-spatial),
+      box-shadow var(--k-duration-spring-fast-effects) var(--k-easing-spring-fast-effects),
+      background-color var(--k-duration-spring-fast-effects) var(--k-easing-spring-fast-effects);
+  }
+  button:active:not(:disabled, [aria-disabled="true"]) {
+    border-radius: var(--k-shape-corner-small);
+  }
+  :host([size="small"]) button {
+    min-block-size: var(--k-size-control-small);
+    min-inline-size: var(--k-size-control-small);
+    padding-inline: var(--k-space-3);
+  }
+  :host([size="large"]) button {
+    ${type("title-medium")}
+    min-block-size: var(--k-size-control-large);
+    padding-inline: var(--k-space-8);
   }
   .filled {
     background: var(--tone);

@@ -45,6 +45,9 @@ import { stateLayer } from "../../styles/state-layer.js";
  */
 export type ButtonVariant = "filled" | "tonal" | "elevated" | "outlined" | "text";
 
+/** How large a button is: small in dense toolbars and rows, large for the action a page invites. */
+export type ButtonSize = "small" | "medium" | "large";
+
 /** What a button does: an ordinary action, one that removes or stops (it always asks first), or one that starts. */
 export type ButtonTone = "primary" | "danger" | "success";
 
@@ -67,6 +70,9 @@ export class KButton extends LitElement {
 
   /** What it does. */
   @property({ reflect: true }) tone: ButtonTone = "primary";
+
+  /** How large it is. */
+  @property({ reflect: true }) size: ButtonSize = "medium";
 
   /** What it does in a form. */
   @property({ reflect: true }) type: "button" | "submit" | "reset" = "button";
