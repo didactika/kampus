@@ -182,6 +182,7 @@ const STORAGE_OPTIONS: &[&str] = &[
     "s3_region",
     "s3_access_key_id",
     "s3_secret_access_key",
+    "public_url",
 ];
 
 /// The options of the mail adapters that the configuration passes on.
@@ -280,13 +281,19 @@ impl<F: Fn(&str) -> Option<String>> Reader<'_, F> {
         if runs_services && url.is_none() {
             self.fail("storage.url", "required");
         }
-        let options = STORAGE_OPTIONS
+        let options: BTreeMap<String, String> = STORAGE_OPTIONS
             .iter()
             .filter_map(|option| {
                 self.value(&format!("storage.{option}"))
                     .map(|v| ((*option).to_owned(), v))
             })
             .collect();
+        if options
+            .get("public_url")
+            .is_some_and(|url| !(url.starts_with("https://") || url.starts_with("http://")))
+        {
+            self.fail("storage.public_url", "url");
+        }
         (url, options, self.value("cache.url"))
     }
 

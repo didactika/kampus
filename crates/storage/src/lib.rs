@@ -43,5 +43,5 @@ pub mod conformance;
 mod port;
 mod registry;
 
-pub use port::{Capabilities, ObjectInfo, Storage, StorageKey, sha256, verify};
+pub use port::{Capabilities, ObjectInfo, ReadHeaders, Storage, StorageKey, sha256, verify};
 pub use registry::{Adapter, Opening, open};

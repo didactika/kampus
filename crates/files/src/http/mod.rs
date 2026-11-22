@@ -53,7 +53,7 @@ use serde::Deserialize;
 
 use crate::service::principal;
 use crate::service::serve::Part;
-use crate::support::sniff;
+use crate::support::headers;
 use crate::{FileId, Files, UploadId};
 
 /// The routes of files.
@@ -205,25 +205,17 @@ async fn content(
         .files()?
         .content(file, part, link.expires, &link.signature)
         .await?;
-    let name = found.name.replace(['"', '\\'], "_");
-    let disposition = if sniff::active(&media_type) {
-        "attachment"
-    } else {
-        "inline"
-    };
+    let disposition = headers::disposition(&found.name, &media_type);
     Ok((
         [
             (header::CONTENT_TYPE, media_type),
-            (
-                header::CONTENT_DISPOSITION,
-                format!("{disposition}; filename=\"{name}\""),
-            ),
+            (header::CONTENT_DISPOSITION, disposition),
             (header::X_CONTENT_TYPE_OPTIONS, "nosniff".to_owned()),
             (
                 header::CONTENT_SECURITY_POLICY,
                 "default-src 'none'; sandbox".to_owned(),
             ),
-            (header::CACHE_CONTROL, "private, max-age=300".to_owned()),
+            (header::CACHE_CONTROL, headers::CACHE_CONTROL.to_owned()),
         ],
         data,
     )

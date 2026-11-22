@@ -14,7 +14,7 @@ paths:
   /api/v1/files/files/{file_id}:
     get: { summary: 'File metadata, when the caller may read its owner (RN-128)', responses: { '200': { description: Metadata }, '404': { description: Not found or not readable } } }
   /api/v1/files/files/{file_id}/url:
-    post: { summary: 'A link that reads this file for 5 minutes, served by the API; links signed by the store wait for a setting of its public address (RN-131)', responses: { '200': { description: URL and expiry }, '404': { description: Not found or not readable } } }
+    post: { summary: 'A link that reads this file for 5 minutes (RN-131): signed by the store at its public address (KAMPUS_STORAGE_PUBLIC_URL) for content that cannot run, such as raster images, PDF, audio, video and plain text, and answered with its type, disposition and caching; served by the API otherwise', responses: { '200': { description: URL and expiry }, '404': { description: Not found or not readable } } }
   /api/v1/files/content/{file_id}:
     get: { summary: 'The content behind a signed link, without signing in: nosniff, a sandboxing content security policy, and an attachment for content that could run (RN-132)', parameters: [{ name: expires, in: query, required: true, schema: { type: integer } }, { name: signature, in: query, required: true, schema: { type: string } }, { name: kind, in: query, schema: { type: string }, description: 'The conversion the link reads; the original when absent' }], responses: { '200': { description: Content }, '404': { description: 'Link changed or expired (files.link_invalid)' } } }
   /api/v1/files/files/{file_id}/conversions/{kind}:

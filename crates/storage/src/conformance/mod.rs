@@ -47,7 +47,7 @@ use std::time::Duration;
 use bytes::Bytes;
 use kampus_common::ErrorKind;
 
-use crate::{Storage, StorageKey, sha256};
+use crate::{ReadHeaders, Storage, StorageKey, sha256};
 
 /// Runs every check against an empty store, using keys under `namespace` so runs never collide.
 pub async fn run(storage: &dyn Storage, namespace: &str) {
@@ -120,7 +120,15 @@ pub async fn run(storage: &dyn Storage, namespace: &str) {
         "copying a missing blob is not_found"
     );
 
-    let signed = storage.presign_read(&a, Duration::from_secs(60)).await.unwrap();
+    let headers = ReadHeaders {
+        content_type: Some("text/plain".into()),
+        content_disposition: Some("inline; filename=\"a.txt\"".into()),
+        cache_control: Some("private, max-age=60".into()),
+    };
+    let signed = storage
+        .presign_read(&a, Duration::from_secs(60), &headers)
+        .await
+        .unwrap();
     assert_eq!(
         signed.is_some(),
         storage.capabilities().presign_read,
