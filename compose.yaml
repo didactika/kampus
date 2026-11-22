@@ -37,7 +37,7 @@ name: kampus
 services:
   postgres:
     image: postgres:17
-    command: ["postgres", "-c", "max_connections=300"]
+    command: ["postgres", "-c", "max_connections=300", "-c", "recovery_init_sync_method=syncfs"]
     shm_size: 512mb
     stop_grace_period: 60s
     environment:
