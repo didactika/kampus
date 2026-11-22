@@ -35,7 +35,7 @@
 
 "use client";
 
-/** The security of the account: changing the password, and the sessions open on other devices, each of which can be closed. */
+/** The security of the account: changing the password, its second factors, and the sessions open on other devices, each of which can be closed. */
 
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
@@ -49,12 +49,14 @@ import { Button, Icon, useToast } from "@kampus/ui";
 
 import { browserApi } from "../../api/browser";
 import { ApiError } from "../../api/problem";
-import type { SessionSummary } from "../../api/types";
+import type { SecondFactor, SessionSummary } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { EmptyState } from "../shell/EmptyState";
 import { NewPasswordForm } from "../session/NewPasswordForm";
 import { PasswordField } from "../session/PasswordField";
 import { deviceOf } from "./device";
+import { SecondFactors } from "./SecondFactors";
+import { StepUpProvider } from "./StepUp";
 
 /** How many sessions show before the rest are asked for. */
 const SHOWN = 6;
@@ -181,11 +183,14 @@ function Sessions({ sessions }: { readonly sessions: readonly SessionSummary[] }
 }
 
 /** `<SecurityPanel sessions={…} />` */
-export function SecurityPanel({ sessions }: { readonly sessions: readonly SessionSummary[] }) {
+export function SecurityPanel({ sessions, factors }: { readonly sessions: readonly SessionSummary[]; readonly factors: readonly SecondFactor[] }) {
   return (
-    <Stack spacing={3}>
-      <PasswordForm />
-      <Sessions sessions={sessions} />
-    </Stack>
+    <StepUpProvider>
+      <Stack spacing={3}>
+        <PasswordForm />
+        <SecondFactors factors={factors} />
+        <Sessions sessions={sessions} />
+      </Stack>
+    </StepUpProvider>
   );
 }

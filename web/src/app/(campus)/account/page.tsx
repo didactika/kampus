@@ -38,7 +38,7 @@
 import type { Metadata } from "next";
 
 import { optional, serverApi } from "../../../api/server";
-import type { Profile, SessionSummary } from "../../../api/types";
+import type { Profile, SecondFactor, SessionSummary } from "../../../api/types";
 import { AccountTabs } from "../../../features/account/AccountTabs";
 import { ProfileForm } from "../../../features/account/ProfileForm";
 import { SecurityPanel } from "../../../features/account/SecurityPanel";
@@ -67,7 +67,10 @@ export default async function AccountPage({ searchParams }: AccountProps) {
       {tab === "profile" ? (
         <ProfileForm account={account} profile={profile} />
       ) : (
-        <SecurityPanel sessions={await optional<SessionSummary[]>("/identity/me/sessions", [])} />
+        <SecurityPanel
+          sessions={await optional<SessionSummary[]>("/identity/me/sessions", [])}
+          factors={await optional<SecondFactor[]>("/identity/me/second-factors", [])}
+        />
       )}
     </AccountTabs>
   );

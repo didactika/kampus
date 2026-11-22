@@ -102,3 +102,14 @@ test("changing the password refuses a new one with spaces before sending it", as
   await expect(form.getByText(t("password.rule.whitespace"))).toBeHidden();
   await expect(form.getByText(t("password.hint"))).toBeVisible();
 });
+
+test("the security of the account offers an authenticator app with its QR code and key", async ({ page }) => {
+  await page.goto("/account?tab=security");
+  await expect(page.getByRole("heading", { name: t("factors.title") })).toBeVisible();
+  await page.getByRole("button", { name: t("factors.add.totp") }).click();
+  const dialog = page.getByRole("dialog", { name: t("factors.add.totp") });
+  await expect(dialog.getByRole("img", { name: t("totp.qr") })).toBeVisible();
+  await expect(dialog.getByText(t("totp.secret"), { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: t("action.cancel") }).click();
+  await expect(dialog).toBeHidden();
+});

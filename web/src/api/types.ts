@@ -48,6 +48,7 @@ export type Category = Schema<"Category">;
 export type Profile = Schema<"Profile">;
 /** An open session of the person. */
 export type SessionSummary = Schema<"SessionSummary">;
+export type SecondFactor = Schema<"SecondFactor">;
 /** A course. */
 export type Course = Schema<"Course">;
 /** A course with its owners, as one course is read. */
