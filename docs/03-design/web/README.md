@@ -41,7 +41,7 @@ web/                                   @kampus/web, the Next.js application
     features/<feature>/                the screens and parts of the shell itself (session, navigation, preferences)
     modules/                           the generated registry of UI modules and the extension points
     theme/                             the theme of the scope as an MUI theme, and the scheme of the person
-    i18n/                              message bundles and formatters
+    i18n/                              the strings of the shell per language, the gathered texts and formatters
     api/                               the API client set up for the server and for the browser
   tests/
     unit/
@@ -63,7 +63,7 @@ crates/<module>/web/                   @kampus/<module>-ui, the UI module of a K
     routes/<route>/                    one folder per page of the module
     contributions/<point>/             widgets, menu items, tabs, actions, form sections, settings panels
     components/<Component>/            components private to the module
-    strings/                           the message keys of the module, per language
+    strings/<language>.json            the texts of the module, one file per language, keys under its name
   tests/
 ```
 

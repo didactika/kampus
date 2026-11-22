@@ -122,6 +122,21 @@ A theme overrides any icon by name with the address of an image, drawn as a mask
 | Wizards | A stepper and the step in a card, with Previous and Next at its foot |
 | Empty, loading and failure | Empty says why and what to do; loading shows the indicator; a failure says so, offers to try again, and leaves the frame working |
 
+## Texts and languages
+
+No text a person reads is written in code: every one is a key with a text per language, so a language is added without touching code.
+
+| Rule | How |
+| --- | --- |
+| Where texts live | One JSON file per language: the shell in `web/src/i18n/strings/<language>.json`; the UI module of a Kampus module or a plugin in `crates/<module>/web/strings/<language>.json`, every key starting with the name of its module (`courses.…`, `myplugin.…`) |
+| Adding a language | Add `<language>.json` (such as `fr.json` or `pt-BR.json`) next to the English one in each strings folder. `npm run strings` (run by every build, check, test and dev server) gathers them into `src/i18n/strings.generated.ts`, and the language is offered as soon as the shell has texts in it |
+| Missing texts | A text a language lacks shows in English, and a key with no text at all shows as itself, so a partial translation never breaks a page. English and Spanish are complete, which a test checks |
+| Plugins | A plugin ships its strings folder with its UI module; the same command picks it up. A key outside the name of its module is refused when texts are gathered, so a plugin never overrides the texts of another |
+| Placeholders | `{name}` in a text is filled by the caller: `t("pager.range", { from, to, total })` |
+| Components | Components of `@kampus/ui` hold no text of their own: every label, title and message comes from the caller |
+| Formats | Dates, days and numbers go through the formatters of the language (`date`, `day`, `number`), never by hand |
+| Words of the domain | What a campus calls a course or a category comes from the terms of customisation (RN-187) |
+
 ## Theming per scope
 
 The platform, a tenant, a campus, a category or a course sets the tokens of its theme; a scope below inherits them unless it sets its own or a scope above locks them.
@@ -149,6 +164,6 @@ The default theme and the one the server grows for the default tokens are the sa
 
 1. Look for an existing component or pattern first. A screen that needs something new asks for it here, not in its module.
 2. A component is a folder in `web/ui/src/components/<Component>/` with `<Component>.tsx` and `index.ts`. It wraps MUI, takes its look from the theme, and states its meaning in its documentation comment.
-3. Every text comes from the caller; every colour is a role; corners, sizes and motion come from the theme.
+3. Every text is a key of a strings file (see Texts and languages) and comes from the caller; every colour is a role; corners, sizes and motion come from the theme.
 4. Tests in `web/ui/tests/` run in Chromium: behaviour, keyboard, and axe in both schemes.
 5. This document and the changelog say what it is for.
