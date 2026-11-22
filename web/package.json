@@ -5,10 +5,15 @@
   "type": "module",
   "license": "AGPL-3.0-or-later",
   "scripts": {
+    "strings": "node scripts/collect-strings.ts",
+    "predev": "npm run strings",
     "dev": "next dev --hostname 0.0.0.0 --port 3000",
+    "prebuild": "npm run strings",
     "build": "next build",
     "start": "next start",
+    "precheck": "npm run strings",
     "check": "tsc --noEmit",
+    "pretest": "npm run strings",
     "test": "vitest run"
   },
   "dependencies": {

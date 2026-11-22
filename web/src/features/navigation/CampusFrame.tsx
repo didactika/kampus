@@ -164,7 +164,7 @@ export function CampusFrame({ account, menu, children }: CampusFrameProps) {
           <Box component={Link} href="/" sx={{ display: "flex", alignItems: "center", gap: 1.5, color: "inherit", textDecoration: "none", mr: 3 }}>
             <Box component="img" src="/kampus-icon.svg" alt="" sx={{ inlineSize: 32, blockSize: 32 }} />
             <Typography component="span" variant="h4" sx={{ fontWeight: 600 }}>
-              Kampus
+              {t("app.name")}
             </Typography>
           </Box>
           <Box component="nav" aria-label={t("nav.primary")} sx={{ display: { xs: "none", md: "flex" }, gap: 0.5 }}>

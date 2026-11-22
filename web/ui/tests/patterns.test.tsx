@@ -94,6 +94,8 @@ describe("the list toolbar", () => {
           search=""
           onSearch={(text) => searched.push(text)}
           searchLabel="Search courses"
+          filtersLabel="Filters"
+          resetLabel="Reset"
           activeFilters={2}
           filters={<FilterGroup title="State" values={[{ value: "draft", label: "Draft", count: 3 }]} selected={[]} onChange={() => {}} />}
         />
@@ -139,6 +141,8 @@ describe("accessibility of the patterns", () => {
               search=""
               onSearch={() => {}}
               searchLabel="Search courses"
+              filtersLabel="Filters"
+              resetLabel="Reset"
               filters={<span />}
               view={<ViewToggle label="View" value="grid" onChange={() => {}} options={[{ value: "grid", label: "Cards", icon: "grid_view" }, { value: "list", label: "List", icon: "view_list" }]} />}
             />

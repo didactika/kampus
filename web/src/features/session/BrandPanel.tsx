@@ -105,7 +105,7 @@ export function BrandPanel() {
       <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", position: "relative" }}>
         <Box component="img" src="/kampus-icon.svg" alt="" sx={{ inlineSize: 40, blockSize: 40, borderRadius: 2.5, boxShadow: 4 }} />
         <Typography variant="h3" component="span">
-          Kampus
+          {t("app.name")}
         </Typography>
       </Stack>
 
@@ -131,10 +131,10 @@ export function BrandPanel() {
           <CoverArt seed="kampus-preview" icon="science" height={84} />
           <Box sx={{ p: 2 }}>
             <Typography variant="overline" color="text.secondary">
-              CHE-132 · Chemistry
+              {t("signin.preview.code")}
             </Typography>
             <Typography variant="h4" component="span" sx={{ display: "block", mb: 1.5 }}>
-              Biochemistry
+              {t("signin.preview.course")}
             </Typography>
             <LinearProgress variant="determinate" value={68} sx={{ blockSize: 8 }} />
           </Box>

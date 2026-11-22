@@ -67,9 +67,9 @@ export interface ListToolbarProps {
   readonly filters?: ReactNode;
   /** How many filters are on. */
   readonly activeFilters?: number;
-  /** The words of the Filters button, of the head of its drop-down and of its reset. */
-  readonly filtersLabel?: string;
-  readonly resetLabel?: string;
+  /** The words of the Filters button and the head of its drop-down, and of its reset; every text comes from the caller. */
+  readonly filtersLabel: string;
+  readonly resetLabel: string;
   /** Clears every filter. */
   readonly onReset?: () => void;
   /** Controls of the view, such as the order and the layout. */
@@ -83,7 +83,7 @@ const PAUSE = 400;
 
 /** `<ListToolbar search={q} onSearch={setQ} searchLabel="Search courses" filters={…} />` */
 export function ListToolbar(props: ListToolbarProps) {
-  const { search, onSearch, searchLabel, filters, activeFilters = 0, filtersLabel = "Filters", resetLabel = "Reset", onReset, view, actions } = props;
+  const { search, onSearch, searchLabel, filters, activeFilters = 0, filtersLabel, resetLabel, onReset, view, actions } = props;
   const [text, setText] = useState(search);
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);

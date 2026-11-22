@@ -33,12 +33,16 @@
 // ------------------------------------------------------------------------------
 
 
-/** Choosing the language of a request, and the messages and formatters of a language. */
+/**
+ * Choosing the language of a request, and the texts and formatters of a language. The texts come from the strings
+ * folders of the shell and of every UI module (see `scripts/collect-strings.ts`); a text a language lacks is the
+ * English one, and a key with no text at all shows as itself.
+ */
 
-import { MESSAGES } from "./messages";
+import { BUNDLES } from "./strings.generated";
 
-/** The languages the shell speaks; the first is the one used when none of the person's is spoken. */
-export const LANGUAGES = Object.keys(MESSAGES);
+/** The languages the client speaks: every language with texts in a strings folder. */
+export const LANGUAGES = Object.keys(BUNDLES);
 
 /** The languages written right to left. */
 const RIGHT_TO_LEFT = new Set(["ar", "fa", "he", "ur"]);
@@ -49,7 +53,7 @@ export function languageOf(acceptLanguage: string | null | undefined): string {
     .split(",")
     .map((part) => part.trim().split(";")[0]!.toLowerCase().slice(0, 2))
     .filter(Boolean);
-  return asked.find((code) => code in MESSAGES) ?? "en";
+  return asked.find((code) => code in BUNDLES) ?? "en";
 }
 
 /** The direction of a language. */
@@ -63,7 +67,7 @@ export type Translate = (key: string, values?: Readonly<Record<string, string | 
 /** The messages of a language: a missing one falls back to English, then to its key. */
 export function translator(language: string): Translate {
   return (key, values = {}) => {
-    const text = MESSAGES[language]?.[key] ?? MESSAGES["en"]?.[key] ?? key;
+    const text = BUNDLES[language]?.[key] ?? BUNDLES["en"]?.[key] ?? key;
     return text.replace(/\{(\w+)\}/g, (_, name: string) => String(values[name] ?? ""));
   };
 }

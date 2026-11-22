@@ -76,7 +76,7 @@ export function LatestNotifications({ inbox }: { readonly inbox: Inbox }) {
               </Box>
               <Box sx={{ minInlineSize: 0 }}>
                 <Typography variant="subtitle2" noWrap>
-                  {describe(n.type)}
+                  {describe(t, n.type)}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   <time dateTime={n.created_at}>{date(n.created_at)}</time>

@@ -33,8 +33,16 @@
 // ------------------------------------------------------------------------------
 
 
-/** What a notification says: its type in plain words, until each type brings its own message. */
-export function describe(type: string): string {
+import type { Translate } from "../../i18n/translator";
+
+/**
+ * What a notification says: the text of its type (`notification.<type>`, which the module that declares the type
+ * brings), or its type in plain words when no language has a text for it yet.
+ */
+export function describe(t: Translate, type: string): string {
+  const key = `notification.${type}`;
+  const text = t(key);
+  if (text !== key) return text;
   const words = type.replace(/[._]/g, " ");
   return words.charAt(0).toUpperCase() + words.slice(1);
 }

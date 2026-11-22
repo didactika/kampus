@@ -49,10 +49,12 @@ import { Providers } from "../features/shell/Providers";
 import { requestI18n } from "../i18n/server";
 import { scopeTheme } from "../theme/scope-theme";
 
-export const metadata: Metadata = {
-  title: { default: "Kampus", template: "%s · Kampus" },
-  icons: { icon: "/kampus-icon.svg" },
-};
+/** The title of every page, after the name of the application in the language of the request, and the icon. */
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await requestI18n();
+  const name = t("app.name");
+  return { title: { default: name, template: `%s · ${name}` }, icons: { icon: "/kampus-icon.svg" } };
+}
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1 };
 

@@ -37,7 +37,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { MESSAGES } from "../../src/i18n/messages";
+import { BUNDLES } from "../../src/i18n/strings.generated";
 import { directionOf, formatNumber, languageOf, translator } from "../../src/i18n/translator";
 
 describe("the language of a request", () => {
@@ -60,10 +60,11 @@ describe("messages", () => {
     expect(t("no.such.key")).toBe("no.such.key");
   });
 
-  it("are the same keys in every language", () => {
-    const english = Object.keys(MESSAGES["en"]!).sort();
-    for (const [language, bundle] of Object.entries(MESSAGES)) {
-      expect(Object.keys(bundle).sort(), language).toEqual(english);
+  it("are complete in English and Spanish, and no language has a key English lacks", () => {
+    const english = Object.keys(BUNDLES["en"]!).sort();
+    expect(Object.keys(BUNDLES["es"]!).sort()).toEqual(english);
+    for (const [language, bundle] of Object.entries(BUNDLES)) {
+      expect(Object.keys(bundle).filter((key) => !english.includes(key)), language).toEqual([]);
     }
   });
 

@@ -103,7 +103,7 @@ export function Inbox({ inbox }: { readonly inbox: InboxPage }) {
                   <Icon name="notifications" />
                 </ListItemIcon>
                 <ListItemText
-                  primary={<Typography variant="subtitle1">{describe(n.type)}</Typography>}
+                  primary={<Typography variant="subtitle1">{describe(t, n.type)}</Typography>}
                   secondary={<time dateTime={n.created_at}>{date(n.created_at)}</time>}
                 />
               </ListItem>
