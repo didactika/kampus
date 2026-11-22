@@ -32,11 +32,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-/** The pages of a campus: only for a signed-in person, inside the frame of the campus. */
+/** The pages of a campus: only for a signed-in person, inside the frame of the campus with the main menu it set. */
 
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { optional } from "../../api/server";
+import type { Menu } from "../../api/types";
 import { CampusFrame } from "../../features/navigation/CampusFrame";
 import { currentAccount } from "../../features/session/current-account";
 
@@ -44,5 +46,10 @@ import { currentAccount } from "../../features/session/current-account";
 export default async function CampusLayout({ children }: { readonly children: ReactNode }) {
   const account = await currentAccount();
   if (!account) redirect("/sign-in");
-  return <CampusFrame account={account}>{children}</CampusFrame>;
+  const menu = await optional<Menu | null>(`/customise/scopes/${account.campus}/menus/customise.main`, null);
+  return (
+    <CampusFrame account={account} menu={menu?.items ?? []}>
+      {children}
+    </CampusFrame>
+  );
 }

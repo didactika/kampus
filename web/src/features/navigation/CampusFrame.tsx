@@ -62,32 +62,58 @@ import { useId, useState, type ReactNode } from "react";
 import { Icon } from "@kampus/ui";
 
 import { browserApi } from "../../api/browser";
-import type { Me } from "../../api/types";
+import type { Me, MenuItem as MenuEntry } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { SchemeMenu } from "../../theme/SchemeMenu";
 
-/** The places of the main navigation. */
-const PLACES = [
-  { href: "/", label: "nav.courses", icon: "school" },
-  { href: "/notifications", label: "nav.notifications", icon: "notifications" },
-] as const;
+/** A place of the main navigation. */
+interface Place {
+  readonly href: string;
+  readonly label: string;
+  readonly icon: string;
+  readonly children: readonly Place[];
+}
+
+/** The icon of a place by where it leads. */
+function iconOf(target: string): string {
+  if (/^https?:\/\//.test(target)) return "open_in_new";
+  if (target === "/") return "home";
+  if (target.startsWith("/courses")) return "school";
+  if (target.startsWith("/notifications")) return "notifications";
+  return "arrow_forward";
+}
+
+/** The places of a menu of the campus. */
+function placesOf(items: readonly MenuEntry[]): Place[] {
+  return items.map((item) => ({ href: item.target, label: item.label, icon: iconOf(item.target), children: placesOf(item.children) }));
+}
 
 /** Whether a place holds the page shown. */
 function holds(href: string, path: string): boolean {
-  return href === "/" ? path === "/" || path.startsWith("/courses") : path.startsWith(href);
+  return href === "/" ? path === "/" : path === href || path.startsWith(`${href}/`);
 }
 
 /** The props of `CampusFrame`. */
 export interface CampusFrameProps {
   /** The signed-in account. */
   readonly account: Me;
+  /** The main menu the campus set; the default places when it set none. */
+  readonly menu: readonly MenuEntry[];
   /** The page. */
   readonly children: ReactNode;
 }
 
 /** The frame of the pages of a campus. */
-export function CampusFrame({ account, children }: CampusFrameProps) {
+export function CampusFrame({ account, menu, children }: CampusFrameProps) {
   const { t } = useI18n();
+  const places: Place[] = menu.length
+    ? placesOf(menu)
+    : [
+        { href: "/", label: t("nav.home"), icon: "home", children: [] },
+        { href: "/courses", label: t("nav.courses"), icon: "school", children: [] },
+        { href: "/notifications", label: t("nav.notifications"), icon: "notifications", children: [] },
+      ];
+  const [submenu, setSubmenu] = useState<{ anchor: HTMLElement; place: Place } | null>(null);
   const path = usePathname();
   const router = useRouter();
   const [drawer, setDrawer] = useState(false);
@@ -127,7 +153,7 @@ export function CampusFrame({ account, children }: CampusFrameProps) {
       <AppBar
         position="sticky"
         sx={{
-          background: "linear-gradient(135deg, var(--k-palette-brand-main), color-mix(in srgb, var(--k-palette-brand-main) 55%, var(--k-palette-surface-scrim)))",
+          backgroundImage: "var(--k-palette-gradient-bar)",
           color: "brand.contrastText",
         }}
       >
@@ -142,23 +168,53 @@ export function CampusFrame({ account, children }: CampusFrameProps) {
             </Typography>
           </Box>
           <Box component="nav" aria-label={t("nav.primary")} sx={{ display: { xs: "none", md: "flex" }, gap: 0.5 }}>
-            {PLACES.map((place) => {
-              const here = holds(place.href, path);
-              return (
+            {places.map((place) => {
+              const here = holds(place.href, path) || place.children.some((c) => holds(c.href, path));
+              const look = {
+                color: "inherit",
+                borderRadius: 999,
+                px: 1.75,
+                bgcolor: here ? "color-mix(in srgb, currentColor 18%, transparent)" : "transparent",
+                "&:hover:not(.Mui-disabled)": { bgcolor: "color-mix(in srgb, currentColor 12%, transparent)" },
+              };
+              return place.children.length ? (
                 <Button
-                  key={place.href}
+                  key={place.href + place.label}
+                  color="inherit"
+                  variant="text"
+                  aria-haspopup="menu"
+                  startIcon={<Icon name={place.icon} size="small" />}
+                  endIcon={<Icon name="keyboard_arrow_down" size="small" />}
+                  onClick={(event) => setSubmenu({ anchor: event.currentTarget, place })}
+                  sx={look}
+                >
+                  {place.label}
+                </Button>
+              ) : (
+                <Button
+                  key={place.href + place.label}
                   component={Link}
                   href={place.href}
                   color="inherit"
                   variant="text"
                   aria-current={here ? "page" : undefined}
                   startIcon={<Icon name={place.icon} size="small" />}
-                  sx={{ bgcolor: here ? "color-mix(in srgb, currentColor 16%, transparent)" : "transparent" }}
+                  sx={look}
                 >
-                  {t(place.label)}
+                  {place.label}
                 </Button>
               );
             })}
+            <Menu anchorEl={submenu?.anchor} open={Boolean(submenu)} onClose={() => setSubmenu(null)}>
+              {submenu?.place.children.map((child) => (
+                <MenuItem key={child.href + child.label} component={Link} href={child.href} onClick={() => setSubmenu(null)} selected={holds(child.href, path)}>
+                  <ListItemIcon>
+                    <Icon name={child.icon} size="small" />
+                  </ListItemIcon>
+                  {child.label}
+                </MenuItem>
+              ))}
+            </Menu>
           </Box>
           <Box sx={{ flex: 1 }} />
           <SchemeMenu />
@@ -192,9 +248,9 @@ export function CampusFrame({ account, children }: CampusFrameProps) {
       <Drawer open={drawer} onClose={() => setDrawer(false)}>
         <Box component="nav" aria-label={t("nav.primary")} sx={{ inlineSize: 280, pt: 2 }}>
           <List>
-            {PLACES.map((place) => (
+            {places.flatMap((place) => [place, ...place.children]).map((place) => (
               <ListItemButton
-                key={place.href}
+                key={place.href + place.label}
                 component={Link}
                 href={place.href}
                 selected={holds(place.href, path)}
@@ -205,7 +261,7 @@ export function CampusFrame({ account, children }: CampusFrameProps) {
                 <ListItemIcon>
                   <Icon name={place.icon} />
                 </ListItemIcon>
-                <ListItemText primary={t(place.label)} />
+                <ListItemText primary={place.label} />
               </ListItemButton>
             ))}
           </List>
