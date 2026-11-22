@@ -37,6 +37,8 @@ import { customElement, property, state } from "lit/decorators.js";
 import { repeat } from "lit/directives/repeat.js";
 
 import type { Tone } from "../alert/alert.js";
+import "../icon/icon.js";
+import "../../icons/core.js";
 import { base } from "../../styles/base.js";
 import { stateLayer } from "../../styles/state-layer.js";
 import { type } from "../../styles/typography.js";
@@ -169,7 +171,7 @@ export class KToasts extends LitElement {
           html`<li class=${t.tone} part="toast">
             <span class="message">${t.message}</span>
             <button class="state-layer" type="button" aria-label=${this.closeLabel} @click=${() => this.dismiss(t.id)}>
-              <span aria-hidden="true">✕</span>
+              <k-icon name="close"></k-icon>
             </button>
           </li>`,
       )}

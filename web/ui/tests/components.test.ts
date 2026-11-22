@@ -45,7 +45,7 @@ import dark from "../tokens/dark.tokens.json";
 import light from "../tokens/light.tokens.json";
 import reference from "../tokens/reference.tokens.json";
 import system from "../tokens/system.tokens.json";
-import { KToasts, stylesheet, toast, type KButton, type KDialog, type KInput, type KTabs, type TokenNode } from "../src/index.js";
+import { KToasts, overrideIcons, stylesheet, toast, type KButton, type KDialog, type KInput, type KTabs, type TokenNode } from "../src/index.js";
 
 beforeAll(() => {
   const style = document.createElement("style");
@@ -167,6 +167,29 @@ describe("a theme of a scope", () => {
   });
 });
 
+describe("icons", () => {
+  it("draw a Material Symbol by name, hidden unless labelled, and follow the overrides of a theme", async () => {
+    const host = await mount(`<k-icon name="delete"></k-icon><k-icon name="edit" label="Edit"></k-icon>`);
+    const [bin, pencil] = [...host.querySelectorAll("k-icon")].map((i) => i.shadowRoot!.querySelector("[part=icon]")!);
+    expect(bin!.querySelector("svg")).not.toBeNull();
+    expect(bin!.getAttribute("aria-hidden")).toBe("true");
+    expect(pencil!.getAttribute("role")).toBe("img");
+    expect(pencil!.getAttribute("aria-label")).toBe("Edit");
+
+    overrideIcons({ delete: "/brand/bin.svg", edit: "javascript:alert(1)" });
+    const icons = [...host.querySelectorAll("k-icon")];
+    await Promise.all(icons.map((i) => i.updateComplete));
+    const overridden = icons[0]!.shadowRoot!.querySelector("[part=icon]")!;
+    expect(overridden.classList.contains("mask")).toBe(true);
+    expect(overridden.getAttribute("style")).toContain('url("/brand/bin.svg")');
+    expect(icons[1]!.shadowRoot!.querySelector("svg"), "only addresses of images are taken").not.toBeNull();
+
+    overrideIcons();
+    await icons[0]!.updateComplete;
+    expect(icons[0]!.shadowRoot!.querySelector("svg")).not.toBeNull();
+  });
+});
+
 describe("the dialog", () => {
   it("takes focus, closes with Escape and gives focus back", async () => {
     const host = await mount(`<button id="opener">Open</button>
@@ -261,6 +284,7 @@ describe("accessibility", () => {
         <k-card variant="elevated" heading="Chemistry"></k-card>
         <k-card variant="filled" heading="Biology"></k-card>
         <k-spinner label="Loading courses"></k-spinner>
+        <p><k-icon name="info"></k-icon> <k-icon name="delete" label="Delete"></k-icon></p>
         <k-tabs label="Course"><k-tab-panel label="Content">Sections</k-tab-panel><k-tab-panel label="Grades">Grades</k-tab-panel></k-tabs>`);
       const select = document.querySelector("k-select")!;
       select.options = [{ value: "en", label: "English" }];

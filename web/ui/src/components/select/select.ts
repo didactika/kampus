@@ -36,6 +36,8 @@ import { css, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 
 import { FormControl } from "../../forms/form-control.js";
+import "../icon/icon.js";
+import "../../icons/core.js";
 import { base } from "../../styles/base.js";
 import { field } from "../../styles/field.js";
 
@@ -64,16 +66,12 @@ export class KSelect extends FormControl {
         padding-inline-end: var(--k-space-10);
         cursor: pointer;
       }
-      .box::after {
-        content: "";
+      .box k-icon {
         position: absolute;
-        inset-inline-end: var(--k-space-4);
+        inset-inline-end: var(--k-space-3);
         inset-block-start: 50%;
-        inline-size: 0.5rem;
-        block-size: 0.5rem;
-        border: solid var(--k-color-on-surface-variant);
-        border-width: 0 2px 2px 0;
-        transform: translateY(-75%) rotate(45deg);
+        transform: translateY(-50%);
+        color: var(--k-color-on-surface-variant);
         pointer-events: none;
       }
     `,
@@ -129,7 +127,7 @@ export class KSelect extends FormControl {
             ${option.label}
           </option>`,
       )}
-    </select></div>`);
+    </select><k-icon name="keyboard_arrow_down"></k-icon></div>`);
   }
 
   override updated(): void {

@@ -35,6 +35,8 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 
+import "../icon/icon.js";
+import "../../icons/core.js";
 import { base } from "../../styles/base.js";
 import { stateLayer } from "../../styles/state-layer.js";
 import { type } from "../../styles/typography.js";
@@ -165,7 +167,7 @@ export class KDialog extends LitElement {
       <header>
         <h2 id="heading" part="heading">${this.heading}</h2>
         <button class="close state-layer" part="close" type="button" aria-label=${this.closeLabel} @click=${() => this.close()}>
-          <span aria-hidden="true">✕</span>
+          <k-icon name="close"></k-icon>
         </button>
       </header>
       <div class="body" part="body"><slot></slot></div>

@@ -36,7 +36,7 @@
  * The design system of Kampus: Web Components that follow the patterns of Material 3, themed only by design
  * tokens and usable from any framework. Importing this module defines every element; the tokens of the default theme
  * come from `@kampus/ui/tokens.css`, and the theme of a scope, which the server serves as the same custom
- * properties, replaces them.
+ * properties, replaces them. Icons are Material Symbols by name, and a theme can override any of them.
  */
 
 export { KAlert, type Tone } from "./components/alert/alert.js";
@@ -45,6 +45,7 @@ export { KButton, type ButtonTone, type ButtonVariant } from "./components/butto
 export { KCard, type CardVariant } from "./components/card/card.js";
 export { KCheckbox } from "./components/checkbox/checkbox.js";
 export { KDialog } from "./components/dialog/dialog.js";
+export { KIcon } from "./components/icon/icon.js";
 export { KInput, type InputType } from "./components/input/input.js";
 export { KSelect, type SelectOption } from "./components/select/select.js";
 export { KSpinner } from "./components/spinner/spinner.js";
@@ -52,6 +53,8 @@ export { KTabPanel, KTabs } from "./components/tabs/tabs.js";
 export { KTextarea } from "./components/textarea/textarea.js";
 export { KToasts, toast } from "./components/toast/toast.js";
 export { FormControl } from "./forms/form-control.js";
+export { CORE_ICONS } from "./icons/core.js";
+export { defineIcons, iconNames, iconOf, onIconsChange, overrideIcons, type IconSource } from "./icons/registry.js";
 export { type TypeRole } from "./styles/typography.js";
 export { contrast, luminance } from "./tokens/contrast.js";
 export {
