@@ -84,7 +84,7 @@ fn enrol(context: &CommandContext) -> Result<Enrol> {
         db.clone(),
         access.clone(),
         clock.clone(),
-        Arc::new(Participation::new(db.clone())),
+        Arc::new(Participation::new(db.clone(), clock.clone())),
     );
     Ok(Enrol::new(
         db,

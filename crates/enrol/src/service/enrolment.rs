@@ -149,18 +149,16 @@ impl Enrol {
     ) -> Result<Vec<Enrolment>> {
         let scope = self.courses.course(course).await?.scope;
         self.access.require(actor, ENROLMENT_READ, scope).await?;
-        let filter = if active_only {
-            format!(" and {}", super::participation::ACTIVE)
-        } else {
-            String::new()
-        };
         let rows = sqlx::query(sql(format!(
-            "select {COLUMNS} from {} e join {} i on i.id = e.instance_id where i.course_id = $1{filter}
+            "select {COLUMNS} from {} e join {} i on i.id = e.instance_id
+             where i.course_id = $1 and ($2::timestamptz is null or {})
              order by e.created_at, e.id",
             self.table("enrolment"),
-            self.table("instance")
+            self.table("instance"),
+            super::participation::active("$2")
         )))
         .bind(course.as_uuid())
+        .bind(active_only.then(|| self.now().as_offset_date_time()))
         .fetch_all(self.db.pool())
         .await
         .map_err(kampus_db::classify)?;

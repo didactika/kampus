@@ -17,6 +17,10 @@ All notable changes to Kampus are recorded here, following [Keep a Changelog](ht
 - The server opens the file storage and the cache from its configuration, through the adapters of the build, and its readiness checks both.
 - Kampus is free software under the GNU Affero General Public License, version 3 or later (DEC-085), instead of a proprietary licence.
 
+### Fixed
+
+- A role granted or an enrolment made "now" is valid at once even when the wall clock of the host steps back (a virtual machine resyncing with its host, an NTP correction): the system clock never answers an earlier instant than one it already gave in the process, and active participation and `Access::holds_role` compare with that clock instead of the database one, so the start and the check come from the same clock. `Participation::new` takes the clock.
+
 ### Upgrade
 
 - The first start, or `kampus-server upgrade`, installs the `activities` schema (steps 1 to 4). `Module` gains `condition_kinds`. `Module` gains `activity_types` (empty when a module has none). `files` accepts the area type `*/*` for areas that take any content.

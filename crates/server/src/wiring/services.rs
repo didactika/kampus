@@ -152,7 +152,7 @@ impl Services {
             parts.db.clone(),
             access.clone(),
             parts.clock.clone(),
-            Arc::new(Participation::new(parts.db.clone())),
+            Arc::new(Participation::new(parts.db.clone(), parts.clock.clone())),
         )
         .with_customise(customise.clone());
         let learning = Learning::build(&parts.db, &access, &courses, &files);
