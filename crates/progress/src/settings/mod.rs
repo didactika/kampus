@@ -35,6 +35,5 @@
 //! What progress offers to other modules: the types of notification, the kind of access condition, the setting and the widget it declares.
 
 pub mod conditions;
-pub mod customise;
 pub mod notifications;
 pub mod notify;

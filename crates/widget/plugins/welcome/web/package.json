@@ -1,0 +1,21 @@
+{
+  "name": "@kampus/widget-welcome",
+  "version": "0.1.0",
+  "description": "The welcome widget of Kampus",
+  "license": "AGPL-3.0-or-later",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "strings"
+  ],
+  "peerDependencies": {
+    "@kampus/ui": "*",
+    "@kampus/web": "*",
+    "@mui/material": "*",
+    "react": "*"
+  }
+}

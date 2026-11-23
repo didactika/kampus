@@ -58,6 +58,12 @@ const crates = path.join(repo, "crates");
 for (const module of existsSync(crates) ? readdirSync(crates).sort() : []) {
   const folder = path.join(crates, module, "web/strings");
   if (existsSync(folder)) sources.push({ folder, prefix: `${module}.` });
+  // The plugins of a type: crates/<type>/plugins/<name>/web/strings, under <type>_<name>.
+  const plugins = path.join(crates, module, "plugins");
+  for (const name of existsSync(plugins) ? readdirSync(plugins).sort() : []) {
+    const strings = path.join(plugins, name, "web/strings");
+    if (existsSync(strings)) sources.push({ folder: strings, prefix: `${module}_${name}.` });
+  }
 }
 
 const bundles: Record<string, Record<string, string>> = {};

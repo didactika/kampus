@@ -2496,6 +2496,105 @@
       "settings": [],
       "summary": "Privacy: exports of personal data answered by each module, and the policies of a campus",
       "terms": []
+    },
+    {
+      "events": [],
+      "flags": [],
+      "jobs": [],
+      "name": "widget_catalogue",
+      "notification_types": [],
+      "permissions": [],
+      "settings": [],
+      "summary": "The courses of the campus, to search, filter and open",
+      "terms": []
+    },
+    {
+      "events": [],
+      "flags": [],
+      "jobs": [],
+      "name": "widget_course_content",
+      "notification_types": [],
+      "permissions": [],
+      "settings": [],
+      "summary": "The sections of the course the reader sees",
+      "terms": []
+    },
+    {
+      "events": [],
+      "flags": [],
+      "jobs": [],
+      "name": "widget_course_grades",
+      "notification_types": [],
+      "permissions": [],
+      "settings": [],
+      "summary": "The grades of the reader in the course",
+      "terms": []
+    },
+    {
+      "events": [],
+      "flags": [],
+      "jobs": [],
+      "name": "widget_course_progress",
+      "notification_types": [],
+      "permissions": [],
+      "settings": [],
+      "summary": "The progress of the reader in the course",
+      "terms": []
+    },
+    {
+      "events": [],
+      "flags": [],
+      "jobs": [],
+      "name": "widget_course_summary",
+      "notification_types": [],
+      "permissions": [],
+      "settings": [],
+      "summary": "The summary and dates of the course",
+      "terms": []
+    },
+    {
+      "events": [],
+      "flags": [],
+      "jobs": [],
+      "name": "widget_notifications",
+      "notification_types": [],
+      "permissions": [],
+      "settings": [],
+      "summary": "The latest notifications of the reader",
+      "terms": []
+    },
+    {
+      "events": [],
+      "flags": [],
+      "jobs": [],
+      "name": "widget_text",
+      "notification_types": [],
+      "permissions": [],
+      "settings": [],
+      "summary": "A heading and a text, on any page",
+      "terms": []
+    },
+    {
+      "events": [],
+      "flags": [],
+      "jobs": [],
+      "name": "widget_upcoming",
+      "notification_types": [],
+      "permissions": [],
+      "settings": [],
+      "summary": "The dates of the course ahead",
+      "terms": []
+    },
+    {
+      "events": [],
+      "flags": [],
+      "jobs": [],
+      "name": "widget_welcome",
+      "notification_types": [],
+      "permissions": [],
+      "settings": [],
+      "summary": "A greeting in the colours of the brand, with the figures of the reader",
+      "terms": []
     }
   ],
   "version": "0.1.0"

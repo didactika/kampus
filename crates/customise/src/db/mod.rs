@@ -36,6 +36,7 @@
 //! run them.
 
 pub mod grid;
+pub mod plugins;
 pub mod steps;
 
 pub use steps::STEPS;

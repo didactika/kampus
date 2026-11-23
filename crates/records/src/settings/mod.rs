@@ -35,6 +35,5 @@
 //! What records offers to other modules: the types of notification, the kind of access condition, the file area and the widget it declares.
 
 pub mod conditions;
-pub mod customise;
 pub mod files;
 pub mod notifications;

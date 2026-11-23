@@ -49,7 +49,7 @@ const START = '# modules:start';
 const END = '# modules:end';
 
 /** The kinds a crate may be. */
-const KINDS = ['foundation', 'port', 'adapter', 'module', 'server'];
+const KINDS = ['foundation', 'port', 'adapter', 'type', 'module', 'server'];
 
 const SRC_FOLDERS = [
   'commands',
@@ -85,6 +85,17 @@ const LAYOUTS = {
     required: ['store'],
     declarations: [
       ['src/lib.rs', /pub const ADAPTER: /, 'declares `pub const ADAPTER`'],
+      ['version.toml', COMPONENT_VERSION, 'starts its [component] table with the version'],
+    ],
+  },
+  // A plugin type: the contract its plugins build on, with the plugins of the repository in plugins/<name>.
+  type: {
+    root: ['plugins', 'web', 'assets', 'version.toml'],
+    files: ['lib.rs'],
+    folders: null,
+    required: ['declaration', 'conformance'],
+    declarations: [
+      ['src/lib.rs', /pub const TYPE: &str = /, 'declares `pub const TYPE`, the prefix of its plugins'],
       ['version.toml', COMPONENT_VERSION, 'starts its [component] table with the version'],
     ],
   },
@@ -139,10 +150,13 @@ function crates(root) {
 export function listModules(root) {
   const architecture = fs.readFileSync(path.join(root, 'docs/03-design/architecture.md'), 'utf8');
   const order = [...architecture.matchAll(/^\| [^|]+ \| `(kampus-[a-z0-9-]+)` \|/gm)].map((m) => m[1]);
+  // Core modules in the order of the architecture, then the plugins of the repository by name: a plugin needs
+  // the module that defines its type, so it comes after every core module.
+  const rank = (c) => (c.owner ? order.length : order.indexOf(c.name));
   const local = crates(root)
     .filter((c) => c.kind === 'module')
-    .sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name))
-    .map((c) => ({ crate: c.name, source: `path = "../${path.basename(c.dir)}"` }));
+    .sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))
+    .map((c) => ({ crate: c.name, source: `path = "${path.relative(path.join('crates', 'server'), c.dir).split(path.sep).join('/')}"` }));
   const external = path.join(root, 'crates', 'server', 'modules.toml');
   const declared = [];
   if (fs.existsSync(external)) {
@@ -167,7 +181,8 @@ function checkLayout(root) {
     const where = `the ${c.kind} layout`;
     const hosts = crates(root).filter((o) => o.owner === path.basename(c.dir) && !c.owner).map((o) => o.group);
     if (c.owner) {
-      const type = c.group === 'adapters' ? c.owner : c.group;
+      // Adapters live in the folder of their port, and plugins in plugins/ of the crate of their type.
+      const type = c.group === 'adapters' || c.group === 'plugins' ? c.owner : c.group;
       const expected = `kampus-${type}-${c.folder.replace(/_/g, '-')}`;
       if (c.name !== expected) problems.push(`${c.dir}: a component of type ${type} in this folder is the package ${expected}, not ${c.name}`);
       if (c.group === 'adapters' && c.kind !== 'adapter') problems.push(`${c.dir}: crates in adapters/ are of kind adapter`);

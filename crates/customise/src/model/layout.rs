@@ -166,6 +166,12 @@ pub struct AvailableWidget {
     pub code: String,
     /// What it shows.
     pub summary: String,
+    /// Its icon, by the name the design system gives it.
+    pub icon: String,
+    /// Whether a page holds it once at most.
+    pub single: bool,
+    /// Whether every page holds it, at one size and never removed.
+    pub required: bool,
     /// The sizes it takes on the page kind.
     pub sizes: WidgetSizes,
     /// Its settings as declared: key, kind and default.

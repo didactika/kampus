@@ -149,15 +149,15 @@ test("a widget of the home moves and resizes with the keyboard and every change 
   type Placed = { widget: string; x: number; y: number; w: number; h: number; settings: unknown };
   type Read = { placements: Placed[]; origin: { from: string; scope?: string } };
   const read = async () => (await (await page.request.get(layout)).json()) as Read;
-  const welcomeOf = async () => (await read()).placements.find((p) => p.widget === "customise.welcome");
+  const welcomeOf = async () => (await read()).placements.find((p) => p.widget === "widget_welcome");
   const start = await read();
   const own = start.origin.from === "scope" && start.origin.scope === me.scope;
   const before = start.placements;
-  const welcome = before.find((p) => p.widget === "customise.welcome");
+  const welcome = before.find((p) => p.widget === "widget_welcome");
   test.skip(!welcome, "the home has no welcome");
   await mode.check();
   try {
-    const frame = page.getByRole("group", { name: new RegExp(`^${t("widget.customise.welcome")}:`) }).first();
+    const frame = page.getByRole("group", { name: new RegExp(`^${t("widget_welcome.name")}:`) }).first();
     await frame.focus();
     await page.keyboard.press("ArrowDown");
     await expect.poll(async () => (await welcomeOf())?.y, { timeout: 5000 }).toBe(welcome!.y + 1);
@@ -187,7 +187,7 @@ test("the settings of a widget are checked before they apply", async ({ page }) 
   await mode.waitFor({ timeout: 5000 }).catch(() => undefined);
   test.skip(!(await mode.isVisible()), "the account cannot arrange the home");
   await mode.check();
-  const catalogue = page.getByRole("group", { name: new RegExp(`^${t("widget.courses.catalogue")}:`) }).first();
+  const catalogue = page.getByRole("group", { name: new RegExp(`^${t("widget_catalogue.name")}:`) }).first();
   test.skip(!(await catalogue.isVisible()), "the home has no catalogue");
   await catalogue.hover();
   await catalogue.getByRole("button", { name: t("dashboard.settings") }).click();

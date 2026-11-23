@@ -13,6 +13,8 @@ The contract between Kampus and installable plugins (DEC-003, DEC-067 to DEC-069
 
 ## Plugin types and their worlds
 
+Where each type lives in the repository and the rules of native plugins are in the [plugins guide](../plugins/README.md). The worlds below are the contract of the plugins installed as WebAssembly components.
+
 | Plugin type | World | Exports (what the plugin implements) | Extension points |
 | --- | --- | --- | --- |
 | Activity | `activity-plugin` | the activity contract of RN-075: settings schema, create, update, delete, copy, view model, grading, progress conditions, exceptions, backup | course modules, records, progress |

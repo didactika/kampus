@@ -48,17 +48,18 @@ import { CourseHeader } from "../../../../features/course/CourseHeader";
 import { STANDARD_GRID } from "../../../../features/dashboard/default-layout";
 import { ArrangedPage } from "../../../../features/layouts/ArrangedPage";
 import { currentAccount } from "../../../../features/session/current-account";
-import { WIDGETS } from "../../../../modules/widgets/registry";
+import { WIDGETS } from "../../../../plugins/widgets.generated";
 
 /** The page kind of a course. */
 const COURSE_PAGE = "courses.course";
 
-/** The page of a course until its teachers arrange their own: the content, and beside it progress, grades and dates. */
+/** The page of a course until its teachers arrange their own: the content, and beside it the summary, progress and grades. */
 const DEFAULT_COURSE: readonly Placement[] = [
-  { widget: "courses.outline", x: 0, y: 0, w: 8, h: 10, settings: { collapsed: false }, permission: null },
-  { widget: "progress.course", x: 8, y: 0, w: 4, h: 3, settings: { heading: "" }, permission: null },
-  { widget: "records.grades", x: 8, y: 3, w: 4, h: 4, settings: { heading: "" }, permission: null },
-  { widget: "calendar.upcoming", x: 8, y: 7, w: 4, h: 4, settings: { days: 30 }, permission: null },
+  { widget: "widget_course_content", x: 0, y: 0, w: 8, h: 10, settings: { collapsed: false }, permission: null },
+  { widget: "widget_course_summary", x: 8, y: 0, w: 4, h: 4, settings: {}, permission: null },
+  { widget: "widget_course_progress", x: 8, y: 4, w: 4, h: 3, settings: { heading: "" }, permission: null },
+  { widget: "widget_course_grades", x: 8, y: 7, w: 4, h: 4, settings: { heading: "" }, permission: null },
+  { widget: "widget_upcoming", x: 0, y: 10, w: 4, h: 4, settings: { days: 30 }, permission: null },
 ];
 
 /** The props of a page of a course. */
@@ -82,8 +83,8 @@ export default async function CoursePage({ params }: CoursePageProps) {
   const context = { campus: account.campus, course: data };
   const widgets = await Promise.all(
     placements.map(async (placement) => {
-      const Widget = WIDGETS[placement.widget];
-      return { placement, node: Widget ? await Widget({ settings: placement.settings, context, size: { w: placement.w, h: placement.h } }) : null };
+      const plugin = WIDGETS[placement.widget];
+      return { placement, node: plugin ? await plugin.render({ settings: placement.settings, context, size: { w: placement.w, h: placement.h } }) : null };
     }),
   );
   return (

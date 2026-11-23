@@ -87,6 +87,12 @@ const PAGES: &[PageKindDeclaration] = &[
         personal: false,
     },
     PageKindDeclaration {
+        code: "testing.lesson",
+        summary: "A page that always holds its anchor",
+        grid: Grid::STANDARD,
+        personal: false,
+    },
+    PageKindDeclaration {
         code: "testing.home",
         summary: "A page each person arranges for themselves",
         grid: Grid::STANDARD,
@@ -110,7 +116,14 @@ const WIDGETS: &[WidgetDeclaration] = &[
     WidgetDeclaration {
         code: "testing.clock",
         summary: "A clock",
-        sizes: &[clock("testing.page"), clock("testing.home")],
+        icon: "schedule",
+        single: false,
+        required: false,
+        sizes: &[
+            clock("testing.page"),
+            clock("testing.home"),
+            clock("testing.lesson"),
+        ],
         settings: &[WidgetSetting {
             key: "seconds",
             kind: ValueKind::Boolean { default: false },
@@ -119,7 +132,28 @@ const WIDGETS: &[WidgetDeclaration] = &[
     WidgetDeclaration {
         code: "testing.elsewhere",
         summary: "A widget for another page",
+        icon: "widgets",
+        single: false,
+        required: false,
         sizes: &[clock("testing.other")],
+        settings: &[],
+    },
+    WidgetDeclaration {
+        code: "testing.anchor",
+        summary: "What every lesson holds",
+        icon: "anchor",
+        single: true,
+        required: true,
+        sizes: &[WidgetSize::fixed("testing.lesson", Cells::new(8, 4))],
+        settings: &[],
+    },
+    WidgetDeclaration {
+        code: "testing.banner",
+        summary: "A banner a page holds once",
+        icon: "flag",
+        single: true,
+        required: false,
+        sizes: &[clock("testing.page")],
         settings: &[],
     },
 ];

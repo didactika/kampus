@@ -33,15 +33,13 @@
 // ------------------------------------------------------------------------------
 
 //! What courses offers to customisation: the words of its domain in English and Spanish, the groups
-//! feature, custom fields on courses, the page of a course with its widgets, the catalogue for the home,
-//! and the actions rules run.
+//! feature, custom fields on courses, the page of a course, and the actions rules run.
 
 use kampus_access::{Actor, PrincipalId};
 use kampus_common::{Error, FieldError};
 use kampus_module::{
-    Cells, FieldKindDeclaration, FlagDeclaration, Grid, JobFuture, PageKindDeclaration, Resize,
-    RuleActionDeclaration, RuleActionRun, RuleParameter, TermDeclaration, TermForms, ValueKind,
-    WidgetDeclaration, WidgetSetting, WidgetSize,
+    FieldKindDeclaration, FlagDeclaration, Grid, JobFuture, PageKindDeclaration, RuleActionDeclaration,
+    RuleActionRun, RuleParameter, TermDeclaration, TermForms, ValueKind,
 };
 use serde_json::Value;
 
@@ -53,9 +51,6 @@ pub const COURSE_KIND: &str = "courses.course";
 
 /// The page kind of a course.
 pub const COURSE_PAGE: &str = "courses.course";
-
-/// The home of the site, a page kind customisation declares.
-const DASHBOARD_PAGE: &str = "customise.dashboard";
 
 /// The feature of groups and group sets.
 pub const GROUPS_FEATURE: &str = "courses.groups";
@@ -129,70 +124,6 @@ pub const PAGE_KINDS: &[PageKindDeclaration] = &[PageKindDeclaration {
     grid: Grid::STANDARD,
     personal: false,
 }];
-
-/// The widgets of this module.
-pub const WIDGETS: &[WidgetDeclaration] = &[
-    WidgetDeclaration {
-        code: "courses.outline",
-        summary: "The sections of the course the reader sees",
-        sizes: &[WidgetSize::fixed(COURSE_PAGE, Cells::new(8, 10))],
-        settings: &[WidgetSetting {
-            key: "collapsed",
-            kind: ValueKind::Boolean { default: false },
-        }],
-    },
-    WidgetDeclaration {
-        code: "courses.summary",
-        summary: "The summary and dates of the course",
-        sizes: &[WidgetSize {
-            page_kind: COURSE_PAGE,
-            min: Cells::new(4, 2),
-            default: Cells::new(12, 3),
-            max: Cells::new(12, 5),
-            resize: Resize::Both,
-        }],
-        settings: &[],
-    },
-    WidgetDeclaration {
-        code: "courses.catalogue",
-        summary: "The courses of the campus, to search, filter and open",
-        sizes: &[WidgetSize {
-            page_kind: DASHBOARD_PAGE,
-            min: Cells::new(6, 5),
-            default: Cells::new(8, 8),
-            max: Cells::new(12, 16),
-            resize: Resize::Both,
-        }],
-        settings: &[
-            WidgetSetting {
-                key: "heading",
-                kind: ValueKind::Text {
-                    max: 100,
-                    default: "",
-                },
-            },
-            WidgetSetting {
-                key: "view",
-                kind: ValueKind::Choice {
-                    options: &["grid", "list"],
-                    default: "grid",
-                },
-            },
-            WidgetSetting {
-                key: "size",
-                kind: ValueKind::Integer {
-                    min: 4,
-                    max: 48,
-                    default: 8,
-                },
-            },
-            WidgetSetting {
-                key: "sizes",
-                kind: ValueKind::Text { max: 60, default: "" },
-            },
-        ],
-    },
-];
 
 /// The actions of this module rules run.
 pub const RULE_ACTIONS: &[RuleActionDeclaration] = &[RuleActionDeclaration {

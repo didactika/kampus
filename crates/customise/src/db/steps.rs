@@ -534,4 +534,31 @@ alter table {schema}.\"placement\" alter column \"position\" drop not null;",
             reason: "the neutral schema cannot make a column optional nor drop a unique key; regions and positions are no longer written, and their columns are dropped once no supported release reads them",
         },
     ],
+}, Step {
+    sequence: 6,
+    name: "widgets as plugins",
+    revert: &[],
+    action: Some(Action {
+        name: "rename widgets to their plugins",
+        run: super::plugins::rename_widgets,
+    }),
+    changes: &[
+        Change::AddColumn {
+            table: "widget",
+            column: Column::new("icon", Type::Text).nullable(),
+        },
+        Change::AddColumn {
+            table: "widget",
+            column: Column::new("single", Type::Boolean).default(ColumnDefault::Bool(false)),
+        },
+    ],
+}, Step {
+    sequence: 7,
+    name: "widgets every page holds",
+    revert: &[],
+    action: None,
+    changes: &[Change::AddColumn {
+        table: "widget",
+        column: Column::new("required", Type::Boolean).default(ColumnDefault::Bool(false)),
+    }],
 }];

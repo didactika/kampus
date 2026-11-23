@@ -397,8 +397,9 @@ impl Customise {
                 Err(e) => return Err(e),
             };
             let widgets = self.widgets(&mut conn, &layout.placements).await?;
+            let required = self.required(&mut conn, &layout.page_kind).await?;
             problems.extend(
-                super::layout::problems(&layout.page_kind, grid, &widgets, &layout.placements)
+                super::layout::problems(&layout.page_kind, grid, (&widgets, &required), &layout.placements)
                     .into_iter()
                     .map(|p| FieldError::new(format!("layouts[{at}].{}", p.field), p.rule)),
             );

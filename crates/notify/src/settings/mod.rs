@@ -35,7 +35,6 @@
 //! What notify offers to other modules and to campuses: the settings of messaging and the type of
 //! notification of a new message.
 
-pub mod customise;
 pub mod files;
 pub mod messaging;
 pub mod notifications;

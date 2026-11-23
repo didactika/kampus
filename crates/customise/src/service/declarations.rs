@@ -164,14 +164,19 @@ impl Customise {
                     .map(|size| (size.page_kind.to_owned(), stored_size(size)))
                     .collect();
                 sqlx::query(sql(format!(
-                    "insert into {} (code, module, summary, sizes, settings) values ($1, $2, $3, $4, $5)
+                    "insert into {} (code, module, summary, icon, single, required, sizes, settings)
+                     values ($1, $2, $3, $4, $5, $6, $7, $8)
                      on conflict (code) do update set module = excluded.module, summary = excluded.summary,
-                     sizes = excluded.sizes, settings = excluded.settings, retired_at = null",
+                     icon = excluded.icon, single = excluded.single, required = excluded.required, sizes = excluded.sizes,
+                     settings = excluded.settings, retired_at = null",
                     self.table("widget")
                 )))
                 .bind(widget.code)
                 .bind(module.name)
                 .bind(widget.summary)
+                .bind(widget.icon)
+                .bind(widget.single)
+                .bind(widget.required)
                 .bind(Value::Object(sizes))
                 .bind(json!(settings))
                 .execute(&mut *conn)

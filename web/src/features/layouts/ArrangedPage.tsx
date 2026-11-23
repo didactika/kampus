@@ -70,7 +70,6 @@ import { GridEditor } from "./GridEditor";
 import { GridView } from "./GridView";
 import { WidgetFrame } from "./WidgetFrame";
 import { WidgetSettings } from "./WidgetSettings";
-import { WIDGET_ICONS } from "./widget-icons";
 
 /** A widget placed on the page, with what it shows when it was rendered by the server. */
 export interface PlacedWidget {
@@ -133,7 +132,10 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
   latest.current = draft;
 
   const declared = (code: string) => available.find((w) => w.code === code);
-  const name = (code: string) => (t(`widget.${code}`) === `widget.${code}` ? code : t(`widget.${code}`));
+  // A widget names and describes itself in the strings of its plugin, and gives its icon in its declaration.
+  const name = (code: string) => (t(`${code}.name`) === `${code}.name` ? code : t(`${code}.name`));
+  const about = (widget: AvailableWidget) => (t(`${widget.code}.about`) === `${widget.code}.about` ? widget.summary : t(`${widget.code}.about`));
+  const iconOf = (code: string) => declared(code)?.icon || "widgets";
 
   // The arrangement follows the page each time the server renders it again, unless a change is waiting to be saved.
   useEffect(() => {
@@ -212,6 +214,8 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
     }
   }
 
+  // A widget a page holds once is not offered again while it is on the page.
+  const offered = available.filter((w) => !(w.single && draft.some((d) => d.placement.widget === w.code)));
   const guard = useLeaveGuard(pending);
   const configured = draft.find((d) => d.key === configuring);
   /** The shape of a widget while its content is rendered, never a message. */
@@ -228,16 +232,18 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
     ...rectangle(d),
     sizes: declared(d.placement.widget)?.sizes,
     name: name(d.placement.widget),
-    icon: WIDGET_ICONS[d.placement.widget] ?? "widgets",
+    icon: iconOf(d.placement.widget),
     node: d.node ?? shape,
     onSettings: settingsOf(declared(d.placement.widget)).length > 0 ? () => setConfiguring(d.key) : undefined,
+    // A widget every page holds is never removed.
+    removable: !declared(d.placement.widget)?.required,
   });
 
   return (
     <>
       {editing ? (
         <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap", gap: 1, mb: 2 }}>
-          <Button variant="filled" icon="add_circle" onClick={() => setAdding(true)} disabled={available.length === 0}>
+          <Button variant="filled" icon="add_circle" onClick={() => setAdding(true)} disabled={offered.length === 0}>
             {t("dashboard.add")}
           </Button>
           <Tooltip title={t("dashboard.reset.hint")}>
@@ -264,7 +270,7 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
               return {
                 ...rectangle(d),
                 node: (
-                  <WidgetFrame name={f.name} icon={f.icon} onSettings={f.onSettings} onRemove={() => remove(d.key)} style={{ cursor: "default", blockSize: 320 }}>
+                  <WidgetFrame name={f.name} icon={f.icon} onSettings={f.onSettings} onRemove={f.removable ? () => remove(d.key) : undefined} style={{ cursor: "default", blockSize: 320 }}>
                     {f.node}
                   </WidgetFrame>
                 ),
@@ -280,7 +286,7 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
         <DialogTitle id="add-widget">{t("dashboard.add.title")}</DialogTitle>
         <DialogContent>
           <Grid container spacing={1.5}>
-            {available.map((widget) => (
+            {offered.map((widget) => (
               <Grid key={widget.code} size={{ xs: 12, sm: 6 }}>
                 <Card sx={{ blockSize: "100%" }}>
                   <CardActionArea
@@ -292,12 +298,12 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
                     }}
                   >
                     <Box sx={{ display: "grid", placeItems: "center", inlineSize: 40, blockSize: 40, flex: "none", borderRadius: 2.5, backgroundImage: "var(--k-palette-gradient-soft)", color: "primary.main" }}>
-                      <Icon name={WIDGET_ICONS[widget.code] ?? "widgets"} />
+                      <Icon name={iconOf(widget.code)} />
                     </Box>
                     <Box>
                       <Typography variant="subtitle2">{name(widget.code)}</Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {t(`about.${widget.code}`) === `about.${widget.code}` ? widget.summary : t(`about.${widget.code}`)}
+                        {about(widget)}
                       </Typography>
                     </Box>
                   </CardActionArea>
@@ -311,7 +317,7 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
       {preparing ? (
         <WidgetSettings
           title={t("dashboard.add.widget", { widget: name(preparing.code) })}
-          icon={WIDGET_ICONS[preparing.code] ?? "widgets"}
+          icon={iconOf(preparing.code)}
           applyLabel={t("dashboard.insert")}
           declared={settingsOf(preparing)}
           values={Object.fromEntries(settingsOf(preparing).map((s) => [s.key, s.default]))}
@@ -326,7 +332,7 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
       {configured ? (
         <WidgetSettings
           title={t("dashboard.settings.title", { widget: name(configured.placement.widget) })}
-          icon={WIDGET_ICONS[configured.placement.widget] ?? "widgets"}
+          icon={iconOf(configured.placement.widget)}
           declared={settingsOf(declared(configured.placement.widget))}
           values={configured.placement.settings}
           onClose={() => setConfiguring(null)}

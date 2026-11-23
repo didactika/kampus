@@ -46,7 +46,7 @@ import { ArrangedPage } from "../../features/layouts/ArrangedPage";
 import { DASHBOARD, DEFAULT_DASHBOARD, STANDARD_GRID } from "../../features/dashboard/default-layout";
 import { currentAccount } from "../../features/session/current-account";
 import { requestI18n } from "../../i18n/server";
-import { WIDGETS } from "../../modules/widgets/registry";
+import { WIDGETS } from "../../plugins/widgets.generated";
 
 /** The title of the page, in the language of the request. */
 export async function generateMetadata(): Promise<Metadata> {
@@ -61,8 +61,8 @@ export default async function HomePage() {
   const placements = layout?.placements.length ? layout.placements : DEFAULT_DASHBOARD;
   const widgets = await Promise.all(
     placements.map(async (placement) => {
-      const Widget = WIDGETS[placement.widget];
-      return { placement, node: Widget ? await Widget({ settings: placement.settings, context: { campus: account.campus }, size: { w: placement.w, h: placement.h } }) : null };
+      const plugin = WIDGETS[placement.widget];
+      return { placement, node: plugin ? await plugin.render({ settings: placement.settings, context: { campus: account.campus }, size: { w: placement.w, h: placement.h } }) : null };
     }),
   );
   return (

@@ -131,6 +131,10 @@ async fn a_layout_keeps_to_the_grid_and_the_sizes_of_its_widgets_and_fills_defau
         vec![ok([0, 0, 3, 1])],
         vec![ok([10, 0, 3, 2])],
         vec![ok([0, 0, 3, 2]), ok([2, 1, 3, 2])],
+        vec![
+            placement([0, 0, 3, 2], "testing.banner", json!({})),
+            placement([4, 0, 3, 2], "testing.banner", json!({})),
+        ],
     ] {
         let refused = c
             .set_layout(&w.admin, "testing.page", w.course, wrong, false)
@@ -383,5 +387,102 @@ async fn a_theme_merges_tokens_down_the_tree_and_keeps_its_contrast() {
     );
     c.reset_theme(&w.admin, w.campus).await.unwrap();
     assert_eq!(c.theme(w.course).await.unwrap().tokens["radius"], json!(20));
+    w.drop().await;
+}
+
+#[tokio::test]
+async fn a_widget_a_page_holds_once_shows_once_even_when_an_old_layout_holds_more() {
+    let w = world().await;
+    let c = &w.customise;
+    c.set_layout(
+        &w.admin,
+        "testing.page",
+        w.category,
+        vec![placement([0, 0, 3, 2], "testing.banner", json!({}))],
+        false,
+    )
+    .await
+    .unwrap();
+    // A layout written before the widget was single: a second banner, added behind the service's back.
+    let schema = w.db.prefix().schema("customise");
+    sqlx::query(sqlx::AssertSqlSafe(format!(
+        "insert into {schema}.\"placement\" (id, layout_id, widget_code, x, y, w, h, settings)
+         select $1, layout_id, widget_code, 4, 0, 3, 2, settings from {schema}.\"placement\" limit 1"
+    )))
+    .bind(uuid::Uuid::now_v7())
+    .execute(w.db.pool())
+    .await
+    .unwrap();
+    let read = c.layout(&w.admin, "testing.page", w.category).await.unwrap();
+    let banners = read
+        .placements
+        .iter()
+        .filter(|p| p.widget == "testing.banner")
+        .count();
+    assert_eq!(banners, 1, "the first in reading order shows");
+    assert_eq!(read.placements[0].x, 0);
+    w.drop().await;
+}
+
+#[tokio::test]
+async fn a_widget_every_page_holds_cannot_be_left_out_and_comes_back_when_it_is_missing() {
+    let w = world().await;
+    let c = &w.customise;
+    let refused = c
+        .set_layout(
+            &w.admin,
+            "testing.lesson",
+            w.category,
+            vec![placement([0, 0, 3, 2], "testing.clock", json!({}))],
+            false,
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(
+        refused.code(),
+        "customise.layout_invalid",
+        "the anchor cannot be left out"
+    );
+    let grown = c
+        .set_layout(
+            &w.admin,
+            "testing.lesson",
+            w.category,
+            vec![placement([0, 0, 12, 4], "testing.anchor", json!({}))],
+            false,
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(grown.code(), "customise.layout_invalid", "nor take another size");
+    let moved = c
+        .set_layout(
+            &w.admin,
+            "testing.lesson",
+            w.category,
+            vec![placement([4, 2, 8, 4], "testing.anchor", json!({}))],
+            false,
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        (moved.placements[0].x, moved.placements[0].y),
+        (4, 2),
+        "but it moves"
+    );
+    // A layout written before the anchor was required: it is read with the anchor in the first room that holds it.
+    let schema = w.db.prefix().schema("customise");
+    sqlx::query(sqlx::AssertSqlSafe(format!(
+        "update {schema}.\"placement\" set widget_code = 'testing.clock', w = 3, h = 2, x = 0, y = 0"
+    )))
+    .execute(w.db.pool())
+    .await
+    .unwrap();
+    let read = c.layout(&w.admin, "testing.lesson", w.category).await.unwrap();
+    let anchor = read
+        .placements
+        .iter()
+        .find(|p| p.widget == "testing.anchor")
+        .expect("the anchor is back");
+    assert_eq!((anchor.x, anchor.y, anchor.w, anchor.h), (3, 0, 8, 4));
     w.drop().await;
 }

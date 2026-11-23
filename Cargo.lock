@@ -2554,6 +2554,16 @@ dependencies = [
  "kampus-storage-opendal",
  "kampus-tasks",
  "kampus-users",
+ "kampus-widget",
+ "kampus-widget-catalogue",
+ "kampus-widget-course-content",
+ "kampus-widget-course-grades",
+ "kampus-widget-course-progress",
+ "kampus-widget-course-summary",
+ "kampus-widget-notifications",
+ "kampus-widget-text",
+ "kampus-widget-upcoming",
+ "kampus-widget-welcome",
  "metrics",
  "metrics-exporter-prometheus",
  "openidconnect",
@@ -2653,6 +2663,105 @@ dependencies = [
  "time",
  "tokio",
  "uuid",
+]
+
+[[package]]
+name = "kampus-widget"
+version = "0.1.0"
+dependencies = [
+ "kampus-common",
+ "kampus-db",
+ "kampus-module",
+]
+
+[[package]]
+name = "kampus-widget-catalogue"
+version = "0.1.0"
+dependencies = [
+ "kampus-common",
+ "kampus-db",
+ "kampus-module",
+ "kampus-widget",
+]
+
+[[package]]
+name = "kampus-widget-course-content"
+version = "0.1.0"
+dependencies = [
+ "kampus-common",
+ "kampus-db",
+ "kampus-module",
+ "kampus-widget",
+]
+
+[[package]]
+name = "kampus-widget-course-grades"
+version = "0.1.0"
+dependencies = [
+ "kampus-common",
+ "kampus-db",
+ "kampus-module",
+ "kampus-widget",
+]
+
+[[package]]
+name = "kampus-widget-course-progress"
+version = "0.1.0"
+dependencies = [
+ "kampus-common",
+ "kampus-db",
+ "kampus-module",
+ "kampus-widget",
+]
+
+[[package]]
+name = "kampus-widget-course-summary"
+version = "0.1.0"
+dependencies = [
+ "kampus-common",
+ "kampus-db",
+ "kampus-module",
+ "kampus-widget",
+]
+
+[[package]]
+name = "kampus-widget-notifications"
+version = "0.1.0"
+dependencies = [
+ "kampus-common",
+ "kampus-db",
+ "kampus-module",
+ "kampus-widget",
+]
+
+[[package]]
+name = "kampus-widget-text"
+version = "0.1.0"
+dependencies = [
+ "kampus-common",
+ "kampus-db",
+ "kampus-module",
+ "kampus-widget",
+]
+
+[[package]]
+name = "kampus-widget-upcoming"
+version = "0.1.0"
+dependencies = [
+ "kampus-common",
+ "kampus-db",
+ "kampus-module",
+ "kampus-widget",
+]
+
+[[package]]
+name = "kampus-widget-welcome"
+version = "0.1.0"
+dependencies = [
+ "kampus-common",
+ "kampus-db",
+ "kampus-module",
+ "kampus-widget",
 ]
 
 [[package]]

@@ -3866,8 +3866,14 @@ export type components = {
         AvailableWidget: {
             /** @description Its code. */
             code: string;
+            /** @description Its icon, by the name the design system gives it. */
+            icon: string;
+            /** @description Whether every page holds it, at one size and never removed. */
+            required: boolean;
             /** @description Its settings as declared: key, kind and default. */
             settings: unknown[];
+            /** @description Whether a page holds it once at most. */
+            single: boolean;
             /** @description The sizes it takes on the page kind. */
             sizes: components["schemas"]["WidgetSizes"];
             /** @description What it shows. */
