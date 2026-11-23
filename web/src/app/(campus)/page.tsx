@@ -59,7 +59,7 @@ const REGIONS = ["top", "main", "side"];
 
 /** The home of the campus of the person. */
 export default async function HomePage() {
-  const [account, { t }] = [(await currentAccount())!, await requestI18n()];
+  const account = (await currentAccount())!;
   const layout = await optional<Layout | null>(`/customise/scopes/${account.campus}/layouts/${DASHBOARD}`, null);
   const placements = layout?.placements.length ? layout.placements : DEFAULT_DASHBOARD;
   const widgets = await Promise.all(
@@ -76,7 +76,6 @@ export default async function HomePage() {
       widgets={widgets}
       editable={layout?.editable ?? false}
       available={(layout?.widgets ?? []).filter((w) => w.code in WIDGETS)}
-      editingText={t("dashboard.editing")}
     />
   );
 }

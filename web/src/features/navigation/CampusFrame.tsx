@@ -68,6 +68,7 @@ import { browserApi } from "../../api/browser";
 import type { Me, MenuItem as MenuEntry, Profile } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { SchemeMenu } from "../../theme/SchemeMenu";
+import { EditModeProvider, EditModeSwitch } from "../shell/EditMode";
 import { helpAddress } from "./help";
 import { initialsOf, nameOf } from "../account/names";
 
@@ -140,7 +141,7 @@ export function CampusFrame({ account, profile, menu, help, children }: CampusFr
   }
 
   return (
-    <>
+    <EditModeProvider>
       <Box
         component="a"
         href="#content"
@@ -226,6 +227,7 @@ export function CampusFrame({ account, profile, menu, help, children }: CampusFr
             </Menu>
           </Box>
           <Box sx={{ flex: 1 }} />
+          <EditModeSwitch />
           {helpAddress(help, language, path) ? (
             <Tooltip title={t("nav.help")}>
               <IconButton color="inherit" component="a" href={helpAddress(help, language, path) ?? undefined} target="_blank" rel="noopener" aria-label={t("nav.help")}>
@@ -316,6 +318,6 @@ export function CampusFrame({ account, profile, menu, help, children }: CampusFr
       <Container component="main" id="content" tabIndex={-1} maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, outline: "none" }}>
         {children}
       </Container>
-    </>
+    </EditModeProvider>
   );
 }

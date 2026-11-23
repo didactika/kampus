@@ -37,9 +37,9 @@
 
 /**
  * A page arranged with widgets in its regions (top across the page, then the main column and the side), such as the
- * home of a campus or the page of a course. A person who may arrange it gets "Customise page": every widget then shows
- * its controls (move it up, down or to another region, change its settings, remove it), each region offers to add a
- * widget, and the arrangement is saved for the scope, or put back to the default.
+ * home of a campus or the page of a course. For a person who may arrange it, the edit mode of the bar turns it into
+ * its editor: widgets are dragged within and between regions, their settings open at the side, each region offers to
+ * add one, and the arrangement can go back to the default. Every change is saved as it is made.
  */
 
 import Box from "@mui/material/Box";
@@ -49,22 +49,35 @@ import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Grid from "@mui/material/Grid";
-import IconButton from "@mui/material/IconButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
-import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
+import {
+  DndContext,
+  DragOverlay,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type Announcements,
+  type UniqueIdentifier,
+} from "@dnd-kit/core";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import Tooltip from "@mui/material/Tooltip";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
-import { Button, ChangesBar, ConfirmDialog, Icon, useToast } from "@kampus/ui";
+import { Button, ConfirmDialog, Icon, useToast } from "@kampus/ui";
 
 import { browserApi } from "../../api/browser";
 import type { AvailableWidget, DeclaredSetting, Placement } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
+import { useOfferEditMode } from "../shell/EditMode";
 import { useLeaveGuard } from "../shell/LeaveGuard";
+import { DropRegion } from "./DropRegion";
+import { SortableWidget } from "./SortableWidget";
+import { WidgetFrame } from "./WidgetFrame";
 import { WidgetSettings } from "./WidgetSettings";
 import { WIDGET_ICONS } from "./widget-icons";
 
@@ -95,8 +108,6 @@ export interface ArrangedPageProps {
   readonly editable: boolean;
   /** The widgets the reader may add. */
   readonly available: readonly AvailableWidget[];
-  /** What the bar of the editor says: who sees what is saved. */
-  readonly editingText: string;
 }
 
 let keys = 0;
@@ -104,68 +115,120 @@ let keys = 0;
 /** The settings a widget declares, as the API sends them. */
 const settingsOf = (widget: AvailableWidget | undefined): DeclaredSetting[] => (widget?.settings ?? []) as DeclaredSetting[];
 
-/** How many places differ between two arrangements: each widget moved, changed, added or removed counts once. */
-function changesBetween(before: readonly Placement[], after: readonly Placement[]): number {
-  const key = (p: Placement) => JSON.stringify([p.region, p.widget, p.settings]);
-  const longest = Math.max(before.length, after.length);
-  let differ = 0;
-  for (let i = 0; i < longest; i++) {
-    if (!before[i] || !after[i] || key(before[i]!) !== key(after[i]!)) differ += 1;
-  }
-  return differ;
-}
-
 /** `<ArrangedPage scope="…" pageKind="customise.dashboard" regions={["top", "main", "side"]} widgets={…} … />` */
-export function ArrangedPage({ scope, pageKind, regions, widgets, editable, available, editingText }: ArrangedPageProps) {
+export function ArrangedPage({ scope, pageKind, regions, widgets, editable, available }: ArrangedPageProps) {
   const { t } = useI18n();
   const router = useRouter();
   const toast = useToast();
-  const [editing, setEditing] = useState(false);
+  const editing = useOfferEditMode(editable);
   const [draft, setDraft] = useState<Draft[]>([]);
   const [busy, setBusy] = useState(false);
+  const [pending, setPending] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
   const [configuring, setConfiguring] = useState<number | null>(null);
   const [resetting, setResetting] = useState(false);
+  const [selected, setSelected] = useState<number | null>(null);
+  const [dragged, setDragged] = useState<number | null>(null);
+  const [changed, setChanged] = useState(0);
+  const justMoved = useRef(false);
+  const latest = useRef<Draft[]>([]);
+  latest.current = draft;
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 180, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
-  const shown: Draft[] = editing ? draft : widgets.map((w) => ({ key: 0, placement: w.placement, node: w.node }));
   const declared = (code: string) => available.find((w) => w.code === code);
-  const name = (code: string) => t(`widget.${code}`) === `widget.${code}` ? code : t(`widget.${code}`);
+  const name = (code: string) => (t(`widget.${code}`) === `widget.${code}` ? code : t(`widget.${code}`));
+  const fresh = () => widgets.map((w) => ({ key: ++keys, placement: w.placement, node: w.node }));
 
-  function begin() {
-    setDraft(widgets.map((w) => ({ key: ++keys, placement: w.placement, node: w.node })));
-    setEditing(true);
-  }
+  // The arrangement starts from the page as rendered, and follows it again after each save that brought new content.
+  useEffect(() => {
+    if (editing && !pending && dragged === null) setDraft(fresh());
+  }, [editing, widgets]);
 
-  function move(key: number, region: string, by: number) {
-    setDraft((items) => {
-      const at = items.findIndex((d) => d.key === key);
-      if (at < 0) return items;
-      const item = items[at]!;
-      const rest = items.filter((d) => d.key !== key);
-      if (region !== item.placement.region) return [...rest, { ...item, placement: { ...item.placement, region } }];
-      const siblings = rest.filter((d) => d.placement.region === region);
-      const index = items.filter((d) => d.placement.region === region).findIndex((d) => d.key === key) + by;
-      const before = siblings[index];
-      const position = before ? rest.indexOf(before) : rest.length;
-      return [...rest.slice(0, position), item, ...rest.slice(position)];
-    });
-  }
-
-  async function save() {
-    setBusy(true);
+  /** Saves the arrangement as it is now; content is asked again only when a widget needs it. */
+  const save = useCallback(async () => {
+    const items = latest.current;
+    setPending(false);
     try {
       await browserApi(`/customise/scopes/${scope}/layouts/${pageKind}`, {
         method: "PUT",
-        body: { placements: draft.map((d) => ({ region: d.placement.region, widget: d.placement.widget, settings: d.placement.settings })) },
+        body: { placements: items.map((d) => ({ region: d.placement.region, widget: d.placement.widget, settings: d.placement.settings })) },
       });
-      toast(t("dashboard.saved"), "success");
-      setEditing(false);
-      router.refresh();
+      if (items.some((d) => d.node === null)) router.refresh();
     } catch {
-      toast(t("error.generic"), "danger");
-    } finally {
-      setBusy(false);
+      toast(t("dashboard.savefailed"), "danger");
     }
+  }, [scope, pageKind, router, toast, t]);
+
+  // Every change is saved a moment after it is made, so several quick ones go together.
+  useEffect(() => {
+    if (changed === 0) return undefined;
+    setPending(true);
+    const timer = setTimeout(() => void save(), 400);
+    return () => clearTimeout(timer);
+  }, [changed, save]);
+
+  // Leaving the mode saves what is still pending at once.
+  const wasEditing = useRef(editing);
+  useEffect(() => {
+    if (wasEditing.current && !editing && pending) void save();
+    wasEditing.current = editing;
+  }, [editing, pending, save]);
+
+  /** Records a change of the person, to be saved. */
+  const change = (update: (items: Draft[]) => Draft[]) => {
+    setDraft(update);
+    setChanged((n) => n + 1);
+  };
+
+  const nameOf = (id: UniqueIdentifier) => name(draft.find((d) => d.key === Number(id))?.placement.widget ?? "");
+  /** The region of a widget, or the region a drop target is. */
+  const regionOf = (id: UniqueIdentifier): string | undefined =>
+    typeof id === "string" && id.startsWith("region:") ? id.slice("region:".length) : draft.find((d) => d.key === Number(id))?.placement.region;
+  const placeOf = (id: UniqueIdentifier | undefined) => (id === undefined ? "" : t(`region.${regionOf(id) ?? ""}`));
+  const announcements: Announcements = {
+    onDragStart: ({ active }) => t("drag.start", { widget: nameOf(active.id) }),
+    onDragOver: ({ active, over }) => (over ? t("drag.over", { widget: nameOf(active.id), region: placeOf(over.id) }) : undefined),
+    onDragEnd: ({ active, over }) => (over ? t("drag.end", { widget: nameOf(active.id), region: placeOf(over.id) }) : t("drag.cancel", { widget: nameOf(active.id) })),
+    onDragCancel: ({ active }) => t("drag.cancel", { widget: nameOf(active.id) }),
+  };
+
+  /**
+   * A widget dragged over another region joins it, before the widget it is over or at its end. After a move, the
+   * next ones wait for the next frame: the region it left is then the nearest target, and moving back at once would
+   * swing the widget between both for ever.
+   */
+  function moveOver(key: number, over: UniqueIdentifier) {
+    if (justMoved.current) return;
+    setDraft((items) => {
+      const item = items.find((d) => d.key === key);
+      const to = typeof over === "string" && over.startsWith("region:") ? over.slice("region:".length) : items.find((d) => d.key === over)?.placement.region;
+      if (!to || !item || item.placement.region === to) return items;
+      justMoved.current = true;
+      requestAnimationFrame(() => {
+        justMoved.current = false;
+      });
+      const rest = items.filter((d) => d.key !== key);
+      const moved = { ...item, placement: { ...item.placement, region: to } };
+      const at = typeof over === "number" ? rest.findIndex((d) => d.key === over) : -1;
+      if (at >= 0) return [...rest.slice(0, at), moved, ...rest.slice(at)];
+      const last = rest.map((d) => d.placement.region).lastIndexOf(to);
+      return [...rest.slice(0, last + 1), moved, ...rest.slice(last + 1)];
+    });
+  }
+
+  /** A widget dropped on another of its region takes its place; any drop is a change to save. */
+  function drop(key: number, over: UniqueIdentifier | undefined) {
+    change((items) => {
+      if (typeof over !== "number" || over === key) return items;
+      const from = items.findIndex((d) => d.key === key);
+      const to = items.findIndex((d) => d.key === over);
+      if (from < 0 || to < 0 || items[from]!.placement.region !== items[to]!.placement.region) return items;
+      return arrayMove(items, from, to);
+    });
   }
 
   async function reset() {
@@ -173,8 +236,8 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
     try {
       await browserApi(`/customise/scopes/${scope}/layouts/${pageKind}`, { method: "DELETE" });
       toast(t("dashboard.restored"), "success");
-      setEditing(false);
       setResetting(false);
+      setPending(false);
       router.refresh();
     } catch {
       toast(t("error.generic"), "danger");
@@ -183,101 +246,98 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
     }
   }
 
-  const changes = editing ? changesBetween(widgets.map((w) => w.placement), draft.map((d) => d.placement)) : 0;
-  const guard = useLeaveGuard(changes > 0);
+  const shown: Draft[] = editing ? draft : widgets.map((w) => ({ key: 0, placement: w.placement, node: w.node }));
+  const lifted = dragged === null ? undefined : draft.find((d) => d.key === dragged);
+  const guard = useLeaveGuard(pending);
   const sideUsed = editing || shown.some((d) => d.placement.region === "side");
   const span = (region: string) => (region === "main" ? (sideUsed ? 8 : 12) : region === "side" ? 4 : 12);
   const configured = draft.find((d) => d.key === configuring);
+  const preview = (code: string) => (
+    <Stack spacing={1} sx={{ alignItems: "center", py: 4, color: "text.secondary" }}>
+      <Icon name={WIDGET_ICONS[code] ?? "widgets"} size="large" />
+      <Typography variant="body2">{t("dashboard.preview")}</Typography>
+    </Stack>
+  );
 
   return (
     <>
-      {editable && !editing ? (
-        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
-          <Button variant="tonal" icon="space_dashboard" onClick={begin}>
-            {t("dashboard.customise")}
-          </Button>
-        </Box>
+      {editing ? (
+        <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end", mb: 2 }}>
+          <Tooltip title={t("dashboard.reset.hint")}>
+            <span>
+              <Button variant="tonal" icon="restart_alt" onClick={() => setResetting(true)} disabled={busy}>
+                {t("dashboard.reset")}
+              </Button>
+            </span>
+          </Tooltip>
+        </Stack>
       ) : null}
-      <Grid container spacing={3}>
-        {regions.map((region) => {
-          const items = shown.filter((d) => d.placement.region === region);
-          if (!editing && items.length === 0) return null;
-          return (
-            <Grid key={region} size={{ xs: 12, md: span(region) }}>
-              <Stack
-                spacing={3}
-                sx={
-                  editing
-                    ? { p: 2, borderRadius: 4, border: "2px dashed", borderColor: "primary.main", bgcolor: "color-mix(in srgb, var(--k-palette-primary-main) 4%, transparent)" }
-                    : undefined
-                }
-              >
-                {editing ? (
-                  <Typography variant="overline" color="primary">
-                    {t(`region.${region}`)}
-                  </Typography>
-                ) : null}
-                {items.map((item, at) =>
-                  editing ? (
-                    <Card key={item.key} sx={{ overflow: "visible", boxShadow: 2 }}>
-                      <Stack direction="row" spacing={1} sx={{ alignItems: "center", px: 1.5, py: 1, borderBottom: 1, borderColor: "divider" }}>
-                        <Box sx={{ color: "primary.main", display: "flex" }}>
-                          <Icon name={WIDGET_ICONS[item.placement.widget] ?? "widgets"} size="small" />
-                        </Box>
-                        <Typography variant="subtitle2" sx={{ flex: 1 }} noWrap>
-                          {name(item.placement.widget)}
-                        </Typography>
-                        <Tooltip title={t("dashboard.moveup")}>
-                          <span>
-                            <IconButton size="small" aria-label={t("dashboard.moveup")} disabled={at === 0} onClick={() => move(item.key, region, -1)}>
-                              <Icon name="arrow_upward" size="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                        <Tooltip title={t("dashboard.movedown")}>
-                          <span>
-                            <IconButton size="small" aria-label={t("dashboard.movedown")} disabled={at === items.length - 1} onClick={() => move(item.key, region, 1)}>
-                              <Icon name="arrow_downward" size="small" />
-                            </IconButton>
-                          </span>
-                        </Tooltip>
-                        <RegionMenu regions={regions.filter((r) => r !== region)} onMove={(to) => move(item.key, to, 0)} />
-                        {settingsOf(declared(item.placement.widget)).length > 0 ? (
-                          <Tooltip title={t("dashboard.settings")}>
-                            <IconButton size="small" aria-label={t("dashboard.settings")} onClick={() => setConfiguring(item.key)}>
-                              <Icon name="tune" size="small" />
-                            </IconButton>
-                          </Tooltip>
-                        ) : null}
-                        <Tooltip title={t("dashboard.remove")}>
-                          <IconButton size="small" aria-label={t("dashboard.remove")} sx={{ color: "error.main" }} onClick={() => setDraft((d) => d.filter((x) => x.key !== item.key))}>
-                            <Icon name="delete" size="small" />
-                          </IconButton>
-                        </Tooltip>
-                      </Stack>
-                      <Box sx={{ p: 2, pointerEvents: "none", opacity: 0.92, maxBlockSize: 420, overflow: "hidden" }} inert>
-                        {item.node ?? (
-                          <Stack spacing={1} sx={{ alignItems: "center", py: 4, color: "text.secondary" }}>
-                            <Icon name={WIDGET_ICONS[item.placement.widget] ?? "widgets"} size="large" />
-                            <Typography variant="body2">{t("dashboard.preview")}</Typography>
-                          </Stack>
-                        )}
-                      </Box>
-                    </Card>
-                  ) : (
+      {editing ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          accessibility={{ announcements, screenReaderInstructions: { draggable: t("drag.instructions") } }}
+          onDragStart={({ active }) => setDragged(Number(active.id))}
+          onDragOver={({ active, over }) => over && moveOver(Number(active.id), over.id)}
+          onDragEnd={({ active, over }) => {
+            setDragged(null);
+            drop(Number(active.id), over?.id);
+          }}
+          onDragCancel={() => setDragged(null)}
+        >
+          <Grid container spacing={3}>
+            {regions.map((region) => {
+              const items = shown.filter((d) => d.placement.region === region);
+              return (
+                <Grid key={region} size={{ xs: 12, md: span(region) }}>
+                  <DropRegion region={region} label={t(`region.${region}`)} items={items.map((d) => d.key)}>
+                    {items.map((item) => (
+                      <SortableWidget
+                        key={item.key}
+                        id={item.key}
+                        name={name(item.placement.widget)}
+                        icon={WIDGET_ICONS[item.placement.widget] ?? "widgets"}
+                        selected={selected === item.key}
+                        onSelect={() => setSelected(item.key)}
+                        onSettings={settingsOf(declared(item.placement.widget)).length > 0 ? () => setConfiguring(item.key) : undefined}
+                        onRemove={() => change((d) => d.filter((x) => x.key !== item.key))}
+                      >
+                        {item.node ?? preview(item.placement.widget)}
+                      </SortableWidget>
+                    ))}
+                    <Button variant="outlined" icon="add_circle" onClick={() => setAdding(region)} sx={{ alignSelf: "center", borderStyle: "dashed" }}>
+                      {t("dashboard.add")}
+                    </Button>
+                  </DropRegion>
+                </Grid>
+              );
+            })}
+          </Grid>
+          <DragOverlay dropAnimation={{ duration: 180, easing: "cubic-bezier(0.2, 0, 0, 1)" }}>
+            {lifted ? (
+              <WidgetFrame lifted name={name(lifted.placement.widget)} icon={WIDGET_ICONS[lifted.placement.widget] ?? "widgets"}>
+                {lifted.node ?? preview(lifted.placement.widget)}
+              </WidgetFrame>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      ) : (
+        <Grid container spacing={3}>
+          {regions.map((region) => {
+            const items = shown.filter((d) => d.placement.region === region);
+            if (items.length === 0) return null;
+            return (
+              <Grid key={region} size={{ xs: 12, md: span(region) }}>
+                <Stack spacing={3}>
+                  {items.map((item, at) => (
                     <Box key={`${item.placement.widget}-${at}`}>{item.node}</Box>
-                  ),
-                )}
-                {editing ? (
-                  <Button variant="outlined" icon="add_circle" onClick={() => setAdding(region)} sx={{ alignSelf: "center", borderStyle: "dashed" }}>
-                    {t("dashboard.add")}
-                  </Button>
-                ) : null}
-              </Stack>
-            </Grid>
-          );
-        })}
-      </Grid>
+                  ))}
+                </Stack>
+              </Grid>
+            );
+          })}
+        </Grid>
+      )}
 
       <Dialog open={adding !== null} onClose={() => setAdding(null)} maxWidth="sm" fullWidth aria-labelledby="add-widget">
         <DialogTitle id="add-widget">{t("dashboard.add.title", { region: adding ? t(`region.${adding}`) : "" })}</DialogTitle>
@@ -290,7 +350,7 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
                     sx={{ p: 2, blockSize: "100%", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 1.5 }}
                     onClick={() => {
                       const settings = Object.fromEntries(settingsOf(widget).map((s) => [s.key, s.default]));
-                      setDraft((d) => [...d, { key: ++keys, placement: { region: adding ?? "main", widget: widget.code, settings, permission: null }, node: null }]);
+                      change((d) => [...d, { key: ++keys, placement: { region: adding ?? "main", widget: widget.code, settings, permission: null }, node: null }]);
                       setAdding(null);
                     }}
                   >
@@ -318,7 +378,7 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
           values={configured.placement.settings}
           onClose={() => setConfiguring(null)}
           onApply={(settings) => {
-            setDraft((d) => d.map((x) => (x.key === configured.key ? { ...x, placement: { ...x.placement, settings }, node: null } : x)));
+            change((d) => d.map((x) => (x.key === configured.key ? { ...x, placement: { ...x.placement, settings }, node: null } : x)));
             setConfiguring(null);
           }}
         />
@@ -335,54 +395,7 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
       >
         {t("dashboard.reset.body")}
       </ConfirmDialog>
-      <ChangesBar
-        open={editing}
-        dirty={changes > 0}
-        label={t("dashboard.customise")}
-        message={changes > 0 ? t("changes.count", { n: changes }) : editingText}
-        saveLabel={t("dashboard.save")}
-        discardLabel={changes > 0 ? t("dashboard.cancel") : t("changes.done")}
-        busy={busy}
-        onSave={() => void save()}
-        onDiscard={() => setEditing(false)}
-        actions={
-          <Button variant="text" icon="restart_alt" onClick={() => setResetting(true)} disabled={busy} sx={{ color: "inherit" }}>
-            {t("dashboard.reset")}
-          </Button>
-        }
-      />
       {guard}
-    </>
-  );
-}
-
-/** The menu that moves a widget to another region. */
-function RegionMenu({ regions, onMove }: { readonly regions: readonly string[]; readonly onMove: (region: string) => void }) {
-  const { t } = useI18n();
-  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
-  return (
-    <>
-      <Tooltip title={t("dashboard.moveto", { region: "…" })}>
-        <IconButton size="small" aria-label={t("dashboard.moveto", { region: "…" })} aria-haspopup="menu" onClick={(e) => setAnchor(e.currentTarget)}>
-          <Icon name="drag_indicator" size="small" />
-        </IconButton>
-      </Tooltip>
-      <Menu anchorEl={anchor} open={Boolean(anchor)} onClose={() => setAnchor(null)}>
-        {regions.map((region) => (
-          <MenuItem
-            key={region}
-            onClick={() => {
-              onMove(region);
-              setAnchor(null);
-            }}
-          >
-            <ListItemIcon>
-              <Icon name="arrow_forward" size="small" />
-            </ListItemIcon>
-            {t("dashboard.moveto", { region: t(`region.${region}`) })}
-          </MenuItem>
-        ))}
-      </Menu>
     </>
   );
 }

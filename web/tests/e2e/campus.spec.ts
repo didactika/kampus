@@ -39,17 +39,17 @@ import { expect, test } from "@playwright/test";
 
 import { tAccount as t } from "./support";
 
-test("the home greets the person and offers to arrange it to whoever may", async ({ page }) => {
+test("the home greets the person and offers the edit mode to whoever may arrange it", async ({ page }) => {
   await page.goto("/");
   // The welcome may carry a heading the campus wrote, so the test asks only for a heading with text.
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/\S/);
   await expect(page.getByRole("heading", { name: t("catalogue.title") })).toBeVisible();
-  const customise = page.getByRole("button", { name: t("dashboard.customise") });
-  if (await customise.isVisible()) {
-    await customise.click();
-    await expect(page.getByText(t("dashboard.editing"))).toBeVisible();
-    await page.getByRole("region", { name: t("dashboard.customise") }).getByRole("button", { name: t("changes.done") }).click();
-    await expect(page.getByText(t("dashboard.editing"))).toBeHidden();
+  const mode = page.getByRole("switch", { name: t("editmode.label") });
+  if (await mode.isVisible()) {
+    await mode.check();
+    await expect(page.getByRole("button", { name: t("dashboard.reset") })).toBeVisible();
+    await mode.uncheck();
+    await expect(page.getByRole("button", { name: t("dashboard.reset") })).toBeHidden();
   }
 });
 
@@ -130,4 +130,44 @@ test("the profile offers its unsaved changes in a floating bar and asks before l
   await bar.getByRole("button", { name: t("changes.discard") }).click();
   await expect(given).toHaveValue(before);
   await expect(bar).toBeHidden();
+});
+
+test("a widget of the home moves with the keyboard and every move is saved at once", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("heading", { level: 1 }).waitFor();
+  const mode = page.getByRole("switch", { name: t("editmode.label") });
+  test.skip(!(await mode.isVisible()), "the account cannot arrange the home");
+  const me = (await (await page.request.get("/api/v1/identity/me")).json()) as { campus: string };
+  const layout = `/api/v1/customise/scopes/${me.campus}/layouts/customise.dashboard`;
+  type Placed = { region: string; widget: string; settings: unknown };
+  const placements = async () => ((await (await page.request.get(layout)).json()) as { placements: Placed[] }).placements;
+  const before = await placements();
+  const welcome = t("drag.handle", { widget: t("widget.customise.welcome") });
+  test.skip(!before.some((p) => p.widget === "customise.welcome" && p.region === "top"), "the home has no welcome at its top");
+  await mode.check();
+  /** Lifts the welcome, moves it some steps and drops it. */
+  const move = async (key: "ArrowDown" | "ArrowUp", steps: number) => {
+    await page.getByRole("button", { name: welcome }).focus();
+    await page.keyboard.press("Space");
+    for (let i = 0; i < steps; i += 1) {
+      await page.keyboard.press(key);
+      await page.waitForTimeout(150);
+    }
+    await page.keyboard.press("Space");
+  };
+  try {
+    // Down into the main region, after the catalogue.
+    await move("ArrowDown", 2);
+    await expect.poll(async () => JSON.stringify(await placements()), { timeout: 5000 }).not.toBe(JSON.stringify(before));
+    // Back up past the catalogue into the top region.
+    await move("ArrowUp", 3);
+    await expect.poll(async () => JSON.stringify(await placements()), { timeout: 5000 }).toBe(JSON.stringify(before));
+  } finally {
+    // Whatever happened, the home of the campus is left as it was.
+    await page.request.put(layout, {
+      headers: { "x-kampus": "1" },
+      data: { placements: before.map(({ region, widget, settings }) => ({ region, widget, settings })) },
+    });
+  }
+  await mode.uncheck();
 });

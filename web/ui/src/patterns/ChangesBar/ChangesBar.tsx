@@ -96,17 +96,22 @@ export function ChangesBar({ open, message, label, saveLabel, discardLabel, onSa
             pr: 1,
             py: 1,
             borderRadius: 999,
-            bgcolor: "surface.inverse",
-            color: "surface.onInverse",
+            bgcolor: "background.paper",
+            color: "text.primary",
+            border: 1,
+            borderColor: "color-mix(in srgb, var(--k-palette-primary-main) 35%, transparent)",
+            boxShadow: "0 12px 32px -8px color-mix(in srgb, var(--k-palette-primary-main) 35%, transparent)",
           }}
         >
-          <Icon name={dirty ? "edit_note" : "edit_square"} size="small" />
+          <Box sx={{ display: "flex", color: "primary.main" }}>
+            <Icon name={dirty ? "edit_note" : "edit_square"} size="small" />
+          </Box>
           <Typography variant="body2" aria-live="polite" sx={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             {message}
           </Typography>
           <Stack direction="row" spacing={1} sx={{ alignItems: "center", flex: "none" }}>
             {actions}
-            <Button variant="text" onClick={onDiscard} disabled={busy} sx={{ color: "inherit" }}>
+            <Button variant="text" onClick={onDiscard} disabled={busy}>
               {discardLabel}
             </Button>
             {dirty ? (

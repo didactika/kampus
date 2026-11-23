@@ -36,20 +36,21 @@
 "use client";
 
 /**
- * The settings of a widget, as a form made from what its module declares: a text field for text (several lines for a
+ * The settings of a widget, in a panel at the side of the page so the widget stays in sight, as a form made from what
+ * its module declares: a text field for text (several lines for a
  * long one), a switch for on or off, a list for a choice, a number within its bounds.
  */
 
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogTitle from "@mui/material/DialogTitle";
+import Box from "@mui/material/Box";
+import Drawer from "@mui/material/Drawer";
+import IconButton from "@mui/material/IconButton";
+import Typography from "@mui/material/Typography";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import { useId, useState } from "react";
 
-import { Button, SelectField, TextField } from "@kampus/ui";
+import { Button, Icon, SelectField, TextField } from "@kampus/ui";
 
 import type { DeclaredSetting } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
@@ -71,10 +72,22 @@ export function WidgetSettings({ title, declared, values, onApply, onClose }: Wi
   const label = (key: string) => (t(`setting.${key}`) === `setting.${key}` ? key : t(`setting.${key}`));
   const set = (key: string, value: unknown) => setDraft((d) => ({ ...d, [key]: value }));
   return (
-    <Dialog open onClose={onClose} maxWidth="xs" fullWidth aria-labelledby={heading}>
-      <DialogTitle id={heading}>{title}</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2.5} sx={{ pt: 1 }}>
+    <Drawer
+      open
+      anchor="right"
+      onClose={onClose}
+      slotProps={{ paper: { role: "dialog", "aria-labelledby": heading, sx: { inlineSize: 400, maxInlineSize: "100vw", display: "flex", flexDirection: "column" } } }}
+    >
+      <Stack direction="row" sx={{ alignItems: "center", gap: 1, px: 3, py: 2, borderBottom: 1, borderColor: "divider" }}>
+        <Typography id={heading} variant="h4" component="h2" sx={{ flex: 1 }}>
+          {title}
+        </Typography>
+        <IconButton aria-label={t("dashboard.cancel")} onClick={onClose}>
+          <Icon name="close" />
+        </IconButton>
+      </Stack>
+      <Box sx={{ flex: 1, overflowY: "auto", px: 3, py: 3 }}>
+        <Stack spacing={2.5}>
           {declared.map((setting) => {
             const value = draft[setting.key] ?? setting.default;
             switch (setting.kind.type) {
@@ -127,15 +140,15 @@ export function WidgetSettings({ title, declared, values, onApply, onClose }: Wi
             }
           })}
         </Stack>
-      </DialogContent>
-      <DialogActions>
+      </Box>
+      <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end", px: 3, py: 2, borderTop: 1, borderColor: "divider" }}>
         <Button variant="text" onClick={onClose}>
           {t("dashboard.cancel")}
         </Button>
         <Button variant="filled" onClick={() => onApply(draft)}>
           {t("dashboard.apply")}
         </Button>
-      </DialogActions>
-    </Dialog>
+      </Stack>
+    </Drawer>
   );
 }
