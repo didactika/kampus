@@ -207,3 +207,25 @@ test("the settings of a widget are checked before they apply", async ({ page }) 
   await panel.getByRole("button", { name: t("dashboard.cancel") }).first().click();
   await mode.uncheck();
 });
+
+test("a course being arranged keeps its content and summary: they move, but are never removed", async ({ page }) => {
+  await page.goto("/courses");
+  await page.locator('a[href^="/courses/"]').first().click();
+  await page.getByRole("heading", { level: 1 }).first().waitFor();
+  const mode = page.getByRole("switch", { name: t("editmode.label") });
+  await mode.waitFor({ timeout: 5000 }).catch(() => undefined);
+  test.skip(!(await mode.isVisible()), "the account cannot arrange the course");
+  await mode.check();
+  try {
+    for (const widget of ["widget_course_content", "widget_course_summary"]) {
+      const frame = page.getByRole("group", { name: new RegExp(`^${t(`${widget}.name`)}:`) });
+      await expect(frame, `${widget} is on the page`).toHaveCount(1);
+      await frame.hover();
+      await expect(frame.getByRole("button", { name: t("dashboard.remove") })).toHaveCount(0);
+      await expect(frame.getByRole("img", { name: t("grid.fixed") })).toBeVisible();
+    }
+  } finally {
+    // Nothing was changed, so leaving the mode saves nothing.
+    await mode.uncheck();
+  }
+});

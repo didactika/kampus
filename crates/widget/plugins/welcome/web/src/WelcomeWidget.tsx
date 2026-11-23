@@ -41,10 +41,11 @@ import { Welcome } from "./Welcome";
 /** The fewest rows that hold the figures under the greeting. */
 const ROWS_FOR_FIGURES = 4;
 
-/** `customise.welcome`: the greeting, and the figures of the reader when it sets them and is tall enough. */
+/** The greeting, and the figures of the reader when the widget is tall enough. */
 export async function WelcomeWidget({ settings, context, size }: WidgetProps) {
   const account = await currentAccount();
-  const figures = settings["figures"] !== false && size.h >= ROWS_FOR_FIGURES;
+  // Its presentation follows its size: the greeting alone when short, with the figures of the reader when taller.
+  const figures = size.h >= ROWS_FOR_FIGURES;
   const [catalogue, inbox] = figures
     ? await Promise.all([catalogueOf(context.campus), optional<Inbox | null>("/notify/inbox?limit=1", null)])
     : [null, null];

@@ -37,7 +37,7 @@
 
 import { test } from "@playwright/test";
 
-import { expectAccessible } from "./support";
+import { expectAccessible, t } from "./support";
 
 for (const path of ["/", "/courses", "/notifications", "/notifications/preferences", "/account", "/account?tab=security"]) {
   test(`${path} has no WCAG 2.2 AA violations`, async ({ page }) => {
@@ -46,6 +46,22 @@ for (const path of ["/", "/courses", "/notifications", "/notifications/preferenc
     await expectAccessible(page);
   });
 }
+
+test("the home being arranged has no WCAG 2.2 AA violations", async ({ page }) => {
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  const mode = page.getByRole("switch", { name: t("editmode.label") });
+  await mode.waitFor({ timeout: 5000 }).catch(() => undefined);
+  test.skip(!(await mode.isVisible()), "the account cannot arrange the home");
+  await mode.check();
+  await page.getByRole("list", { name: t("grid.label") }).waitFor();
+  await page.getByRole("group").first().focus();
+  try {
+    await expectAccessible(page);
+  } finally {
+    await mode.uncheck();
+  }
+});
 
 test("a course has no WCAG 2.2 AA violations", async ({ page }) => {
   await page.goto("/courses");

@@ -37,7 +37,7 @@
 
 import { ProgressCard, isDone, text, type WidgetProps } from "@kampus/web/host";
 
-/** `progress.course` */
+/** The progress of the reader in the course. */
 export function ProgressWidget({ settings, context }: WidgetProps) {
   const course = context.course;
   if (!course) return null;

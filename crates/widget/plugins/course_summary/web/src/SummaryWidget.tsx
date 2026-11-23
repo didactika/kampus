@@ -37,7 +37,7 @@
 
 import { SummaryCard, type WidgetProps } from "@kampus/web/host";
 
-/** `courses.summary` */
+/** The summary and dates of the course. */
 export function SummaryWidget({ context }: WidgetProps) {
   return context.course ? <SummaryCard course={context.course.course} /> : null;
 }

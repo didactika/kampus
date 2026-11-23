@@ -252,7 +252,7 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
   return (
     <>
       {editing ? (
-        <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap", gap: 1, mb: 2 }}>
+        <Stack direction="row" spacing={1} role="toolbar" aria-label={t("editmode.label")} sx={{ justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap", gap: 1, mb: 2 }}>
           <Button variant="filled" icon="add_circle" onClick={() => setAdding(true)} disabled={offered.length === 0}>
             {t("dashboard.add")}
           </Button>

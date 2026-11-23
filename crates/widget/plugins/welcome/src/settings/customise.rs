@@ -42,30 +42,24 @@ const DASHBOARD: &str = "customise.dashboard";
 /// The widget of this plugin.
 pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
     code: crate::module::NAME,
-    summary: "A greeting in the colours of the brand, with the figures of the reader",
+    summary: "A greeting in the colours of the brand, with the figures of the reader when it is tall enough",
     icon: "home",
     single: true,
     required: false,
     sizes: &[WidgetSize {
         page_kind: DASHBOARD,
         min: Cells::new(6, 3),
-        default: Cells::new(12, 4),
+        default: Cells::new(8, 5),
         max: Cells::new(12, 6),
         resize: Resize::Both,
-        // Wider than half the page its greeting and figures fit in four rows; narrower, they wrap and need six.
-        bands: &[Band::new((6, 6), (3, 6)), Band::new((7, 12), (3, 4))],
+        // Up to two thirds of the page the greeting wraps and the figures need up to six rows; wider, four hold all.
+        bands: &[Band::new((6, 8), (3, 6)), Band::new((9, 12), (3, 4))],
     }],
-    settings: &[
-        WidgetSetting {
-            key: "heading",
-            kind: ValueKind::Text {
-                max: 100,
-                default: "",
-            },
+    settings: &[WidgetSetting {
+        key: "heading",
+        kind: ValueKind::Text {
+            max: 100,
+            default: "",
         },
-        WidgetSetting {
-            key: "figures",
-            kind: ValueKind::Boolean { default: true },
-        },
-    ],
+    }],
 }];

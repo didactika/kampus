@@ -48,6 +48,7 @@ import { useTheme } from "@mui/material/styles";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { reading, type Item } from "./grid/engine";
+import { rows, spots as place, type Spot } from "./grid/spots";
 
 /** The room between widgets, in units of the spacing of the theme. */
 export const GAP = 3;
@@ -68,13 +69,6 @@ export interface GridViewProps {
   readonly items: readonly ShownWidget[];
 }
 
-/** Where each widget goes once measured: its left, top, width and height in pixels. */
-interface Spot {
-  readonly left: number;
-  readonly top: number;
-  readonly width: number;
-}
-
 /** `<GridView columns={12} row={72} items={…} />` */
 export function GridView({ columns, row, items }: GridViewProps) {
   const theme = useTheme();
@@ -84,7 +78,7 @@ export function GridView({ columns, row, items }: GridViewProps) {
   const [width, setWidth] = useState(0);
   const [heights, setHeights] = useState<Readonly<Record<number, number>>>({});
   const gap = GAP * UNIT;
-  const cell = (h: number) => h * row + (h - 1) * gap;
+  const cell = (h: number) => rows({ columns, row, gap, width }, h);
 
   useEffect(() => {
     const element = canvas.current;
@@ -108,21 +102,9 @@ export function GridView({ columns, row, items }: GridViewProps) {
 
   const order = reading(items);
   const measured = wide && width > 0 && order.every((i) => heights[i.key] !== undefined);
-  const column = (width - gap * (columns - 1)) / columns;
-  // Each widget rests on the lowest widget above it that shares a column, or on its own row when it is pinned.
-  const spots = new Map<number, Spot>();
-  let bottom = 0;
-  if (measured) {
-    const placed: { readonly x: number; readonly w: number; readonly end: number }[] = [];
-    for (const item of order) {
-      const floor = placed.filter((p) => p.x < item.x + item.w && item.x < p.x + p.w).reduce((low, p) => Math.max(low, p.end + gap), 0);
-      const top = item.pinned ? Math.max(floor, item.y * (row + gap)) : floor;
-      const height = Math.min(heights[item.key] ?? 0, cell(item.h));
-      spots.set(item.key, { left: item.x * (column + gap), top, width: item.w * column + (item.w - 1) * gap });
-      placed.push({ x: item.x, w: item.w, end: top + height });
-      bottom = Math.max(bottom, top + height);
-    }
-  }
+  const { at: spots, bottom } = measured
+    ? place(items, { columns, row, gap, width }, (item) => heights[item.key] ?? 0)
+    : { at: new Map<number, Spot>(), bottom: 0 };
 
   return (
     <Box
@@ -155,7 +137,7 @@ export function GridView({ columns, row, items }: GridViewProps) {
                 if (element) contents.current.set(item.key, element);
                 else contents.current.delete(item.key);
               }}
-              sx={{ maxBlockSize: { md: cell(item.h) }, overflow: { md: "auto" }, display: "flex", flexDirection: "column" }}
+              sx={{ maxBlockSize: { md: cell(item.h) }, overflow: { md: "clip" }, overflowClipMargin: 40, display: "flex", flexDirection: "column", "& > *": { minBlockSize: 0 } }}
             >
               {item.node}
             </Box>

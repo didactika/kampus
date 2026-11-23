@@ -48,6 +48,7 @@ import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent as R
 import { useI18n } from "../../i18n/I18nProvider";
 import { place, reading, step as past, within, type Item, type Sizes } from "./grid/engine";
 import { GAP } from "./GridView";
+import { rows, spots } from "./grid/spots";
 import { WidgetFrame } from "./WidgetFrame";
 
 /** The pixels of one unit of spacing of the theme. */
@@ -110,6 +111,20 @@ interface Gesture {
   readonly dy: number;
 }
 
+/**
+ * The height the content of a widget needs, in pixels: what it shows, plus what the lists inside it hide below their
+ * fold.
+ */
+function natural(element: HTMLElement): number {
+  let hidden = 0;
+  for (const inner of element.querySelectorAll<HTMLElement>("*")) {
+    if (inner.scrollHeight > inner.clientHeight + 1 && /(auto|scroll)/.test(getComputedStyle(inner).overflowY)) {
+      hidden = Math.max(hidden, inner.scrollHeight - inner.clientHeight);
+    }
+  }
+  return Math.max(element.scrollHeight, element.offsetHeight) + hidden;
+}
+
 /** `<GridEditor columns={12} row={72} items={…} onChange={…} onRemove={…} />` */
 export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: GridEditorProps) {
   const { t } = useI18n();
@@ -118,6 +133,9 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
   const [gesture, setGesture] = useState<Gesture | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [announced, setAnnounced] = useState("");
+  const contents = useRef(new Map<number, HTMLDivElement>());
+  const [heights, setHeights] = useState<Readonly<Record<number, number>>>({});
+  const [naturals, setNaturals] = useState<Readonly<Record<number, number>>>({});
   const gap = GAP * UNIT;
 
   useEffect(() => {
@@ -128,31 +146,62 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
     return () => observer.disconnect();
   }, []);
 
+  // The height each widget shows, measured as the page measures it.
+  useEffect(() => {
+    const observer = new ResizeObserver((entries) => {
+      setHeights((known) => {
+        const next = { ...known };
+        for (const entry of entries) next[Number((entry.target as HTMLElement).dataset["key"])] = (entry.target as HTMLElement).offsetHeight;
+        return next;
+      });
+      setNaturals((known) => {
+        const next = { ...known };
+        for (const entry of entries) next[Number((entry.target as HTMLElement).dataset["key"])] = natural(entry.target as HTMLElement);
+        return next;
+      });
+    });
+    for (const element of contents.current.values()) observer.observe(element);
+    return () => observer.disconnect();
+    // The widgets render once the width of the page is known, so they are observed again then.
+  }, [items, width > 0]);
+
   const column = width > 0 ? (width - gap * (columns - 1)) / columns : 0;
   const pitchX = column + gap;
   const pitchY = row + gap;
+  const metrics = { columns, row, gap, width };
   const box = (item: Pick<Item, "x" | "y" | "w" | "h">) => ({
     left: item.x * pitchX,
     top: item.y * pitchY,
     width: item.w * column + (item.w - 1) * gap,
-    height: item.h * row + (item.h - 1) * gap,
+    height: rows(metrics, item.h),
   });
   const sizesOf = (key: number) => items.find((i) => i.key === key)?.sizes;
+  /** The most rows a widget may take: those its content fills, so it never grows past what it shows. */
+  const fill = (key: number, size: { readonly w: number; readonly h: number }, low: number) => {
+    const content = naturals[key];
+    if (content === undefined) return size;
+    return { ...size, h: Math.max(low, Math.min(size.h, Math.ceil((content + gap) / pitchY))) };
+  };
+  // A widget shows the height of its content, as on the page; the one being resized shows the rows it will take.
+  const heightOf = (resizing: number | null) => (item: Item) => (item.key === resizing ? rows(metrics, item.h) : (heights[item.key] ?? rows(metrics, item.h)));
+  const layout = (list: readonly Item[], resizing: number | null = null) => spots(list, metrics, heightOf(resizing));
 
   /** The rectangle the gesture gives the widget, and where every widget then is. */
   function preview(g: Gesture): { readonly target: Item; readonly placed: readonly Item[] } {
     const start = g.origin.find((i) => i.key === g.key)!;
+    const from = layout(g.origin).at.get(g.key) ?? box(start);
     let to: Item = start;
     if (g.kind === "move") {
-      to = { ...start, x: Math.round((start.x * pitchX + g.dx) / pitchX), y: Math.max(0, Math.round((start.y * pitchY + g.dy) / pitchY)) };
+      to = { ...start, x: Math.round((from.left + g.dx) / pitchX), y: Math.max(0, Math.round((from.top + g.dy) / pitchY)) };
     } else {
       // The edge the person holds moves; the opposite one stays where it was.
       const { left, right, top, bottom } = g.edges;
-      const wide = left ? box(start).width - g.dx : right ? box(start).width + g.dx : box(start).width;
-      const tall = top ? box(start).height - g.dy : bottom ? box(start).height + g.dy : box(start).height;
+      const height = rows(metrics, start.h);
+      const wide = left ? from.width - g.dx : right ? from.width + g.dx : from.width;
+      const tall = top ? height - g.dy : bottom ? height + g.dy : height;
       const size = { w: Math.round((wide + gap) / pitchX), h: Math.round((tall + gap) / pitchY) };
       const sizes = sizesOf(g.key);
-      const kept = sizes ? within(sizes, size, columns) : { w: start.w, h: start.h };
+      const kept = sizes ? fill(g.key, within(sizes, size, columns), Math.min(start.h, sizes.min.h)) : { w: start.w, h: start.h };
       to = {
         ...start,
         ...kept,
@@ -165,9 +214,10 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
   }
 
   const rectangles = (list: readonly Item[]) => list.map(({ key, x, y, w, h, pinned }) => ({ key, x, y, w, h, pinned }));
-  const shown = gesture?.started ? preview(gesture).placed : rectangles(items);
-  const at = (key: number) => shown.find((i) => i.key === key)!;
-  const bottom = shown.reduce((low, i) => Math.max(low, i.y + i.h), 0) + SPARE_ROWS;
+  const lifted = gesture?.started ? gesture : null;
+  const shown = lifted ? preview(lifted).placed : rectangles(items);
+  const now = layout(shown, lifted?.kind === "resize" ? lifted.key : null);
+  const origin = lifted ? layout(lifted.origin) : now;
 
   const say = (item: Item) => {
     const widget = items.find((i) => i.key === item.key);
@@ -212,7 +262,7 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
     let to: Item;
     if (event.shiftKey) {
       if (!item.sizes) return;
-      to = { ...start, ...within(item.sizes, { w: start.w + dx, h: start.h + dy }, columns) };
+      to = { ...start, ...fill(item.key, within(item.sizes, { w: start.w + dx, h: start.h + dy }, columns), Math.min(start.h, item.sizes.min.h)) };
     } else if (dy !== 0) {
       const placed = past(current, item.key, dy > 0, columns);
       onChange(placed);
@@ -226,8 +276,9 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
     say(placed.find((i) => i.key === item.key)!);
   }
 
-  const lifted = gesture?.started ? gesture : null;
   const resizable = (sizes: Sizes | undefined) => sizes && sizes.resize !== "none";
+  // While a widget moves, the page keeps a few rows below the last widget to drop it there.
+  const bottom = now.bottom + (lifted ? SPARE_ROWS * pitchY : 0);
 
   return (
     <Box>
@@ -242,16 +293,11 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
         role="list"
         aria-label={t("grid.label")}
         aria-describedby="grid-instructions"
-        sx={{
-          position: "relative",
-          blockSize: bottom * pitchY - gap,
-          borderRadius: 4,
-          transition: "block-size 200ms cubic-bezier(0.2, 0, 0, 1)",
-        }}
+        sx={{ position: "relative", blockSize: bottom, transition: "block-size 200ms cubic-bezier(0.2, 0, 0, 1)" }}
       >
         {width > 0 && lifted
           ? // While a widget moves or grows, the cells of the grid show, so the person sees where it can go.
-            Array.from({ length: bottom * columns }, (_, cell) => (
+            Array.from({ length: Math.ceil(bottom / pitchY) * columns }, (_, cell) => (
               <Box
                 key={cell}
                 aria-hidden
@@ -271,7 +317,7 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
             aria-hidden
             sx={{
               position: "absolute",
-              ...box(preview(lifted).target),
+              ...now.at.get(lifted.key),
               borderRadius: 4,
               border: "2px dashed",
               borderColor: "primary.main",
@@ -283,13 +329,12 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
         {width > 0
           ? reading(items).map((item) => {
               const moving = lifted?.key === item.key;
-              const rect = box(at(item.key));
-              const start = moving ? box(lifted.origin.find((i) => i.key === item.key)!) : rect;
-              const style = moving
-                ? lifted.kind === "move"
+              const spot = now.at.get(item.key)!;
+              const start = origin.at.get(item.key) ?? spot;
+              const style =
+                moving && lifted.kind === "move"
                   ? { left: start.left + lifted.dx, top: start.top + lifted.dy, width: start.width, height: start.height, zIndex: 3 }
-                  : { ...rect, zIndex: 3 }
-                : { ...rect, zIndex: selected === item.key ? 2 : 1 };
+                  : { ...spot, zIndex: moving ? 3 : selected === item.key ? 2 : 1 };
               return (
                 <Box
                   key={item.key}
@@ -311,6 +356,13 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
                     role="group"
                     aria-roledescription={t("grid.widget")}
                     aria-label={t("grid.position", { widget: item.name, x: item.x + 1, y: item.y + 1, w: item.w, h: item.h })}
+                    contentRef={(element: HTMLDivElement | null) => {
+                      if (element) {
+                        element.dataset["key"] = String(item.key);
+                        contents.current.set(item.key, element);
+                      } else contents.current.delete(item.key);
+                    }}
+                    maxContent={rows(metrics, item.h)}
                     onFocus={() => setSelected(item.key)}
                     onPointerDown={(event) => begin(event, item.key, "move")}
                     onPointerMove={follow}

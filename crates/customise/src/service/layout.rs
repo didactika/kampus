@@ -74,8 +74,10 @@ impl Widget {
             .find(|s| s.get("key").and_then(Value::as_str) == Some(key))
     }
 
-    /// The settings of a placement with the defaults of what it leaves out.
+    /// The settings of a placement with the defaults of what it leaves out, and without those the widget no longer
+    /// declares, so a widget that drops a setting never breaks a page or its next save.
     fn with_defaults(&self, mut settings: BTreeMap<String, Value>) -> BTreeMap<String, Value> {
+        settings.retain(|key, _| self.setting(key).is_some());
         for declared in &self.settings {
             if let (Some(key), Some(default)) = (
                 declared.get("key").and_then(Value::as_str),

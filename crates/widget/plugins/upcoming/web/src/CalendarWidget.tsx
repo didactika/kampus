@@ -37,7 +37,7 @@
 
 import { CalendarCard, DAYS_AHEAD, number, type WidgetProps } from "@kampus/web/host";
 
-/** `calendar.upcoming` */
+/** The dates of the course in the days ahead. */
 export function CalendarWidget({ settings, context }: WidgetProps) {
   const course = context.course;
   return course ? <CalendarCard items={course.items} days={Math.min(DAYS_AHEAD, number(settings, "days", 30))} /> : null;
