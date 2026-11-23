@@ -35,6 +35,8 @@
 
 "use client";
 
+import { useId } from "react";
+
 /**
  * The welcome of the home of a campus: a band in the colours of the brand that greets the person, says what the page
  * is for and shows at a glance how many courses, categories and unread notifications there are.
@@ -80,6 +82,8 @@ export interface WelcomeProps {
 /** `<Welcome name="lea" courses={12} categories={3} unread={2} />` */
 export function Welcome({ name, heading, figures: counts }: WelcomeProps) {
   const { t, number } = useI18n();
+  // A page may hold more than one welcome, so each names its own heading.
+  const title = useId();
   const figures: Figure[] = counts
     ? [
         { icon: "school", label: t("stats.courses"), value: counts.courses, href: "/courses" },
@@ -90,7 +94,7 @@ export function Welcome({ name, heading, figures: counts }: WelcomeProps) {
   return (
     <Box
       component="section"
-      aria-labelledby="welcome"
+      aria-labelledby={title}
       sx={{
         position: "relative",
         overflow: "hidden",
@@ -117,7 +121,7 @@ export function Welcome({ name, heading, figures: counts }: WelcomeProps) {
       <Typography variant="overline" sx={{ position: "relative", opacity: 0.85, letterSpacing: "0.12em", textTransform: "uppercase" }}>
         {t("app.name")}
       </Typography>
-      <Typography id="welcome" variant="h1" sx={{ position: "relative", mt: 1, fontSize: { md: "2.75rem" }, lineHeight: 1.15, maxInlineSize: "30ch" }}>
+      <Typography id={title} variant="h1" sx={{ position: "relative", mt: 1, fontSize: { md: "2.75rem" }, lineHeight: 1.15, maxInlineSize: "30ch" }}>
         {heading || t("home.greeting", { name })}
       </Typography>
       <Typography variant="body1" sx={{ position: "relative", mt: 1.5, opacity: 0.9, maxInlineSize: "52ch" }}>

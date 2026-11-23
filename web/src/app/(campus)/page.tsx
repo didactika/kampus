@@ -43,7 +43,7 @@ import type { Metadata } from "next";
 import { optional } from "../../api/server";
 import type { Layout } from "../../api/types";
 import { ArrangedPage } from "../../features/layouts/ArrangedPage";
-import { DASHBOARD, DEFAULT_DASHBOARD } from "../../features/dashboard/default-layout";
+import { DASHBOARD, DEFAULT_DASHBOARD, STANDARD_GRID } from "../../features/dashboard/default-layout";
 import { currentAccount } from "../../features/session/current-account";
 import { requestI18n } from "../../i18n/server";
 import { WIDGETS } from "../../modules/widgets/registry";
@@ -54,9 +54,6 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("dashboard.title") };
 }
 
-/** The regions of the home when the server does not say. */
-const REGIONS = ["top", "main", "side"];
-
 /** The home of the person: their own arrangement, or the one of their campus until they make one. */
 export default async function HomePage() {
   const account = (await currentAccount())!;
@@ -65,14 +62,14 @@ export default async function HomePage() {
   const widgets = await Promise.all(
     placements.map(async (placement) => {
       const Widget = WIDGETS[placement.widget];
-      return { placement, node: Widget ? await Widget({ settings: placement.settings, context: { campus: account.campus } }) : null };
+      return { placement, node: Widget ? await Widget({ settings: placement.settings, context: { campus: account.campus }, size: { w: placement.w, h: placement.h } }) : null };
     }),
   );
   return (
     <ArrangedPage
       scope={account.scope}
       pageKind={DASHBOARD}
-      regions={layout?.regions.length ? layout.regions : REGIONS}
+      grid={layout ? { columns: layout.grid.columns, row: layout.grid.row_pixels } : STANDARD_GRID}
       widgets={widgets}
       editable={layout?.editable ?? false}
       available={(layout?.widgets ?? []).filter((w) => w.code in WIDGETS)}

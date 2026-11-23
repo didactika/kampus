@@ -1131,7 +1131,7 @@ export type paths = {
         };
         /** The layout of a kind of page in a scope */
         get: operations["get_customise_scopes_scope_layouts_page_kind"];
-        /** Place widgets in the regions of a kind of page */
+        /** Place widgets on the grid of a kind of page */
         put: operations["put_customise_scopes_scope_layouts_page_kind"];
         post?: never;
         /** Go back to the layout the scope inherits */
@@ -3868,6 +3868,8 @@ export type components = {
             code: string;
             /** @description Its settings as declared: key, kind and default. */
             settings: unknown[];
+            /** @description The sizes it takes on the page kind. */
+            sizes: components["schemas"]["WidgetSizes"];
             /** @description What it shows. */
             summary: string;
         };
@@ -5099,20 +5101,20 @@ export type components = {
         };
         /** @description The layout of a page kind in a scope. */
         Layout: {
-            /** @description Whether the reader may change it here: they hold `customise.layout.manage` and no scope above locks it. */
+            /** @description Whether the reader may change it here: they may arrange the page and no scope above locks it. */
             editable: boolean;
+            /** @description The grid its widgets are placed on. */
+            grid: components["schemas"]["PageGrid"];
             /** @description Where the layout came from. */
             origin: components["schemas"]["Origin"];
             /** @description The page kind. */
             page_kind: string;
             /**
-             * @description The widgets the reader sees, by region and in order; the page shows its own arrangement when the
-             *     layout comes from its declaration.
+             * @description The widgets the reader sees, in reading order (by row, then by column); the page shows its own arrangement
+             *     when the layout comes from its declaration.
              */
             placements: components["schemas"]["Placement"][];
-            /** @description Its regions, in order. */
-            regions: string[];
-            /** @description The widgets the reader may place on the page kind, with their settings; only when it is editable. */
+            /** @description The widgets the reader may place on the page kind, with their sizes and settings; only when it is editable. */
             widgets: components["schemas"]["AvailableWidget"][];
         };
         /** @description Bands that turn a percentage into a letter. */
@@ -5520,6 +5522,21 @@ export type components = {
             /** @description The cursor of the next page, absent on the last page. */
             next: string | null;
         };
+        /** @description The grid of a page kind. */
+        PageGrid: {
+            /**
+             * Format: uint16
+             * @description How many columns it has.
+             */
+            columns: number;
+            /** @description The height of a row, by name: `compact`, `regular` or `tall`. */
+            row: components["schemas"]["RowHeight"];
+            /**
+             * Format: uint16
+             * @description The height of a row, in CSS pixels.
+             */
+            row_pixels: number;
+        };
         /** @description The picture of an account. */
         PictureFile: {
             /**
@@ -5528,15 +5545,18 @@ export type components = {
              */
             file: string;
         };
-        /** @description A widget in a region of a layout, with its settings. */
+        /** @description A widget on the grid of a layout: the rectangle of cells it takes, and its settings. */
         Placement: {
+            /**
+             * Format: uint16
+             * @description How many rows it takes, within the sizes the widget declares for the page kind.
+             */
+            h: number;
             /**
              * @description The permission a person needs to see it; everyone who sees the page when absent.
              * @default null
              */
             permission: string | null;
-            /** @description The region of the page kind. */
-            region: string;
             /**
              * @description Its settings, each of the kind the widget declares; the defaults fill what is left out.
              * @default {}
@@ -5544,8 +5564,23 @@ export type components = {
             settings: {
                 [key: string]: unknown;
             };
+            /**
+             * Format: uint16
+             * @description How many columns it takes, within the sizes the widget declares for the page kind.
+             */
+            w: number;
             /** @description The widget, by code. */
             widget: string;
+            /**
+             * Format: uint16
+             * @description The first column it takes, from 0.
+             */
+            x: number;
+            /**
+             * Format: uint16
+             * @description The first row it takes, from 0.
+             */
+            y: number;
         };
         /** @description A policy of a campus, as of its latest version. */
         Policy: {
@@ -5914,6 +5949,8 @@ export type components = {
         };
         /** @description The state of a request to join. */
         RequestState: "pending" | "approved" | "rejected" | "withdrawn";
+        /** @description How a widget may be resized. */
+        Resize: "none" | "horizontal" | "vertical" | "both";
         /** @description A kind of personal data and how long the campus keeps it after the account is deleted. */
         Retention: {
             /** @description The data category, `<module>.<what>`. */
@@ -5926,6 +5963,8 @@ export type components = {
             /** @description Why the data is kept. */
             purpose: string;
         };
+        /** @description The height of a row of a grid, by name. */
+        RowHeight: "compact" | "regular" | "tall";
         /** @description A rule of a scope; it reacts to the events of its scope and of the scopes below. */
         Rule: {
             /** @description What it does, in order. */
@@ -6190,6 +6229,19 @@ export type components = {
             link: string;
             /** @constant */
             status: "confirm_link";
+        };
+        /** @description A size on a grid, in cells. */
+        Size: {
+            /**
+             * Format: uint16
+             * @description Rows.
+             */
+            h: number;
+            /**
+             * Format: uint16
+             * @description Columns.
+             */
+            w: number;
         };
         /** @description Where a state came from. */
         Source: "automatic" | "exception";
@@ -6478,6 +6530,17 @@ export type components = {
              * @description Shown until.
              */
             until: string | null;
+        };
+        /** @description The sizes a widget takes on a page kind. */
+        WidgetSizes: {
+            /** @description The one it takes when it is placed. */
+            default: components["schemas"]["Size"];
+            /** @description The largest. */
+            max: components["schemas"]["Size"];
+            /** @description The smallest. */
+            min: components["schemas"]["Size"];
+            /** @description How it may be resized between them. */
+            resize: components["schemas"]["Resize"];
         };
         /** @description A course with the people who own it. */
         WithOwners: {
@@ -11006,12 +11069,15 @@ export interface operations {
                         /** @description Its widgets, in order. */
                         placements: {
                             /**
+                             * Format: uint16
+                             * @description How many rows it takes, within the sizes the widget declares for the page kind.
+                             */
+                            h: number;
+                            /**
                              * @description The permission a person needs to see it; everyone who sees the page when absent.
                              * @default null
                              */
                             permission?: string | null;
-                            /** @description The region of the page kind. */
-                            region: string;
                             /**
                              * @description Its settings, each of the kind the widget declares; the defaults fill what is left out.
                              * @default {}
@@ -11019,8 +11085,23 @@ export interface operations {
                             settings?: {
                                 [key: string]: unknown;
                             };
+                            /**
+                             * Format: uint16
+                             * @description How many columns it takes, within the sizes the widget declares for the page kind.
+                             */
+                            w: number;
                             /** @description The widget, by code. */
                             widget: string;
+                            /**
+                             * Format: uint16
+                             * @description The first column it takes, from 0.
+                             */
+                            x: number;
+                            /**
+                             * Format: uint16
+                             * @description The first row it takes, from 0.
+                             */
+                            y: number;
                         }[];
                     }[];
                     /**
@@ -11215,15 +11296,18 @@ export interface operations {
                      * @default false
                      */
                     locked?: boolean;
-                    /** @description Its widgets, by region and in order. */
+                    /** @description Its widgets, each a rectangle of cells of the grid. */
                     placements: {
+                        /**
+                         * Format: uint16
+                         * @description How many rows it takes, within the sizes the widget declares for the page kind.
+                         */
+                        h: number;
                         /**
                          * @description The permission a person needs to see it; everyone who sees the page when absent.
                          * @default null
                          */
                         permission?: string | null;
-                        /** @description The region of the page kind. */
-                        region: string;
                         /**
                          * @description Its settings, each of the kind the widget declares; the defaults fill what is left out.
                          * @default {}
@@ -11231,8 +11315,23 @@ export interface operations {
                         settings?: {
                             [key: string]: unknown;
                         };
+                        /**
+                         * Format: uint16
+                         * @description How many columns it takes, within the sizes the widget declares for the page kind.
+                         */
+                        w: number;
                         /** @description The widget, by code. */
                         widget: string;
+                        /**
+                         * Format: uint16
+                         * @description The first column it takes, from 0.
+                         */
+                        x: number;
+                        /**
+                         * Format: uint16
+                         * @description The first row it takes, from 0.
+                         */
+                        y: number;
                     }[];
                 };
             };

@@ -34,13 +34,19 @@
 
 //! What records offers to customisation: a widget of the page of a course.
 
-use kampus_module::{ValueKind, WidgetDeclaration, WidgetSetting};
+use kampus_module::{Cells, Resize, ValueKind, WidgetDeclaration, WidgetSetting, WidgetSize};
 
 /// The widgets of this module.
 pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
     code: "records.grades",
     summary: "The grades of the reader in the course",
-    page_kinds: &["courses.course"],
+    sizes: &[WidgetSize {
+        page_kind: "courses.course",
+        min: Cells::new(3, 3),
+        default: Cells::new(4, 4),
+        max: Cells::new(6, 8),
+        resize: Resize::Both,
+    }],
     settings: &[WidgetSetting {
         key: "heading",
         kind: ValueKind::Text {

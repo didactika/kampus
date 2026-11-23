@@ -34,13 +34,19 @@
 
 //! What progress offers to customisation: a widget of the page of a course.
 
-use kampus_module::{ValueKind, WidgetDeclaration, WidgetSetting};
+use kampus_module::{Cells, Resize, ValueKind, WidgetDeclaration, WidgetSetting, WidgetSize};
 
 /// The widgets of this module.
 pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
     code: "progress.course",
     summary: "The progress of the reader in the course",
-    page_kinds: &["courses.course"],
+    sizes: &[WidgetSize {
+        page_kind: "courses.course",
+        min: Cells::new(3, 2),
+        default: Cells::new(4, 3),
+        max: Cells::new(6, 5),
+        resize: Resize::Both,
+    }],
     settings: &[WidgetSetting {
         key: "heading",
         kind: ValueKind::Text {

@@ -51,3 +51,29 @@ fn the_schema_of_every_module_passes_the_linter() {
             .join("\n")
     );
 }
+
+#[test]
+fn every_widget_declares_sizes_that_fit_the_pages_it_goes_on() {
+    use kampus_server::wiring::registry::MODULES;
+    let pages: Vec<_> = MODULES.iter().flat_map(|m| m.page_kinds.iter()).collect();
+    let mut problems = Vec::new();
+    for widget in MODULES.iter().flat_map(|m| m.widgets.iter()) {
+        if widget.sizes.is_empty() {
+            problems.push(format!("{} declares no size, so it goes on no page", widget.code));
+        }
+        for size in widget.sizes {
+            match pages.iter().find(|p| p.code == size.page_kind) {
+                None => problems.push(format!(
+                    "{} has a size for {}, which no module declares",
+                    widget.code, size.page_kind
+                )),
+                Some(page) => {
+                    if let Some(problem) = size.problem(page.grid) {
+                        problems.push(format!("{} on {}: {problem}", widget.code, size.page_kind));
+                    }
+                }
+            }
+        }
+    }
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}

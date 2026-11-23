@@ -42,3 +42,4 @@
 
 mod command;
 mod permission;
+mod widget_size;

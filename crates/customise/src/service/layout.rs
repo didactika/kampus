@@ -32,9 +32,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Layouts: the widgets of a page kind arranged in its regions per scope, validated against the regions
-//! and the widgets the modules declare; a widget no module declares any more is skipped, never breaks the
-//! page.
+//! Layouts: the widgets of a page kind placed on its grid per scope, validated against the grid and the sizes the
+//! widgets declare for it; a widget no module declares any more, or no longer for the page kind, is skipped and
+//! never breaks the page.
 
 use std::collections::BTreeMap;
 
@@ -46,15 +46,18 @@ use sqlx::{PgConnection, Row};
 
 use super::{is_code, principal, refuse_below_lock};
 use crate::permissions::{LAYOUT_MANAGE, LAYOUT_OWN};
-use crate::{AvailableWidget, Customise, Layout, Origin, Placement, sql};
+use crate::{AvailableWidget, Customise, Layout, Origin, PageGrid, Placement, RowHeight, WidgetSizes, sql};
 
 /// The most widgets a layout holds.
 const MAX_PLACEMENTS: usize = 50;
 
-/// A widget as declared: the page kinds it may be placed in and its settings.
+/// The lowest row a widget may start on.
+const MAX_ROW: u16 = 400;
+
+/// A widget as declared: the sizes it takes on each page kind and its settings.
 pub(super) struct Widget {
-    /// The page kinds; every one when empty.
-    page_kinds: Vec<String>,
+    /// Its sizes, by page kind; it is placed on no other.
+    sizes: BTreeMap<String, WidgetSizes>,
     /// Its settings as stored: key, kind and default.
     settings: Vec<Value>,
 }
@@ -83,20 +86,23 @@ impl Widget {
 
 /// Reads a widget from its row.
 pub(super) fn widget(row: &sqlx::postgres::PgRow, settings: &str) -> Widget {
-    let strings = |v: Value| -> Vec<Value> { v.as_array().cloned().unwrap_or_default() };
+    let sizes: Option<Value> = row.get("sizes");
     Widget {
-        page_kinds: strings(row.get("page_kinds"))
-            .iter()
-            .filter_map(|v| v.as_str().map(str::to_owned))
-            .collect(),
-        settings: strings(row.get(settings)),
+        sizes: sizes
+            .and_then(|s| serde_json::from_value(s).ok())
+            .unwrap_or_default(),
+        settings: row
+            .get::<Value, _>(settings)
+            .as_array()
+            .cloned()
+            .unwrap_or_default(),
     }
 }
 
-/// The problems of the placements of a layout of a page kind.
+/// The problems of the placements of a layout of a page kind on its grid.
 pub(super) fn problems(
     page_kind: &str,
-    regions: &[String],
+    grid: PageGrid,
     widgets: &BTreeMap<String, Widget>,
     placements: &[Placement],
 ) -> Vec<FieldError> {
@@ -106,15 +112,28 @@ pub(super) fn problems(
     }
     for (at, placement) in placements.iter().enumerate() {
         let name = |part: &str| format!("placements[{at}].{part}");
-        if !regions.contains(&placement.region) {
-            problems.push(FieldError::new(name("region"), "one_of"));
-        }
         let Some(widget) = widgets.get(&placement.widget) else {
             problems.push(FieldError::new(name("widget"), "one_of"));
             continue;
         };
-        if !widget.page_kinds.is_empty() && !widget.page_kinds.iter().any(|p| p == page_kind) {
+        let Some(sizes) = widget.sizes.get(page_kind) else {
             problems.push(FieldError::new(name("widget"), "page_kind"));
+            continue;
+        };
+        if !(sizes.min.w..=sizes.max.w).contains(&placement.w) {
+            problems.push(FieldError::new(name("w"), "range"));
+        }
+        if !(sizes.min.h..=sizes.max.h).contains(&placement.h) {
+            problems.push(FieldError::new(name("h"), "range"));
+        }
+        if u32::from(placement.x) + u32::from(placement.w) > u32::from(grid.columns) {
+            problems.push(FieldError::new(name("x"), "range"));
+        }
+        if placement.y > MAX_ROW {
+            problems.push(FieldError::new(name("y"), "range"));
+        }
+        if placements[..at].iter().any(|other| other.overlaps(placement)) {
+            problems.push(FieldError::new(name("y"), "overlap"));
         }
         for (key, value) in &placement.settings {
             let fits = widget
@@ -130,6 +149,30 @@ pub(super) fn problems(
         }
     }
     problems
+}
+
+/// The grid of a page kind, as stored.
+fn grid_of(stored: Option<Value>) -> PageGrid {
+    let columns = stored
+        .as_ref()
+        .and_then(|g| g.get("columns"))
+        .and_then(Value::as_u64)
+        .and_then(|c| u16::try_from(c).ok())
+        .unwrap_or(12);
+    let row = stored
+        .and_then(|g| g.get("row").cloned())
+        .and_then(|r| serde_json::from_value(r).ok())
+        .unwrap_or(RowHeight::Regular);
+    let row_pixels = match row {
+        RowHeight::Compact => 48,
+        RowHeight::Regular => 72,
+        RowHeight::Tall => 96,
+    };
+    PageGrid {
+        columns,
+        row,
+        row_pixels,
+    }
 }
 
 impl Customise {
@@ -172,16 +215,16 @@ impl Customise {
         // Everything is read on one connection, which is given back before any permission is checked: a check takes
         // a connection of its own, and holding one while waiting for another starves the pool under load.
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
-        let regions = self.regions(&mut conn, page_kind).await?;
+        let grid = self.grid(&mut conn, page_kind).await?;
         let nearest = self
             .nearest(&mut conn, ("layout", "page_kind_code"), page_kind, scope)
             .await?;
         let available = self.available(&mut conn, page_kind).await?;
         let rows = match &nearest {
             Some((id, _)) => sqlx::query(sql(format!(
-                "select p.region, p.widget_code, p.settings, p.permission, w.page_kinds, w.settings as declared
+                "select p.widget_code, p.x, p.y, p.w, p.h, p.settings, p.permission, w.sizes, w.settings as declared
                  from {} p join {} w on w.code = p.widget_code
-                 where p.layout_id = $1 and w.retired_at is null order by p.position",
+                 where p.layout_id = $1 and w.retired_at is null order by p.y, p.x",
                 self.table("placement"),
                 self.table("widget")
             )))
@@ -198,24 +241,32 @@ impl Customise {
         let widgets = if editable { available } else { Vec::new() };
         let mut placements = Vec::new();
         for row in &rows {
-            let region: String = row.get("region");
+            let declared = widget(row, "declared");
+            let Some(sizes) = declared.sizes.get(page_kind) else {
+                continue;
+            };
             let permission: Option<String> = row.get("permission");
-            if !regions.contains(&region) || !self.holds(actor, permission.as_deref(), scope).await? {
+            if !self.holds(actor, permission.as_deref(), scope).await? {
                 continue;
             }
             let settings: BTreeMap<String, Value> =
                 serde_json::from_value(row.get("settings")).unwrap_or_default();
+            let cell = |column: &str| u16::try_from(row.get::<i32, _>(column)).unwrap_or(0);
+            // A widget whose sizes changed since it was placed takes the nearest size it now allows.
+            let w = cell("w").clamp(sizes.min.w, sizes.max.w).min(grid.columns);
             placements.push(Placement {
-                region,
                 widget: row.get("widget_code"),
-                settings: widget(row, "declared").with_defaults(settings),
+                x: cell("x").min(grid.columns.saturating_sub(w)),
+                y: cell("y"),
+                w,
+                h: cell("h").clamp(sizes.min.h, sizes.max.h),
+                settings: declared.with_defaults(settings),
                 permission,
             });
         }
-        placements.sort_by_key(|p| regions.iter().position(|r| *r == p.region));
         Ok(Layout {
             page_kind: page_kind.to_owned(),
-            regions,
+            grid,
             placements,
             origin,
             editable,
@@ -223,10 +274,10 @@ impl Customise {
         })
     }
 
-    /// The widgets that may be placed on a page kind, with their settings as declared.
+    /// The widgets that may be placed on a page kind, with their sizes there and their settings as declared.
     async fn available(&self, conn: &mut PgConnection, page_kind: &str) -> Result<Vec<AvailableWidget>> {
         let rows = sqlx::query(sql(format!(
-            "select code, summary, page_kinds, settings from {} where retired_at is null order by code",
+            "select code, summary, sizes, settings from {} where retired_at is null order by code",
             self.table("widget")
         )))
         .fetch_all(&mut *conn)
@@ -234,25 +285,27 @@ impl Customise {
         .map_err(kampus_db::classify)?;
         Ok(rows
             .iter()
-            .filter(|row| {
+            .filter_map(|row| {
                 let declared = widget(row, "settings");
-                declared.page_kinds.is_empty() || declared.page_kinds.iter().any(|p| p == page_kind)
-            })
-            .map(|row| AvailableWidget {
-                code: row.get("code"),
-                summary: row.get("summary"),
-                settings: widget(row, "settings").settings,
+                let sizes = *declared.sizes.get(page_kind)?;
+                Some(AvailableWidget {
+                    code: row.get("code"),
+                    summary: row.get("summary"),
+                    sizes,
+                    settings: declared.settings,
+                })
             })
             .collect())
     }
 
-    /// Replaces the layout of a page kind in a scope, locked or not; needs `customise.layout.manage` there.
+    /// Replaces the layout of a page kind in a scope, locked or not.
     ///
     /// # Errors
     ///
-    /// `not_found` for an unknown page kind, `permission_denied` without the permission, `validation`
-    /// (`customise.layout_invalid`) for an unknown region or widget, a widget not offered for the page kind
-    /// or a setting it does not declare, `conflict` (`customise.locked_above`) below a scope that locks it.
+    /// `not_found` for an unknown page kind, `permission_denied` when the actor may not arrange it, `validation`
+    /// (`customise.layout_invalid`) for an unknown widget, one not offered for the page kind, a rectangle outside
+    /// the grid or the sizes of its widget, two rectangles that overlap or a setting the widget does not declare,
+    /// `conflict` (`customise.locked_above`) below a scope that locks it.
     pub async fn set_layout(
         &self,
         actor: &Actor,
@@ -263,9 +316,9 @@ impl Customise {
     ) -> Result<Layout> {
         self.require_arranges(actor, page_kind, scope).await?;
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
-        let regions = self.regions(&mut conn, page_kind).await?;
+        let grid = self.grid(&mut conn, page_kind).await?;
         let widgets = self.widgets(&mut conn, &placements).await?;
-        let problems = problems(page_kind, &regions, &widgets, &placements);
+        let problems = problems(page_kind, grid, &widgets, &placements);
         if !problems.is_empty() {
             return Err(Error::validation("customise.layout_invalid", problems));
         }
@@ -296,7 +349,7 @@ impl Customise {
     ///
     /// # Errors
     ///
-    /// `permission_denied` without `customise.layout.manage`.
+    /// `permission_denied` when the actor may not arrange it.
     pub async fn reset_layout(&self, actor: &Actor, page_kind: &str, scope: ScopeId) -> Result<Layout> {
         self.require_arranges(actor, page_kind, scope).await?;
         self.remove_in_scope(actor, ("layout", "page_kind_code"), page_kind, scope)
@@ -312,7 +365,7 @@ impl Customise {
     ) -> Result<BTreeMap<String, Widget>> {
         let codes: Vec<&str> = placements.iter().map(|p| p.widget.as_str()).collect();
         let rows = sqlx::query(sql(format!(
-            "select code, page_kinds, settings from {} where code = any($1) and retired_at is null",
+            "select code, sizes, settings from {} where code = any($1) and retired_at is null",
             self.table("widget")
         )))
         .bind(&codes)
@@ -325,10 +378,10 @@ impl Customise {
             .collect())
     }
 
-    /// The regions of a page kind, in order.
-    pub(super) async fn regions(&self, conn: &mut PgConnection, page_kind: &str) -> Result<Vec<String>> {
-        let regions: Value = sqlx::query_scalar(sql(format!(
-            "select regions from {} where code = $1 and retired_at is null",
+    /// The grid of a page kind.
+    pub(super) async fn grid(&self, conn: &mut PgConnection, page_kind: &str) -> Result<PageGrid> {
+        let grid: Option<Value> = sqlx::query_scalar(sql(format!(
+            "select grid from {} where code = $1 and retired_at is null",
             self.table("page_kind")
         )))
         .bind(page_kind)
@@ -338,7 +391,7 @@ impl Customise {
         .ok_or_else(|| {
             Error::not_found("customise.page_kind_unknown").with_param("code", page_kind.to_owned())
         })?;
-        Ok(serde_json::from_value(regions).unwrap_or_default())
+        Ok(grid_of(grid))
     }
 
     /// Stores the layout of a page kind in a scope with its placements, replacing the ones it had.
@@ -371,19 +424,21 @@ impl Customise {
         .execute(&mut *conn)
         .await
         .map_err(kampus_db::classify)?;
-        for (position, placement) in (0_i32..).zip(placements) {
+        for placement in placements {
             sqlx::query(sql(format!(
-                "insert into {} (id, layout_id, region, widget_code, settings, permission, position)
-                 values ($1, $2, $3, $4, $5, $6, $7)",
+                "insert into {} (id, layout_id, widget_code, x, y, w, h, settings, permission)
+                 values ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
                 self.table("placement")
             )))
             .bind(uuid::Uuid::now_v7())
             .bind(id)
-            .bind(&placement.region)
             .bind(&placement.widget)
+            .bind(i32::from(placement.x))
+            .bind(i32::from(placement.y))
+            .bind(i32::from(placement.w))
+            .bind(i32::from(placement.h))
             .bind(json!(placement.settings))
             .bind(placement.permission.as_deref())
-            .bind(position)
             .execute(&mut *conn)
             .await
             .map_err(kampus_db::classify)?;

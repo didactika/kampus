@@ -19,8 +19,8 @@ Module `kampus-customise` (level 1, [architecture](../03-design/architecture.md#
 | Term override | 2 | The campus or scope's word for a term in a language | Term, scope, language, forms |
 | Custom field | 1 | A typed field added to an entity kind in a scope | entity kind, scope, code, type, validation, visibility, required, sort key |
 | Custom field value | 1 | The value of a custom field for one entity | Custom field, entity id, value |
-| Layout | 2 | The arrangement of regions and widgets of a page kind in a scope | page kind, scope, version |
-| Widget placement | 2 | One widget in a region of a layout with its settings | Layout, region, widget, settings, sort key, visibility |
+| Layout | 2 | The widgets of a page kind placed on its grid in a scope | page kind, scope, version |
+| Widget placement | 2 | One widget on a rectangle of cells of a layout, with its settings | Layout, widget, column, row, width, height, settings, visibility |
 | Navigation menu | 2 | A menu as data: items, links to pages or URLs, visibility by permission | scope, menu kind, items |
 | Theme | 2 | A set of design tokens (colour, typography, spacing, radius, motion) for a scope | scope, tokens, parent, version |
 | Rule | 1 | When an event happens and conditions hold, run actions | scope, trigger, conditions, actions, enabled, owner |
@@ -36,7 +36,7 @@ Module `kampus-customise` (level 1, [architecture](../03-design/architecture.md#
 | RN-213 | Every customisation is resolved from the most specific scope up and returns its origin; a level may lock a kind for the levels below (as RN-165). |
 | RN-214 | Custom fields are typed (text, number, date, choice, multiple choice, boolean, file, reference to an account), validated on write, and stored as typed values with a foreign key to the field and owned through each module's link table, like files (RN-127), so there is no polymorphic owner. |
 | RN-215 | Custom field visibility and editing follow permissions (`customise.field.view`, `.edit`) per field; private fields never reach the API or exports of people without them. |
-| RN-216 | Layouts and menus are data validated against the page kind's regions and the widgets installed; an unknown or disabled widget is skipped, never breaks the page; teachers change course layouts within what the campus allows. |
+| RN-216 | Layouts and menus are data validated against the grid of the page kind, the widgets installed and the sizes each declares for the page kind (DEC-090); an unknown or disabled widget is skipped, never breaks the page; teachers change course layouts within what the campus allows. |
 | RN-217 | Themes are design tokens validated against the token schema: seed colours from which the colour roles of a light and a dark scheme are grown, each keeping the contrast of WCAG 2.2 AA (RNF-003); a theme whose roles would still fail it is refused; the client applies them as CSS custom properties without code. |
 | RN-218 | Rules have a typed trigger (a declared event type), typed conditions and typed actions declared by modules (enrol, notify, set progress, add to group, set a grade category, call a webhook); free code is not allowed. |
 | RN-219 | Rule actions run as jobs after commit with the permissions of the rule's owner; a rule chain is limited in depth (RN-141) and a rule cannot trigger itself; every run is recorded. |

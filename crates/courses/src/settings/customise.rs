@@ -39,8 +39,9 @@
 use kampus_access::{Actor, PrincipalId};
 use kampus_common::{Error, FieldError};
 use kampus_module::{
-    FieldKindDeclaration, FlagDeclaration, JobFuture, PageKindDeclaration, RuleActionDeclaration,
-    RuleActionRun, RuleParameter, TermDeclaration, TermForms, ValueKind, WidgetDeclaration, WidgetSetting,
+    Cells, FieldKindDeclaration, FlagDeclaration, Grid, JobFuture, PageKindDeclaration, Resize,
+    RuleActionDeclaration, RuleActionRun, RuleParameter, TermDeclaration, TermForms, ValueKind,
+    WidgetDeclaration, WidgetSetting, WidgetSize,
 };
 use serde_json::Value;
 
@@ -125,7 +126,7 @@ pub const FIELD_KINDS: &[FieldKindDeclaration] = &[FieldKindDeclaration {
 pub const PAGE_KINDS: &[PageKindDeclaration] = &[PageKindDeclaration {
     code: COURSE_PAGE,
     summary: "The page of a course",
-    regions: &["top", "main", "side"],
+    grid: Grid::STANDARD,
     personal: false,
 }];
 
@@ -134,7 +135,7 @@ pub const WIDGETS: &[WidgetDeclaration] = &[
     WidgetDeclaration {
         code: "courses.outline",
         summary: "The sections of the course the reader sees",
-        page_kinds: &[COURSE_PAGE],
+        sizes: &[WidgetSize::fixed(COURSE_PAGE, Cells::new(8, 10))],
         settings: &[WidgetSetting {
             key: "collapsed",
             kind: ValueKind::Boolean { default: false },
@@ -143,13 +144,25 @@ pub const WIDGETS: &[WidgetDeclaration] = &[
     WidgetDeclaration {
         code: "courses.summary",
         summary: "The summary and dates of the course",
-        page_kinds: &[COURSE_PAGE],
+        sizes: &[WidgetSize {
+            page_kind: COURSE_PAGE,
+            min: Cells::new(4, 2),
+            default: Cells::new(12, 3),
+            max: Cells::new(12, 5),
+            resize: Resize::Both,
+        }],
         settings: &[],
     },
     WidgetDeclaration {
         code: "courses.catalogue",
         summary: "The courses of the campus, to search, filter and open",
-        page_kinds: &[DASHBOARD_PAGE],
+        sizes: &[WidgetSize {
+            page_kind: DASHBOARD_PAGE,
+            min: Cells::new(6, 5),
+            default: Cells::new(8, 8),
+            max: Cells::new(12, 16),
+            resize: Resize::Both,
+        }],
         settings: &[
             WidgetSetting {
                 key: "heading",

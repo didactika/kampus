@@ -34,13 +34,19 @@
 
 //! What notifications offer to customisation: the inbox as a widget of the home.
 
-use kampus_module::{ValueKind, WidgetDeclaration, WidgetSetting};
+use kampus_module::{Cells, Resize, ValueKind, WidgetDeclaration, WidgetSetting, WidgetSize};
 
 /// The widgets of this module.
 pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
     code: "notify.inbox",
     summary: "The latest notifications of the reader",
-    page_kinds: &["customise.dashboard"],
+    sizes: &[WidgetSize {
+        page_kind: "customise.dashboard",
+        min: Cells::new(3, 3),
+        default: Cells::new(4, 5),
+        max: Cells::new(6, 10),
+        resize: Resize::Both,
+    }],
     settings: &[WidgetSetting {
         key: "limit",
         kind: ValueKind::Integer {

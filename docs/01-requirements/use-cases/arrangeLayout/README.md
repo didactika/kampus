@@ -24,7 +24,7 @@ extends:
 | --- | --- |
 | Actor | Campus administrator for campus pages; teacher for course pages, within what the campus allows |
 | Package | customise |
-| Goal | Place widgets in the regions of a page and edit its menus |
+| Goal | Place widgets on the grid of a page and edit its menus |
 | Type | Primary, real |
 | Level | User goal |
 | Requirement | RF-006 |
@@ -32,7 +32,7 @@ extends:
 
 ## Context
 
-Layouts and menus are data per page kind and scope, validated against the regions and installed widgets.
+Layouts and menus are data per page kind and scope, validated against the grid of the page kind, the installed widgets and the sizes they declare.
 
 ## Preconditions
 
@@ -47,8 +47,8 @@ Layouts and menus are data per page kind and scope, validated against the region
 
 | Step | Actor | System |
 | --- | --- | --- |
-| 1 | Opens a page in edit mode | Shows regions and the widgets available |
-| 2 | Adds, moves or removes widgets and saves | Validates regions, widgets and their settings (RN-216); stores with If-Match |
+| 1 | Opens a page in edit mode | Shows the widgets on the grid and those available |
+| 2 | Adds, moves, resizes or removes widgets | Validates the rectangles against the grid and the sizes of each widget, that none overlap, and the settings (RN-216); stores each change as it is made |
 | 3 | Edits a menu | Stores the tree; items are filtered by permission when shown |
 
 ## Alternative flows

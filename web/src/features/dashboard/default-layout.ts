@@ -37,12 +37,15 @@
 
 import type { Placement } from "../../api/types";
 
+/** The grid of a page until the server says: twelve columns of regular rows. */
+export const STANDARD_GRID = { columns: 12, row: 72 } as const;
+
 /** The page kind of the home. */
 export const DASHBOARD = "customise.dashboard";
 
 /** The widgets of the home by default. */
 export const DEFAULT_DASHBOARD: readonly Placement[] = [
-  { region: "top", widget: "customise.welcome", settings: { heading: "", figures: true }, permission: null },
-  { region: "main", widget: "courses.catalogue", settings: { heading: "", view: "grid", size: 8 }, permission: null },
-  { region: "side", widget: "notify.inbox", settings: { limit: 5 }, permission: null },
+  { widget: "customise.welcome", x: 0, y: 0, w: 12, h: 4, settings: { heading: "", figures: true }, permission: null },
+  { widget: "courses.catalogue", x: 0, y: 4, w: 8, h: 8, settings: { heading: "", view: "grid", size: 8 }, permission: null },
+  { widget: "notify.inbox", x: 8, y: 4, w: 4, h: 5, settings: { limit: 5 }, permission: null },
 ];

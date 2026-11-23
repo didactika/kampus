@@ -37,7 +37,7 @@
 //! retired, and the customisations stay.
 
 use kampus_common::Result;
-use kampus_module::Module;
+use kampus_module::{Grid, Module, WidgetSize};
 use serde_json::{Value, json};
 use sqlx::PgConnection;
 
@@ -118,22 +118,30 @@ impl Customise {
         tx.commit().await.map_err(kampus_db::classify)
     }
 
-    /// Brings the page kinds, widgets and kinds of menu the modules declare into the database.
+    /// Brings the page kinds with their grids, the widgets with their sizes and the kinds of menu the modules declare
+    /// into the database.
     async fn sync_pages_in(&self, conn: &mut PgConnection, modules: &[&Module]) -> Result<()> {
         let (mut pages, mut widgets, mut menus) = (Vec::new(), Vec::new(), Vec::new());
+        // A size is kept only for a page kind of the build whose grid holds it: a widget is never placed where it
+        // was not declared, nor larger than the page.
+        let grids: std::collections::BTreeMap<&str, Grid> = modules
+            .iter()
+            .flat_map(|m| m.page_kinds.iter())
+            .map(|p| (p.code, p.grid))
+            .collect();
         for module in modules {
             for page in module.page_kinds {
                 pages.push(page.code.to_owned());
                 sqlx::query(sql(format!(
-                    "insert into {} (code, module, summary, regions) values ($1, $2, $3, $4)
+                    "insert into {} (code, module, summary, grid) values ($1, $2, $3, $4)
                      on conflict (code) do update set module = excluded.module, summary = excluded.summary,
-                     regions = excluded.regions, retired_at = null",
+                     grid = excluded.grid, retired_at = null",
                     self.table("page_kind")
                 )))
                 .bind(page.code)
                 .bind(module.name)
                 .bind(page.summary)
-                .bind(json!(page.regions))
+                .bind(json!({ "columns": page.grid.columns, "row": page.grid.row.code() }))
                 .execute(&mut *conn)
                 .await
                 .map_err(kampus_db::classify)?;
@@ -145,16 +153,26 @@ impl Customise {
                     .iter()
                     .map(|s| json!({ "key": s.key, "kind": s.kind.stored(), "default": s.kind.default_value() }))
                     .collect();
+                let sizes: serde_json::Map<String, Value> = widget
+                    .sizes
+                    .iter()
+                    .filter(|size| {
+                        grids
+                            .get(size.page_kind)
+                            .is_some_and(|grid| size.problem(*grid).is_none())
+                    })
+                    .map(|size| (size.page_kind.to_owned(), stored_size(size)))
+                    .collect();
                 sqlx::query(sql(format!(
-                    "insert into {} (code, module, summary, page_kinds, settings) values ($1, $2, $3, $4, $5)
+                    "insert into {} (code, module, summary, sizes, settings) values ($1, $2, $3, $4, $5)
                      on conflict (code) do update set module = excluded.module, summary = excluded.summary,
-                     page_kinds = excluded.page_kinds, settings = excluded.settings, retired_at = null",
+                     sizes = excluded.sizes, settings = excluded.settings, retired_at = null",
                     self.table("widget")
                 )))
                 .bind(widget.code)
                 .bind(module.name)
                 .bind(widget.summary)
-                .bind(json!(widget.page_kinds))
+                .bind(Value::Object(sizes))
                 .bind(json!(settings))
                 .execute(&mut *conn)
                 .await
@@ -187,4 +205,15 @@ impl Customise {
         }
         Ok(())
     }
+}
+
+/// The sizes of a widget on a page kind, as stored.
+fn stored_size(size: &WidgetSize) -> Value {
+    let cells = |c: kampus_module::Cells| json!({ "w": c.w, "h": c.h });
+    json!({
+        "min": cells(size.min),
+        "default": cells(size.default),
+        "max": cells(size.max),
+        "resize": size.resize.code(),
+    })
 }

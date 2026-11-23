@@ -42,10 +42,13 @@ import { Welcome } from "../../features/home/Welcome";
 import { currentAccount } from "../../features/session/current-account";
 import { text, type WidgetProps } from "./widget";
 
-/** `customise.welcome` */
-export async function WelcomeWidget({ settings, context }: WidgetProps) {
+/** The fewest rows that hold the figures under the greeting. */
+const ROWS_FOR_FIGURES = 4;
+
+/** `customise.welcome`: the greeting, and the figures of the reader when it sets them and is tall enough. */
+export async function WelcomeWidget({ settings, context, size }: WidgetProps) {
   const account = await currentAccount();
-  const figures = settings["figures"] !== false;
+  const figures = settings["figures"] !== false && size.h >= ROWS_FOR_FIGURES;
   const [catalogue, inbox] = figures
     ? await Promise.all([catalogueOf(context.campus), optional<Inbox | null>("/notify/inbox?limit=1", null)])
     : [null, null];

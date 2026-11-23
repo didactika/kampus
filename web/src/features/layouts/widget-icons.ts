@@ -46,11 +46,3 @@ export const WIDGET_ICONS: Readonly<Record<string, string>> = {
   "calendar.upcoming": "calendar_month",
 };
 
-/** The widgets that need the width of a main column, which a narrow region such as the side cannot give. */
-export const WIDE_WIDGETS: ReadonlySet<string> = new Set(["courses.catalogue", "courses.outline"]);
-
-/** The regions too narrow for a wide widget. */
-export const NARROW_REGIONS: ReadonlySet<string> = new Set(["side"]);
-
-/** Whether a widget fits a region. */
-export const fits = (widget: string, region: string): boolean => !(WIDE_WIDGETS.has(widget) && NARROW_REGIONS.has(region));

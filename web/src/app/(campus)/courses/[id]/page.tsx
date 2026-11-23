@@ -45,6 +45,7 @@ import { optional } from "../../../../api/server";
 import type { CourseWithOwners, Layout, Placement } from "../../../../api/types";
 import { courseData } from "../../../../features/course/course-data";
 import { CourseHeader } from "../../../../features/course/CourseHeader";
+import { STANDARD_GRID } from "../../../../features/dashboard/default-layout";
 import { ArrangedPage } from "../../../../features/layouts/ArrangedPage";
 import { currentAccount } from "../../../../features/session/current-account";
 import { WIDGETS } from "../../../../modules/widgets/registry";
@@ -54,10 +55,10 @@ const COURSE_PAGE = "courses.course";
 
 /** The page of a course until its teachers arrange their own: the content, and beside it progress, grades and dates. */
 const DEFAULT_COURSE: readonly Placement[] = [
-  { region: "main", widget: "courses.outline", settings: { collapsed: false }, permission: null },
-  { region: "side", widget: "progress.course", settings: { heading: "" }, permission: null },
-  { region: "side", widget: "records.grades", settings: { heading: "" }, permission: null },
-  { region: "side", widget: "calendar.upcoming", settings: { days: 30 }, permission: null },
+  { widget: "courses.outline", x: 0, y: 0, w: 8, h: 10, settings: { collapsed: false }, permission: null },
+  { widget: "progress.course", x: 8, y: 0, w: 4, h: 3, settings: { heading: "" }, permission: null },
+  { widget: "records.grades", x: 8, y: 3, w: 4, h: 4, settings: { heading: "" }, permission: null },
+  { widget: "calendar.upcoming", x: 8, y: 7, w: 4, h: 4, settings: { days: 30 }, permission: null },
 ];
 
 /** The props of a page of a course. */
@@ -82,7 +83,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
   const widgets = await Promise.all(
     placements.map(async (placement) => {
       const Widget = WIDGETS[placement.widget];
-      return { placement, node: Widget ? await Widget({ settings: placement.settings, context }) : null };
+      return { placement, node: Widget ? await Widget({ settings: placement.settings, context, size: { w: placement.w, h: placement.h } }) : null };
     }),
   );
   return (
@@ -91,7 +92,7 @@ export default async function CoursePage({ params }: CoursePageProps) {
       <ArrangedPage
         scope={data.course.scope}
         pageKind={COURSE_PAGE}
-        regions={layout?.regions.length ? layout.regions : ["top", "main", "side"]}
+        grid={layout ? { columns: layout.grid.columns, row: layout.grid.row_pixels } : STANDARD_GRID}
         widgets={widgets}
         editable={layout?.editable ?? false}
         available={(layout?.widgets ?? []).filter((w) => w.code in WIDGETS)}

@@ -78,7 +78,7 @@ A module uses the components and patterns of `@kampus/ui`, or MUI directly with 
 | Part | Responsibility |
 | --- | --- |
 | Router | The App Router of Next.js: the pages of the shell, and the routes UI modules declare (`/courses/:id`, `/admin/settings`…) through the registry; server-side rendering of the first page, client navigation afterwards |
-| Layout engine | Renders the page kind's regions from the resolved layout (RN-216); a widget whose module is disabled or failing is skipped with a placeholder |
+| Layout engine | Renders the widgets of the resolved layout on the grid of the page kind, each in its rectangle and told its size (RN-216, DEC-090); a widget whose module is disabled or failing is skipped with a placeholder |
 | Navigation | Menus from data (DEC-071), filtered by permissions |
 | Session | Signed-in account, current scope, language and time zone; reacts to revocation (DEC-031) |
 | Theme | Turns the theme of the scope of the page into the MUI theme, in light and dark; the scheme of the person; direction from the language (RN-192) |
@@ -103,7 +103,7 @@ A UI module is a React package with a `kampus-ui.json` manifest, written with `@
 | --- | --- |
 | `module` | id (the module or plugin id), version, SDK range, entry file |
 | `routes` | path, page kind, permission required to show it, help topic |
-| `contributions` | widgets (for regions), menu items, page slots (tabs, panels, actions), form sections for other modules' forms, settings panels |
+| `contributions` | widgets (with their sizes per page kind), menu items, page slots (tabs, panels, actions), form sections for other modules' forms, settings panels |
 | `strings` | the message keys the module uses (checked against its declared messages) |
 | `events` | client events it emits and listens to |
 
@@ -122,7 +122,7 @@ Rules:
 
 | Point | Where | Filled with |
 | --- | --- | --- |
-| `region:<page kind>:<region>` | regions of every page kind (for example `course:main`, `course:side`, `dashboard:top`) | widgets |
+| `page:<page kind>` | the grid of every page kind (for example `page:courses.course`, `page:customise.dashboard`) | widgets |
 | `menu:<menu kind>` | primary navigation, course navigation, user menu, admin menu | menu items |
 | `slot:<page kind>:tabs` | tabs of an entity page (course, activity, profile) | panels |
 | `slot:<page kind>:actions` | action menus of entities | actions |
