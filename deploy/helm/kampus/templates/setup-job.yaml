@@ -1,0 +1,77 @@
+# ------------------------------------------------------------------------------
+#
+#     _  __    _    __  __ ____  _   _ ____
+#    | |/ /   / \  |  \/  |  _ \| | | / ___|
+#    | ' /   / _ \ | |\/| | |_) | | | \___ \
+#    | . \  / ___ \| |  | |  __/| |_| |___) |
+#    |_|\_\/_/   \_\_|  |_|_|    \___/|____/
+#
+#    Knowledge Academic Modular Platform for Universal Study
+#
+# ------------------------------------------------------------------------------
+#
+# This file is part of Kampus - https://github.com/didactika/kampus
+#
+# Kampus is free software: you can redistribute it and/or modify it under the terms of the
+# GNU Affero General Public License as published by the Free Software Foundation, either
+# version 3 of the License, or (at your option) any later version.
+#
+# Kampus is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License along with Kampus.
+# If not, see <https://www.gnu.org/licenses/>.
+#
+# @package   kampus
+# @copyright 2026 Didactika
+# @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
+# @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
+# @since     0.1.0
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# ------------------------------------------------------------------------------
+
+
+# Installs on an empty database and applies the pending upgrades; one Job per revision of the release, which the
+# Kampus pods wait for (their init container runs `kampus-server check` until the database matches the build).
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-setup-{{ .Release.Revision }}
+  labels:
+    {{- include "kampus.labels" . | nindent 4 }}
+    app.kubernetes.io/component: setup
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata:
+      labels:
+        {{- include "kampus.labels" . | nindent 8 }}
+        app.kubernetes.io/component: setup
+    spec:
+      restartPolicy: OnFailure
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: setup
+          image: {{ include "kampus.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["sh", "-c", "kampus-server install --non-interactive && kampus-server upgrade"]
+          env:
+            {{- include "kampus.env" . | nindent 12 }}
+          envFrom:
+            {{- include "kampus.envFrom" . | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          volumeMounts:
+            - { name: config, mountPath: /etc/kampus }
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - { name: config, emptyDir: {} }
+        - { name: tmp, emptyDir: {} }

@@ -1,0 +1,127 @@
+# ------------------------------------------------------------------------------
+#
+#     _  __    _    __  __ ____  _   _ ____
+#    | |/ /   / \  |  \/  |  _ \| | | / ___|
+#    | ' /   / _ \ | |\/| | |_) | | | \___ \
+#    | . \  / ___ \| |  | |  __/| |_| |___) |
+#    |_|\_\/_/   \_\_|  |_|_|    \___/|____/
+#
+#    Knowledge Academic Modular Platform for Universal Study
+#
+# ------------------------------------------------------------------------------
+#
+# This file is part of Kampus - https://github.com/didactika/kampus
+#
+# Kampus is free software: you can redistribute it and/or modify it under the terms of the
+# GNU Affero General Public License as published by the Free Software Foundation, either
+# version 3 of the License, or (at your option) any later version.
+#
+# Kampus is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License along with Kampus.
+# If not, see <https://www.gnu.org/licenses/>.
+#
+# @package   kampus
+# @copyright 2026 Didactika
+# @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
+# @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
+# @since     0.1.0
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# ------------------------------------------------------------------------------
+
+
+# The values of a Kampus release. Secrets go in `secrets` or, better, in a Secret of your own (`existingSecret`).
+
+image:
+  repository: kampus
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+webImage:
+  repository: kampus-web
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# The address people open; the ingress serves it.
+siteUrl: https://campus.example.org
+
+# The handbook the help of each screen opens; none when empty.
+helpUrl: ""
+
+# A Secret with the keys KAMPUS_DATABASE_URL, KAMPUS_SECURITY_SECRET_KEY, KAMPUS_ADMIN_EMAIL,
+# KAMPUS_ADMIN_USERNAME and KAMPUS_ADMIN_PASSWORD, and the storage, cache and mail secrets you use.
+existingSecret: ""
+
+# Used only without `existingSecret`.
+secrets:
+  databaseUrl: ""
+  secretKey: ""
+  adminEmail: ""
+  adminUsername: admin
+  adminPassword: ""
+  storageS3AccessKeyId: ""
+  storageS3SecretAccessKey: ""
+  mailUrl: ""
+
+# Plain settings, as environment variables of every Kampus process.
+config:
+  KAMPUS_STORAGE_URL: s3://kampus/files
+  KAMPUS_STORAGE_S3_ENDPOINT: ""
+  KAMPUS_STORAGE_S3_REGION: ""
+  KAMPUS_STORAGE_PUBLIC_URL: ""
+  KAMPUS_CACHE_URL: valkey://valkey:6379
+  # The networks of the pods and of the ingress controller, whose X-Forwarded-For tells the address of people.
+  # Keep it to the networks of your cluster: an address outside them is never believed.
+  KAMPUS_SERVER_TRUSTED_PROXIES: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+  KAMPUS_MAIL_FROM: ""
+  KAMPUS_LOG_FORMAT: json
+  KAMPUS_LOG_LEVEL: info
+
+# The roles of Kampus; `server` answers HTTP, `worker` runs jobs, `scheduler` fires schedules.
+roles:
+  server:
+    replicas: 2
+    resources:
+      requests: { cpu: 250m, memory: 256Mi }
+      limits: { memory: 1Gi }
+  worker:
+    replicas: 1
+    resources:
+      requests: { cpu: 100m, memory: 128Mi }
+      limits: { memory: 512Mi }
+  scheduler:
+    replicas: 1
+    resources:
+      requests: { cpu: 50m, memory: 64Mi }
+      limits: { memory: 256Mi }
+
+web:
+  replicas: 2
+  resources:
+    requests: { cpu: 100m, memory: 192Mi }
+    limits: { memory: 512Mi }
+
+ingress:
+  enabled: true
+  className: ""
+  annotations: {}
+  host: campus.example.org
+  tls:
+    enabled: true
+    secretName: kampus-tls
+
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
