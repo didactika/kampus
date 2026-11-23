@@ -47,7 +47,6 @@ import { courseData } from "../../../../features/course/course-data";
 import { CourseHeader } from "../../../../features/course/CourseHeader";
 import { ArrangedPage } from "../../../../features/layouts/ArrangedPage";
 import { currentAccount } from "../../../../features/session/current-account";
-import { requestI18n } from "../../../../i18n/server";
 import { WIDGETS } from "../../../../modules/widgets/registry";
 
 /** The page kind of a course. */
@@ -76,7 +75,7 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
 /** A course as the person sees it. */
 export default async function CoursePage({ params }: CoursePageProps) {
   const { id } = await params;
-  const [account, { t }, data] = [(await currentAccount())!, await requestI18n(), await courseData(id)];
+  const [account, data] = [(await currentAccount())!, await courseData(id)];
   const layout = await optional<Layout | null>(`/customise/scopes/${data.course.scope}/layouts/${COURSE_PAGE}`, null);
   const placements = layout?.placements.length ? layout.placements : DEFAULT_COURSE;
   const context = { campus: account.campus, course: data };
@@ -96,7 +95,6 @@ export default async function CoursePage({ params }: CoursePageProps) {
         widgets={widgets}
         editable={layout?.editable ?? false}
         available={(layout?.widgets ?? []).filter((w) => w.code in WIDGETS)}
-        editingText={t("course.editing")}
       />
     </>
   );

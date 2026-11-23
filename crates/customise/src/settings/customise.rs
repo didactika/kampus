@@ -44,6 +44,7 @@ pub const PAGE_KINDS: &[PageKindDeclaration] = &[PageKindDeclaration {
     code: DASHBOARD,
     summary: "The home of the site",
     regions: &["top", "main", "side"],
+    personal: true,
 }];
 
 /// The kinds of menu of every site.

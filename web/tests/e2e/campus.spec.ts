@@ -39,17 +39,19 @@ import { expect, test } from "@playwright/test";
 
 import { tAccount as t } from "./support";
 
-test("the home greets the person and offers to arrange it to whoever may", async ({ page }) => {
+test("the home greets the person and offers the edit mode to whoever may arrange it", async ({ page }) => {
   await page.goto("/");
   // The welcome may carry a heading the campus wrote, so the test asks only for a heading with text.
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(/\S/);
   await expect(page.getByRole("heading", { name: t("catalogue.title") })).toBeVisible();
-  const customise = page.getByRole("button", { name: t("dashboard.customise") });
-  if (await customise.isVisible()) {
-    await customise.click();
-    await expect(page.getByText(t("dashboard.editing"))).toBeVisible();
-    await page.getByRole("region", { name: t("dashboard.customise") }).getByRole("button", { name: t("changes.done") }).click();
-    await expect(page.getByText(t("dashboard.editing"))).toBeHidden();
+  const mode = page.getByRole("switch", { name: t("editmode.label") });
+  // The switch shows once the page has offered it, a moment after it renders.
+  await mode.waitFor({ timeout: 5000 }).catch(() => undefined);
+  if (await mode.isVisible()) {
+    await mode.check();
+    await expect(page.getByRole("button", { name: t("dashboard.reset") })).toBeVisible();
+    await mode.uncheck();
+    await expect(page.getByRole("button", { name: t("dashboard.reset") })).toBeHidden();
   }
 });
 
@@ -130,4 +132,80 @@ test("the profile offers its unsaved changes in a floating bar and asks before l
   await bar.getByRole("button", { name: t("changes.discard") }).click();
   await expect(given).toHaveValue(before);
   await expect(bar).toBeHidden();
+});
+
+test("a widget of the home moves with the keyboard and every move is saved at once", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("heading", { level: 1 }).waitFor();
+  const mode = page.getByRole("switch", { name: t("editmode.label") });
+  // The switch shows once the page has offered it, a moment after it renders.
+  await mode.waitFor({ timeout: 5000 }).catch(() => undefined);
+  test.skip(!(await mode.isVisible()), "the account cannot arrange the home");
+  const me = (await (await page.request.get("/api/v1/identity/me")).json()) as { campus: string; scope: string };
+  // The home is personal: what the person arranges is kept in their own scope, and the campus keeps its own.
+  const layout = `/api/v1/customise/scopes/${me.scope}/layouts/customise.dashboard`;
+  const campusLayout = `/api/v1/customise/scopes/${me.campus}/layouts/customise.dashboard`;
+  const campusBefore = await (await page.request.get(campusLayout)).text();
+  type Placed = { region: string; widget: string; settings: unknown };
+  type Read = { placements: Placed[]; origin: { from: string; scope?: string } };
+  const read = async () => (await (await page.request.get(layout)).json()) as Read;
+  const start = await read();
+  const own = start.origin.from === "scope" && start.origin.scope === me.scope;
+  const before = start.placements;
+  test.skip(!before.some((p) => p.widget === "customise.welcome" && p.region === "top"), "the home has no welcome at its top");
+  const welcome = t("drag.handle", { widget: t("widget.customise.welcome") });
+  const overTop = t("drag.over", { widget: t("widget.customise.welcome"), region: t("region.top") });
+  const announced = () => page.evaluate(() => [...document.querySelectorAll("[aria-live]")].map((e) => e.textContent ?? "").join(" "));
+  await mode.check();
+  try {
+    // Down into the main region, past its first widget.
+    await page.getByRole("button", { name: welcome }).focus();
+    await page.keyboard.press("Space");
+    for (const _ of [1, 2]) {
+      await page.keyboard.press("ArrowDown");
+      await page.waitForTimeout(150);
+    }
+    await page.keyboard.press("Space");
+    await expect.poll(async () => JSON.stringify((await read()).placements), { timeout: 5000 }).not.toBe(JSON.stringify(before));
+    expect(await (await page.request.get(campusLayout)).text(), "the home of the campus does not change").toBe(campusBefore);
+    // Back up until it is over the top region, then dropped there.
+    await page.getByRole("button", { name: welcome }).focus();
+    await page.keyboard.press("Space");
+    for (let step = 0; step < 8 && !(await announced()).includes(overTop); step += 1) {
+      await page.keyboard.press("ArrowUp");
+      await page.waitForTimeout(150);
+    }
+    await page.keyboard.press("Space");
+    await expect.poll(async () => JSON.stringify((await read()).placements), { timeout: 5000 }).toBe(JSON.stringify(before));
+  } finally {
+    // The home of the person is left exactly as it was: their own arrangement, or the campus's when they had none.
+    if (own) {
+      await page.request.put(layout, { headers: { "x-kampus": "1" }, data: { placements: before.map(({ region, widget, settings }) => ({ region, widget, settings })) } });
+    } else {
+      await page.request.delete(layout, { headers: { "x-kampus": "1" } });
+    }
+  }
+  await mode.uncheck();
+});
+
+test("the settings of a widget are checked before they apply", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("heading", { level: 1 }).waitFor();
+  const mode = page.getByRole("switch", { name: t("editmode.label") });
+  await mode.waitFor({ timeout: 5000 }).catch(() => undefined);
+  test.skip(!(await mode.isVisible()), "the account cannot arrange the home");
+  await mode.check();
+  const catalogue = page.getByRole("button", { name: t("drag.handle", { widget: t("widget.courses.catalogue") }) });
+  test.skip(!(await catalogue.isVisible()), "the home has no catalogue");
+  await catalogue.hover();
+  await catalogue.getByRole("button", { name: t("dashboard.settings") }).click();
+  const panel = page.getByRole("dialog");
+  const sizes = panel.getByRole("textbox", { name: t("setting.sizes") });
+  await sizes.fill("5,10,XIII,20");
+  await expect(panel.getByText(t("setting.error.sizes", { max: 500 }))).toBeVisible();
+  await expect(panel.getByRole("button", { name: t("dashboard.apply") })).toBeDisabled();
+  await sizes.fill("5, 10, 200");
+  await expect(panel.getByRole("button", { name: t("dashboard.apply") })).toBeEnabled();
+  await panel.getByRole("button", { name: t("dashboard.cancel") }).first().click();
+  await mode.uncheck();
 });

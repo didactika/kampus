@@ -51,6 +51,7 @@ kampus-common.workspace = true
 kampus-db.workspace = true
 kampus-module.workspace = true
 kampus-access.workspace = true
+async-trait.workspace = true
 kampus-events = { path = "../events" }
 kampus-identity = { path = "../identity" }
 axum.workspace = true

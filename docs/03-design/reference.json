@@ -798,6 +798,18 @@
           ]
         },
         {
+          "code": "customise.layout.own",
+          "granted_by": [
+            "authenticated_user",
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "user",
+          "risks": []
+        },
+        {
           "code": "customise.menu.manage",
           "granted_by": [
             "campus_administrator",

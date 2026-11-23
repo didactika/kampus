@@ -109,6 +109,13 @@ pub struct Services {
     pub context: ServiceContext,
 }
 
+/// Customisation for the modules of the build, which knows who owns the scopes of people from their accounts.
+fn customise(db: &Database, access: &Access, identity: &Identity) -> Customise {
+    Customise::new(db.clone(), access.clone())
+        .with_modules(MODULES)
+        .with_owners(Arc::new(super::owners::AccountScopes(identity.clone())))
+}
+
 impl Services {
     /// Builds the services of the modules of this build.
     #[must_use]
@@ -129,7 +136,6 @@ impl Services {
         )
         .with_modules(MODULES)
         .with_scanner(parts.scanner.clone());
-        let customise = Customise::new(parts.db.clone(), access.clone()).with_modules(MODULES);
         let identity = Identity::new(
             parts.db.clone(),
             access.clone(),
@@ -142,6 +148,7 @@ impl Services {
             Some(cost) => identity.with_password_cost(cost),
             None => identity,
         };
+        let customise = customise(&parts.db, &access, &identity);
         let preferences = MODULES
             .iter()
             .flat_map(|m| m.preferences.iter().copied())

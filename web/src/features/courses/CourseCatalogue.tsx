@@ -42,7 +42,6 @@
 
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
-import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
@@ -186,13 +185,12 @@ export function CourseCatalogue({ catalogue, initial = "", heading, titleless = 
           />
         </Card>
       ) : query.view === "grid" ? (
-        <Grid container spacing={2.5}>
+        // As many columns as the width of the catalogue itself holds, so it fits a wide page, a column or a side.
+        <Box sx={{ display: "grid", gap: 2.5, gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 280px), 1fr))" }}>
           {shown.map((course) => (
-            <Grid key={course.id} size={{ xs: 12, sm: 6, lg: 4, xl: 3 }}>
-              <CourseCard course={course} />
-            </Grid>
+            <CourseCard key={course.id} course={course} />
           ))}
-        </Grid>
+        </Box>
       ) : (
         <Card sx={{ p: 1 }}>
           <Stack divider={<Box sx={{ borderBottom: 1, borderColor: "divider", mx: 1.5 }} />}>

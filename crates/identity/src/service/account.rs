@@ -263,6 +263,23 @@ impl Identity {
         row.as_ref().map(from_row).transpose()
     }
 
+    /// The account a scope of a person belongs to; none for a scope that is not a person's.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn account_of_scope(&self, scope: ScopeId) -> Result<Option<AccountId>> {
+        let id: Option<uuid::Uuid> = sqlx::query_scalar(sql(format!(
+            "select id from {} where scope_id = $1",
+            self.table("account")
+        )))
+        .bind(scope.as_uuid())
+        .fetch_optional(self.db.pool())
+        .await
+        .map_err(kampus_db::classify)?;
+        Ok(id.map(AccountId::from_uuid))
+    }
+
     /// An account, for the account itself or for someone with `identity.account.read` in its campus.
     ///
     /// # Errors

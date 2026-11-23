@@ -45,6 +45,7 @@ import { createRequire } from "node:module";
 const NAMES = [
   "add",
   "add_circle",
+  "add_row_above",
   "archive",
   "arrow_back",
   "arrow_downward",
@@ -126,6 +127,7 @@ const NAMES = [
   "upload",
   "verified",
   "view_list",
+  "view_sidebar",
   "visibility",
   "visibility_off",
   "warning",
