@@ -109,6 +109,7 @@ const fn clock(page_kind: &'static str) -> WidgetSize {
         max: Cells::new(6, 4),
         resize: Resize::Both,
         bands: &[],
+        grows: false,
     }
 }
 

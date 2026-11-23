@@ -137,7 +137,7 @@ export function GridView({ columns, row, items }: GridViewProps) {
                 if (element) contents.current.set(item.key, element);
                 else contents.current.delete(item.key);
               }}
-              sx={{ maxBlockSize: { md: cell(item.h) }, overflow: { md: "clip" }, overflowClipMargin: 40, display: "flex", flexDirection: "column", "& > *": { minBlockSize: 0 } }}
+              sx={{ maxBlockSize: { md: item.grows ? "none" : cell(item.h) }, overflow: { md: "clip" }, overflowClipMargin: 40, display: "flex", flexDirection: "column", "& > *": { minBlockSize: 0 } }}
             >
               {item.node}
             </Box>

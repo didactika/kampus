@@ -78,6 +78,8 @@ export interface Item {
   readonly h: number;
   /** Whether the person pinned it where it is; otherwise it rises. */
   readonly pinned?: boolean;
+  /** Whether its height is its content, however tall, rather than its rows. */
+  readonly grows?: boolean;
 }
 
 /** Whether two rectangles share a cell. */

@@ -35,10 +35,10 @@
 
 /** The grades of the person in the course of the page. */
 
-import { GradesCard, text, type WidgetProps } from "@kampus/web/host";
+import { GradesCard, type WidgetProps } from "@kampus/web/host";
 
 /** The grades of the reader in the course. */
 export function GradesWidget({ settings, context }: WidgetProps) {
   const course = context.course;
-  return course ? <GradesCard heading={text(settings, "heading")} grades={course.grades} titles={course.recordTitles} /> : null;
+  return course ? <GradesCard heading={settings["heading"]} grades={course.grades} titles={course.recordTitles} /> : null;
 }

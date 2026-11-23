@@ -53,18 +53,22 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
         WidgetSize {
             page_kind: DASHBOARD,
             min: Cells::new(2, 2),
-            default: Cells::new(4, 3),
-            max: Cells::new(12, 12),
-            resize: Resize::Both,
+            default: Cells::new(4, 2),
+            max: Cells::new(12, 2),
+            // Its height is its text, however long; only its width is chosen.
+            resize: Resize::Horizontal,
             bands: &[],
+            grows: true,
         },
         WidgetSize {
             page_kind: COURSE_PAGE,
             min: Cells::new(2, 2),
-            default: Cells::new(4, 3),
-            max: Cells::new(12, 12),
-            resize: Resize::Both,
+            default: Cells::new(4, 2),
+            max: Cells::new(12, 2),
+            // Its height is its text, however long; only its width is chosen.
+            resize: Resize::Horizontal,
             bands: &[],
+            grows: true,
         },
     ],
     settings: &[

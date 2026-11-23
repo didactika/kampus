@@ -53,7 +53,7 @@ export async function CatalogueWidget({ settings, context }: WidgetProps) {
     <CourseCatalogue
       catalogue={catalogue}
       inAddress={false}
-      heading={text(settings, "heading")}
+      heading={settings["heading"]}
       view={text(settings, "view") === "list" ? "list" : "grid"}
       size={number(settings, "size", 8)}
       contained

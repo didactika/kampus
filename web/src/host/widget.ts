@@ -59,6 +59,8 @@ export interface WidgetProps {
   readonly settings: Readonly<Record<string, unknown>>;
   readonly context: PageContext;
   readonly size: WidgetSize;
+  /** The language of the reader, in which a text written per language is read. */
+  readonly language: string;
 }
 
 /** A widget: a server component. */

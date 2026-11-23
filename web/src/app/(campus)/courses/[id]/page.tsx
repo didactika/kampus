@@ -48,6 +48,7 @@ import { CourseHeader } from "../../../../features/course/CourseHeader";
 import { STANDARD_GRID } from "../../../../features/dashboard/default-layout";
 import { ArrangedPage } from "../../../../features/layouts/ArrangedPage";
 import { currentAccount } from "../../../../features/session/current-account";
+import { requestI18n } from "../../../../i18n/server";
 import { WIDGETS } from "../../../../plugins/widgets.generated";
 
 /** The page kind of a course. */
@@ -55,11 +56,11 @@ const COURSE_PAGE = "courses.course";
 
 /** The page of a course until its teachers arrange their own: the content, and beside it the summary, progress and grades. */
 const DEFAULT_COURSE: readonly Placement[] = [
-  { widget: "widget_course_content", x: 0, y: 0, w: 8, h: 10, settings: { collapsed: false }, pinned: false, locked: false, held: false, permission: null },
-  { widget: "widget_course_summary", x: 8, y: 0, w: 4, h: 4, settings: {}, pinned: false, locked: false, held: false, permission: null },
-  { widget: "widget_course_progress", x: 8, y: 4, w: 4, h: 3, settings: { heading: "" }, pinned: false, locked: false, held: false, permission: null },
-  { widget: "widget_course_grades", x: 8, y: 7, w: 4, h: 4, settings: { heading: "" }, pinned: false, locked: false, held: false, permission: null },
-  { widget: "widget_upcoming", x: 0, y: 10, w: 4, h: 4, settings: { days: 30 }, pinned: false, locked: false, held: false, permission: null },
+  { widget: "widget_course_content", x: 0, y: 0, w: 8, h: 10, settings: { collapsed: false }, pinned: false, locked: false, held: false, grows: false, permission: null },
+  { widget: "widget_course_summary", x: 8, y: 0, w: 4, h: 4, settings: {}, pinned: false, locked: false, held: false, grows: false, permission: null },
+  { widget: "widget_course_progress", x: 8, y: 4, w: 4, h: 3, settings: { heading: "" }, pinned: false, locked: false, held: false, grows: false, permission: null },
+  { widget: "widget_course_grades", x: 8, y: 7, w: 4, h: 4, settings: { heading: "" }, pinned: false, locked: false, held: false, grows: false, permission: null },
+  { widget: "widget_upcoming", x: 0, y: 10, w: 4, h: 4, settings: { days: 30 }, pinned: false, locked: false, held: false, grows: false, permission: null },
 ];
 
 /** The props of a page of a course. */
@@ -77,14 +78,14 @@ export async function generateMetadata({ params }: CoursePageProps): Promise<Met
 /** A course as the person sees it. */
 export default async function CoursePage({ params }: CoursePageProps) {
   const { id } = await params;
-  const [account, data] = [(await currentAccount())!, await courseData(id)];
+  const [account, data, { language }] = [(await currentAccount())!, await courseData(id), await requestI18n()];
   const layout = await optional<Layout | null>(`/customise/scopes/${data.course.scope}/layouts/${COURSE_PAGE}`, null);
   const placements = layout?.placements.length ? layout.placements : DEFAULT_COURSE;
   const context = { campus: account.campus, course: data };
   const widgets = await Promise.all(
     placements.map(async (placement) => {
       const plugin = WIDGETS[placement.widget];
-      return { placement, node: plugin ? await plugin.render({ settings: placement.settings, context, size: { w: placement.w, h: placement.h } }) : null };
+      return { placement, node: plugin ? await plugin.render({ settings: placement.settings, context, size: { w: placement.w, h: placement.h }, language }) : null };
     }),
   );
   return (

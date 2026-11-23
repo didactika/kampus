@@ -160,7 +160,7 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
             Some(json!({ "placements": [
                 { "widget": "widget_course_content", "x": 0, "y": 0, "w": 8, "h": 10 },
                 { "widget": "widget_course_summary", "x": 8, "y": 3, "w": 4, "h": 4 },
-                { "widget": "widget_text", "x": 8, "y": 0, "w": 4, "h": 3, "settings": { "heading": "Office hours", "text": "<p>Tuesdays<script>x()</script></p>" } }
+                { "widget": "widget_text", "x": 8, "y": 0, "w": 4, "h": 2, "settings": { "heading": "Office hours", "text": "<p>Tuesdays<script>x()</script></p>" } }
             ] })),
         )
         .await;

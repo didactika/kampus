@@ -201,7 +201,9 @@ test("the settings of a widget are checked before they apply", async ({ page }) 
   const sizes = panel.getByRole("textbox", { name: t("setting.sizes") });
   await sizes.fill("5,10,XIII,20");
   await expect(panel.getByText(t("setting.error.sizes", { max: 500 }))).toBeVisible();
-  await expect(panel.getByRole("button", { name: t("dashboard.apply") })).toBeDisabled();
+  // Applying with a wrong setting keeps the dialog open, showing what is wrong.
+  await panel.getByRole("button", { name: t("dashboard.apply") }).click();
+  await expect(panel).toBeVisible();
   await sizes.fill("5, 10, 200");
   await expect(panel.getByRole("button", { name: t("dashboard.apply") })).toBeEnabled();
   await panel.getByRole("button", { name: t("dashboard.cancel") }).first().click();

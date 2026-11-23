@@ -56,6 +56,7 @@ fn placement(at: [u16; 4], widget: &str, settings: Value) -> Placement {
         pinned: false,
         locked: false,
         held: false,
+        grows: false,
         settings: serde_json::from_value(settings).unwrap(),
         permission: None,
     }

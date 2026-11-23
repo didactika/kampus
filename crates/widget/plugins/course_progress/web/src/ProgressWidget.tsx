@@ -35,7 +35,7 @@
 
 /** How far the person has gone in the course of the page. */
 
-import { ProgressCard, isDone, text, type WidgetProps } from "@kampus/web/host";
+import { ProgressCard, isDone, type WidgetProps } from "@kampus/web/host";
 
 /** The progress of the reader in the course. */
 export function ProgressWidget({ settings, context }: WidgetProps) {
@@ -43,5 +43,5 @@ export function ProgressWidget({ settings, context }: WidgetProps) {
   if (!course) return null;
   const states = new Map(course.progress.map((p) => [p.course_module, p.state as string]));
   const all = course.modules.flat();
-  return <ProgressCard heading={text(settings, "heading")} done={all.filter((m) => isDone(states.get(m.id))).length} total={all.length} />;
+  return <ProgressCard heading={settings["heading"]} done={all.filter((m) => isDone(states.get(m.id))).length} total={all.length} />;
 }

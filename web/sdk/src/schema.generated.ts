@@ -5556,6 +5556,12 @@ export type components = {
         /** @description A widget on the grid of a layout: the rectangle of cells it takes, and its settings. */
         Placement: {
             /**
+             * @description Whether its height is the height of its content rather than its rows, as its widget declares on the page kind;
+             *     given by the server and ignored when a layout is written.
+             * @default false
+             */
+            grows: boolean;
+            /**
              * Format: uint16
              * @description How many rows it takes, within the sizes the widget declares for the page kind.
              */
@@ -6572,6 +6578,11 @@ export type components = {
             bands: components["schemas"]["SizeBand"][];
             /** @description The one it takes when it is placed. */
             default: components["schemas"]["Size"];
+            /**
+             * @description Whether its height is the height of its content, however tall, rather than its rows.
+             * @default false
+             */
+            grows: boolean;
             /** @description The largest. */
             max: components["schemas"]["Size"];
             /** @description The smallest. */
@@ -11106,6 +11117,12 @@ export interface operations {
                         /** @description Its widgets, in order. */
                         placements: {
                             /**
+                             * @description Whether its height is the height of its content rather than its rows, as its widget declares on the page kind;
+                             *     given by the server and ignored when a layout is written.
+                             * @default false
+                             */
+                            grows?: boolean;
+                            /**
                              * Format: uint16
                              * @description How many rows it takes, within the sizes the widget declares for the page kind.
                              */
@@ -11352,6 +11369,12 @@ export interface operations {
                     locked?: boolean;
                     /** @description Its widgets, each a rectangle of cells of the grid. */
                     placements: {
+                        /**
+                         * @description Whether its height is the height of its content rather than its rows, as its widget declares on the page kind;
+                         *     given by the server and ignored when a layout is written.
+                         * @default false
+                         */
+                        grows?: boolean;
                         /**
                          * Format: uint16
                          * @description How many rows it takes, within the sizes the widget declares for the page kind.

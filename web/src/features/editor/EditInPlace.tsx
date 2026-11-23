@@ -42,15 +42,14 @@
  */
 
 import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
 import InputBase from "@mui/material/InputBase";
-import Stack from "@mui/material/Stack";
 import Typography, { type TypographyProps } from "@mui/material/Typography";
 import { createContext, useContext, useState, type ReactNode, type SyntheticEvent } from "react";
 
 import type { DeclaredSetting } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { LANGUAGES } from "../../i18n/translator";
+import { LanguagePicker, filledIn } from "./LanguagePicker";
 import { RichText } from "./RichText";
 import { RichTextEditor } from "./RichTextEditor";
 import { textIn, translated, withText } from "./translated";
@@ -90,29 +89,13 @@ function useEditable(setting: string, given: unknown) {
   return { edit, value, writing, setWriting, translatable, required: Boolean(declared?.required), write, shown: translated(value, language) };
 }
 
-/** The languages a text is written in, to switch between them without leaving the page. */
-function Languages({ writing, onWrite }: { readonly writing: string; readonly onWrite: (language: string) => void }) {
-  const { t } = useI18n();
+/** The language a text is written in, floating over it while it is edited. */
+function Languages({ value, writing, onWrite }: { readonly value: unknown; readonly writing: string; readonly onWrite: (language: string) => void }) {
+  const [open, setOpen] = useState(false);
   return (
-    <Stack
-      direction="row"
-      role="group"
-      aria-label={t("editor.languages")}
-      className="edit-languages"
-      sx={{ position: "absolute", insetBlockEnd: "100%", insetInlineEnd: 0, mb: 0.5, zIndex: 3, gap: 0.25, p: 0.25, borderRadius: 999, bgcolor: "background.paper", color: "text.primary", border: 1, borderColor: "divider", boxShadow: 3 }}
-    >
-      {LANGUAGES.map((code) => (
-        <ButtonBase
-          key={code}
-          aria-pressed={code === writing}
-          onMouseDown={(event) => event.preventDefault()}
-          onClick={() => onWrite(code)}
-          sx={{ px: 1, py: 0.25, borderRadius: 999, typography: "caption", fontWeight: 700, textTransform: "uppercase", ...(code === writing ? { bgcolor: "primary.main", color: "primary.contrastText" } : {}) }}
-        >
-          {code}
-        </ButtonBase>
-      ))}
-    </Stack>
+    <Box className="edit-languages" data-open={open} sx={{ position: "absolute", insetBlockEnd: "100%", insetInlineEnd: 0, mb: 0.5, zIndex: 3 }}>
+      <LanguagePicker compact languages={LANGUAGES} value={writing} onChange={onWrite} filled={filledIn(value)} onOpen={setOpen} />
+    </Box>
   );
 }
 
@@ -128,7 +111,7 @@ const editable = (wrong: boolean) => ({
   "&:hover": { outlineColor: "currentColor" },
   "&:focus-within": { outline: "2px solid", outlineColor: wrong ? "error.main" : "currentColor" },
   "& .edit-languages": { display: "none" },
-  "&:focus-within .edit-languages": { display: "flex" },
+  "&:focus-within .edit-languages, & .edit-languages[data-open=true]": { display: "flex" },
 }) as const;
 
 /** The props of `EditableText`. */
@@ -166,7 +149,7 @@ export function EditableText({ setting, value: given, fallback = "", placeholder
   const current = (translatable ? textIn(value, writing, FALLBACK) : "") || translated(value, writing);
   return (
     <Typography variant={variant} component="div" id={id} className="editable-text" sx={[editable(wrong), ...(Array.isArray(sx) ? sx : [sx])]} {...contained}>
-      {translatable ? <Languages writing={writing} onWrite={setWriting} /> : null}
+      {translatable ? <Languages value={value} writing={writing} onWrite={setWriting} /> : null}
       <InputBase
         fullWidth
         multiline
@@ -208,7 +191,7 @@ export function EditableRichText({ setting, value: given, placeholder = "" }: Ed
   const current = (translatable ? textIn(value, writing, FALLBACK) : "") || translated(value, writing);
   return (
     <Box className="editable-text" sx={editable(wrong)} {...contained}>
-      {translatable ? <Languages writing={writing} onWrite={setWriting} /> : null}
+      {translatable ? <Languages value={value} writing={writing} onWrite={setWriting} /> : null}
       <RichTextEditor
         bare
         label={t("editor.text", { setting })}

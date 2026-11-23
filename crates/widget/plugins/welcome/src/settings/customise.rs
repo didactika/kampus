@@ -54,6 +54,7 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
         resize: Resize::Both,
         // Up to two thirds of the page the greeting wraps and the figures need up to six rows; wider, four hold all.
         bands: &[Band::new((6, 8), (3, 6)), Band::new((9, 12), (3, 4))],
+        grows: false,
     }],
     settings: &[WidgetSetting {
         key: "heading",
