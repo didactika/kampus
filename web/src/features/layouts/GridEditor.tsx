@@ -75,6 +75,12 @@ export interface EditedWidget extends Item {
   readonly edit?: EditInPlaceValue;
   /** Whether the person may remove it; a widget every page holds is not removed. */
   readonly removable: boolean;
+  /** Whether a scope above locks it here: it stays as that scope placed it, and nothing here changes it. */
+  readonly held?: boolean;
+  /** Whether it is locked here for the scopes below. */
+  readonly locked?: boolean;
+  /** Locks it for the scopes below, or frees it; none where nothing can be locked. */
+  readonly onLock?: () => void;
 }
 
 /** The props of `GridEditor`. */
@@ -257,7 +263,7 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
   /** Arrows move the widget: sideways by a cell, up or down past the next widget; with shift they resize it. */
   function key(event: KeyboardEvent<HTMLElement>, item: EditedWidget) {
     const step = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
-    if (!step || event.target !== event.currentTarget) return;
+    if (!step || event.target !== event.currentTarget || item.held) return;
     event.preventDefault();
     const [dx, dy] = step as [number, number];
     const current = rectangles(items);
@@ -367,7 +373,7 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
                     }}
                     maxContent={rows(metrics, item.h)}
                     onFocus={() => setSelected(item.key)}
-                    onPointerDown={(event) => begin(event, item.key, "move")}
+                    onPointerDown={item.held ? undefined : (event) => begin(event, item.key, "move")}
                     onPointerMove={follow}
                     onPointerUp={end}
                     onPointerCancel={() => setGesture(null)}
@@ -376,11 +382,14 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
                     edit={item.edit}
                     onRemove={item.removable ? () => onRemove(item.key) : undefined}
                     pinned={Boolean(item.pinned)}
-                    onPin={() => onPin(item.key)}
+                    onPin={item.held ? undefined : () => onPin(item.key)}
+                    held={item.held}
+                    locked={item.locked}
+                    onLock={item.onLock}
                   >
                     {item.node}
                   </WidgetFrame>
-                  {resizable(item.sizes) ? (
+                  {resizable(item.sizes) && !item.held ? (
                     <ResizeHandles
                       name={t("grid.resize", { widget: item.name })}
                       resize={item.sizes!.resize}

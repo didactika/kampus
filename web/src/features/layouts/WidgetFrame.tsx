@@ -70,6 +70,12 @@ export interface WidgetFrameProps extends HTMLAttributes<HTMLDivElement> {
   readonly pinned?: boolean;
   /** Pins it, or lets it rise again. */
   readonly onPin?: () => void;
+  /** Whether a scope above locks it here, which the frame says, with no way to change it. */
+  readonly held?: boolean;
+  /** Whether it is locked here for the scopes below. */
+  readonly locked?: boolean;
+  /** Locks it for the scopes below, or frees it. */
+  readonly onLock?: () => void;
   /** Opens its settings; none when it declares no settings. */
   readonly onSettings?: () => void;
   /** Removes it from the page; none when every page holds it. */
@@ -92,7 +98,7 @@ const own = {
 
 /** `<WidgetFrame name="Catalogue" icon="school">{preview}</WidgetFrame>` */
 export const WidgetFrame = forwardRef<HTMLDivElement, WidgetFrameProps>(function WidgetFrame(
-  { name, icon, selected = false, lifted = false, fixed = false, pinned = false, onPin, onSettings, onRemove, contentRef, maxContent, edit, children, style, ...rest },
+  { name, icon, selected = false, lifted = false, fixed = false, pinned = false, onPin, held = false, locked = false, onLock, onSettings, onRemove, contentRef, maxContent, edit, children, style, ...rest },
   ref,
 ) {
   const { t } = useI18n();
@@ -112,7 +118,7 @@ export const WidgetFrame = forwardRef<HTMLDivElement, WidgetFrameProps>(function
         position: "relative",
         blockSize: "100%",
         borderRadius: 4,
-        cursor: "move",
+        cursor: held ? "not-allowed" : "move",
         touchAction: "none",
         userSelect: "none",
         outline: "none",
@@ -166,7 +172,15 @@ export const WidgetFrame = forwardRef<HTMLDivElement, WidgetFrameProps>(function
           <Typography variant="caption" noWrap sx={{ fontWeight: 600, mx: 0.75, minInlineSize: 0 }}>
             {name}
           </Typography>
-          {fixed ? (
+          {held ? (
+            <Tooltip title={t("grid.held")}>
+              <Box sx={{ color: "warning.main", display: "flex", px: 0.5 }} role="img" aria-label={t("grid.held")}>
+                <Icon name="lock" size="small" />
+              </Box>
+            </Tooltip>
+          ) : null}
+          {onLock ? action(t(locked ? "grid.unlock" : "grid.lock"), locked ? "lock" : "lock_open", onLock, { "aria-pressed": locked, sx: { color: locked ? "primary.main" : undefined } }) : null}
+          {fixed && !held ? (
             <Tooltip title={t("grid.fixed")}>
               <Box sx={{ color: "text.secondary", display: "flex", px: 0.5 }} role="img" aria-label={t("grid.fixed")}>
                 <Icon name="lock" size="small" />

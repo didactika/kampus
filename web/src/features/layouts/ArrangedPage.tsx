@@ -102,6 +102,8 @@ export interface ArrangedPageProps {
   readonly widgets: readonly PlacedWidget[];
   /** Whether the reader may arrange it. */
   readonly editable: boolean;
+  /** Whether the reader may lock widgets here for the scopes below. */
+  readonly lockable?: boolean;
   /** The widgets the reader may add, with their sizes on the page. */
   readonly available: readonly AvailableWidget[];
 }
@@ -118,7 +120,7 @@ function fall(items: readonly Draft[]): Draft[] {
 const settingsOf = (widget: AvailableWidget | undefined): DeclaredSetting[] => (widget?.settings ?? []) as DeclaredSetting[];
 
 /** `<ArrangedPage scope="…" pageKind="customise.dashboard" grid={{ columns: 12, row: 72 }} widgets={…} … />` */
-export function ArrangedPage({ scope, pageKind, grid, widgets, editable, available }: ArrangedPageProps) {
+export function ArrangedPage({ scope, pageKind, grid, widgets, editable, lockable = false, available }: ArrangedPageProps) {
   const { t } = useI18n();
   const router = useRouter();
   const toast = useToast();
@@ -156,7 +158,10 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
       await browserApi(`/customise/scopes/${scope}/layouts/${pageKind}`, {
         method: "PUT",
         body: {
-          placements: items.map(({ placement: { widget, x, y, w, h, pinned, settings } }) => ({ widget, x, y, w, h, pinned, settings })),
+          // What a scope above locks here is theirs and is never written here.
+          placements: items
+            .filter((d) => !d.placement.held)
+            .map(({ placement: { widget, x, y, w, h, pinned, locked, settings } }) => ({ widget, x, y, w, h, pinned, locked, settings })),
         },
       });
       if (items.some((d) => d.node === null)) router.refresh();
@@ -202,8 +207,12 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
     change((items) => {
       const size = { w: Math.min(widget.sizes.default.w, grid.columns), h: widget.sizes.default.h };
       const at = room(items.map((d) => ({ key: d.key, ...d.placement })), size, grid.columns);
-      return fall([...items, { key: ++keys, placement: { widget: widget.code, ...at, ...size, pinned: false, settings, permission: null }, node: null }]);
+      return fall([...items, { key: ++keys, placement: { widget: widget.code, ...at, ...size, pinned: false, locked: false, held: false, settings, permission: null }, node: null }]);
     });
+
+  /** Locks a widget for the scopes below, or frees it. */
+  const lock = (key: number) =>
+    change((items) => items.map((d) => (d.key === key ? { ...d, placement: { ...d.placement, locked: !d.placement.locked } } : d)));
 
   /** Pins a widget where it is, or lets it rise again with the others. */
   const pin = (key: number) =>
@@ -244,11 +253,14 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
     name: name(d.placement.widget),
     icon: iconOf(d.placement.widget),
     node: d.node ?? shape,
-    onSettings: settingsOf(declared(d.placement.widget)).length > 0 ? () => setConfiguring(d.key) : undefined,
-    // A widget every page holds is never removed.
-    removable: !declared(d.placement.widget)?.required,
+    onSettings: settingsOf(declared(d.placement.widget)).length > 0 && !d.placement.held ? () => setConfiguring(d.key) : undefined,
+    // A widget every page holds is never removed, nor one a scope above locks here.
+    removable: !declared(d.placement.widget)?.required && !d.placement.held,
+    held: d.placement.held,
+    locked: d.placement.locked,
+    onLock: lockable && !d.placement.held ? () => lock(d.key) : undefined,
     // Its texts are edited on it: each change is a change of its settings, saved as any other.
-    edit: {
+    edit: d.placement.held ? undefined : {
       settings: d.placement.settings,
       declared: settingsOf(declared(d.placement.widget)),
       set: (key: string, value: unknown) =>

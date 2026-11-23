@@ -38,7 +38,7 @@
 
 use std::collections::BTreeMap;
 
-use kampus_access::{Actor, ScopeId};
+use kampus_access::{Actor, ScopeId, ScopeKind};
 use kampus_common::{Error, FieldError, Result};
 use serde_json::{Value, json};
 use sqlx::{PgConnection, Row};
@@ -183,6 +183,28 @@ pub(super) fn problems(
     problems
 }
 
+/// Puts on a page the widgets the scopes above lock on it, as they placed them and pinned there: each replaces what
+/// the page has of the same widget when a page holds it once, or the same widget at the same place.
+fn hold(placements: &mut Vec<(Placement, bool)>, held: Vec<(Placement, bool)>) {
+    for (locked, single) in held {
+        placements
+            .retain(|(p, _)| p.widget != locked.widget || (!single && (p.x, p.y) != (locked.x, locked.y)));
+        if placements.iter().any(|(p, _)| {
+            p.held && p.widget == locked.widget && (single || (p.x, p.y) == (locked.x, locked.y))
+        }) {
+            continue;
+        }
+        placements.push((
+            Placement {
+                pinned: true,
+                held: true,
+                ..locked
+            },
+            single,
+        ));
+    }
+}
+
 /// The grid of a page kind, as stored.
 fn grid_of(stored: Option<Value>) -> PageGrid {
     let columns = stored
@@ -254,7 +276,7 @@ impl Customise {
         let available = self.available(&mut conn, page_kind).await?;
         let rows = match &nearest {
             Some((id, _)) => sqlx::query(sql(format!(
-                "select p.widget_code, p.x, p.y, p.w, p.h, p.pinned, p.settings, p.permission, w.single, w.sizes, w.settings as declared
+                "select p.widget_code, p.x, p.y, p.w, p.h, p.pinned, p.locked, p.settings, p.permission, w.single, w.sizes, w.settings as declared
                  from {} p join {} w on w.code = p.widget_code
                  where p.layout_id = $1 and w.retired_at is null order by p.y, p.x",
                 self.table("placement"),
@@ -266,12 +288,91 @@ impl Customise {
             .map_err(kampus_db::classify)?,
             None => Vec::new(),
         };
-        drop(conn);
         let origin = nearest.map_or(Origin::Declared, |(_, origin)| origin);
+        // The widgets locked by the scopes above the one the layout comes from.
+        let held_rows = match origin {
+            Origin::Scope { scope: from, .. } => self.locked_above(&mut conn, page_kind, from).await?,
+            Origin::Declared => Vec::new(),
+        };
+        // Only a scope that holds others arranging the same pages locks widgets for them: a platform, a tenant, a
+        // campus or a category; a course, a section or a person has no such scopes below.
+        let gathers = self
+            .access
+            .path(&mut conn, scope)
+            .await?
+            .iter()
+            .find(|s| s.depth == 0)
+            .is_some_and(|s| {
+                matches!(
+                    s.kind,
+                    ScopeKind::Platform | ScopeKind::Tenant | ScopeKind::Campus | ScopeKind::Category
+                )
+            });
+        drop(conn);
         let locked_above = matches!(origin, Origin::Scope { scope: at, locked: true } if at != scope);
         let editable = !locked_above && self.arranges(actor, page_kind, scope).await?;
-        let mut placements: Vec<Placement> = Vec::new();
-        for row in &rows {
+        let lockable = editable && gathers;
+        let held = self
+            .read_placements(actor, page_kind, scope, grid, &held_rows)
+            .await?;
+        let mut placements = self.read_placements(actor, page_kind, scope, grid, &rows).await?;
+        hold(&mut placements, held);
+        // A widget every page holds is on the page even when the layout was written before it was declared so: it takes
+        // the first room that holds it, and the next arrangement saved keeps it there.
+        if nearest.is_some() {
+            for kept in available.iter().filter(|w| w.required) {
+                if !placements.iter().any(|(p, _)| p.widget == kept.code) {
+                    let (w, h) = (kept.sizes.default.w.min(grid.columns), kept.sizes.default.h);
+                    let taken: Vec<Placement> = placements.iter().map(|(p, _)| p.clone()).collect();
+                    let (x, y) = room(&taken, w, h, grid.columns);
+                    let settings = kept
+                        .settings
+                        .iter()
+                        .filter_map(|s| Some((s.get("key")?.as_str()?.to_owned(), s.get("default")?.clone())))
+                        .collect();
+                    placements.push((
+                        Placement {
+                            widget: kept.code.clone(),
+                            x,
+                            y,
+                            w,
+                            h,
+                            pinned: false,
+                            locked: false,
+                            held: false,
+                            settings,
+                            permission: None,
+                        },
+                        true,
+                    ));
+                }
+            }
+        }
+        let placements = settle(placements.into_iter().map(|(p, _)| p).collect());
+        let widgets = if editable { available } else { Vec::new() };
+        Ok(Layout {
+            page_kind: page_kind.to_owned(),
+            grid,
+            placements,
+            origin,
+            editable,
+            lockable,
+            widgets,
+        })
+    }
+
+    /// The placements of rows as the actor sees them: the widgets it may see that the page kind still offers, each at
+    /// the nearest size it now allows, a widget a page holds once only once, and their settings with their defaults.
+    async fn read_placements(
+        &self,
+        actor: &Actor,
+        page_kind: &str,
+        scope: ScopeId,
+        grid: PageGrid,
+        rows: &[sqlx::postgres::PgRow],
+    ) -> Result<Vec<(Placement, bool)>> {
+        let mut placements: Vec<(Placement, bool)> = Vec::new();
+        for row in rows {
             let declared = widget(row, "declared");
             let Some(sizes) = declared.sizes.get(page_kind) else {
                 continue;
@@ -279,7 +380,7 @@ impl Customise {
             let code: String = row.get("widget_code");
             // A widget a page holds once shows once, in reading order, even when a layout written before it said so
             // holds more: the page never breaks, and the next arrangement saved keeps only the one shown.
-            if declared.single && placements.iter().any(|p| p.widget == code) {
+            if declared.single && placements.iter().any(|(p, _)| p.widget == code) {
                 continue;
             }
             let permission: Option<String> = row.get("permission");
@@ -291,55 +392,65 @@ impl Customise {
             let cell = |column: &str| u16::try_from(row.get::<i32, _>(column)).unwrap_or(0);
             // A widget whose sizes changed since it was placed takes the nearest size it now allows.
             let w = cell("w").clamp(sizes.min.w, sizes.max.w).min(grid.columns);
-            placements.push(Placement {
-                widget: code,
-                x: cell("x").min(grid.columns.saturating_sub(w)),
-                y: cell("y"),
-                w,
-                h: {
-                    let (low, high) = sizes.heights(w);
-                    cell("h").clamp(low, high)
+            let (low, high) = sizes.heights(w);
+            placements.push((
+                Placement {
+                    widget: code,
+                    x: cell("x").min(grid.columns.saturating_sub(w)),
+                    y: cell("y"),
+                    w,
+                    h: cell("h").clamp(low, high),
+                    pinned: row.get("pinned"),
+                    locked: row.get("locked"),
+                    held: false,
+                    settings: values::clean(&declared.settings, declared.with_defaults(settings)),
+                    permission,
                 },
-                pinned: row.get("pinned"),
-                settings: values::clean(&declared.settings, declared.with_defaults(settings)),
-                permission,
-            });
+                declared.single,
+            ));
         }
-        // A widget every page holds is on the page even when the layout was written before it was declared so: it takes
-        // the first room that holds it, and the next arrangement saved keeps it there.
-        if nearest.is_some() {
-            for kept in available.iter().filter(|w| w.required) {
-                if !placements.iter().any(|p| p.widget == kept.code) {
-                    let (w, h) = (kept.sizes.default.w.min(grid.columns), kept.sizes.default.h);
-                    let (x, y) = room(&placements, w, h, grid.columns);
-                    let settings = kept
-                        .settings
-                        .iter()
-                        .filter_map(|s| Some((s.get("key")?.as_str()?.to_owned(), s.get("default")?.clone())))
-                        .collect();
-                    placements.push(Placement {
-                        widget: kept.code.clone(),
-                        x,
-                        y,
-                        w,
-                        h,
-                        pinned: false,
-                        settings,
-                        permission: None,
-                    });
-                }
-            }
+        Ok(placements)
+    }
+
+    /// The rows of the widgets the scopes above one lock on a page kind, the highest scope first.
+    async fn locked_above(
+        &self,
+        conn: &mut PgConnection,
+        page_kind: &str,
+        scope: ScopeId,
+    ) -> Result<Vec<sqlx::postgres::PgRow>> {
+        let depths = self.depths(conn, scope).await?;
+        let above: Vec<uuid::Uuid> = depths
+            .iter()
+            .filter(|(_, depth)| **depth > 0)
+            .map(|(id, _)| *id)
+            .collect();
+        if above.is_empty() {
+            return Ok(Vec::new());
         }
-        let placements = settle(placements);
-        let widgets = if editable { available } else { Vec::new() };
-        Ok(Layout {
-            page_kind: page_kind.to_owned(),
-            grid,
-            placements,
-            origin,
-            editable,
-            widgets,
-        })
+        let mut rows = sqlx::query(sql(format!(
+            "select p.widget_code, p.x, p.y, p.w, p.h, p.pinned, p.locked, p.settings, p.permission, w.single, w.sizes,
+                    w.settings as declared, l.scope_id
+             from {} p join {} l on l.id = p.layout_id join {} w on w.code = p.widget_code
+             where l.page_kind_code = $1 and l.scope_id = any($2) and p.locked and w.retired_at is null",
+            self.table("placement"),
+            self.table("layout"),
+            self.table("widget")
+        )))
+        .bind(page_kind)
+        .bind(&above)
+        .fetch_all(&mut *conn)
+        .await
+        .map_err(kampus_db::classify)?;
+        rows.sort_by_key(|r| {
+            std::cmp::Reverse(
+                depths
+                    .get(&r.get::<uuid::Uuid, _>("scope_id"))
+                    .copied()
+                    .unwrap_or(0),
+            )
+        });
+        Ok(rows)
     }
 
     /// The widgets that may be placed on a page kind, with their sizes there and their settings as declared.
@@ -389,8 +500,32 @@ impl Customise {
         self.require_arranges(actor, page_kind, scope).await?;
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
         let grid = self.grid(&mut conn, page_kind).await?;
+        // The widgets the scopes above lock here are theirs: what the writer sends of them is left out, and a widget
+        // every page holds counts as held when they hold it.
+        let held_rows = self.locked_above(&mut conn, page_kind, scope).await?;
+        drop(conn);
+        let held: Vec<String> = held_rows
+            .iter()
+            .map(|r| r.get::<String, _>("widget_code"))
+            .collect();
+        let held_once: Vec<String> = held_rows
+            .iter()
+            .filter(|r| r.get::<bool, _>("single"))
+            .map(|r| r.get::<String, _>("widget_code"))
+            .collect();
+        let placements: Vec<Placement> = placements
+            .into_iter()
+            .filter(|p| !p.held && !held_once.contains(&p.widget))
+            .map(|p| Placement { held: false, ..p })
+            .collect();
+        let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
         let widgets = self.widgets(&mut conn, &placements).await?;
-        let required = self.required(&mut conn, page_kind).await?;
+        let required: Vec<AvailableWidget> = self
+            .required(&mut conn, page_kind)
+            .await?
+            .into_iter()
+            .filter(|w| !held.contains(&w.code))
+            .collect();
         let problems = problems(page_kind, grid, (&widgets, &required), &placements);
         if !problems.is_empty() {
             return Err(Error::validation("customise.layout_invalid", problems));
@@ -525,8 +660,8 @@ impl Customise {
         .map_err(kampus_db::classify)?;
         for placement in placements {
             sqlx::query(sql(format!(
-                "insert into {} (id, layout_id, widget_code, x, y, w, h, pinned, settings, permission)
-                 values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+                "insert into {} (id, layout_id, widget_code, x, y, w, h, pinned, locked, settings, permission)
+                 values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
                 self.table("placement")
             )))
             .bind(uuid::Uuid::now_v7())
@@ -537,6 +672,7 @@ impl Customise {
             .bind(i32::from(placement.w))
             .bind(i32::from(placement.h))
             .bind(placement.pinned)
+            .bind(placement.locked)
             .bind(json!(placement.settings))
             .bind(placement.permission.as_deref())
             .execute(&mut *conn)

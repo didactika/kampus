@@ -570,4 +570,13 @@ alter table {schema}.\"placement\" alter column \"position\" drop not null;",
         table: "placement",
         column: Column::new("pinned", Type::Boolean).default(ColumnDefault::Bool(false)),
     }],
+}, Step {
+    sequence: 9,
+    name: "widgets locked for the scopes below",
+    revert: &[],
+    action: None,
+    changes: &[Change::AddColumn {
+        table: "placement",
+        column: Column::new("locked", Type::Boolean).default(ColumnDefault::Bool(false)),
+    }],
 }];

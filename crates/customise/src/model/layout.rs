@@ -58,6 +58,14 @@ pub struct Placement {
     /// Whether the person pinned it where it is; otherwise it rises to the widgets above it, so no row is left empty.
     #[serde(default)]
     pub pinned: bool,
+    /// Whether the scope it is placed in locks it for the scopes below: there it shows as placed here, and it cannot
+    /// be moved, resized, edited or removed.
+    #[serde(default)]
+    pub locked: bool,
+    /// Whether a scope above locked it on this page, so it shows as that scope placed it; given by the server and
+    /// ignored when a layout is written.
+    #[serde(default)]
+    pub held: bool,
     /// Its settings, each of the kind the widget declares; the defaults fill what is left out.
     #[serde(default)]
     pub settings: BTreeMap<String, Value>,
@@ -180,6 +188,8 @@ pub struct Layout {
     pub origin: Origin,
     /// Whether the reader may change it here: they may arrange the page and no scope above locks it.
     pub editable: bool,
+    /// Whether the reader may lock widgets here for the scopes below: never on a page a person arranges for themselves.
+    pub lockable: bool,
     /// The widgets the reader may place on the page kind, with their sizes and settings; only when it is editable.
     pub widgets: Vec<AvailableWidget>,
 }

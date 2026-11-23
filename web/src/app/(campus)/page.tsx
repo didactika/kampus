@@ -72,6 +72,7 @@ export default async function HomePage() {
       grid={layout ? { columns: layout.grid.columns, row: layout.grid.row_pixels } : STANDARD_GRID}
       widgets={widgets}
       editable={layout?.editable ?? false}
+      lockable={layout?.lockable ?? false}
       available={(layout?.widgets ?? []).filter((w) => w.code in WIDGETS)}
     />
   );
