@@ -38,6 +38,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   optimizeDeps: {
     include: [
+      "@mui/material/Autocomplete",
       "@mui/material/Badge",
       "@mui/material/Box",
       "@mui/material/Button",
@@ -54,9 +55,14 @@ export default defineConfig({
       "@mui/material/FormLabel",
       "@mui/material/IconButton",
       "@mui/material/InputAdornment",
+      "@mui/material/ListItemIcon",
+      "@mui/material/MenuItem",
       "@mui/material/NativeSelect",
       "@mui/material/OutlinedInput",
+      "@mui/material/Paper",
       "@mui/material/Popover",
+      "@mui/material/Select",
+      "@mui/material/Slide",
       "@mui/material/Snackbar",
       "@mui/material/Stack",
       "@mui/material/ToggleButton",

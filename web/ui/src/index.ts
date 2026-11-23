@@ -47,6 +47,7 @@ export * from "./components/SelectField/index";
 export * from "./components/StatusBadge/index";
 export * from "./components/TextField/index";
 export * from "./components/Toasts/index";
+export * from "./patterns/ChangesBar";
 export * from "./patterns/CoverArt";
 export * from "./patterns/FilterGroup";
 export * from "./patterns/ListToolbar";
