@@ -37,8 +37,8 @@
 use kampus_access::{RoleTemplateDeclaration, Value};
 
 use super::{
-    FIELD_EDIT, FIELD_MANAGE, FIELD_VIEW, FLAG_MANAGE, LAYOUT_MANAGE, MENU_MANAGE, PACKAGE_MANAGE,
-    RULE_MANAGE, TERM_MANAGE, THEME_MANAGE,
+    FIELD_EDIT, FIELD_MANAGE, FIELD_VIEW, FLAG_MANAGE, LAYOUT_MANAGE, LAYOUT_OWN, MENU_MANAGE,
+    PACKAGE_MANAGE, RULE_MANAGE, TERM_MANAGE, THEME_MANAGE,
 };
 
 /// Every permission of this module, allowed: what an administrator holds.
@@ -49,6 +49,7 @@ const ALL_ALLOWED: &[(&str, Value)] = &[
     (FIELD_VIEW, Value::Allow),
     (FIELD_EDIT, Value::Allow),
     (LAYOUT_MANAGE, Value::Allow),
+    (LAYOUT_OWN, Value::Allow),
     (MENU_MANAGE, Value::Allow),
     (THEME_MANAGE, Value::Allow),
     (RULE_MANAGE, Value::Allow),
@@ -82,6 +83,11 @@ pub const TEMPLATES: &[RoleTemplateDeclaration] = &[
             (FIELD_EDIT, Value::Allow),
             (LAYOUT_MANAGE, Value::Allow),
         ],
+    },
+    RoleTemplateDeclaration {
+        code: "authenticated_user",
+        version: 1,
+        values: &[(LAYOUT_OWN, Value::Allow)],
     },
     RoleTemplateDeclaration {
         code: "non_editing_teacher",

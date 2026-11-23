@@ -45,7 +45,7 @@ use serde_json::{Value, json};
 use sqlx::{PgConnection, Row};
 
 use super::{is_code, principal, refuse_below_lock};
-use crate::permissions::LAYOUT_MANAGE;
+use crate::permissions::{LAYOUT_MANAGE, LAYOUT_OWN};
 use crate::{AvailableWidget, Customise, Layout, Origin, Placement, sql};
 
 /// The most widgets a layout holds.
@@ -133,6 +133,36 @@ pub(super) fn problems(
 }
 
 impl Customise {
+    /// Whether an actor may arrange a kind of page in a scope: they hold `customise.layout.manage` there, or the
+    /// page is personal, the scope is their own and they hold `customise.layout.own`.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn arranges(&self, actor: &Actor, page_kind: &str, scope: ScopeId) -> Result<bool> {
+        if self.access.check(actor, LAYOUT_MANAGE, scope).await?.allowed {
+            return Ok(true);
+        }
+        let Actor::Principal(principal) = *actor else {
+            return Ok(false);
+        };
+        if !self.personal(page_kind) || self.owners.owner_of(scope).await? != Some(principal) {
+            return Ok(false);
+        }
+        Ok(self.access.check(actor, LAYOUT_OWN, scope).await?.allowed)
+    }
+
+    /// Fails with `permission_denied` unless the actor may arrange the page in the scope.
+    async fn require_arranges(&self, actor: &Actor, page_kind: &str, scope: ScopeId) -> Result<()> {
+        if self.arranges(actor, page_kind, scope).await? {
+            Ok(())
+        } else {
+            Err(Error::permission_denied("access.denied")
+                .with_param("permission", LAYOUT_MANAGE)
+                .with_param("rule", "no_allow"))
+        }
+    }
+
     /// The layout of a page kind in a scope, with the widgets the actor sees.
     ///
     /// # Errors
@@ -163,7 +193,8 @@ impl Customise {
         };
         drop(conn);
         let origin = nearest.map_or(Origin::Declared, |(_, origin)| origin);
-        let editable = self.editable(actor, LAYOUT_MANAGE, &origin, scope).await?;
+        let locked_above = matches!(origin, Origin::Scope { scope: at, locked: true } if at != scope);
+        let editable = !locked_above && self.arranges(actor, page_kind, scope).await?;
         let widgets = if editable { available } else { Vec::new() };
         let mut placements = Vec::new();
         for row in &rows {
@@ -230,7 +261,7 @@ impl Customise {
         placements: Vec<Placement>,
         locked: bool,
     ) -> Result<Layout> {
-        self.access.require(actor, LAYOUT_MANAGE, scope).await?;
+        self.require_arranges(actor, page_kind, scope).await?;
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
         let regions = self.regions(&mut conn, page_kind).await?;
         let widgets = self.widgets(&mut conn, &placements).await?;
@@ -267,7 +298,7 @@ impl Customise {
     ///
     /// `permission_denied` without `customise.layout.manage`.
     pub async fn reset_layout(&self, actor: &Actor, page_kind: &str, scope: ScopeId) -> Result<Layout> {
-        self.access.require(actor, LAYOUT_MANAGE, scope).await?;
+        self.require_arranges(actor, page_kind, scope).await?;
         self.remove_in_scope(actor, ("layout", "page_kind_code"), page_kind, scope)
             .await?;
         self.layout(actor, page_kind, scope).await

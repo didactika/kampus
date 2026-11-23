@@ -2153,6 +2153,7 @@ dependencies = [
 name = "kampus-customise"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
  "kampus-access",
  "kampus-common",
@@ -2519,6 +2520,7 @@ dependencies = [
 name = "kampus-server"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "axum",
  "clap",
  "http-body-util",

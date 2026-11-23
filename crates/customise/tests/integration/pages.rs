@@ -128,6 +128,77 @@ async fn a_layout_keeps_to_the_regions_and_widgets_of_its_page_and_fills_default
 }
 
 #[tokio::test]
+async fn each_person_arranges_their_own_home_and_nothing_else() {
+    let w = world().await;
+    let c = &w.customise;
+    c.set_layout(
+        &w.admin,
+        "testing.home",
+        w.campus,
+        vec![placement("main", "testing.clock", json!({}))],
+        false,
+    )
+    .await
+    .unwrap();
+    let inherited = c.layout(&w.person, "testing.home", w.person_scope).await.unwrap();
+    assert_eq!(
+        inherited.placements.len(),
+        1,
+        "until the person arranges it, their home is the campus's"
+    );
+    assert!(inherited.editable, "a person may arrange their own home");
+    c.set_layout(&w.person, "testing.home", w.person_scope, Vec::new(), false)
+        .await
+        .unwrap();
+    assert!(
+        c.layout(&w.person, "testing.home", w.person_scope)
+            .await
+            .unwrap()
+            .placements
+            .is_empty()
+    );
+    assert_eq!(
+        c.layout(&w.admin, "testing.home", w.campus)
+            .await
+            .unwrap()
+            .placements
+            .len(),
+        1,
+        "what a person arranges is theirs alone"
+    );
+    for (page, scope, why) in [
+        ("testing.home", w.campus, "not the home of the campus"),
+        ("testing.home", w.other_scope, "not the home of another person"),
+        ("testing.page", w.person_scope, "not a page that is not personal"),
+    ] {
+        let denied = c
+            .set_layout(&w.person, page, scope, Vec::new(), false)
+            .await
+            .unwrap_err();
+        assert_eq!(denied.kind(), ErrorKind::PermissionDenied, "{why}");
+    }
+    assert!(
+        !c.layout(&w.person, "testing.home", w.other_scope)
+            .await
+            .unwrap()
+            .editable
+    );
+    c.reset_layout(&w.person, "testing.home", w.person_scope)
+        .await
+        .unwrap();
+    assert_eq!(
+        c.layout(&w.person, "testing.home", w.person_scope)
+            .await
+            .unwrap()
+            .placements
+            .len(),
+        1,
+        "back to the campus's"
+    );
+    w.drop().await;
+}
+
+#[tokio::test]
 async fn a_locked_layout_holds_below_and_a_widget_no_longer_declared_is_skipped() {
     let w = world().await;
     let c = &w.customise;

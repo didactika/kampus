@@ -85,6 +85,9 @@ pub struct PageKindDeclaration {
     pub summary: &'static str,
     /// Its regions, in the order they are shown.
     pub regions: &'static [&'static str],
+    /// Whether each person arranges it for themselves, in their own scope, such as the home: what they change
+    /// is theirs alone. A page that is not personal is arranged for everyone who sees it, such as a course.
+    pub personal: bool,
 }
 
 /// A setting of a widget, with the kind of value it takes.

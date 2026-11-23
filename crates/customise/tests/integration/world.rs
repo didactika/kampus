@@ -79,18 +79,27 @@ const KINDS: &[FieldKindDeclaration] = &[FieldKindDeclaration {
 }];
 
 /// The page kinds of these tests.
-const PAGES: &[PageKindDeclaration] = &[PageKindDeclaration {
-    code: "testing.page",
-    summary: "A page",
-    regions: &["main", "side"],
-}];
+const PAGES: &[PageKindDeclaration] = &[
+    PageKindDeclaration {
+        code: "testing.page",
+        summary: "A page",
+        regions: &["main", "side"],
+        personal: false,
+    },
+    PageKindDeclaration {
+        code: "testing.home",
+        summary: "A page each person arranges for themselves",
+        regions: &["main", "side"],
+        personal: true,
+    },
+];
 
 /// The widgets of these tests.
 const WIDGETS: &[WidgetDeclaration] = &[
     WidgetDeclaration {
         code: "testing.clock",
         summary: "A clock",
-        page_kinds: &["testing.page"],
+        page_kinds: &["testing.page", "testing.home"],
         settings: &[WidgetSetting {
             key: "seconds",
             kind: ValueKind::Boolean { default: false },
@@ -213,9 +222,29 @@ pub(crate) struct World {
     pub(crate) admin: Actor,
     /// A principal without roles.
     pub(crate) nobody: Actor,
+    /// A person of the campus, with their own scope.
+    pub(crate) person: Actor,
+    /// The scope of the person.
+    pub(crate) person_scope: ScopeId,
+    /// The scope of another person.
+    pub(crate) other_scope: ScopeId,
 }
 
 /// Builds the world in an installation of its own prefix.
+/// One scope, owned by one person.
+#[derive(Debug)]
+struct OneOwner {
+    scope: ScopeId,
+    owner: PrincipalId,
+}
+
+#[async_trait::async_trait]
+impl kampus_customise::ScopeOwners for OneOwner {
+    async fn owner_of(&self, scope: ScopeId) -> kampus_common::Result<Option<PrincipalId>> {
+        Ok((scope == self.scope).then_some(self.owner))
+    }
+}
+
 pub(crate) async fn world() -> World {
     let url = std::env::var("KAMPUS_TEST_DATABASE_URL").expect("KAMPUS_TEST_DATABASE_URL is set");
     let simple = uuid::Uuid::now_v7().simple().to_string();
@@ -254,6 +283,18 @@ pub(crate) async fn world() -> World {
         .unwrap();
     let nobody = PrincipalId::generate();
     access.create_principal(nobody, campus).await.unwrap();
+    let person = PrincipalId::generate();
+    access.create_principal(person, campus).await.unwrap();
+    access
+        .grant_for_module("setup", roles["authenticated_user"], campus, person, None)
+        .await
+        .unwrap();
+    let person_scope = access.create_scope(campus, ScopeKind::User).await.unwrap();
+    let other_scope = access.create_scope(campus, ScopeKind::User).await.unwrap();
+    let customise = customise.with_owners(Arc::new(OneOwner {
+        scope: person_scope,
+        owner: person,
+    }));
     World {
         customise,
         db,
@@ -263,6 +304,9 @@ pub(crate) async fn world() -> World {
         section,
         admin: Actor::Principal(admin),
         nobody: Actor::Principal(nobody),
+        person: Actor::Principal(person),
+        person_scope,
+        other_scope,
     }
 }
 

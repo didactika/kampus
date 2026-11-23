@@ -52,6 +52,8 @@ pub const FIELD_VIEW: &str = "customise.field.view";
 pub const FIELD_EDIT: &str = "customise.field.edit";
 /// Arrange the widgets of the pages of a scope.
 pub const LAYOUT_MANAGE: &str = "customise.layout.manage";
+/// Arrange one's own personal pages, such as one's home, in one's own scope.
+pub const LAYOUT_OWN: &str = "customise.layout.own";
 /// Change the navigation menus of a scope.
 pub const MENU_MANAGE: &str = "customise.menu.manage";
 /// Change the theme of a scope.
@@ -98,6 +100,12 @@ pub const PERMISSIONS: &[PermissionDeclaration] = &[
         kind: PermissionKind::Write,
         risks: &[Risk::Configuration],
         lowest_kind: ScopeKind::Course,
+    },
+    PermissionDeclaration {
+        code: LAYOUT_OWN,
+        kind: PermissionKind::Write,
+        risks: &[],
+        lowest_kind: ScopeKind::User,
     },
     PermissionDeclaration {
         code: MENU_MANAGE,

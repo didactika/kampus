@@ -43,6 +43,7 @@ pub mod model;
 pub mod module;
 pub mod observers;
 pub mod permissions;
+pub mod ports;
 pub mod service;
 pub mod settings;
 
@@ -62,6 +63,7 @@ pub use model::{
     Term,
 };
 pub use module::MODULE;
+pub use ports::owners::{NoOwners, ScopeOwners};
 
 /// The customisation of an installation.
 #[derive(Debug, Clone)]
@@ -72,16 +74,19 @@ pub struct Customise {
     access: Access,
     /// The modules of the build, for the actions of rules.
     modules: &'static [&'static Module],
+    /// Who owns the scopes of people, for their personal pages.
+    owners: std::sync::Arc<dyn ScopeOwners>,
 }
 
 impl Customise {
     /// The customisation of an installation, whose rules run no action until it knows the modules.
     #[must_use]
-    pub const fn new(db: Database, access: Access) -> Self {
+    pub fn new(db: Database, access: Access) -> Self {
         Self {
             db,
             access,
             modules: &[],
+            owners: std::sync::Arc::new(NoOwners),
         }
     }
 
@@ -89,6 +94,20 @@ impl Customise {
     #[must_use]
     pub fn with_modules(self, modules: &'static [&'static Module]) -> Self {
         Self { modules, ..self }
+    }
+
+    /// The customisation that knows who owns the scopes of people, so each arranges their personal pages.
+    #[must_use]
+    pub fn with_owners(self, owners: std::sync::Arc<dyn ScopeOwners>) -> Self {
+        Self { owners, ..self }
+    }
+
+    /// Whether a kind of page of the build is arranged by each person for themselves.
+    fn personal(&self, page_kind: &str) -> bool {
+        self.modules
+            .iter()
+            .flat_map(|m| m.page_kinds.iter())
+            .any(|p| p.code == page_kind && p.personal)
     }
 
     /// The rule action a module of the build declares with a code.

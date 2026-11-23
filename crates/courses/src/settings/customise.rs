@@ -126,6 +126,7 @@ pub const PAGE_KINDS: &[PageKindDeclaration] = &[PageKindDeclaration {
     code: COURSE_PAGE,
     summary: "The page of a course",
     regions: &["top", "main", "side"],
+    personal: false,
 }];
 
 /// The widgets of this module.
