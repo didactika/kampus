@@ -150,12 +150,14 @@ async fn each_person_arranges_their_own_home_and_nothing_else() {
     c.set_layout(&w.person, "testing.home", w.person_scope, Vec::new(), false)
         .await
         .unwrap();
-    assert!(
+    assert_eq!(
         c.layout(&w.person, "testing.home", w.person_scope)
             .await
             .unwrap()
             .placements
-            .is_empty()
+            .len(),
+        0,
+        "the person emptied their own home"
     );
     assert_eq!(
         c.layout(&w.admin, "testing.home", w.campus)
