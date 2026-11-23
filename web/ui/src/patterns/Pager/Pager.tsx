@@ -36,9 +36,10 @@
 "use client";
 
 /**
- * The pages of a list, under it, as Didactika's lists have them: how many items per page on one side (12, 24, 48 or
- * 96, only those smaller than the list, and All when the list has at most 500 items, chosen only on purpose), and on
- * the other the range shown and the previous and next arrows.
+ * The pages of a list, under it, as Didactika's lists have them: how many items per page on one side, from the sizes
+ * the list offers (12, 24, 48 and 96 unless it says others), only those smaller than the list, and All when the list
+ * has at most 500 items, chosen only on purpose; and on the other the range shown and the previous and next arrows.
+ * With 5, 10 and 200 offered and 10 items, the choice is 5 or All; when only one choice is left, none is shown.
  */
 
 import IconButton from "@mui/material/IconButton";
@@ -56,22 +57,26 @@ export const PAGE_SIZES = [12, 24, 48, 96] as const;
 /** The largest list "All" is offered for. */
 const ALL_UP_TO = 500;
 
-/** The sizes offered for a list of this many items, with a size a page prefers (such as the one a widget sets). */
-export function pageSizes(total: number, preferred = 0): number[] {
-  const sizes = [...new Set([...PAGE_SIZES, ...(preferred > 0 ? [preferred] : [])])].sort((a, b) => a - b);
-  const smaller = sizes.filter((size) => size < total);
-  const shown = smaller.length ? smaller : [Math.min(...sizes)];
-  return total <= ALL_UP_TO ? [...shown, 0] : shown;
+/**
+ * The sizes offered for a list of this many items: those of `sizes` (and a size a page prefers, such as the one a
+ * widget sets) smaller than the list, then All (0) when the list has at most 500 items.
+ */
+export function pageSizes(total: number, preferred = 0, sizes: readonly number[] = PAGE_SIZES): number[] {
+  const all = [...new Set([...sizes, ...(preferred > 0 ? [preferred] : [])])].filter((size) => size > 0).sort((a, b) => a - b);
+  const smaller = all.filter((size) => size < total);
+  if (total <= ALL_UP_TO) return [...smaller, 0];
+  return smaller.length ? smaller : [Math.min(...all)];
 }
 
 /**
  * The size a page takes: the one asked for when it is offered (0, the whole list, only when asked for on purpose),
  * the preferred size or 12 otherwise, so a list never shows everything at once by surprise.
  */
-export function pageSize(asked: number, total: number, preferred = 0): number {
-  const offered = pageSizes(total, preferred);
+export function pageSize(asked: number, total: number, preferred = 0, sizes: readonly number[] = PAGE_SIZES): number {
+  const offered = pageSizes(total, preferred, sizes);
   if (offered.includes(asked)) return asked;
-  return preferred > 0 && offered.includes(preferred) ? preferred : PAGE_SIZES[0];
+  if (preferred > 0 && offered.includes(preferred)) return preferred;
+  return offered.find((size) => size > 0) ?? 0;
 }
 
 /** The props of `Pager`. */
@@ -88,6 +93,8 @@ export interface PagerProps {
   readonly onSize: (size: number) => void;
   /** A size the list prefers, offered beside the usual ones. */
   readonly preferred?: number;
+  /** The sizes the list offers; 12, 24, 48 and 96 unless it says others. */
+  readonly sizes?: readonly number[];
   /** The words of the pager. */
   readonly labels: {
     readonly perPage: string;
@@ -100,35 +107,42 @@ export interface PagerProps {
 }
 
 /** `<Pager total={62} page={0} size={12} … />` */
-export function Pager({ total, page, size, onPage, onSize, labels, preferred = 0 }: PagerProps) {
+export function Pager({ total, page, size, onPage, onSize, labels, preferred = 0, sizes = PAGE_SIZES }: PagerProps) {
   const select = useId();
+  const offered = pageSizes(total, preferred, sizes);
   const per = size === 0 ? total : size;
   const pages = Math.max(1, Math.ceil(total / Math.max(per, 1)));
   const from = total === 0 ? 0 : page * per + 1;
   const to = Math.min(total, (page + 1) * per);
   return (
-    <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" }, justifyContent: "space-between", mt: 3, pt: 2, borderTop: 1, borderColor: "divider" }}>
-      <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-        <Typography variant="body2" color="text.secondary" aria-hidden>
-          {labels.perPage}
-        </Typography>
-        <Box id={select}>
-          <PillSelect
-            label={labels.perPage}
-            value={String(size)}
-            onChange={(value) => onSize(Number(value))}
-            options={pageSizes(total, preferred).map((option) => ({ value: String(option), label: option === 0 ? labels.all : String(option) }))}
-          />
-        </Box>
-      </Stack>
+    <Stack direction="row" spacing={2} sx={{ alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", rowGap: 1, mt: 3, pt: 1.5, borderTop: 1, borderColor: "divider" }}>
+      {offered.length > 1 ? (
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          <Typography variant="caption" color="text.secondary" aria-hidden>
+            {labels.perPage}
+          </Typography>
+          <Box id={select}>
+            <PillSelect
+              compact
+              opens="above"
+              label={labels.perPage}
+              value={String(size)}
+              onChange={(value) => onSize(Number(value))}
+              options={offered.map((option) => ({ value: String(option), label: option === 0 ? labels.all : String(option) }))}
+            />
+          </Box>
+        </Stack>
+      ) : (
+        <span />
+      )}
       <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
-        <Typography variant="body2" color="text.secondary" aria-live="polite" sx={{ mr: 1 }}>
+        <Typography variant="caption" color="text.secondary" aria-live="polite" sx={{ mr: 1 }}>
           {labels.range(from, to, total)}
         </Typography>
-        <IconButton aria-label={labels.previous} disabled={page === 0} onClick={() => onPage(page - 1)} sx={{ "&:hover, &:focus-visible": { color: "primary.main" } }}>
+        <IconButton size="small" aria-label={labels.previous} disabled={page === 0} onClick={() => onPage(page - 1)} sx={{ "&:hover, &:focus-visible": { color: "primary.main" } }}>
           <Icon name="chevron_left" />
         </IconButton>
-        <IconButton aria-label={labels.next} disabled={page >= pages - 1} onClick={() => onPage(page + 1)} sx={{ "&:hover, &:focus-visible": { color: "primary.main" } }}>
+        <IconButton size="small" aria-label={labels.next} disabled={page >= pages - 1} onClick={() => onPage(page + 1)} sx={{ "&:hover, &:focus-visible": { color: "primary.main" } }}>
           <Icon name="chevron_right" />
         </IconButton>
       </Stack>

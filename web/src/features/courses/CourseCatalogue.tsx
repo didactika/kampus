@@ -71,12 +71,14 @@ export interface CourseCatalogueProps {
   readonly view?: CatalogueQuery["view"];
   /** The size of its pages it starts with. */
   readonly size?: number;
+  /** The sizes of page offered, such as 5, 10 and 200; 12, 24, 48 and 96 when none. */
+  readonly sizes?: readonly number[];
   /** A link to the page of every course, for a catalogue shown as a widget. */
   readonly more?: { readonly href: string; readonly label: string };
 }
 
 /** `<CourseCatalogue catalogue={…} initial="q=phys" />` */
-export function CourseCatalogue({ catalogue, initial = "", heading, titleless = false, inAddress = true, view, size: startSize, more }: CourseCatalogueProps) {
+export function CourseCatalogue({ catalogue, initial = "", heading, titleless = false, inAddress = true, view, size: startSize, sizes, more }: CourseCatalogueProps) {
   const { t, language } = useI18n();
   const start = useMemo<CatalogueQuery>(() => ({ ...FRESH, ...(view ? { view } : {}), ...(startSize ? { size: startSize } : {}) }), [view, startSize]);
   const [query, setQuery] = useState<CatalogueQuery>(() => ({ ...start, ...readQuery(new URLSearchParams(initial), start) }));
@@ -93,7 +95,7 @@ export function CourseCatalogue({ catalogue, initial = "", heading, titleless = 
   }, [query, inAddress, start]);
 
   const found = useMemo(() => matching(catalogue.courses, query, language), [catalogue.courses, query, language]);
-  const size = pageSize(query.size, found.length, startSize ?? 0);
+  const size = pageSize(query.size, found.length, startSize ?? 0, sizes);
   const per = size === 0 ? found.length : size;
   const pages = Math.max(1, Math.ceil(found.length / Math.max(per, 1)));
   const page = Math.min(query.page, pages - 1);
@@ -203,6 +205,7 @@ export function CourseCatalogue({ catalogue, initial = "", heading, titleless = 
       {found.length > 0 ? (
         <Pager
           preferred={startSize ?? 0}
+          sizes={sizes}
           total={found.length}
           page={page}
           size={size}

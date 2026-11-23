@@ -37,7 +37,9 @@
 
 import { expect, test } from "@playwright/test";
 
-import { account, t } from "./support";
+import fs from "node:fs";
+
+import { LANGUAGE_FILE, account, t } from "./support";
 
 test("signs in, after refusing a wrong password", async ({ page }) => {
   const { user, password } = account();
@@ -51,4 +53,6 @@ test("signs in, after refusing a wrong password", async ({ page }) => {
   await page.getByRole("button", { name: t("signin.submit") }).click();
   await expect(page).toHaveURL(/\/$/);
   await page.context().storageState({ path: ".e2e-results/session.json" });
+  const profile = (await (await page.request.get("/api/v1/users/me/profile")).json()) as { language_code?: string | null };
+  fs.writeFileSync(LANGUAGE_FILE, profile.language_code ?? "");
 });

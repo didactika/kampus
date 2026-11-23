@@ -92,7 +92,7 @@ export function WidgetSettings({ title, declared, values, onApply, onClose }: Wi
                     key={setting.key}
                     label={label(setting.key)}
                     value={String(value)}
-                    onChange={(e) => set(setting.key, e.target.value)}
+                    onChange={(next) => set(setting.key, next)}
                     options={setting.kind.options.map((o) => ({ value: o, label: t(`choice.${o}`) === `choice.${o}` ? o : t(`choice.${o}`) }))}
                   />
                 );

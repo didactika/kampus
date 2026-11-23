@@ -172,6 +172,10 @@ pub const WIDGETS: &[WidgetDeclaration] = &[
                     default: 8,
                 },
             },
+            WidgetSetting {
+                key: "sizes",
+                kind: ValueKind::Text { max: 60, default: "" },
+            },
         ],
     },
 ];

@@ -115,6 +115,8 @@ export function componentStyles({ compact, still, fontSize }: ComponentOptions):
           paddingBlock: 0,
           paddingInline: theme.spacing(2),
           whiteSpace: "nowrap",
+          // Every variant has the same border, transparent but for outlined, so a button changing variant keeps its size.
+          border: "1px solid transparent",
           transition: `background-color ${EASE}, border-color ${EASE}, color ${EASE}, box-shadow 200ms cubic-bezier(0.2, 0, 0, 1), transform 120ms cubic-bezier(0.2, 0, 0, 1)`,
           "&:active:not(.Mui-disabled)": { transform: "translateY(0)" },
         }),
@@ -188,6 +190,24 @@ export function componentStyles({ compact, still, fontSize }: ComponentOptions):
           "&.Mui-error.Mui-focused": { boxShadow: `0 0 0 3px ${mix(vars(theme).error.main, "transparent", 28)}` },
         }),
         input: { minHeight: control - 2, paddingBlock: 0, boxSizing: "border-box" },
+      },
+    },
+    MuiSelect: {
+      styleOverrides: {
+        select: { minHeight: `${control - 2}px !important`, display: "flex", alignItems: "center", "&:focus": { backgroundColor: "transparent" } },
+      },
+    },
+    MuiAutocomplete: {
+      styleOverrides: {
+        inputRoot: { paddingBlock: "0 !important", minHeight: control },
+        paper: ({ theme }) => ({ borderRadius: theme.shape.borderRadius, boxShadow: theme.shadows[3], marginTop: theme.spacing(0.5) }),
+        listbox: ({ theme }) => ({ padding: theme.spacing(0.75) }),
+        option: ({ theme }) => ({
+          borderRadius: theme.shape.small,
+          minHeight: control,
+          "&.Mui-focused": { backgroundColor: `${mix(vars(theme).primary.main, "transparent", 8)} !important` },
+          "&[aria-selected=\"true\"]": { backgroundColor: `${vars(theme).primary.container} !important`, color: vars(theme).primary.onContainer },
+        }),
       },
     },
     MuiNativeSelect: { styleOverrides: { select: { "&:focus": { backgroundColor: "transparent" } } } },
