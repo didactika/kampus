@@ -39,6 +39,7 @@ pub mod declarations;
 pub mod export;
 pub mod field;
 pub mod flag;
+pub mod gravity;
 pub mod import;
 pub mod layout;
 pub mod menu;

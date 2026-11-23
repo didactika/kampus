@@ -44,6 +44,7 @@ use kampus_module::ValueKind;
 use serde_json::{Value, json};
 use sqlx::{PgConnection, Row};
 
+use super::gravity::{room, settle};
 use super::{is_code, principal, refuse_below_lock};
 use crate::permissions::{LAYOUT_MANAGE, LAYOUT_OWN};
 use crate::{AvailableWidget, Customise, Layout, Origin, PageGrid, Placement, RowHeight, WidgetSizes, sql};
@@ -168,29 +169,6 @@ pub(super) fn problems(
     problems
 }
 
-/// The first cell, in reading order, where a rectangle of a size fits among placements without moving any; under all
-/// of them when none does.
-fn room(placements: &[Placement], w: u16, h: u16, columns: u16) -> (u16, u16) {
-    let bottom = placements.iter().map(|p| p.y + p.h).max().unwrap_or(0);
-    let probe = |x: u16, y: u16| Placement {
-        widget: String::new(),
-        x,
-        y,
-        w,
-        h,
-        settings: BTreeMap::new(),
-        permission: None,
-    };
-    for y in 0..=bottom {
-        for x in 0..=columns.saturating_sub(w) {
-            if !placements.iter().any(|p| p.overlaps(&probe(x, y))) {
-                return (x, y);
-            }
-        }
-    }
-    (0, bottom)
-}
-
 /// The grid of a page kind, as stored.
 fn grid_of(stored: Option<Value>) -> PageGrid {
     let columns = stored
@@ -262,7 +240,7 @@ impl Customise {
         let available = self.available(&mut conn, page_kind).await?;
         let rows = match &nearest {
             Some((id, _)) => sqlx::query(sql(format!(
-                "select p.widget_code, p.x, p.y, p.w, p.h, p.settings, p.permission, w.single, w.sizes, w.settings as declared
+                "select p.widget_code, p.x, p.y, p.w, p.h, p.pinned, p.settings, p.permission, w.single, w.sizes, w.settings as declared
                  from {} p join {} w on w.code = p.widget_code
                  where p.layout_id = $1 and w.retired_at is null order by p.y, p.x",
                 self.table("placement"),
@@ -305,6 +283,7 @@ impl Customise {
                 y: cell("y"),
                 w,
                 h: cell("h").clamp(sizes.min.h, sizes.max.h),
+                pinned: row.get("pinned"),
                 settings: declared.with_defaults(settings),
                 permission,
             });
@@ -327,12 +306,14 @@ impl Customise {
                         y,
                         w,
                         h,
+                        pinned: false,
                         settings,
                         permission: None,
                     });
                 }
             }
         }
+        let placements = settle(placements);
         let widgets = if editable { available } else { Vec::new() };
         Ok(Layout {
             page_kind: page_kind.to_owned(),
@@ -404,6 +385,8 @@ impl Customise {
             refuse_below_lock(origin, scope)?;
         }
         drop(conn);
+        // What is stored is what the page shows: every widget not pinned risen to the ones above it.
+        let placements = settle(placements);
         let mut tx = self.db.begin().await?;
         self.write_layout_in(&mut tx, page_kind, scope, &placements, locked)
             .await?;
@@ -515,8 +498,8 @@ impl Customise {
         .map_err(kampus_db::classify)?;
         for placement in placements {
             sqlx::query(sql(format!(
-                "insert into {} (id, layout_id, widget_code, x, y, w, h, settings, permission)
-                 values ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+                "insert into {} (id, layout_id, widget_code, x, y, w, h, pinned, settings, permission)
+                 values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
                 self.table("placement")
             )))
             .bind(uuid::Uuid::now_v7())
@@ -526,6 +509,7 @@ impl Customise {
             .bind(i32::from(placement.y))
             .bind(i32::from(placement.w))
             .bind(i32::from(placement.h))
+            .bind(placement.pinned)
             .bind(json!(placement.settings))
             .bind(placement.permission.as_deref())
             .execute(&mut *conn)

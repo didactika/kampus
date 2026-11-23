@@ -45,7 +45,7 @@ export const DASHBOARD = "customise.dashboard";
 
 /** The widgets of the home by default. */
 export const DEFAULT_DASHBOARD: readonly Placement[] = [
-  { widget: "widget_welcome", x: 0, y: 0, w: 12, h: 4, settings: { heading: "", figures: true }, permission: null },
-  { widget: "widget_catalogue", x: 0, y: 4, w: 8, h: 8, settings: { heading: "", view: "grid", size: 8 }, permission: null },
-  { widget: "widget_notifications", x: 8, y: 4, w: 4, h: 5, settings: { limit: 5 }, permission: null },
+  { widget: "widget_welcome", x: 0, y: 0, w: 12, h: 4, settings: { heading: "", figures: true }, pinned: false, permission: null },
+  { widget: "widget_catalogue", x: 0, y: 4, w: 8, h: 8, settings: { heading: "", view: "grid", size: 8 }, pinned: false, permission: null },
+  { widget: "widget_notifications", x: 8, y: 4, w: 4, h: 5, settings: { limit: 5 }, pinned: false, permission: null },
 ];

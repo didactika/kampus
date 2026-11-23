@@ -46,7 +46,7 @@ import Box from "@mui/material/Box";
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react";
 
 import { useI18n } from "../../i18n/I18nProvider";
-import { place, reading, within, type Item, type Sizes } from "./grid/engine";
+import { place, reading, step as past, within, type Item, type Sizes } from "./grid/engine";
 import { GAP } from "./GridView";
 import { WidgetFrame } from "./WidgetFrame";
 
@@ -83,6 +83,8 @@ export interface GridEditorProps {
   readonly onChange: (items: readonly Item[]) => void;
   /** Removes a widget. */
   readonly onRemove: (key: number) => void;
+  /** Pins a widget where it is, or lets it rise again. */
+  readonly onPin: (key: number) => void;
 }
 
 /** What the pointer is doing to a widget. */
@@ -101,7 +103,7 @@ interface Gesture {
 }
 
 /** `<GridEditor columns={12} row={72} items={…} onChange={…} onRemove={…} />` */
-export function GridEditor({ columns, row, items, onChange, onRemove }: GridEditorProps) {
+export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: GridEditorProps) {
   const { t } = useI18n();
   const canvas = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
@@ -147,7 +149,7 @@ export function GridEditor({ columns, row, items, onChange, onRemove }: GridEdit
     return { target: placed.find((i) => i.key === g.key)!, placed };
   }
 
-  const rectangles = (list: readonly Item[]) => list.map(({ key, x, y, w, h }) => ({ key, x, y, w, h }));
+  const rectangles = (list: readonly Item[]) => list.map(({ key, x, y, w, h, pinned }) => ({ key, x, y, w, h, pinned }));
   const shown = gesture?.started ? preview(gesture).placed : rectangles(items);
   const at = (key: number) => shown.find((i) => i.key === key)!;
   const bottom = shown.reduce((low, i) => Math.max(low, i.y + i.h), 0) + SPARE_ROWS;
@@ -184,7 +186,7 @@ export function GridEditor({ columns, row, items, onChange, onRemove }: GridEdit
     setGesture(null);
   }
 
-  /** Arrows move the widget by a cell; with shift they resize it. */
+  /** Arrows move the widget: sideways by a cell, up or down past the next widget; with shift they resize it. */
   function key(event: KeyboardEvent<HTMLElement>, item: EditedWidget) {
     const step = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
     if (!step || event.target !== event.currentTarget) return;
@@ -196,8 +198,13 @@ export function GridEditor({ columns, row, items, onChange, onRemove }: GridEdit
     if (event.shiftKey) {
       if (!item.sizes) return;
       to = { ...start, ...within(item.sizes, { w: start.w + dx, h: start.h + dy }, columns) };
+    } else if (dy !== 0) {
+      const placed = past(current, item.key, dy > 0, columns);
+      onChange(placed);
+      say(placed.find((i) => i.key === item.key)!);
+      return;
     } else {
-      to = { ...start, x: start.x + dx, y: Math.max(0, start.y + dy) };
+      to = { ...start, x: start.x + dx };
     }
     const placed = place(current, item.key, to, columns);
     onChange(placed);
@@ -275,6 +282,8 @@ export function GridEditor({ columns, row, items, onChange, onRemove }: GridEdit
                   sx={{
                     position: "absolute",
                     ...style,
+                    // The corner that resizes shows only while the pointer or the focus is on the widget.
+                    "&:hover .resize-corner::after, &:focus-within .resize-corner::after": { opacity: 0.55 },
                     transition: moving ? "none" : "left 200ms cubic-bezier(0.2, 0, 0, 1), top 200ms cubic-bezier(0.2, 0, 0, 1), width 200ms cubic-bezier(0.2, 0, 0, 1), height 200ms cubic-bezier(0.2, 0, 0, 1)",
                     "@media (prefers-reduced-motion: reduce)": { transition: "none" },
                   }}
@@ -297,6 +306,8 @@ export function GridEditor({ columns, row, items, onChange, onRemove }: GridEdit
                     onKeyDown={(event) => key(event, item)}
                     onSettings={item.onSettings}
                     onRemove={item.removable ? () => onRemove(item.key) : undefined}
+                    pinned={Boolean(item.pinned)}
+                    onPin={() => onPin(item.key)}
                   >
                     {item.node}
                   </WidgetFrame>
@@ -355,6 +366,7 @@ function ResizeHandles({ name, resize, onPointerDown, onPointerMove, onPointerUp
       {horizontal && vertical ? (
         <Box
           {...common}
+          className="resize-corner"
           onPointerDown={(event) => onPointerDown(event, { right: true, bottom: true })}
           sx={{
             ...edge,
@@ -363,7 +375,7 @@ function ResizeHandles({ name, resize, onPointerDown, onPointerMove, onPointerUp
             inlineSize: 22,
             blockSize: 22,
             cursor: "nwse-resize",
-            "&::after": { ...bar, opacity: 0.6, insetInlineEnd: 6, insetBlockEnd: 6, inlineSize: 10, blockSize: 10, bgcolor: "transparent", borderInlineEnd: "3px solid", borderBlockEnd: "3px solid", borderColor: "primary.main", borderEndEndRadius: 6 },
+            "&::after": { ...bar, insetInlineEnd: 6, insetBlockEnd: 6, inlineSize: 10, blockSize: 10, bgcolor: "transparent", borderInlineEnd: "3px solid", borderBlockEnd: "3px solid", borderColor: "primary.main", borderEndEndRadius: 6 },
           }}
         />
       ) : null}

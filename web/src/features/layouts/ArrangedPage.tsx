@@ -65,7 +65,7 @@ import type { AvailableWidget, DeclaredSetting, Placement } from "../../api/type
 import { useI18n } from "../../i18n/I18nProvider";
 import { useOfferEditMode } from "../shell/EditMode";
 import { useLeaveGuard } from "../shell/LeaveGuard";
-import { room, type Item } from "./grid/engine";
+import { room, settle, type Item } from "./grid/engine";
 import { GridEditor } from "./GridEditor";
 import { GridView } from "./GridView";
 import { WidgetFrame } from "./WidgetFrame";
@@ -107,6 +107,12 @@ export interface ArrangedPageProps {
 }
 
 let keys = 0;
+
+/** The widgets of a page with every one not pinned risen to the ones above it, as the server keeps them. */
+function fall(items: readonly Draft[]): Draft[] {
+  const settled = settle(items.map((d) => ({ key: d.key, x: d.placement.x, y: d.placement.y, w: d.placement.w, h: d.placement.h, pinned: d.placement.pinned })));
+  return items.map((d) => ({ ...d, placement: { ...d.placement, y: settled.find((s) => s.key === d.key)!.y } }));
+}
 
 /** The settings a widget declares, as the API sends them. */
 const settingsOf = (widget: AvailableWidget | undefined): DeclaredSetting[] => (widget?.settings ?? []) as DeclaredSetting[];
@@ -150,7 +156,7 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
       await browserApi(`/customise/scopes/${scope}/layouts/${pageKind}`, {
         method: "PUT",
         body: {
-          placements: items.map(({ placement: { widget, x, y, w, h, settings } }) => ({ widget, x, y, w, h, settings })),
+          placements: items.map(({ placement: { widget, x, y, w, h, pinned, settings } }) => ({ widget, x, y, w, h, pinned, settings })),
         },
       });
       if (items.some((d) => d.node === null)) router.refresh();
@@ -187,7 +193,7 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
         const r = rectangles.find((x) => x.key === d.key);
         if (!r) return d;
         const resized = r.w !== d.placement.w || r.h !== d.placement.h;
-        return { ...d, placement: { ...d.placement, x: r.x, y: r.y, w: r.w, h: r.h }, node: resized ? null : d.node };
+        return { ...d, placement: { ...d.placement, x: r.x, y: r.y, w: r.w, h: r.h, pinned: Boolean(r.pinned) }, node: resized ? null : d.node };
       }),
     );
 
@@ -196,8 +202,12 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
     change((items) => {
       const size = { w: Math.min(widget.sizes.default.w, grid.columns), h: widget.sizes.default.h };
       const at = room(items.map((d) => ({ key: d.key, ...d.placement })), size, grid.columns);
-      return [...items, { key: ++keys, placement: { widget: widget.code, ...at, ...size, settings, permission: null }, node: null }];
+      return fall([...items, { key: ++keys, placement: { widget: widget.code, ...at, ...size, pinned: false, settings, permission: null }, node: null }]);
     });
+
+  /** Pins a widget where it is, or lets it rise again with the others. */
+  const pin = (key: number) =>
+    change((items) => fall(items.map((d) => (d.key === key ? { ...d, placement: { ...d.placement, pinned: !d.placement.pinned } } : d))));
 
   async function reset() {
     setBusy(true);
@@ -226,8 +236,8 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
       <Skeleton variant="rounded" height={64} animation="wave" />
     </Stack>
   );
-  const rectangle = (d: Draft) => ({ key: d.key, x: d.placement.x, y: d.placement.y, w: d.placement.w, h: d.placement.h });
-  const remove = (key: number) => change((d) => d.filter((x) => x.key !== key));
+  const rectangle = (d: Draft) => ({ key: d.key, x: d.placement.x, y: d.placement.y, w: d.placement.w, h: d.placement.h, pinned: d.placement.pinned });
+  const remove = (key: number) => change((d) => fall(d.filter((x) => x.key !== key)));
   const framed = (d: Draft) => ({
     ...rectangle(d),
     sizes: declared(d.placement.widget)?.sizes,
@@ -256,7 +266,7 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
         </Stack>
       ) : null}
       {editing && wide ? (
-        <GridEditor columns={grid.columns} row={grid.row} items={draft.map(framed)} onChange={arrange} onRemove={remove} />
+        <GridEditor columns={grid.columns} row={grid.row} items={draft.map(framed)} onChange={arrange} onRemove={remove} onPin={pin} />
       ) : editing ? (
         <>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>

@@ -34,7 +34,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { collides, place, reading, room, within, type Item, type Sizes } from "../../src/features/layouts/grid/engine";
+import { collides, place, reading, room, settle, step, within, type Item, type Sizes } from "../../src/features/layouts/grid/engine";
 
 /** A rectangle of the grid. */
 const at = (key: number, x: number, y: number, w: number, h: number): Item => ({ key, x, y, w, h });
@@ -53,10 +53,21 @@ describe("the grid of a page", () => {
     expect(apart(moved)).toBe(true);
   });
 
-  it("leaves empty the room a widget leaves, as a free grid does", () => {
+  it("never leaves an empty row above a widget: what moves down rises to the ones above it", () => {
     const moved = place(page, 3, { x: 8, y: 20, w: 4, h: 5 }, 12);
-    expect(moved.find((i) => i.key === 3)).toEqual(at(3, 8, 20, 4, 5));
-    expect(moved.find((i) => i.key === 2)).toEqual(at(2, 0, 4, 8, 8));
+    expect(moved.find((i) => i.key === 3)).toEqual(at(3, 8, 4, 4, 5));
+    expect(settle([at(1, 0, 3, 4, 2), at(2, 6, 9, 4, 2)])).toEqual([at(1, 0, 0, 4, 2), at(2, 6, 0, 4, 2)]);
+  });
+
+  it("keeps a pinned widget where it is, and the ones under it rest on it", () => {
+    const pinned = { ...at(2, 0, 6, 4, 2), pinned: true };
+    expect(settle([at(1, 0, 0, 4, 2), pinned, at(3, 0, 9, 4, 2)])).toEqual([at(1, 0, 0, 4, 2), pinned, at(3, 0, 8, 4, 2)]);
+  });
+
+  it("steps a widget under the next one and back, as the arrows do", () => {
+    const down = step(page, 1, true, 12);
+    expect(down.find((i) => i.key === 1)!.y).toBeGreaterThan(0);
+    expect(step(down, 1, false, 12).find((i) => i.key === 1)!.y).toBe(0);
   });
 
   it("keeps a widget inside the grid", () => {

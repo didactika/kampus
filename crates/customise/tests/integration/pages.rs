@@ -53,6 +53,7 @@ fn placement(at: [u16; 4], widget: &str, settings: Value) -> Placement {
         y,
         w,
         h,
+        pinned: false,
         settings: serde_json::from_value(settings).unwrap(),
         permission: None,
     }
@@ -466,8 +467,8 @@ async fn a_widget_every_page_holds_cannot_be_left_out_and_comes_back_when_it_is_
         .unwrap();
     assert_eq!(
         (moved.placements[0].x, moved.placements[0].y),
-        (4, 2),
-        "but it moves"
+        (4, 0),
+        "but it moves, and rises to the top"
     );
     // A layout written before the anchor was required: it is read with the anchor in the first room that holds it.
     let schema = w.db.prefix().schema("customise");
@@ -484,5 +485,49 @@ async fn a_widget_every_page_holds_cannot_be_left_out_and_comes_back_when_it_is_
         .find(|p| p.widget == "testing.anchor")
         .expect("the anchor is back");
     assert_eq!((anchor.x, anchor.y, anchor.w, anchor.h), (3, 0, 8, 4));
+    w.drop().await;
+}
+
+#[tokio::test]
+async fn widgets_rise_so_no_row_is_left_empty_unless_one_is_pinned() {
+    let w = world().await;
+    let c = &w.customise;
+    let gap = c
+        .set_layout(
+            &w.admin,
+            "testing.page",
+            w.category,
+            vec![
+                placement([0, 0, 3, 2], "testing.clock", json!({})),
+                placement([0, 6, 3, 2], "testing.clock", json!({})),
+                placement([6, 9, 3, 2], "testing.clock", json!({})),
+            ],
+            false,
+        )
+        .await
+        .unwrap();
+    let rows: Vec<_> = gap.placements.iter().map(|p| (p.x, p.y)).collect();
+    assert_eq!(
+        rows,
+        [(0, 0), (6, 0), (0, 2)],
+        "each rises to the widgets above it"
+    );
+    let mut pinned = placement([0, 6, 3, 2], "testing.clock", json!({}));
+    pinned.pinned = true;
+    let held = c
+        .set_layout(
+            &w.admin,
+            "testing.page",
+            w.category,
+            vec![placement([0, 0, 3, 2], "testing.clock", json!({})), pinned],
+            false,
+        )
+        .await
+        .unwrap();
+    assert_eq!(
+        (held.placements[1].y, held.placements[1].pinned),
+        (6, true),
+        "a pinned widget keeps its row"
+    );
     w.drop().await;
 }

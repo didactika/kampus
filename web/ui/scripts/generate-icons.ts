@@ -88,6 +88,8 @@ const NAMES = [
   "home",
   "inbox",
   "info",
+  "keep",
+  "keep_off",
   "key",
   "keyboard_arrow_down",
   "keyboard_arrow_up",

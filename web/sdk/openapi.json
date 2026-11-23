@@ -4147,6 +4147,11 @@
               "null"
             ]
           },
+          "pinned": {
+            "default": false,
+            "description": "Whether the person pinned it where it is; otherwise it rises to the widgets above it, so no row is left empty.",
+            "type": "boolean"
+          },
           "settings": {
             "additionalProperties": true,
             "default": {},
@@ -4185,6 +4190,7 @@
           "y",
           "w",
           "h",
+          "pinned",
           "settings",
           "permission"
         ],
@@ -15123,6 +15129,11 @@
                                   "null"
                                 ]
                               },
+                              "pinned": {
+                                "default": false,
+                                "description": "Whether the person pinned it where it is; otherwise it rises to the widgets above it, so no row is left empty.",
+                                "type": "boolean"
+                              },
                               "settings": {
                                 "additionalProperties": true,
                                 "default": {},
@@ -15687,6 +15698,11 @@
                             "string",
                             "null"
                           ]
+                        },
+                        "pinned": {
+                          "default": false,
+                          "description": "Whether the person pinned it where it is; otherwise it rises to the widgets above it, so no row is left empty.",
+                          "type": "boolean"
                         },
                         "settings": {
                           "additionalProperties": true,

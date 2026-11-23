@@ -186,7 +186,7 @@ impl Customise {
         let mut exported = Vec::new();
         for layout in &layouts {
             let rows = sqlx::query(sql(format!(
-                "select widget_code, x, y, w, h, settings, permission from {} where layout_id = $1 order by y, x",
+                "select widget_code, x, y, w, h, pinned, settings, permission from {} where layout_id = $1 order by y, x",
                 self.table("placement")
             )))
             .bind(layout.get::<uuid::Uuid, _>("id"))
@@ -203,6 +203,7 @@ impl Customise {
                         y: cell(r, "y"),
                         w: cell(r, "w"),
                         h: cell(r, "h"),
+                        pinned: r.get("pinned"),
                         settings: serde_json::from_value::<BTreeMap<String, Value>>(r.get("settings"))
                             .unwrap_or_default(),
                         permission: r.get("permission"),

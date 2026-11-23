@@ -55,6 +55,9 @@ pub struct Placement {
     pub w: u16,
     /// How many rows it takes, within the sizes the widget declares for the page kind.
     pub h: u16,
+    /// Whether the person pinned it where it is; otherwise it rises to the widgets above it, so no row is left empty.
+    #[serde(default)]
+    pub pinned: bool,
     /// Its settings, each of the kind the widget declares; the defaults fill what is left out.
     #[serde(default)]
     pub settings: BTreeMap<String, Value>,
