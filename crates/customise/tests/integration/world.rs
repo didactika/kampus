@@ -42,9 +42,9 @@ use kampus_common::SystemClock;
 use kampus_customise::{Choice, Customise, FieldSpec, FieldType, FieldVisibility};
 use kampus_db::{Database, Prefix, Upgrader};
 use kampus_module::{
-    EventDeclaration, FieldKindDeclaration, FlagDeclaration, JobFuture, MenuKindDeclaration, Module,
-    PageKindDeclaration, RuleActionDeclaration, RuleActionRun, RuleParameter, TermDeclaration, TermForms,
-    ValueKind, WidgetDeclaration, WidgetSetting,
+    Cells, EventDeclaration, FieldKindDeclaration, FlagDeclaration, Grid, JobFuture, MenuKindDeclaration,
+    Module, PageKindDeclaration, Resize, RuleActionDeclaration, RuleActionRun, RuleParameter,
+    TermDeclaration, TermForms, ValueKind, WidgetDeclaration, WidgetSetting, WidgetSize,
 };
 use serde_json::Value;
 
@@ -83,23 +83,34 @@ const PAGES: &[PageKindDeclaration] = &[
     PageKindDeclaration {
         code: "testing.page",
         summary: "A page",
-        regions: &["main", "side"],
+        grid: Grid::STANDARD,
         personal: false,
     },
     PageKindDeclaration {
         code: "testing.home",
         summary: "A page each person arranges for themselves",
-        regions: &["main", "side"],
+        grid: Grid::STANDARD,
         personal: true,
     },
 ];
+
+/// The sizes of the clock on a page kind: two by two up to six by four.
+const fn clock(page_kind: &'static str) -> WidgetSize {
+    WidgetSize {
+        page_kind,
+        min: Cells::new(2, 2),
+        default: Cells::new(3, 2),
+        max: Cells::new(6, 4),
+        resize: Resize::Both,
+    }
+}
 
 /// The widgets of these tests.
 const WIDGETS: &[WidgetDeclaration] = &[
     WidgetDeclaration {
         code: "testing.clock",
         summary: "A clock",
-        page_kinds: &["testing.page", "testing.home"],
+        sizes: &[clock("testing.page"), clock("testing.home")],
         settings: &[WidgetSetting {
             key: "seconds",
             kind: ValueKind::Boolean { default: false },
@@ -108,7 +119,7 @@ const WIDGETS: &[WidgetDeclaration] = &[
     WidgetDeclaration {
         code: "testing.elsewhere",
         summary: "A widget for another page",
-        page_kinds: &["testing.other"],
+        sizes: &[clock("testing.other")],
         settings: &[],
     },
 ];

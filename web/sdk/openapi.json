@@ -285,6 +285,10 @@
             "items": true,
             "type": "array"
           },
+          "sizes": {
+            "$ref": "#/components/schemas/WidgetSizes",
+            "description": "The sizes it takes on the page kind."
+          },
           "summary": {
             "description": "What it shows.",
             "type": "string"
@@ -293,6 +297,7 @@
         "required": [
           "code",
           "summary",
+          "sizes",
           "settings"
         ],
         "type": "object"
@@ -3015,8 +3020,12 @@
         "description": "The layout of a page kind in a scope.",
         "properties": {
           "editable": {
-            "description": "Whether the reader may change it here: they hold `customise.layout.manage` and no scope above locks it.",
+            "description": "Whether the reader may change it here: they may arrange the page and no scope above locks it.",
             "type": "boolean"
+          },
+          "grid": {
+            "$ref": "#/components/schemas/PageGrid",
+            "description": "The grid its widgets are placed on."
           },
           "origin": {
             "$ref": "#/components/schemas/Origin",
@@ -3027,21 +3036,14 @@
             "type": "string"
           },
           "placements": {
-            "description": "The widgets the reader sees, by region and in order; the page shows its own arrangement when the\nlayout comes from its declaration.",
+            "description": "The widgets the reader sees, in reading order (by row, then by column); the page shows its own arrangement\nwhen the layout comes from its declaration.",
             "items": {
               "$ref": "#/components/schemas/Placement"
             },
             "type": "array"
           },
-          "regions": {
-            "description": "Its regions, in order.",
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
           "widgets": {
-            "description": "The widgets the reader may place on the page kind, with their settings; only when it is editable.",
+            "description": "The widgets the reader may place on the page kind, with their sizes and settings; only when it is editable.",
             "items": {
               "$ref": "#/components/schemas/AvailableWidget"
             },
@@ -3050,7 +3052,7 @@
         },
         "required": [
           "page_kind",
-          "regions",
+          "grid",
           "placements",
           "origin",
           "editable",
@@ -4069,6 +4071,35 @@
         ],
         "type": "object"
       },
+      "PageGrid": {
+        "description": "The grid of a page kind.",
+        "properties": {
+          "columns": {
+            "description": "How many columns it has.",
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "row": {
+            "$ref": "#/components/schemas/RowHeight",
+            "description": "The height of a row, by name: `compact`, `regular` or `tall`."
+          },
+          "row_pixels": {
+            "description": "The height of a row, in CSS pixels.",
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "columns",
+          "row",
+          "row_pixels"
+        ],
+        "type": "object"
+      },
       "PictureFile": {
         "description": "The picture of an account.",
         "properties": {
@@ -4084,8 +4115,15 @@
         "type": "object"
       },
       "Placement": {
-        "description": "A widget in a region of a layout, with its settings.",
+        "description": "A widget on the grid of a layout: the rectangle of cells it takes, and its settings.",
         "properties": {
+          "h": {
+            "description": "How many rows it takes, within the sizes the widget declares for the page kind.",
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
           "permission": {
             "default": null,
             "description": "The permission a person needs to see it; everyone who sees the page when absent.",
@@ -4094,24 +4132,44 @@
               "null"
             ]
           },
-          "region": {
-            "description": "The region of the page kind.",
-            "type": "string"
-          },
           "settings": {
             "additionalProperties": true,
             "default": {},
             "description": "Its settings, each of the kind the widget declares; the defaults fill what is left out.",
             "type": "object"
           },
+          "w": {
+            "description": "How many columns it takes, within the sizes the widget declares for the page kind.",
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
           "widget": {
             "description": "The widget, by code.",
             "type": "string"
+          },
+          "x": {
+            "description": "The first column it takes, from 0.",
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "y": {
+            "description": "The first row it takes, from 0.",
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
           }
         },
         "required": [
-          "region",
           "widget",
+          "x",
+          "y",
+          "w",
+          "h",
           "settings",
           "permission"
         ],
@@ -4936,6 +4994,31 @@
           }
         ]
       },
+      "Resize": {
+        "description": "How a widget may be resized.",
+        "oneOf": [
+          {
+            "const": "none",
+            "description": "It keeps its size.",
+            "type": "string"
+          },
+          {
+            "const": "horizontal",
+            "description": "Only its width changes.",
+            "type": "string"
+          },
+          {
+            "const": "vertical",
+            "description": "Only its height changes.",
+            "type": "string"
+          },
+          {
+            "const": "both",
+            "description": "Both change.",
+            "type": "string"
+          }
+        ]
+      },
       "Retention": {
         "description": "A kind of personal data and how long the campus keeps it after the account is deleted.",
         "properties": {
@@ -4962,6 +5045,26 @@
           "keep_days"
         ],
         "type": "object"
+      },
+      "RowHeight": {
+        "description": "The height of a row of a grid, by name.",
+        "oneOf": [
+          {
+            "const": "compact",
+            "description": "48 pixels.",
+            "type": "string"
+          },
+          {
+            "const": "regular",
+            "description": "72 pixels.",
+            "type": "string"
+          },
+          {
+            "const": "tall",
+            "description": "96 pixels.",
+            "type": "string"
+          }
+        ]
       },
       "Rule": {
         "description": "A rule of a scope; it reacts to the events of its scope and of the scopes below.",
@@ -5526,6 +5629,30 @@
         "required": [
           "url",
           "expires_at"
+        ],
+        "type": "object"
+      },
+      "Size": {
+        "description": "A size on a grid, in cells.",
+        "properties": {
+          "h": {
+            "description": "Rows.",
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "w": {
+            "description": "Columns.",
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "w",
+          "h"
         ],
         "type": "object"
       },
@@ -6200,6 +6327,34 @@
             "type": "object"
           }
         ]
+      },
+      "WidgetSizes": {
+        "description": "The sizes a widget takes on a page kind.",
+        "properties": {
+          "default": {
+            "$ref": "#/components/schemas/Size",
+            "description": "The one it takes when it is placed."
+          },
+          "max": {
+            "$ref": "#/components/schemas/Size",
+            "description": "The largest."
+          },
+          "min": {
+            "$ref": "#/components/schemas/Size",
+            "description": "The smallest."
+          },
+          "resize": {
+            "$ref": "#/components/schemas/Resize",
+            "description": "How it may be resized between them."
+          }
+        },
+        "required": [
+          "min",
+          "default",
+          "max",
+          "resize"
+        ],
+        "type": "object"
       },
       "WithOwners": {
         "description": "A course with the people who own it.",
@@ -14936,8 +15091,15 @@
                         "placements": {
                           "description": "Its widgets, in order.",
                           "items": {
-                            "description": "A widget in a region of a layout, with its settings.",
+                            "description": "A widget on the grid of a layout: the rectangle of cells it takes, and its settings.",
                             "properties": {
+                              "h": {
+                                "description": "How many rows it takes, within the sizes the widget declares for the page kind.",
+                                "format": "uint16",
+                                "maximum": 65535,
+                                "minimum": 0,
+                                "type": "integer"
+                              },
                               "permission": {
                                 "default": null,
                                 "description": "The permission a person needs to see it; everyone who sees the page when absent.",
@@ -14946,24 +15108,44 @@
                                   "null"
                                 ]
                               },
-                              "region": {
-                                "description": "The region of the page kind.",
-                                "type": "string"
-                              },
                               "settings": {
                                 "additionalProperties": true,
                                 "default": {},
                                 "description": "Its settings, each of the kind the widget declares; the defaults fill what is left out.",
                                 "type": "object"
                               },
+                              "w": {
+                                "description": "How many columns it takes, within the sizes the widget declares for the page kind.",
+                                "format": "uint16",
+                                "maximum": 65535,
+                                "minimum": 0,
+                                "type": "integer"
+                              },
                               "widget": {
                                 "description": "The widget, by code.",
                                 "type": "string"
+                              },
+                              "x": {
+                                "description": "The first column it takes, from 0.",
+                                "format": "uint16",
+                                "maximum": 65535,
+                                "minimum": 0,
+                                "type": "integer"
+                              },
+                              "y": {
+                                "description": "The first row it takes, from 0.",
+                                "format": "uint16",
+                                "maximum": 65535,
+                                "minimum": 0,
+                                "type": "integer"
                               }
                             },
                             "required": [
-                              "region",
-                              "widget"
+                              "widget",
+                              "x",
+                              "y",
+                              "w",
+                              "h"
                             ],
                             "type": "object"
                           },
@@ -15472,10 +15654,17 @@
                     "type": "boolean"
                   },
                   "placements": {
-                    "description": "Its widgets, by region and in order.",
+                    "description": "Its widgets, each a rectangle of cells of the grid.",
                     "items": {
-                      "description": "A widget in a region of a layout, with its settings.",
+                      "description": "A widget on the grid of a layout: the rectangle of cells it takes, and its settings.",
                       "properties": {
+                        "h": {
+                          "description": "How many rows it takes, within the sizes the widget declares for the page kind.",
+                          "format": "uint16",
+                          "maximum": 65535,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
                         "permission": {
                           "default": null,
                           "description": "The permission a person needs to see it; everyone who sees the page when absent.",
@@ -15484,24 +15673,44 @@
                             "null"
                           ]
                         },
-                        "region": {
-                          "description": "The region of the page kind.",
-                          "type": "string"
-                        },
                         "settings": {
                           "additionalProperties": true,
                           "default": {},
                           "description": "Its settings, each of the kind the widget declares; the defaults fill what is left out.",
                           "type": "object"
                         },
+                        "w": {
+                          "description": "How many columns it takes, within the sizes the widget declares for the page kind.",
+                          "format": "uint16",
+                          "maximum": 65535,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
                         "widget": {
                           "description": "The widget, by code.",
                           "type": "string"
+                        },
+                        "x": {
+                          "description": "The first column it takes, from 0.",
+                          "format": "uint16",
+                          "maximum": 65535,
+                          "minimum": 0,
+                          "type": "integer"
+                        },
+                        "y": {
+                          "description": "The first row it takes, from 0.",
+                          "format": "uint16",
+                          "maximum": 65535,
+                          "minimum": 0,
+                          "type": "integer"
                         }
                       },
                       "required": [
-                        "region",
-                        "widget"
+                        "widget",
+                        "x",
+                        "y",
+                        "w",
+                        "h"
                       ],
                       "type": "object"
                     },
@@ -15547,7 +15756,7 @@
             "token": []
           }
         ],
-        "summary": "Place widgets in the regions of a kind of page",
+        "summary": "Place widgets on the grid of a kind of page",
         "tags": [
           "customise"
         ]

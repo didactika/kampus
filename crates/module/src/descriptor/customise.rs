@@ -76,15 +76,171 @@ pub struct FieldKindDeclaration {
     pub summary: &'static str,
 }
 
-/// A kind of page a module shows, with the regions a layout places widgets in.
+/// The height of a row of the grid of a page, from the heights everyone knows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RowHeight {
+    /// 48 pixels: lists and short texts.
+    Compact,
+    /// 72 pixels: most pages.
+    Regular,
+    /// 96 pixels: pages of large figures and pictures.
+    Tall,
+}
+
+impl RowHeight {
+    /// Its code, as stored and sent.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::Compact => "compact",
+            Self::Regular => "regular",
+            Self::Tall => "tall",
+        }
+    }
+
+    /// Its height in CSS pixels.
+    #[must_use]
+    pub const fn pixels(self) -> u16 {
+        match self {
+            Self::Compact => 48,
+            Self::Regular => 72,
+            Self::Tall => 96,
+        }
+    }
+}
+
+/// The grid a page lays its widgets on: columns of equal width and rows of one height.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Grid {
+    /// How many columns it has.
+    pub columns: u8,
+    /// How high a row is.
+    pub row: RowHeight,
+}
+
+impl Grid {
+    /// Twelve columns of regular rows, the grid of most pages.
+    pub const STANDARD: Self = Self {
+        columns: 12,
+        row: RowHeight::Regular,
+    };
+}
+
+/// A size on a grid, in cells.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Cells {
+    /// Its width, in columns.
+    pub w: u8,
+    /// Its height, in rows.
+    pub h: u8,
+}
+
+impl Cells {
+    /// A size of `w` columns by `h` rows.
+    #[must_use]
+    pub const fn new(w: u8, h: u8) -> Self {
+        Self { w, h }
+    }
+}
+
+/// How a person may change the size of a widget on a page.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Resize {
+    /// It keeps its size.
+    None,
+    /// Only its width changes.
+    Horizontal,
+    /// Only its height changes.
+    Vertical,
+    /// Both change.
+    Both,
+}
+
+impl Resize {
+    /// Its code, as stored and sent.
+    #[must_use]
+    pub const fn code(self) -> &'static str {
+        match self {
+            Self::None => "none",
+            Self::Horizontal => "horizontal",
+            Self::Vertical => "vertical",
+            Self::Both => "both",
+        }
+    }
+}
+
+/// The sizes a widget takes on one kind of page: the smallest, the one it starts with and the largest, and how a
+/// person may change it between them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct WidgetSize {
+    /// The page kind, `<module>.<page>`.
+    pub page_kind: &'static str,
+    /// The smallest size.
+    pub min: Cells,
+    /// The size it takes when it is placed.
+    pub default: Cells,
+    /// The largest size.
+    pub max: Cells,
+    /// How it may be resized.
+    pub resize: Resize,
+}
+
+impl WidgetSize {
+    /// One size it always keeps, on a page kind: what it shows reads the same however the page is arranged.
+    #[must_use]
+    pub const fn fixed(page_kind: &'static str, size: Cells) -> Self {
+        Self {
+            page_kind,
+            min: size,
+            default: size,
+            max: size,
+            resize: Resize::None,
+        }
+    }
+
+    /// What is wrong with it on a grid; nothing when it fits.
+    #[must_use]
+    pub fn problem(&self, grid: Grid) -> Option<&'static str> {
+        let Self {
+            min,
+            default,
+            max,
+            resize,
+            ..
+        } = *self;
+        if min.w == 0 || min.h == 0 {
+            return Some("a size has no width or no height");
+        }
+        if !(min.w <= default.w && default.w <= max.w && min.h <= default.h && default.h <= max.h) {
+            return Some("the default size is not between the smallest and the largest");
+        }
+        if max.w > grid.columns {
+            return Some("the largest size is wider than the grid");
+        }
+        let (wide, high) = (min.w != max.w, min.h != max.h);
+        let allowed = match resize {
+            Resize::None => !wide && !high,
+            Resize::Horizontal => !high,
+            Resize::Vertical => !wide,
+            Resize::Both => true,
+        };
+        if allowed {
+            None
+        } else {
+            Some("the sizes change in a direction the widget may not be resized in")
+        }
+    }
+}
+
+/// A kind of page a module shows, laid out as a grid of widgets.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct PageKindDeclaration {
     /// `<module>.<page>`, unique in the build.
     pub code: &'static str,
     /// What the page is, for people who arrange it.
     pub summary: &'static str,
-    /// Its regions, in the order they are shown.
-    pub regions: &'static [&'static str],
+    /// The grid its widgets are placed on.
+    pub grid: Grid,
     /// Whether each person arranges it for themselves, in their own scope, such as the home: what they change
     /// is theirs alone. A page that is not personal is arranged for everyone who sees it, such as a course.
     pub personal: bool,
@@ -106,8 +262,8 @@ pub struct WidgetDeclaration {
     pub code: &'static str,
     /// What it shows.
     pub summary: &'static str,
-    /// The page kinds it may be placed in; every page kind when empty.
-    pub page_kinds: &'static [&'static str],
+    /// The sizes it takes on each page kind it may be placed on; it is placed on no other.
+    pub sizes: &'static [WidgetSize],
     /// Its settings; a placement sets only these, each of its kind.
     pub settings: &'static [WidgetSetting],
 }

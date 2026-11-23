@@ -37,8 +37,8 @@
 
 /**
  * The frame of a widget on a page being arranged: its name and icon, its settings and a way to remove it, and its
- * content below as a preview that cannot be used. The same frame follows the pointer while it is dragged, at its
- * own size, so the person sees the whole widget they move.
+ * content below, filling the rectangle it takes, as a preview that cannot be used. The whole frame is what the
+ * person drags, and it follows the pointer at its own size, so they see the whole widget they move.
  */
 
 import Box from "@mui/material/Box";
@@ -63,8 +63,8 @@ export interface WidgetFrameProps extends HTMLAttributes<HTMLDivElement> {
   readonly selected?: boolean;
   /** Whether it is the copy that follows the pointer. */
   readonly lifted?: boolean;
-  /** Whether it is the place a dragged widget leaves, shown as the room it will take. */
-  readonly placeholder?: boolean;
+  /** Whether it keeps one size, which the frame says. */
+  readonly fixed?: boolean;
   /** Opens its settings; none when it declares no settings. */
   readonly onSettings?: () => void;
   /** Removes it from the page. */
@@ -81,7 +81,7 @@ const own = {
 
 /** `<WidgetFrame name="Catalogue" icon="school">{preview}</WidgetFrame>` */
 export const WidgetFrame = forwardRef<HTMLDivElement, WidgetFrameProps>(function WidgetFrame(
-  { name, icon, selected = false, lifted = false, placeholder = false, onSettings, onRemove, children, style, ...rest },
+  { name, icon, selected = false, lifted = false, fixed = false, onSettings, onRemove, children, style, ...rest },
   ref,
 ) {
   const { t } = useI18n();
@@ -93,6 +93,9 @@ export const WidgetFrame = forwardRef<HTMLDivElement, WidgetFrameProps>(function
       sx={{
         position: "relative",
         overflow: "hidden",
+        blockSize: "100%",
+        display: "flex",
+        flexDirection: "column",
         cursor: "move",
         touchAction: "none",
         userSelect: "none",
@@ -105,21 +108,22 @@ export const WidgetFrame = forwardRef<HTMLDivElement, WidgetFrameProps>(function
         "&:focus-visible": { outline: 3, outlineColor: "primary.main", outlineOffset: 2 },
         "& .widget-actions": { opacity: selected ? 1 : 0, transition: "opacity 120ms" },
         "&:hover .widget-actions, &:focus-within .widget-actions": { opacity: 1 },
-        ...(placeholder
-          ? { boxShadow: "none", bgcolor: "transparent", border: "2px dashed", borderColor: "primary.main", "& > *": { visibility: "hidden" } }
-          : {}),
       }}
     >
       <Stack direction="row" spacing={1} sx={{ alignItems: "center", pl: 1.5, pr: 1, py: 0.75, borderBottom: 1, borderColor: "divider" }}>
-        <Box sx={{ color: "text.secondary", display: "flex" }} aria-hidden>
-          <Icon name="drag_indicator" size="small" />
-        </Box>
         <Box sx={{ color: "primary.main", display: "flex" }}>
           <Icon name={icon} size="small" />
         </Box>
         <Typography variant="subtitle2" sx={{ flex: 1 }} noWrap>
           {name}
         </Typography>
+        {fixed ? (
+          <Tooltip title={t("grid.fixed")}>
+            <Box sx={{ color: "text.secondary", display: "flex" }} role="img" aria-label={t("grid.fixed")}>
+              <Icon name="lock" size="small" />
+            </Box>
+          </Tooltip>
+        ) : null}
         {lifted ? null : (
           <Stack direction="row" className="widget-actions">
             {onSettings ? (
@@ -139,7 +143,7 @@ export const WidgetFrame = forwardRef<HTMLDivElement, WidgetFrameProps>(function
           </Stack>
         )}
       </Stack>
-      <Box sx={{ p: 2, pointerEvents: "none", opacity: 0.94, maxBlockSize: 420, overflow: "hidden" }} inert>
+      <Box sx={{ flex: 1, minBlockSize: 0, p: 2, pointerEvents: "none", opacity: 0.94, overflow: "hidden" }} inert>
         {children}
       </Box>
     </Card>

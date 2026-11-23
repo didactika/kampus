@@ -32,8 +32,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! Layouts and menus: the widgets of a page kind arranged in its regions, and navigation menus as data,
-//! each resolved from the nearest scope that sets one unless a scope above locks its own.
+//! Layouts and menus: the widgets of a page kind placed on its grid, and navigation menus as data, each resolved
+//! from the nearest scope that sets one unless a scope above locks its own.
 
 use std::collections::BTreeMap;
 
@@ -42,13 +42,19 @@ use serde_json::Value;
 
 use super::Origin;
 
-/// A widget in a region of a layout, with its settings.
+/// A widget on the grid of a layout: the rectangle of cells it takes, and its settings.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct Placement {
-    /// The region of the page kind.
-    pub region: String,
     /// The widget, by code.
     pub widget: String,
+    /// The first column it takes, from 0.
+    pub x: u16,
+    /// The first row it takes, from 0.
+    pub y: u16,
+    /// How many columns it takes, within the sizes the widget declares for the page kind.
+    pub w: u16,
+    /// How many rows it takes, within the sizes the widget declares for the page kind.
+    pub h: u16,
     /// Its settings, each of the kind the widget declares; the defaults fill what is left out.
     #[serde(default)]
     pub settings: BTreeMap<String, Value>,
@@ -57,21 +63,99 @@ pub struct Placement {
     pub permission: Option<String>,
 }
 
+impl Placement {
+    /// Whether it shares a cell with another.
+    #[must_use]
+    pub fn overlaps(&self, other: &Self) -> bool {
+        self.x < other.x + other.w
+            && other.x < self.x + self.w
+            && self.y < other.y + other.h
+            && other.y < self.y + self.h
+    }
+}
+
+/// The grid of a page kind.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct PageGrid {
+    /// How many columns it has.
+    pub columns: u16,
+    /// The height of a row, by name: `compact`, `regular` or `tall`.
+    pub row: RowHeight,
+    /// The height of a row, in CSS pixels.
+    pub row_pixels: u16,
+}
+
+/// The height of a row of a grid, by name.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum RowHeight {
+    /// 48 pixels.
+    Compact,
+    /// 72 pixels.
+    Regular,
+    /// 96 pixels.
+    Tall,
+}
+
+/// A size on a grid, in cells.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct Size {
+    /// Columns.
+    pub w: u16,
+    /// Rows.
+    pub h: u16,
+}
+
+/// How a widget may be resized.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum Resize {
+    /// It keeps its size.
+    None,
+    /// Only its width changes.
+    Horizontal,
+    /// Only its height changes.
+    Vertical,
+    /// Both change.
+    Both,
+}
+
+/// The sizes a widget takes on a page kind.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct WidgetSizes {
+    /// The smallest.
+    pub min: Size,
+    /// The one it takes when it is placed.
+    pub default: Size,
+    /// The largest.
+    pub max: Size,
+    /// How it may be resized between them.
+    pub resize: Resize,
+}
+
+impl WidgetSizes {
+    /// Whether a width and a height are within them.
+    #[must_use]
+    pub const fn hold(&self, w: u16, h: u16) -> bool {
+        self.min.w <= w && w <= self.max.w && self.min.h <= h && h <= self.max.h
+    }
+}
+
 /// The layout of a page kind in a scope.
 #[derive(Debug, Clone, PartialEq, Serialize, schemars::JsonSchema)]
 pub struct Layout {
     /// The page kind.
     pub page_kind: String,
-    /// Its regions, in order.
-    pub regions: Vec<String>,
-    /// The widgets the reader sees, by region and in order; the page shows its own arrangement when the
-    /// layout comes from its declaration.
+    /// The grid its widgets are placed on.
+    pub grid: PageGrid,
+    /// The widgets the reader sees, in reading order (by row, then by column); the page shows its own arrangement
+    /// when the layout comes from its declaration.
     pub placements: Vec<Placement>,
     /// Where the layout came from.
     pub origin: Origin,
-    /// Whether the reader may change it here: they hold `customise.layout.manage` and no scope above locks it.
+    /// Whether the reader may change it here: they may arrange the page and no scope above locks it.
     pub editable: bool,
-    /// The widgets the reader may place on the page kind, with their settings; only when it is editable.
+    /// The widgets the reader may place on the page kind, with their sizes and settings; only when it is editable.
     pub widgets: Vec<AvailableWidget>,
 }
 
@@ -82,6 +166,8 @@ pub struct AvailableWidget {
     pub code: String,
     /// What it shows.
     pub summary: String,
+    /// The sizes it takes on the page kind.
+    pub sizes: WidgetSizes,
     /// Its settings as declared: key, kind and default.
     pub settings: Vec<Value>,
 }

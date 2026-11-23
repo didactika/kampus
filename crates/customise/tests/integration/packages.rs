@@ -93,8 +93,11 @@ async fn customised(w: &World) {
     .await
     .unwrap();
     let clock = Placement {
-        region: "main".to_owned(),
         widget: "testing.clock".to_owned(),
+        x: 0,
+        y: 0,
+        w: 3,
+        h: 2,
         settings: BTreeMap::new(),
         permission: None,
     };
@@ -188,7 +191,7 @@ async fn an_import_that_does_not_fit_the_scope_is_refused_whole() {
     ]))
     .unwrap();
     package.layouts = serde_json::from_value(json!([
-        { "page_kind": "testing.page", "placements": [{ "region": "main", "widget": "testing.unknown" }] }
+        { "page_kind": "testing.page", "placements": [{ "widget": "testing.unknown", "x": 0, "y": 0, "w": 3, "h": 2 }] }
     ]))
     .unwrap();
     package.theme = serde_json::from_value(json!({ "tokens": { "primary": "yellow" } })).unwrap();

@@ -388,8 +388,8 @@ impl Customise {
     ) -> Result<()> {
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
         for (at, layout) in package.layouts.iter().enumerate() {
-            let regions = match self.regions(&mut conn, &layout.page_kind).await {
-                Ok(regions) => regions,
+            let grid = match self.grid(&mut conn, &layout.page_kind).await {
+                Ok(grid) => grid,
                 Err(e) if e.kind() == ErrorKind::NotFound => {
                     problems.push(FieldError::new(format!("layouts[{at}].page_kind"), "one_of"));
                     continue;
@@ -398,7 +398,7 @@ impl Customise {
             };
             let widgets = self.widgets(&mut conn, &layout.placements).await?;
             problems.extend(
-                super::layout::problems(&layout.page_kind, &regions, &widgets, &layout.placements)
+                super::layout::problems(&layout.page_kind, grid, &widgets, &layout.placements)
                     .into_iter()
                     .map(|p| FieldError::new(format!("layouts[{at}].{}", p.field), p.rule)),
             );

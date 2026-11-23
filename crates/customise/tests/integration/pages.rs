@@ -44,11 +44,15 @@ use serde_json::{Value, json};
 
 use crate::world::{TESTING, world};
 
-/// A placement of a widget in a region.
-fn placement(region: &str, widget: &str, settings: Value) -> Placement {
+/// A placement of a widget on a rectangle of the grid: column, row, width and height.
+fn placement(at: [u16; 4], widget: &str, settings: Value) -> Placement {
+    let [x, y, w, h] = at;
     Placement {
-        region: region.to_owned(),
         widget: widget.to_owned(),
+        x,
+        y,
+        w,
+        h,
         settings: serde_json::from_value(settings).unwrap(),
         permission: None,
     }
@@ -70,12 +74,12 @@ fn tokens(value: Value) -> BTreeMap<String, Value> {
 }
 
 #[tokio::test]
-async fn a_layout_keeps_to_the_regions_and_widgets_of_its_page_and_fills_default_settings() {
+async fn a_layout_keeps_to_the_grid_and_the_sizes_of_its_widgets_and_fills_default_settings() {
     let w = world().await;
     let c = &w.customise;
     let empty = c.layout(&w.admin, "testing.page", w.section).await.unwrap();
     assert_eq!((empty.placements.len(), empty.origin), (0, Origin::Declared));
-    assert_eq!(empty.regions, ["main", "side"]);
+    assert_eq!((empty.grid.columns, empty.grid.row_pixels), (12, 72));
     assert!(empty.editable, "an administrator may arrange the page");
     assert!(
         empty.widgets.iter().any(|widget| widget.code == "testing.clock"),
@@ -92,14 +96,14 @@ async fn a_layout_keeps_to_the_regions_and_widgets_of_its_page_and_fills_default
             "testing.page",
             w.category,
             vec![
-                placement("side", "testing.clock", json!({})),
-                placement("main", "testing.clock", json!({ "seconds": true })),
+                placement([6, 0, 3, 2], "testing.clock", json!({})),
+                placement([0, 0, 3, 2], "testing.clock", json!({ "seconds": true })),
             ],
             false,
         )
         .await
         .unwrap();
-    assert_eq!(layout.placements[0].region, "main", "regions keep their order");
+    assert_eq!(layout.placements[0].x, 0, "widgets are read in reading order");
     assert_eq!(layout.placements[1].settings["seconds"], json!(false));
     let below = c.layout(&w.admin, "testing.page", w.section).await.unwrap();
     assert_eq!(
@@ -109,15 +113,27 @@ async fn a_layout_keeps_to_the_regions_and_widgets_of_its_page_and_fills_default
             locked: false
         }
     );
+    let ok = |at| placement(at, "testing.clock", json!({}));
     for wrong in [
-        placement("footer", "testing.clock", json!({})),
-        placement("main", "testing.unknown", json!({})),
-        placement("main", "testing.elsewhere", json!({})),
-        placement("main", "testing.clock", json!({ "seconds": "yes" })),
-        placement("main", "testing.clock", json!({ "colour": "red" })),
+        vec![placement([0, 0, 3, 2], "testing.unknown", json!({}))],
+        vec![placement([0, 0, 3, 2], "testing.elsewhere", json!({}))],
+        vec![placement(
+            [0, 0, 3, 2],
+            "testing.clock",
+            json!({ "seconds": "yes" }),
+        )],
+        vec![placement(
+            [0, 0, 3, 2],
+            "testing.clock",
+            json!({ "colour": "red" }),
+        )],
+        vec![ok([0, 0, 7, 2])],
+        vec![ok([0, 0, 3, 1])],
+        vec![ok([10, 0, 3, 2])],
+        vec![ok([0, 0, 3, 2]), ok([2, 1, 3, 2])],
     ] {
         let refused = c
-            .set_layout(&w.admin, "testing.page", w.course, vec![wrong], false)
+            .set_layout(&w.admin, "testing.page", w.course, wrong, false)
             .await
             .unwrap_err();
         assert_eq!(refused.code(), "customise.layout_invalid");
@@ -135,7 +151,7 @@ async fn each_person_arranges_their_own_home_and_nothing_else() {
         &w.admin,
         "testing.home",
         w.campus,
-        vec![placement("main", "testing.clock", json!({}))],
+        vec![placement([0, 0, 3, 2], "testing.clock", json!({}))],
         false,
     )
     .await
@@ -208,7 +224,7 @@ async fn a_locked_layout_holds_below_and_a_widget_no_longer_declared_is_skipped(
         &w.admin,
         "testing.page",
         w.campus,
-        vec![placement("main", "testing.clock", json!({}))],
+        vec![placement([0, 0, 3, 2], "testing.clock", json!({}))],
         true,
     )
     .await

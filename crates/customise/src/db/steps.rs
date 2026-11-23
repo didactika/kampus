@@ -37,8 +37,8 @@
 //! layouts with their placements, menus with their items, themes, rules with their runs, and imports of
 //! packages.
 
-use kampus_db::Step;
 use kampus_db::schema::{Change, Check, Column, ColumnDefault, ForeignKey, Index, OnDelete, Table, Type};
+use kampus_db::{Action, Step};
 
 /// The types of a custom field.
 pub const FIELD_TYPES: &[&str] = &[
@@ -476,4 +476,62 @@ alter table {schema}.\"field_value\" add constraint \"field_value_at_most_one_ch
         without_natural_key: Some("one import of a package, which may be read again into the same scope"),
         ..Table::EMPTY
     })],
+}, Step {
+    sequence: 5,
+    name: "pages as grids of widgets",
+    revert: &[],
+    action: Some(Action {
+        name: "place the widgets of every layout on the grid",
+        run: super::grid::place_on_grid,
+    }),
+    changes: &[
+        Change::AddColumn {
+            table: "page_kind",
+            column: Column::new("grid", Type::Json("customise.page_grid")).nullable(),
+        },
+        Change::AddColumn {
+            table: "widget",
+            column: Column::new("sizes", Type::Json("customise.widget_sizes")).nullable(),
+        },
+        Change::AddColumn {
+            table: "placement",
+            column: Column::new("x", Type::Integer).default(ColumnDefault::Int(0)),
+        },
+        Change::AddColumn {
+            table: "placement",
+            column: Column::new("y", Type::Integer).default(ColumnDefault::Int(0)),
+        },
+        Change::AddColumn {
+            table: "placement",
+            column: Column::new("w", Type::Integer).default(ColumnDefault::Int(1)),
+        },
+        Change::AddColumn {
+            table: "placement",
+            column: Column::new("h", Type::Integer).default(ColumnDefault::Int(1)),
+        },
+        Change::AddCheck {
+            table: "placement",
+            check: Check::NonNegative("x"),
+        },
+        Change::AddCheck {
+            table: "placement",
+            check: Check::NonNegative("y"),
+        },
+        Change::AddCheck {
+            table: "placement",
+            check: Check::Positive("w"),
+        },
+        Change::AddCheck {
+            table: "placement",
+            check: Check::Positive("h"),
+        },
+        Change::Postgres {
+            sql: "alter table {schema}.\"page_kind\" alter column \"regions\" drop not null;
+alter table {schema}.\"widget\" alter column \"page_kinds\" drop not null;
+alter table {schema}.\"placement\" drop constraint \"placement_layout_id_region_position_key\";
+alter table {schema}.\"placement\" alter column \"region\" drop not null;
+alter table {schema}.\"placement\" alter column \"position\" drop not null;",
+            reason: "the neutral schema cannot make a column optional nor drop a unique key; regions and positions are no longer written, and their columns are dropped once no supported release reads them",
+        },
+    ],
 }];

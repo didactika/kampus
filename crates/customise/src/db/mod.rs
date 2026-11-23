@@ -32,9 +32,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-//! The database of customisation: the upgrade steps of its schema. Its queries live with the services that
+//! The database of customisation: the upgrade steps of its schema and the data work of some of them. Its queries live with the services that
 //! run them.
 
+pub mod grid;
 pub mod steps;
 
 pub use steps::STEPS;

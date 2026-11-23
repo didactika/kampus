@@ -16,7 +16,7 @@ The contract between Kampus and installable plugins (DEC-003, DEC-067 to DEC-069
 | Plugin type | World | Exports (what the plugin implements) | Extension points |
 | --- | --- | --- | --- |
 | Activity | `activity-plugin` | the activity contract of RN-075: settings schema, create, update, delete, copy, view model, grading, progress conditions, exceptions, backup | course modules, records, progress |
-| Widget | `widget-plugin` | view model for a region, settings schema | layouts (RN-216) |
+| Widget | `widget-plugin` | view model for the size it is given, sizes per page kind, settings schema | layouts (RN-216) |
 | Authentication | `auth-plugin` | sign-in step of the pipeline (DEC-030), profile mapping | sign-in pipeline |
 | Enrolment | `enrol-plugin` | method settings, enrol, unenrol, sync job | enrolment methods (DEC-040) |
 | Report | `report-plugin` | report definition, query through host data interfaces, export | reports |

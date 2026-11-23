@@ -45,14 +45,38 @@ export interface PageContext {
   readonly course?: CourseData;
 }
 
-/** What a widget receives: its settings, with the defaults its module declares, and the page it is on. */
+/** The size a widget has on the grid of its page, in cells: columns of twelve across the page, rows of their height. */
+export interface WidgetSize {
+  readonly w: number;
+  readonly h: number;
+}
+
+/**
+ * What a widget receives: its settings, with the defaults its module declares, the page it is on, and the size it
+ * has there, from which it chooses how to show its content so that it never spills out of it.
+ */
 export interface WidgetProps {
   readonly settings: Readonly<Record<string, unknown>>;
   readonly context: PageContext;
+  readonly size: WidgetSize;
 }
 
 /** A widget: a server component. */
 export type Widget = (props: WidgetProps) => Promise<ReactNode> | ReactNode;
+
+/** The pixels of a row of the grid and of the room between rows, for a widget to work out what fits in its height. */
+const ROW = 72;
+const GAP = 24;
+
+/** The height of a widget, in pixels, from its rows. */
+export function heightOf(size: WidgetSize): number {
+  return size.h * ROW + (size.h - 1) * GAP;
+}
+
+/** How many things of a height fit in a widget once its own header and footer are taken out; at least one. */
+export function fitting(size: WidgetSize, chrome: number, each: number): number {
+  return Math.max(1, Math.floor((heightOf(size) - chrome) / each));
+}
 
 /** A setting of a widget as text. */
 export function text(settings: WidgetProps["settings"], key: string): string {

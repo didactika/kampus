@@ -158,14 +158,30 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
             Some(&admin),
             &[],
             Some(json!({ "placements": [
-                { "region": "main", "widget": "courses.outline" },
-                { "region": "side", "widget": "customise.text", "settings": { "heading": "Office hours" } }
+                { "widget": "courses.outline", "x": 0, "y": 0, "w": 8, "h": 10 },
+                { "widget": "customise.text", "x": 8, "y": 0, "w": 4, "h": 3, "settings": { "heading": "Office hours" } }
             ] })),
         )
         .await;
     assert_eq!(layout.status, StatusCode::OK, "{}", layout.body);
     assert_eq!(layout.body["placements"][0]["settings"]["collapsed"], false);
     assert_eq!(layout.body["placements"][1]["settings"]["text"], "");
+    let grown = site
+        .call(
+            Method::PUT,
+            &format!("/api/v1/customise/scopes/{scope}/layouts/courses.course"),
+            Some(&admin),
+            &[],
+            Some(
+                json!({ "placements": [{ "widget": "courses.outline", "x": 0, "y": 0, "w": 12, "h": 10 }] }),
+            ),
+        )
+        .await;
+    assert_eq!(
+        grown.status,
+        StatusCode::UNPROCESSABLE_ENTITY,
+        "the content of a course keeps its one size"
+    );
 
     let campus = site.campus.to_string();
     let menu = site

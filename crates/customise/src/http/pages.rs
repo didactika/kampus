@@ -62,7 +62,7 @@ pub(super) const OPERATIONS: &[Operation] = &[
     .returns::<crate::Layout>(),
     Operation::put(
         "/scopes/{scope}/layouts/{page_kind}",
-        "Place widgets in the regions of a kind of page",
+        "Place widgets on the grid of a kind of page",
     )
     .body::<LayoutBody>()
     .returns::<crate::Layout>(),
@@ -117,7 +117,7 @@ pub(super) fn routes() -> Router<Shared> {
 /// A layout to set.
 #[derive(Debug, Deserialize, schemars::JsonSchema)]
 struct LayoutBody {
-    /// Its widgets, by region and in order.
+    /// Its widgets, each a rectangle of cells of the grid.
     placements: Vec<Placement>,
     /// Whether the scopes below keep it.
     #[serde(default)]

@@ -34,16 +34,22 @@
 
 //! The kinds of menu, the page kind of the home and the widgets customisation declares.
 
-use kampus_module::{MenuKindDeclaration, PageKindDeclaration, ValueKind, WidgetDeclaration, WidgetSetting};
+use kampus_module::{
+    Cells, Grid, MenuKindDeclaration, PageKindDeclaration, Resize, ValueKind, WidgetDeclaration,
+    WidgetSetting, WidgetSize,
+};
 
 /// The page kind of the home of a site: what every person sees first, arranged with widgets per scope.
 pub const DASHBOARD: &str = "customise.dashboard";
+
+/// The page of a course, which the courses module declares.
+const COURSE_PAGE: &str = "courses.course";
 
 /// The page kinds of this module.
 pub const PAGE_KINDS: &[PageKindDeclaration] = &[PageKindDeclaration {
     code: DASHBOARD,
     summary: "The home of the site",
-    regions: &["top", "main", "side"],
+    grid: Grid::STANDARD,
     personal: true,
 }];
 
@@ -64,7 +70,13 @@ pub const WIDGETS: &[WidgetDeclaration] = &[
     WidgetDeclaration {
         code: "customise.welcome",
         summary: "A greeting in the colours of the brand, with the figures of the reader",
-        page_kinds: &[DASHBOARD],
+        sizes: &[WidgetSize {
+            page_kind: DASHBOARD,
+            min: Cells::new(6, 3),
+            default: Cells::new(12, 4),
+            max: Cells::new(12, 6),
+            resize: Resize::Both,
+        }],
         settings: &[
             WidgetSetting {
                 key: "heading",
@@ -82,7 +94,22 @@ pub const WIDGETS: &[WidgetDeclaration] = &[
     WidgetDeclaration {
         code: "customise.text",
         summary: "A heading and a text, on any page",
-        page_kinds: &[],
+        sizes: &[
+            WidgetSize {
+                page_kind: DASHBOARD,
+                min: Cells::new(2, 2),
+                default: Cells::new(4, 3),
+                max: Cells::new(12, 12),
+                resize: Resize::Both,
+            },
+            WidgetSize {
+                page_kind: COURSE_PAGE,
+                min: Cells::new(2, 2),
+                default: Cells::new(4, 3),
+                max: Cells::new(12, 12),
+                resize: Resize::Both,
+            },
+        ],
         settings: &[
             WidgetSetting {
                 key: "heading",

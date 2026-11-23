@@ -53,11 +53,11 @@ pub use descriptor::{
     JobFuture, JobRun, ListenerDeclaration, Module, PreferenceDeclaration, ProgressRuleDeclaration,
     ScheduleDeclaration, SettingDeclaration, ValueKind,
 };
-pub use descriptor::{Content, Method, Operation, SchemaOf, schema_of};
 pub use descriptor::{
-    FieldKindDeclaration, FlagDeclaration, MenuKindDeclaration, PageKindDeclaration, TermDeclaration,
-    TermForms, WidgetDeclaration, WidgetSetting,
+    Cells, FieldKindDeclaration, FlagDeclaration, Grid, MenuKindDeclaration, PageKindDeclaration, Resize,
+    RowHeight, TermDeclaration, TermForms, WidgetDeclaration, WidgetSetting, WidgetSize,
 };
+pub use descriptor::{Content, Method, Operation, SchemaOf, schema_of};
 pub use descriptor::{FileAreaDeclaration, FileRead, ReadFuture};
 pub use descriptor::{RuleActionDeclaration, RuleActionRun, RuleParameter};
 pub use permission::{

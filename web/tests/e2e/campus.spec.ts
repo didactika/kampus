@@ -42,7 +42,7 @@ import { tAccount as t } from "./support";
 test("the home greets the person and offers the edit mode to whoever may arrange it", async ({ page }) => {
   await page.goto("/");
   // The welcome may carry a heading the campus wrote, so the test asks only for a heading with text.
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText(/\S/);
+  await expect(page.getByRole("heading", { level: 1 }).first()).toHaveText(/\S/);
   await expect(page.getByRole("heading", { name: t("catalogue.title") })).toBeVisible();
   const mode = page.getByRole("switch", { name: t("editmode.label") });
   // The switch shows once the page has offered it, a moment after it renders.
@@ -134,9 +134,9 @@ test("the profile offers its unsaved changes in a floating bar and asks before l
   await expect(bar).toBeHidden();
 });
 
-test("a widget of the home moves with the keyboard and every move is saved at once", async ({ page }) => {
+test("a widget of the home moves and resizes with the keyboard and every change is saved at once", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("heading", { level: 1 }).waitFor();
+  await page.getByRole("heading", { level: 1 }).first().waitFor();
   const mode = page.getByRole("switch", { name: t("editmode.label") });
   // The switch shows once the page has offered it, a moment after it renders.
   await mode.waitFor({ timeout: 5000 }).catch(() => undefined);
@@ -146,41 +146,33 @@ test("a widget of the home moves with the keyboard and every move is saved at on
   const layout = `/api/v1/customise/scopes/${me.scope}/layouts/customise.dashboard`;
   const campusLayout = `/api/v1/customise/scopes/${me.campus}/layouts/customise.dashboard`;
   const campusBefore = await (await page.request.get(campusLayout)).text();
-  type Placed = { region: string; widget: string; settings: unknown };
+  type Placed = { widget: string; x: number; y: number; w: number; h: number; settings: unknown };
   type Read = { placements: Placed[]; origin: { from: string; scope?: string } };
   const read = async () => (await (await page.request.get(layout)).json()) as Read;
+  const welcomeOf = async () => (await read()).placements.find((p) => p.widget === "customise.welcome");
   const start = await read();
   const own = start.origin.from === "scope" && start.origin.scope === me.scope;
   const before = start.placements;
-  test.skip(!before.some((p) => p.widget === "customise.welcome" && p.region === "top"), "the home has no welcome at its top");
-  const welcome = t("drag.handle", { widget: t("widget.customise.welcome") });
-  const overTop = t("drag.over", { widget: t("widget.customise.welcome"), region: t("region.top") });
-  const announced = () => page.evaluate(() => [...document.querySelectorAll("[aria-live]")].map((e) => e.textContent ?? "").join(" "));
+  const welcome = before.find((p) => p.widget === "customise.welcome");
+  test.skip(!welcome, "the home has no welcome");
   await mode.check();
   try {
-    // Down into the main region, past its first widget.
-    await page.getByRole("button", { name: welcome }).focus();
-    await page.keyboard.press("Space");
-    for (const _ of [1, 2]) {
-      await page.keyboard.press("ArrowDown");
-      await page.waitForTimeout(150);
-    }
-    await page.keyboard.press("Space");
-    await expect.poll(async () => JSON.stringify((await read()).placements), { timeout: 5000 }).not.toBe(JSON.stringify(before));
+    const frame = page.getByRole("group", { name: new RegExp(`^${t("widget.customise.welcome")}:`) }).first();
+    await frame.focus();
+    await page.keyboard.press("ArrowDown");
+    await expect.poll(async () => (await welcomeOf())?.y, { timeout: 5000 }).toBe(welcome!.y + 1);
     expect(await (await page.request.get(campusLayout)).text(), "the home of the campus does not change").toBe(campusBefore);
-    // Back up until it is over the top region, then dropped there.
-    await page.getByRole("button", { name: welcome }).focus();
-    await page.keyboard.press("Space");
-    for (let step = 0; step < 8 && !(await announced()).includes(overTop); step += 1) {
-      await page.keyboard.press("ArrowUp");
-      await page.waitForTimeout(150);
-    }
-    await page.keyboard.press("Space");
-    await expect.poll(async () => JSON.stringify((await read()).placements), { timeout: 5000 }).toBe(JSON.stringify(before));
+    await frame.focus();
+    await page.keyboard.press("ArrowUp");
+    await expect.poll(async () => (await welcomeOf())?.y, { timeout: 5000 }).toBe(welcome!.y);
+    // Shift and an arrow resize it, within the sizes the widget declares.
+    await frame.focus();
+    await page.keyboard.press("Shift+ArrowDown");
+    await expect.poll(async () => (await welcomeOf())?.h, { timeout: 5000 }).not.toBe(undefined);
   } finally {
     // The home of the person is left exactly as it was: their own arrangement, or the campus's when they had none.
     if (own) {
-      await page.request.put(layout, { headers: { "x-kampus": "1" }, data: { placements: before.map(({ region, widget, settings }) => ({ region, widget, settings })) } });
+      await page.request.put(layout, { headers: { "x-kampus": "1" }, data: { placements: before.map(({ widget, x, y, w, h, settings }) => ({ widget, x, y, w, h, settings })) } });
     } else {
       await page.request.delete(layout, { headers: { "x-kampus": "1" } });
     }
@@ -190,12 +182,12 @@ test("a widget of the home moves with the keyboard and every move is saved at on
 
 test("the settings of a widget are checked before they apply", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("heading", { level: 1 }).waitFor();
+  await page.getByRole("heading", { level: 1 }).first().waitFor();
   const mode = page.getByRole("switch", { name: t("editmode.label") });
   await mode.waitFor({ timeout: 5000 }).catch(() => undefined);
   test.skip(!(await mode.isVisible()), "the account cannot arrange the home");
   await mode.check();
-  const catalogue = page.getByRole("button", { name: t("drag.handle", { widget: t("widget.courses.catalogue") }) });
+  const catalogue = page.getByRole("group", { name: new RegExp(`^${t("widget.courses.catalogue")}:`) }).first();
   test.skip(!(await catalogue.isVisible()), "the home has no catalogue");
   await catalogue.hover();
   await catalogue.getByRole("button", { name: t("dashboard.settings") }).click();

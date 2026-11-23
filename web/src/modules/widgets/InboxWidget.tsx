@@ -38,11 +38,16 @@
 import { optional } from "../../api/server";
 import type { Inbox } from "../../api/types";
 import { LatestNotifications } from "../../features/notifications/LatestNotifications";
-import { number, type WidgetProps } from "./widget";
+import { fitting, number, type WidgetProps } from "./widget";
 
-/** `notify.inbox` */
-export async function InboxWidget({ settings }: WidgetProps) {
-  const inbox = await optional<Inbox | null>(`/notify/inbox?limit=${number(settings, "limit", 5)}`, null);
+/** The height of the heading of the list and of one notification, in pixels. */
+const HEADING = 110;
+const NOTIFICATION = 64;
+
+/** `notify.inbox`: as many of the latest notifications as its height holds, up to the limit it sets. */
+export async function InboxWidget({ settings, size }: WidgetProps) {
+  const limit = Math.min(number(settings, "limit", 5), fitting(size, HEADING, NOTIFICATION));
+  const inbox = await optional<Inbox | null>(`/notify/inbox?limit=${limit}`, null);
   if (!inbox) return null;
   return <LatestNotifications inbox={inbox} />;
 }

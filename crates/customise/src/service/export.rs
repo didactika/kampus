@@ -186,7 +186,7 @@ impl Customise {
         let mut exported = Vec::new();
         for layout in &layouts {
             let rows = sqlx::query(sql(format!(
-                "select region, widget_code, settings, permission from {} where layout_id = $1 order by position",
+                "select widget_code, x, y, w, h, settings, permission from {} where layout_id = $1 order by y, x",
                 self.table("placement")
             )))
             .bind(layout.get::<uuid::Uuid, _>("id"))
@@ -198,8 +198,11 @@ impl Customise {
                 placements: rows
                     .iter()
                     .map(|r| Placement {
-                        region: r.get("region"),
                         widget: r.get("widget_code"),
+                        x: cell(r, "x"),
+                        y: cell(r, "y"),
+                        w: cell(r, "w"),
+                        h: cell(r, "h"),
                         settings: serde_json::from_value::<BTreeMap<String, Value>>(r.get("settings"))
                             .unwrap_or_default(),
                         permission: r.get("permission"),
@@ -272,4 +275,9 @@ impl Customise {
             })
             .collect())
     }
+}
+
+/// A cell of a rectangle, as stored.
+fn cell(row: &sqlx::postgres::PgRow, column: &str) -> u16 {
+    u16::try_from(row.get::<i32, _>(column)).unwrap_or(0)
 }
