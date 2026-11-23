@@ -50,6 +50,12 @@ pub trait Participants: Send + Sync {
     /// Whether anyone takes part in the course.
     async fn any(&self, course: CourseId) -> Result<bool>;
 
+    /// Whether anyone takes part in the course, read on a connection the caller holds, such as the transaction
+    /// of a change; ports that read no database need not override it.
+    async fn any_in(&self, _conn: &mut sqlx::PgConnection, course: CourseId) -> Result<bool> {
+        self.any(course).await
+    }
+
     /// Everyone who takes part in the course now.
     async fn accounts(&self, course: CourseId) -> Result<Vec<PrincipalId>>;
 

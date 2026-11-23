@@ -277,7 +277,7 @@ impl Enrol {
     ) -> Result<EnrolmentId> {
         let mut tx = self.db.begin().await?;
         let instance = self.read_instance_in(&mut tx, instance.id, true).await?;
-        let course = self.courses.course(instance.course).await?;
+        let course = self.courses.course_in(&mut tx, instance.course).await?;
         if !self.in_campus(account, course.campus).await? {
             return Err(Error::validation(
                 "enrol.account_invalid",

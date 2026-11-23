@@ -150,7 +150,9 @@ impl Courses {
         let fields = checked(fields)?;
         let mut tx = self.db.begin().await?;
         let parent = self.read_category_in(&mut tx, category, false).await?;
-        self.access.require(actor, COURSE_CREATE, parent.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, COURSE_CREATE, parent.scope)
+            .await?;
         let siblings = self.course_siblings_in(&mut tx, category, None).await?;
         let key = sort_key::place(&siblings, place)?;
         let scope = self
@@ -232,6 +234,15 @@ impl Courses {
         self.read_course_in(&mut conn, id, false).await
     }
 
+    /// A course, as stored, read on a connection the caller holds, such as the transaction of a change.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown course.
+    pub async fn course_in(&self, conn: &mut PgConnection, id: CourseId) -> Result<Course> {
+        self.read_course_in(conn, id, false).await
+    }
+
     /// The courses of a category, in their order; hidden ones only for people with
     /// `courses.hidden.view`.
     ///
@@ -287,7 +298,9 @@ impl Courses {
         let fields = checked(fields)?;
         let mut tx = self.db.begin().await?;
         let stored = self.read_course_in(&mut tx, id, true).await?;
-        self.access.require(actor, COURSE_UPDATE, stored.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, COURSE_UPDATE, stored.scope)
+            .await?;
         check_version(expected_version, stored.version, "courses.course_changed")?;
         let (from, until) = window_of(fields.visibility);
         let row = sqlx::query(sql(format!(
@@ -333,7 +346,9 @@ impl Courses {
     ) -> Result<Course> {
         let mut tx = self.db.begin().await?;
         let stored = self.read_course_in(&mut tx, id, true).await?;
-        self.access.require(actor, COURSE_UPDATE, stored.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, COURSE_UPDATE, stored.scope)
+            .await?;
         check_version(expected_version, stored.version, "courses.course_changed")?;
         let target = self.read_category_in(&mut tx, category, false).await?;
         if target.campus != stored.campus {
@@ -342,7 +357,9 @@ impl Courses {
                 vec![FieldError::new("category", "campus")],
             ));
         }
-        self.access.require(actor, COURSE_CREATE, target.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, COURSE_CREATE, target.scope)
+            .await?;
         if category != stored.category {
             self.access
                 .move_scope_in(&mut tx, stored.scope, target.scope)
@@ -397,17 +414,27 @@ impl Courses {
                 .with_param("to", to.as_str())
         };
         match (stored.state, to) {
-            (Draft, Published) => self.access.require(actor, COURSE_UPDATE, stored.scope).await?,
+            (Draft, Published) => {
+                self.access
+                    .require_in(&mut tx, actor, COURSE_UPDATE, stored.scope)
+                    .await?;
+            }
             (Published, Draft) => {
-                self.access.require(actor, COURSE_UPDATE, stored.scope).await?;
-                if self.participants.any(id).await? {
+                self.access
+                    .require_in(&mut tx, actor, COURSE_UPDATE, stored.scope)
+                    .await?;
+                if self.participants.any_in(&mut tx, id).await? {
                     return Err(refused().with_param("reason", "participants"));
                 }
             }
-            (Published, Archived) => self.access.require(actor, COURSE_ARCHIVE, stored.scope).await?,
+            (Published, Archived) => {
+                self.access
+                    .require_in(&mut tx, actor, COURSE_ARCHIVE, stored.scope)
+                    .await?;
+            }
             (Archived, Published) => {
                 self.access
-                    .require_while_frozen(actor, COURSE_ARCHIVE, stored.scope)
+                    .require_while_frozen_in(&mut tx, actor, COURSE_ARCHIVE, stored.scope)
                     .await?;
             }
             (Draft | Published | Archived, DeletionScheduled) | (DeletionScheduled, Draft) => {

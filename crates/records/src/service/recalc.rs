@@ -263,7 +263,7 @@ impl Records {
         }
         let mut done = Recalculated::default();
         for (course, people) in by_course {
-            let Ok(course) = self.courses.course(CourseId::from_uuid(course)).await else {
+            let Ok(course) = self.courses.course_in(&mut tx, CourseId::from_uuid(course)).await else {
                 continue;
             };
             done.totals_changed += self.recalculate_course_in(&mut tx, &course, &people).await?;

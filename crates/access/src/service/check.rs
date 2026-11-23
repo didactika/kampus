@@ -121,6 +121,17 @@ struct Held {
     scope: ScopeId,
 }
 
+/// `Ok` when the decision allows, `permission_denied` naming the permission and the deciding rule otherwise.
+fn allowed(decision: &Decision, permission: &str) -> Result<()> {
+    if decision.allowed {
+        Ok(())
+    } else {
+        Err(Error::permission_denied("access.denied")
+            .with_param("permission", permission)
+            .with_param("rule", decision.rule))
+    }
+}
+
 impl Access {
     /// Checks whether an actor may do something in a scope, and explains why.
     ///
@@ -132,20 +143,66 @@ impl Access {
         self.evaluate(&mut conn, actor, permission, scope, false).await
     }
 
+    /// Checks on a connection the caller holds, such as the transaction of a change: a change never holds one
+    /// connection while it waits for another, which would starve the pool under load, and the check sees what the
+    /// change locked.
+    ///
+    /// # Errors
+    ///
+    /// As [`Access::check`].
+    pub async fn check_in(
+        &self,
+        conn: &mut PgConnection,
+        actor: &Actor,
+        permission: &str,
+        scope: ScopeId,
+    ) -> Result<Decision> {
+        self.evaluate(conn, actor, permission, scope, false).await
+    }
+
+    /// Fails with `permission_denied` unless the actor may, checked on a connection the caller holds.
+    ///
+    /// # Errors
+    ///
+    /// As [`Access::require`].
+    pub async fn require_in(
+        &self,
+        conn: &mut PgConnection,
+        actor: &Actor,
+        permission: &str,
+        scope: ScopeId,
+    ) -> Result<()> {
+        allowed(
+            &self.evaluate(conn, actor, permission, scope, false).await?,
+            permission,
+        )
+    }
+
+    /// As [`Access::require_while_frozen`], on a connection the caller holds.
+    ///
+    /// # Errors
+    ///
+    /// As [`Access::require`].
+    pub async fn require_while_frozen_in(
+        &self,
+        conn: &mut PgConnection,
+        actor: &Actor,
+        permission: &str,
+        scope: ScopeId,
+    ) -> Result<()> {
+        allowed(
+            &self.evaluate(conn, actor, permission, scope, true).await?,
+            permission,
+        )
+    }
+
     /// Fails with `permission_denied` unless the actor may.
     ///
     /// # Errors
     ///
     /// `permission_denied` naming the permission and the deciding rule, or the errors of [`Access::check`].
     pub async fn require(&self, actor: &Actor, permission: &str, scope: ScopeId) -> Result<()> {
-        let decision = self.check(actor, permission, scope).await?;
-        if decision.allowed {
-            Ok(())
-        } else {
-            Err(Error::permission_denied("access.denied")
-                .with_param("permission", permission)
-                .with_param("rule", decision.rule))
-        }
+        allowed(&self.check(actor, permission, scope).await?, permission)
     }
 
     /// Fails with `permission_denied` unless the actor may, checked as if the scope were not frozen: for the
@@ -156,14 +213,10 @@ impl Access {
     /// As [`Access::require`].
     pub async fn require_while_frozen(&self, actor: &Actor, permission: &str, scope: ScopeId) -> Result<()> {
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
-        let decision = self.evaluate(&mut conn, actor, permission, scope, true).await?;
-        if decision.allowed {
-            Ok(())
-        } else {
-            Err(Error::permission_denied("access.denied")
-                .with_param("permission", permission)
-                .with_param("rule", decision.rule))
-        }
+        allowed(
+            &self.evaluate(&mut conn, actor, permission, scope, true).await?,
+            permission,
+        )
     }
 
     /// Evaluates a check on a connection, so it can run inside the transaction of a change.

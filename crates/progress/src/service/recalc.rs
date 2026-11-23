@@ -102,7 +102,7 @@ impl Progress {
             .await
             .map_err(kampus_db::classify)?;
             people.extend(known.into_iter().map(PrincipalId::from_uuid));
-            people.extend(self.records.graded_accounts(module).await?);
+            people.extend(self.records.graded_accounts_in(&mut tx, module).await?);
             for person in people {
                 self.evaluate_in(&mut tx, module, person, "rules_changed").await?;
             }

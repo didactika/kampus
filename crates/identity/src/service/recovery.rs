@@ -128,7 +128,7 @@ impl Identity {
         if account.status != AccountStatus::Active {
             return Err(crate::service::one_time::invalid_token());
         }
-        let policy = self.policies.policy(account.campus).await?;
+        let policy = self.policies.policy_in(&mut tx, account.campus).await?;
         if !self.factor_kinds_in(&mut tx, id).await?.is_empty() {
             let passed = match &proof {
                 Some(proof @ (Proof::Totp(_) | Proof::RecoveryCode(_))) => self
