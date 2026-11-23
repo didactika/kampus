@@ -208,7 +208,9 @@ impl Courses {
         let mut tx = self.db.begin().await?;
         let stored = self.read_group_in(&mut tx, id, true).await?;
         let course = self.read_course_in(&mut tx, stored.course, false).await?;
-        self.access.require(actor, GROUPS_MANAGE, course.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, GROUPS_MANAGE, course.scope)
+            .await?;
         check_version(expected_version, stored.version, "courses.group_changed")?;
         let row = sqlx::query(sql(format!(
             "update {} set section_id = $2, name = $3, code = $4, description = $5, visibility = $6,
@@ -245,7 +247,9 @@ impl Courses {
         let mut tx = self.db.begin().await?;
         let stored = self.read_group_in(&mut tx, id, true).await?;
         let course = self.read_course_in(&mut tx, stored.course, false).await?;
-        self.access.require(actor, GROUPS_MANAGE, course.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, GROUPS_MANAGE, course.scope)
+            .await?;
         check_version(expected_version, stored.version, "courses.group_changed")?;
         sqlx::query(sql(format!("delete from {} where id = $1", self.table("group"))))
             .bind(id.as_uuid())

@@ -638,7 +638,7 @@ impl Progress {
         for row in &rows {
             let Ok(course) = self
                 .courses
-                .course(CourseId::from_uuid(row.get("course_id")))
+                .course_in(&mut tx, CourseId::from_uuid(row.get("course_id")))
                 .await
             else {
                 continue;

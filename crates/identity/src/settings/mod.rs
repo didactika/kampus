@@ -209,7 +209,21 @@ impl SettingsPolicies {
 #[async_trait]
 impl Policies for SettingsPolicies {
     async fn policy(&self, campus: ScopeId) -> Result<CampusPolicy> {
-        let values = self.settings.resolve_prefix("identity.", campus).await?;
+        Ok(policy_of(
+            &self.settings.resolve_prefix("identity.", campus).await?,
+        ))
+    }
+
+    async fn policy_in(&self, conn: &mut sqlx::PgConnection, campus: ScopeId) -> Result<CampusPolicy> {
+        Ok(policy_of(
+            &self.settings.resolve_prefix_in(conn, "identity.", campus).await?,
+        ))
+    }
+}
+
+/// The policy the resolved settings of a campus give.
+fn policy_of(values: &std::collections::BTreeMap<String, kampus_settings::Resolved>) -> CampusPolicy {
+    {
         let defaults = CampusPolicy::default();
         let number = |key: &str| values.get(key).and_then(|r| r.value.as_i64());
         let flag =
@@ -219,7 +233,7 @@ impl Policies for SettingsPolicies {
         };
         let count =
             |key: &str, default: u32| number(key).and_then(|n| u32::try_from(n).ok()).unwrap_or(default);
-        Ok(CampusPolicy {
+        CampusPolicy {
             self_sign_up: flag("identity.self_sign_up", defaults.self_sign_up),
             allowed_domains: values
                 .get("identity.allowed_domains")
@@ -263,6 +277,6 @@ impl Policies for SettingsPolicies {
                 lock_for: minutes("identity.throttle_lock_minutes", 1, defaults.throttle.lock_for),
                 ..defaults.throttle
             },
-        })
+        }
     }
 }

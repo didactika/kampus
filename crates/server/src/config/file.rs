@@ -85,6 +85,10 @@ pub const KEYS: &[Key] = &[
         "server.upgrade_on_start",
         "Whether the process applies pending upgrades when it starts",
     ),
+    key(
+        "server.trusted_proxies",
+        "The proxies in front of the server whose X-Forwarded-For is believed: addresses or networks, comma-separated",
+    ),
     secret("database.url", "The connection to PostgreSQL"),
     key(
         "database.prefix",

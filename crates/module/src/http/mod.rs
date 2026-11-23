@@ -35,6 +35,10 @@
 //! What modules need to offer HTTP routes: the services the server composed, errors as problem details
 //! (RFC 9457) with the request id, and the conditional requests of `If-Match`.
 
+mod client;
+
+pub use client::ClientAddress;
+
 use axum::http::{HeaderMap, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
 use kampus_common::{Error, ErrorKind, FieldError};

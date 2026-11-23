@@ -286,7 +286,9 @@ impl Identity {
             return Err(Error::not_found("identity.factor_not_found"));
         }
         if self.factor_kinds_in(&mut tx, account.id).await?.is_empty() {
-            if policy.second_factor_required || self.access.second_factor_required(account.id).await? {
+            if policy.second_factor_required
+                || self.access.second_factor_required_in(&mut tx, account.id).await?
+            {
                 return Err(Error::conflict("identity.second_factor_required"));
             }
             sqlx::query(sql(format!(
@@ -366,7 +368,7 @@ impl Identity {
         let mut tx = self.db.begin().await?;
         let id = self.consume_in(&mut tx, Purpose::SecondFactor, challenge).await?;
         let account = self.lock_account_in(&mut tx, id).await?;
-        let policy = self.policies.policy(account.campus).await?;
+        let policy = self.policies.policy_in(&mut tx, account.campus).await?;
         let name = account.username.clone().unwrap_or_default();
         let address = client.address.as_deref();
         if let Some(retry_after) = self
@@ -413,7 +415,9 @@ impl Identity {
             return Ok(true);
         }
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
-        if !self.factor_kinds_in(&mut conn, account.id).await?.is_empty() {
+        let has_factors = !self.factor_kinds_in(&mut conn, account.id).await?.is_empty();
+        drop(conn);
+        if has_factors {
             return Ok(true);
         }
         self.access.second_factor_required(account.id).await

@@ -120,7 +120,9 @@ impl Courses {
             None => None,
         };
         let scope = parent.as_ref().map_or(course.scope, |p| p.scope);
-        self.access.require(actor, SECTION_MANAGE, scope).await?;
+        self.access
+            .require_in(&mut tx, actor, SECTION_MANAGE, scope)
+            .await?;
         let added = self
             .insert_section_in(&mut tx, &course, parent.as_ref(), Some(place), &fields)
             .await?;
@@ -136,6 +138,15 @@ impl Courses {
     pub async fn section(&self, id: SectionId) -> Result<Section> {
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
         self.read_section_in(&mut conn, id, false).await
+    }
+
+    /// A section that is not deleted, read on a connection the caller holds.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown or deleted section.
+    pub async fn section_in(&self, conn: &mut PgConnection, id: SectionId) -> Result<Section> {
+        self.read_section_in(conn, id, false).await
     }
 
     /// The sections of a course the actor sees, depth first: each section followed by those nested in
@@ -196,7 +207,9 @@ impl Courses {
         let fields = checked(fields)?;
         let mut tx = self.db.begin().await?;
         let stored = self.read_section_in(&mut tx, id, true).await?;
-        self.access.require(actor, SECTION_MANAGE, stored.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, SECTION_MANAGE, stored.scope)
+            .await?;
         check_version(expected_version, stored.version, "courses.section_changed")?;
         let (from, until) = window_of(fields.visibility);
         let row = sqlx::query(sql(format!(
@@ -235,14 +248,18 @@ impl Courses {
     ) -> Result<Section> {
         let mut tx = self.db.begin().await?;
         let stored = self.read_section_in(&mut tx, id, true).await?;
-        self.access.require(actor, SECTION_MANAGE, stored.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, SECTION_MANAGE, stored.scope)
+            .await?;
         check_version(expected_version, stored.version, "courses.section_changed")?;
         let course = self.read_course_in(&mut tx, stored.course, false).await?;
         let target = match parent {
             Some(p) => self.parent_section_in(&mut tx, &course, p).await?.scope,
             None => course.scope,
         };
-        self.access.require(actor, SECTION_MANAGE, target).await?;
+        self.access
+            .require_in(&mut tx, actor, SECTION_MANAGE, target)
+            .await?;
         if parent != stored.parent {
             self.access.move_scope_in(&mut tx, stored.scope, target).await?;
         }
@@ -279,7 +296,9 @@ impl Courses {
     ) -> Result<()> {
         let mut tx = self.db.begin().await?;
         let stored = self.read_section_in(&mut tx, id, true).await?;
-        self.access.require(actor, SECTION_MANAGE, stored.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, SECTION_MANAGE, stored.scope)
+            .await?;
         check_version(expected_version, stored.version, "courses.section_changed")?;
         let sections = self.table("section");
         sqlx::query(sql(format!(
@@ -317,7 +336,9 @@ impl Courses {
         .map_err(kampus_db::classify)?
         .ok_or_else(|| Error::not_found("courses.section_not_found"))?;
         let scope = ScopeId::from_uuid(row.get("scope_id"));
-        self.access.require(actor, SECTION_MANAGE, scope).await?;
+        self.access
+            .require_in(&mut tx, actor, SECTION_MANAGE, scope)
+            .await?;
         if row
             .get::<Option<time::OffsetDateTime>, _>("parent_deleted_at")
             .is_some()

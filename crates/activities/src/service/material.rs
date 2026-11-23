@@ -80,7 +80,9 @@ impl Activities {
     pub async fn set_module_file(&self, actor: &Actor, id: ModuleId, file: FileId) -> Result<FileId> {
         let mut tx = self.db.begin().await?;
         let stored = self.stored_in(&mut tx, id, true).await?;
-        self.access.require(actor, MODULE_MANAGE, stored.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, MODULE_MANAGE, stored.scope)
+            .await?;
         if stored.type_code != FILE {
             return Err(Error::validation(
                 "activities.not_a_file_material",

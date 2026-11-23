@@ -113,7 +113,9 @@ impl Courses {
         let fields = checked(fields)?;
         let mut tx = self.db.begin().await?;
         let parent_scope = self.parent_scope_in(&mut tx, campus, parent).await?;
-        self.access.require(actor, CATEGORY_MANAGE, parent_scope).await?;
+        self.access
+            .require_in(&mut tx, actor, CATEGORY_MANAGE, parent_scope)
+            .await?;
         let siblings = self.category_siblings_in(&mut tx, campus, parent, None).await?;
         let key = sort_key::place(&siblings, place)?;
         let scope = self
@@ -207,7 +209,9 @@ impl Courses {
         let fields = checked(fields)?;
         let mut tx = self.db.begin().await?;
         let stored = self.read_category_in(&mut tx, id, true).await?;
-        self.access.require(actor, CATEGORY_MANAGE, stored.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, CATEGORY_MANAGE, stored.scope)
+            .await?;
         check_version(expected_version, stored.version, "courses.category_changed")?;
         let (from, until) = window_of(fields.visibility);
         let row = sqlx::query(sql(format!(
@@ -248,10 +252,14 @@ impl Courses {
     ) -> Result<Category> {
         let mut tx = self.db.begin().await?;
         let stored = self.read_category_in(&mut tx, id, true).await?;
-        self.access.require(actor, CATEGORY_MANAGE, stored.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, CATEGORY_MANAGE, stored.scope)
+            .await?;
         check_version(expected_version, stored.version, "courses.category_changed")?;
         let parent_scope = self.parent_scope_in(&mut tx, stored.campus, parent).await?;
-        self.access.require(actor, CATEGORY_MANAGE, parent_scope).await?;
+        self.access
+            .require_in(&mut tx, actor, CATEGORY_MANAGE, parent_scope)
+            .await?;
         if parent != stored.parent {
             self.access
                 .move_scope_in(&mut tx, stored.scope, parent_scope)
@@ -290,7 +298,9 @@ impl Courses {
     ) -> Result<()> {
         let mut tx = self.db.begin().await?;
         let stored = self.read_category_in(&mut tx, id, true).await?;
-        self.access.require(actor, CATEGORY_MANAGE, stored.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, CATEGORY_MANAGE, stored.scope)
+            .await?;
         check_version(expected_version, stored.version, "courses.category_changed")?;
         let used: bool = sqlx::query_scalar(sql(format!(
             "select exists (select 1 from {} where parent_id = $1) or exists (select 1 from {} where category_id = $1)",

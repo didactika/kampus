@@ -108,15 +108,24 @@ impl Answer {
 
 /// Installs a site as `kampus-server install` does.
 pub(crate) async fn site() -> Site {
+    site_with_pool(4).await
+}
+
+/// Installs a site whose pool holds `size` connections.
+pub(crate) async fn site_with_pool(size: u32) -> Site {
     let url = std::env::var("KAMPUS_TEST_DATABASE_URL").expect("KAMPUS_TEST_DATABASE_URL is set");
     let simple = uuid::Uuid::now_v7().simple().to_string();
     let prefix: Prefix = format!("a{}_", &simple[simple.len() - 6..]).parse().unwrap();
-    let db = Database::connect(&url, prefix, 4).await.unwrap();
-    Upgrader::new(&db, &SCHEMAS, kampus_common::PLATFORM_VERSION)
+    // Upgrades hold a session lock on one connection while they run on another, so the schema is installed on a
+    // pool of its own and the site serves on a pool of `size`.
+    let setup = Database::connect(&url, prefix.clone(), 4).await.unwrap();
+    Upgrader::new(&setup, &SCHEMAS, kampus_common::PLATFORM_VERSION)
         .apply(true)
         .await
         .unwrap();
-    sync_declarations(&db).await.unwrap();
+    sync_declarations(&setup).await.unwrap();
+    setup.pool().close().await;
+    let db = Database::connect(&url, prefix, size).await.unwrap();
     let files = tempfile::tempdir().unwrap();
     let ports = Ports::for_tests(files.path().to_str().unwrap()).await.unwrap();
     let courier = Arc::new(MemoryCourier::default());
@@ -151,6 +160,7 @@ pub(crate) async fn site() -> Site {
             db: db.clone(),
             modules: SCHEMAS.as_slice(),
             ports,
+            trusted_proxies: std::sync::Arc::default(),
         },
         Some(&api),
     );

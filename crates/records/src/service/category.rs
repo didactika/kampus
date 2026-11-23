@@ -264,8 +264,10 @@ impl Records {
     ) -> Result<Category> {
         let mut tx = self.db.begin().await?;
         let stored = self.category_in(&mut tx, id, true).await?;
-        let course = self.courses.course(stored.course).await?;
-        self.access.require(actor, MANAGE, course.scope).await?;
+        let course = self.courses.course_in(&mut tx, stored.course).await?;
+        self.access
+            .require_in(&mut tx, actor, MANAGE, course.scope)
+            .await?;
         if expected_version.is_some_and(|v| v != stored.version) {
             return Err(changed("records.category_changed", stored.version));
         }
@@ -332,8 +334,10 @@ impl Records {
     pub async fn delete_category(&self, actor: &Actor, id: CategoryId) -> Result<()> {
         let mut tx = self.db.begin().await?;
         let stored = self.category_in(&mut tx, id, true).await?;
-        let course = self.courses.course(stored.course).await?;
-        self.access.require(actor, MANAGE, course.scope).await?;
+        let course = self.courses.course_in(&mut tx, stored.course).await?;
+        self.access
+            .require_in(&mut tx, actor, MANAGE, course.scope)
+            .await?;
         if stored.parent.is_none() {
             return Err(Error::conflict("records.category_is_root"));
         }

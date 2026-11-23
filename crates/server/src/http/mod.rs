@@ -37,6 +37,9 @@
 //! every module behind the campus of the request and its authentication.
 
 pub mod campus;
+pub mod client;
+pub mod metrics;
+pub mod no_store;
 pub mod openapi;
 
 use axum::Router;
@@ -69,6 +72,8 @@ pub struct AppState {
     pub modules: &'static [ModuleSteps],
     /// The other ports of the process.
     pub ports: crate::wiring::ports::Ports,
+    /// The proxies whose `X-Forwarded-For` tells the address of people.
+    pub trusted_proxies: std::sync::Arc<client::TrustedProxies>,
 }
 
 /// The API of the modules: their services and how the campus of a request is found.
@@ -106,20 +111,25 @@ impl Api {
                 self.campuses.clone(),
                 campus::resolve,
             ))
+            .layer(middleware::from_fn(no_store::no_store))
     }
 }
 
 /// Builds the router of a process; `api` adds the routes of the modules.
 pub fn router(state: AppState, api: Option<&Api>) -> Router {
+    let trusted = state.trusted_proxies.clone();
     let mut router = Router::new()
         .route("/health/live", get(live))
         .route("/health/ready", get(ready))
+        .route("/metrics", get(metrics::render))
         .with_state(state);
     if let Some(api) = api {
         router = router.nest(API_PREFIX, api.router());
     }
     router
         .fallback(not_found)
+        .layer(middleware::from_fn(metrics::measure))
+        .layer(middleware::from_fn_with_state(trusted, client::resolve))
         .layer(middleware::from_fn(scoped))
         .layer(PropagateRequestIdLayer::new(REQUEST_ID))
         .layer(TraceLayer::new_for_http().make_span_with(|request: &axum::http::Request<_>| {

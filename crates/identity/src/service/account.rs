@@ -281,7 +281,9 @@ impl Identity {
         .ok_or_else(|| Error::not_found("identity.account_not_found"))?;
         let account = from_row(&row)?;
         if !matches!(actor, Actor::Principal(p) if *p == id) {
-            self.access.require(actor, ACCOUNT_READ, account.campus).await?;
+            self.access
+                .require_in(&mut conn, actor, ACCOUNT_READ, account.campus)
+                .await?;
         }
         Ok(account)
     }
@@ -422,7 +424,7 @@ impl Identity {
         if account.status != from {
             return Err(invalid_token());
         }
-        let policy = self.policies.policy(account.campus).await?;
+        let policy = self.policies.policy_in(&mut tx, account.campus).await?;
         self.set_password_in(&mut tx, &account, &policy, password).await?;
         sqlx::query(sql(format!(
             "update {} set email_verified_at = $2 where id = $1",

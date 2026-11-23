@@ -374,7 +374,7 @@ impl Identity {
             )
             .await?;
         }
-        let policy = self.policies.policy(account.campus).await?;
+        let policy = self.policies.policy_in(&mut tx, account.campus).await?;
         sqlx::query(sql(format!(
             "update {} set deletion_due_at = $2, status_reason = $3, version = version + 1 where id = $1",
             self.table("account")

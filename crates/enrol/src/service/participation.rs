@@ -151,6 +151,18 @@ impl Participants for Participation {
         self.anyone(course).await
     }
 
+    async fn any_in(&self, conn: &mut sqlx::PgConnection, course: CourseId) -> Result<bool> {
+        sqlx::query_scalar(sql(format!(
+            "select exists (select 1 from {} e join {} i on i.id = e.instance_id where i.course_id = $1)",
+            table(&self.db, "enrolment"),
+            table(&self.db, "instance")
+        )))
+        .bind(course.as_uuid())
+        .fetch_one(conn)
+        .await
+        .map_err(kampus_db::classify)
+    }
+
     async fn accounts(&self, course: CourseId) -> Result<Vec<PrincipalId>> {
         let found: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
             "select distinct e.account_id from {} e join {} i on i.id = e.instance_id

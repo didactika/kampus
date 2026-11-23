@@ -139,47 +139,32 @@ impl Customise {
     ///
     /// `not_found` (`customise.page_kind_unknown`) for a page kind no module declares.
     pub async fn layout(&self, actor: &Actor, page_kind: &str, scope: ScopeId) -> Result<Layout> {
+        // Everything is read on one connection, which is given back before any permission is checked: a check takes
+        // a connection of its own, and holding one while waiting for another starves the pool under load.
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
         let regions = self.regions(&mut conn, page_kind).await?;
-        let Some((id, origin)) = self
+        let nearest = self
             .nearest(&mut conn, ("layout", "page_kind_code"), page_kind, scope)
-            .await?
-        else {
-            let editable = self
-                .editable(actor, LAYOUT_MANAGE, &Origin::Declared, scope)
-                .await?;
-            let widgets = if editable {
-                self.available(&mut conn, page_kind).await?
-            } else {
-                Vec::new()
-            };
-            return Ok(Layout {
-                page_kind: page_kind.to_owned(),
-                regions,
-                placements: Vec::new(),
-                origin: Origin::Declared,
-                editable,
-                widgets,
-            });
+            .await?;
+        let available = self.available(&mut conn, page_kind).await?;
+        let rows = match &nearest {
+            Some((id, _)) => sqlx::query(sql(format!(
+                "select p.region, p.widget_code, p.settings, p.permission, w.page_kinds, w.settings as declared
+                 from {} p join {} w on w.code = p.widget_code
+                 where p.layout_id = $1 and w.retired_at is null order by p.position",
+                self.table("placement"),
+                self.table("widget")
+            )))
+            .bind(*id)
+            .fetch_all(&mut *conn)
+            .await
+            .map_err(kampus_db::classify)?,
+            None => Vec::new(),
         };
-        let editable = self.editable(actor, LAYOUT_MANAGE, &origin, scope).await?;
-        let widgets = if editable {
-            self.available(&mut conn, page_kind).await?
-        } else {
-            Vec::new()
-        };
-        let rows = sqlx::query(sql(format!(
-            "select p.region, p.widget_code, p.settings, p.permission, w.page_kinds, w.settings as declared
-             from {} p join {} w on w.code = p.widget_code
-             where p.layout_id = $1 and w.retired_at is null order by p.position",
-            self.table("placement"),
-            self.table("widget")
-        )))
-        .bind(id)
-        .fetch_all(&mut *conn)
-        .await
-        .map_err(kampus_db::classify)?;
         drop(conn);
+        let origin = nearest.map_or(Origin::Declared, |(_, origin)| origin);
+        let editable = self.editable(actor, LAYOUT_MANAGE, &origin, scope).await?;
+        let widgets = if editable { available } else { Vec::new() };
         let mut placements = Vec::new();
         for row in &rows {
             let region: String = row.get("region");

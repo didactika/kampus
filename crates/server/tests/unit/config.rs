@@ -81,6 +81,35 @@ fn defaults_apply_when_only_the_required_values_are_set() {
 }
 
 #[test]
+fn an_empty_variable_counts_as_unset() {
+    let mut vars = BASE.to_vec();
+    vars.extend([
+        ("KAMPUS_MAIL_URL", ""),
+        ("KAMPUS_MAIL_FROM", " "),
+        ("KAMPUS_SERVER_ROLE", ""),
+    ]);
+    let config = load(&vars, None).unwrap();
+    assert_eq!(config.mail_url, None);
+    assert_eq!(config.role, Role::All);
+}
+
+#[test]
+fn trusted_proxies_must_be_networks() {
+    let mut vars = BASE.to_vec();
+    vars.push(("KAMPUS_SERVER_TRUSTED_PROXIES", "10.0.0.0/8, 172.16.0.0/12"));
+    assert!(load(&vars, None).is_ok());
+    let mut wrong = BASE.to_vec();
+    wrong.push(("KAMPUS_SERVER_TRUSTED_PROXIES", "the web client"));
+    let error = load(&wrong, None).unwrap_err();
+    assert!(
+        error
+            .fields()
+            .iter()
+            .any(|f| f.field == "KAMPUS_SERVER_TRUSTED_PROXIES" && f.rule == "networks")
+    );
+}
+
+#[test]
 fn every_problem_is_reported_at_once() {
     let error = load(
         &[

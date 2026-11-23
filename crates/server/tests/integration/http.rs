@@ -70,6 +70,7 @@ async fn call(
             db: db.clone(),
             modules: SCHEMAS.as_slice(),
             ports,
+            trusted_proxies: std::sync::Arc::default(),
         },
         None,
     )

@@ -126,6 +126,7 @@ impl Customise {
             .nearest(&mut conn, ("menu", "menu_kind_code"), kind, scope)
             .await?
         else {
+            drop(conn);
             return Ok(Menu {
                 kind: kind.to_owned(),
                 items: Vec::new(),

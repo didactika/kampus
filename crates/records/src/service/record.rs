@@ -283,10 +283,12 @@ impl Records {
     ) -> Result<Record> {
         let mut tx = self.db.begin().await?;
         let stored = self.record_in(&mut tx, id, true).await?;
-        let course = self.courses.course(stored.course).await?;
-        self.access.require(actor, MANAGE, course.scope).await?;
+        let course = self.courses.course_in(&mut tx, stored.course).await?;
+        self.access
+            .require_in(&mut tx, actor, MANAGE, course.scope)
+            .await?;
         if fields.hidden_until != stored.hidden_until {
-            self.access.require(actor, HIDE, course.scope).await?;
+            self.access.require_in(&mut tx, actor, HIDE, course.scope).await?;
         }
         if stored.locked_at.is_some() {
             return Err(Error::conflict("records.locked"));
@@ -342,8 +344,10 @@ impl Records {
     pub async fn delete_record(&self, actor: &Actor, id: RecordId) -> Result<()> {
         let mut tx = self.db.begin().await?;
         let stored = self.record_in(&mut tx, id, true).await?;
-        let course = self.courses.course(stored.course).await?;
-        self.access.require(actor, MANAGE, course.scope).await?;
+        let course = self.courses.course_in(&mut tx, stored.course).await?;
+        self.access
+            .require_in(&mut tx, actor, MANAGE, course.scope)
+            .await?;
         if stored.kind != RecordKind::Manual {
             return Err(Error::conflict("records.record_not_deletable"));
         }
@@ -380,8 +384,8 @@ impl Records {
     pub async fn set_record_locked(&self, actor: &Actor, id: RecordId, locked: bool) -> Result<Record> {
         let mut tx = self.db.begin().await?;
         let stored = self.record_in(&mut tx, id, true).await?;
-        let course = self.courses.course(stored.course).await?;
-        self.access.require(actor, LOCK, course.scope).await?;
+        let course = self.courses.course_in(&mut tx, stored.course).await?;
+        self.access.require_in(&mut tx, actor, LOCK, course.scope).await?;
         if stored.locked_at.is_some() == locked {
             return Ok(stored);
         }
@@ -544,13 +548,27 @@ impl Records {
     ///
     /// `unavailable` when the database fails.
     pub async fn graded_accounts(&self, module: ModuleId) -> Result<Vec<kampus_access::PrincipalId>> {
+        let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
+        self.graded_accounts_in(&mut conn, module).await
+    }
+
+    /// As [`Records::graded_accounts`], on a connection the caller holds, such as the transaction of a change.
+    ///
+    /// # Errors
+    ///
+    /// `unavailable` when the database fails.
+    pub async fn graded_accounts_in(
+        &self,
+        conn: &mut sqlx::PgConnection,
+        module: ModuleId,
+    ) -> Result<Vec<kampus_access::PrincipalId>> {
         let people: Vec<uuid::Uuid> = sqlx::query_scalar(sql(format!(
             "select g.account_id from {} g join {} r on r.id = g.record_id where r.course_module_id = $1",
             self.table("grade"),
             self.table("record")
         )))
         .bind(module.as_uuid())
-        .fetch_all(self.db.pool())
+        .fetch_all(conn)
         .await
         .map_err(kampus_db::classify)?;
         Ok(people

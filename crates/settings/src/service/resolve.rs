@@ -40,7 +40,7 @@ use std::collections::BTreeMap;
 use kampus_access::ScopeId;
 use kampus_common::{Error, Result};
 use serde_json::Value;
-use sqlx::Row;
+use sqlx::{PgConnection, Row};
 
 use crate::{Definition, Origin, Resolved, Settings, sql};
 
@@ -67,6 +67,21 @@ impl Settings {
     /// `not_found` for an unknown scope.
     pub async fn resolve_prefix(&self, prefix: &str, scope: ScopeId) -> Result<BTreeMap<String, Resolved>> {
         self.resolve_where(scope, "starts_with(d.key, $2)", prefix).await
+    }
+
+    /// As [`Settings::resolve_prefix`], on a connection the caller holds, such as the transaction of a change.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown scope.
+    pub async fn resolve_prefix_in(
+        &self,
+        conn: &mut PgConnection,
+        prefix: &str,
+        scope: ScopeId,
+    ) -> Result<BTreeMap<String, Resolved>> {
+        self.resolve_where_in(conn, scope, "starts_with(d.key, $2)", prefix)
+            .await
     }
 
     /// The definitions of every declared setting, by key.
@@ -105,7 +120,18 @@ impl Settings {
         argument: &str,
     ) -> Result<BTreeMap<String, Resolved>> {
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
-        let path = self.access.path(&mut conn, scope).await?;
+        self.resolve_where_in(&mut conn, scope, condition, argument).await
+    }
+
+    /// Resolves the definitions a condition selects, in a scope, on a connection.
+    async fn resolve_where_in(
+        &self,
+        conn: &mut PgConnection,
+        scope: ScopeId,
+        condition: &str,
+        argument: &str,
+    ) -> Result<BTreeMap<String, Resolved>> {
+        let path = self.access.path(&mut *conn, scope).await?;
         let depth: BTreeMap<uuid::Uuid, i32> = path.iter().map(|s| (s.id.as_uuid(), s.depth)).collect();
         let ids: Vec<uuid::Uuid> = depth.keys().copied().collect();
         let rows = sqlx::query(sql(format!(

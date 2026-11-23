@@ -1,0 +1,148 @@
+# ------------------------------------------------------------------------------
+#
+#     _  __    _    __  __ ____  _   _ ____
+#    | |/ /   / \  |  \/  |  _ \| | | / ___|
+#    | ' /   / _ \ | |\/| | |_) | | | \___ \
+#    | . \  / ___ \| |  | |  __/| |_| |___) |
+#    |_|\_\/_/   \_\_|  |_|_|    \___/|____/
+#
+#    Knowledge Academic Modular Platform for Universal Study
+#
+# ------------------------------------------------------------------------------
+#
+# This file is part of Kampus - https://github.com/didactika/kampus
+#
+# Kampus is free software: you can redistribute it and/or modify it under the terms of the
+# GNU Affero General Public License as published by the Free Software Foundation, either
+# version 3 of the License, or (at your option) any later version.
+#
+# Kampus is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License along with Kampus.
+# If not, see <https://www.gnu.org/licenses/>.
+#
+# @package   kampus
+# @copyright 2026 Didactika
+# @author    Hector Arrechea <hectorlazaroarrechea@gmail.com>
+# @license   https://www.gnu.org/licenses/agpl-3.0.html AGPL-3.0-or-later
+# @since     0.1.0
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# ------------------------------------------------------------------------------
+
+
+# Kampus in production with Docker Compose: PostgreSQL, Valkey, Kampus in one process, the web client and Caddy
+# with HTTPS. Every value comes from `.env` (copy `.env.example`); see the operator guide.
+
+name: kampus
+
+x-kampus: &kampus
+  image: ${KAMPUS_IMAGE:-kampus:0.1.0}
+  restart: unless-stopped
+  environment: &kampus-environment
+    KAMPUS_SITE_URL: https://${KAMPUS_DOMAIN:?set KAMPUS_DOMAIN}
+    KAMPUS_DATABASE_URL: postgres://kampus:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/kampus
+    KAMPUS_SECURITY_SECRET_KEY: ${KAMPUS_SECURITY_SECRET_KEY:?set KAMPUS_SECURITY_SECRET_KEY}
+    KAMPUS_STORAGE_URL: file:///var/lib/kampus/files
+    KAMPUS_CACHE_URL: valkey://valkey:6379
+    KAMPUS_MAIL_URL: ${KAMPUS_MAIL_URL:-}
+    KAMPUS_MAIL_FROM: ${KAMPUS_MAIL_FROM:-}
+    # Only the web client reaches Kampus, inside this network: believe the address it forwards.
+    KAMPUS_SERVER_TRUSTED_PROXIES: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+    KAMPUS_LOG_FORMAT: json
+    KAMPUS_LOG_LEVEL: ${KAMPUS_LOG_LEVEL:-info}
+  volumes:
+    - files:/var/lib/kampus/files
+  depends_on:
+    postgres:
+      condition: service_healthy
+    valkey:
+      condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kampus
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: kampus
+    volumes:
+      - database:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kampus -d kampus"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  valkey:
+    image: valkey/valkey:8.1.1
+    restart: unless-stopped
+    command: ["valkey-server", "--save", "60", "1", "--appendonly", "no"]
+    volumes:
+      - cache:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Installs on an empty database, then applies the pending upgrades; runs once at every start.
+  setup:
+    <<: *kampus
+    build:
+      context: ../..
+    restart: "no"
+    entrypoint: ["sh", "-c", "kampus-server install --non-interactive && kampus-server upgrade"]
+    environment:
+      <<: *kampus-environment
+      KAMPUS_ADMIN_EMAIL: ${KAMPUS_ADMIN_EMAIL:?set KAMPUS_ADMIN_EMAIL}
+      KAMPUS_ADMIN_USERNAME: ${KAMPUS_ADMIN_USERNAME:-admin}
+      KAMPUS_ADMIN_PASSWORD: ${KAMPUS_ADMIN_PASSWORD:?set KAMPUS_ADMIN_PASSWORD}
+
+  kampus:
+    <<: *kampus
+    environment:
+      <<: *kampus-environment
+      KAMPUS_SERVER_ROLE: all
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+
+  web:
+    image: ${KAMPUS_WEB_IMAGE:-kampus-web:0.1.0}
+    build:
+      context: ../..
+      dockerfile: web/Dockerfile
+    restart: unless-stopped
+    environment:
+      KAMPUS_API_URL: http://kampus:8080
+      KAMPUS_HELP_URL: ${KAMPUS_HELP_URL:-}
+    depends_on:
+      kampus:
+        condition: service_healthy
+
+  proxy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    command: ["caddy", "reverse-proxy", "--from", "${KAMPUS_DOMAIN}", "--to", "web:3000"]
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - proxy:/data
+    depends_on:
+      - web
+
+volumes:
+  database:
+  cache:
+  files:
+  proxy:

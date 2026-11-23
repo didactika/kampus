@@ -183,7 +183,7 @@ impl Identity {
         if account.status != AccountStatus::Active {
             return Err(Error::conflict("identity.account_not_active"));
         }
-        let policy = self.policies.policy(account.campus).await?;
+        let policy = self.policies.policy_in(&mut tx, account.campus).await?;
         let now = self.now();
         let expires_at = request
             .expires_at
@@ -202,7 +202,7 @@ impl Identity {
         for (index, scope) in request.scopes.iter().enumerate() {
             let held = self
                 .access
-                .check(&Actor::Principal(owner), &scope.permission, scope.scope)
+                .check_in(&mut tx, &Actor::Principal(owner), &scope.permission, scope.scope)
                 .await
                 .is_ok_and(|decision| decision.allowed);
             if !held {
@@ -319,7 +319,7 @@ impl Identity {
         }
         Ok(self
             .access
-            .check(&Actor::Principal(auth.account), permission, scope)
+            .check_in(&mut conn, &Actor::Principal(auth.account), permission, scope)
             .await?
             .allowed)
     }

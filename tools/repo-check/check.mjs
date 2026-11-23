@@ -45,6 +45,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { checkAdapters } from './adapters.mjs';
 import { checkArchitecture } from './architecture.mjs';
+import { checkConnections } from './connections.mjs';
 import { checkHeaders } from './headers.mjs';
 import { checkModules } from './modules.mjs';
 import { checkVersions, workspaceVersion } from './versions.mjs';
@@ -94,6 +95,7 @@ const results = [
   checkHeaders(root, files, { fix: args.includes('--fix'), author: option('--author') ?? process.env.KAMPUS_AUTHOR ?? 'unknown', since: workspaceVersion(root) ?? '0.1.0' }),
   checkVersions(root, { branch, changed }),
   checkArchitecture(root),
+  checkConnections(root),
   checkAdapters(root, { fix: args.includes('--fix'), author: option('--author') ?? process.env.KAMPUS_AUTHOR ?? 'unknown', since: workspaceVersion(root) ?? '0.1.0' }),
   checkModules(root, { fix: args.includes('--fix'), author: option('--author') ?? process.env.KAMPUS_AUTHOR ?? 'unknown', since: workspaceVersion(root) ?? '0.1.0' }),
 ];

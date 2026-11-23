@@ -431,6 +431,20 @@ impl Access {
     ///
     /// `unavailable` when the database fails.
     pub async fn second_factor_required(&self, principal: PrincipalId) -> Result<bool> {
+        let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
+        self.second_factor_required_in(&mut conn, principal).await
+    }
+
+    /// As [`Access::second_factor_required`], on a connection the caller holds.
+    ///
+    /// # Errors
+    ///
+    /// An `unavailable` error when the database fails.
+    pub async fn second_factor_required_in(
+        &self,
+        conn: &mut PgConnection,
+        principal: PrincipalId,
+    ) -> Result<bool> {
         sqlx::query_scalar(sql(format!(
             "select exists (select 1 from {} g join {} r on r.id = g.role_id
              where g.principal_id = $1 and r.second_factor_required
@@ -440,7 +454,7 @@ impl Access {
         )))
         .bind(principal.as_uuid())
         .bind(self.now().as_offset_date_time())
-        .fetch_one(self.db.pool())
+        .fetch_one(&mut *conn)
         .await
         .map_err(kampus_db::classify)
     }

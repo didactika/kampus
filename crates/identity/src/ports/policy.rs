@@ -123,6 +123,12 @@ impl Default for CampusPolicy {
 pub trait Policies: Send + Sync {
     /// The policy of a campus.
     async fn policy(&self, campus: ScopeId) -> Result<CampusPolicy>;
+
+    /// The policy of a campus, read on a connection the caller holds, such as the transaction of a change, so a
+    /// change never waits for a second connection; policies that read no database need not override it.
+    async fn policy_in(&self, _conn: &mut sqlx::PgConnection, campus: ScopeId) -> Result<CampusPolicy> {
+        self.policy(campus).await
+    }
 }
 
 /// The same policy for every campus: the defaults, or one given.

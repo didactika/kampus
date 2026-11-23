@@ -222,7 +222,7 @@ impl Activities {
             .insert_module_in(&mut tx, actor, (&section, declared), fields, place)
             .await?;
         if let Some(reference) = reference {
-            let campus = self.courses.course(section.course).await?.campus;
+            let campus = self.courses.course_in(&mut tx, section.course).await?.campus;
             self.module_references()
                 .set_in(&mut tx, campus.as_uuid(), id.as_uuid(), reference)
                 .await?;
@@ -316,7 +316,9 @@ impl Activities {
     ) -> Result<Module> {
         let mut tx = self.db.begin().await?;
         let stored = self.stored_in(&mut tx, id, true).await?;
-        self.access.require(actor, MODULE_MANAGE, stored.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, MODULE_MANAGE, stored.scope)
+            .await?;
         if stored.state != ModuleState::Active {
             return Err(Error::conflict("activities.module_in_bin"));
         }
@@ -373,12 +375,16 @@ impl Activities {
         let target = self.courses.section(section).await?;
         let mut tx = self.db.begin().await?;
         let stored = self.stored_in(&mut tx, id, true).await?;
-        self.access.require(actor, MODULE_MANAGE, stored.scope).await?;
-        self.access.require(actor, MODULE_MANAGE, target.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, MODULE_MANAGE, stored.scope)
+            .await?;
+        self.access
+            .require_in(&mut tx, actor, MODULE_MANAGE, target.scope)
+            .await?;
         if stored.state != ModuleState::Active {
             return Err(Error::conflict("activities.module_in_bin"));
         }
-        let current = self.courses.section(stored.section).await?;
+        let current = self.courses.section_in(&mut tx, stored.section).await?;
         if current.course != target.course {
             return Err(Error::validation(
                 "activities.section_of_another_course",
@@ -423,7 +429,9 @@ impl Activities {
     pub async fn delete_module(&self, actor: &Actor, id: ModuleId) -> Result<()> {
         let mut tx = self.db.begin().await?;
         let stored = self.stored_in(&mut tx, id, true).await?;
-        self.access.require(actor, MODULE_MANAGE, stored.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, MODULE_MANAGE, stored.scope)
+            .await?;
         if stored.state == ModuleState::InBin {
             return Err(Error::conflict("activities.module_in_bin"));
         }
@@ -463,12 +471,14 @@ impl Activities {
     pub async fn restore_module(&self, actor: &Actor, id: ModuleId) -> Result<Module> {
         let mut tx = self.db.begin().await?;
         let stored = self.stored_in(&mut tx, id, true).await?;
-        self.access.require(actor, MODULE_MANAGE, stored.scope).await?;
+        self.access
+            .require_in(&mut tx, actor, MODULE_MANAGE, stored.scope)
+            .await?;
         if stored.state != ModuleState::InBin {
             return Err(Error::conflict("activities.module_not_in_bin"));
         }
         self.courses
-            .section(stored.section)
+            .section_in(&mut tx, stored.section)
             .await
             .map_err(|_| Error::conflict("activities.section_gone"))?;
         sqlx::query(sql(format!(

@@ -126,6 +126,7 @@ services:
       KAMPUS_ADMIN_EMAIL: admin@kampus.localhost
       KAMPUS_ADMIN_USERNAME: admin
       KAMPUS_ADMIN_PASSWORD: kampus-development-password
+      KAMPUS_SERVER_TRUSTED_PROXIES: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
       KAMPUS_LOG_FORMAT: text
       KAMPUS_STORAGE_URL: s3://kampus/files
       KAMPUS_STORAGE_S3_ENDPOINT: http://s3:8333
@@ -160,6 +161,7 @@ services:
       - "8101:3000"
     environment:
       KAMPUS_API_URL: http://server:8080
+      KAMPUS_HELP_URL: http://localhost:8096
     depends_on:
       server:
         condition: service_healthy

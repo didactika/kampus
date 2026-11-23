@@ -150,6 +150,8 @@ pub struct Config {
     pub database_pool_size: u32,
     /// Whether the process applies pending upgrade steps when it starts.
     pub upgrade_on_start: bool,
+    /// The networks of the proxies in front of the server, whose `X-Forwarded-For` tells the address of people.
+    pub trusted_proxies: crate::http::client::TrustedProxies,
     /// The log level (`error`, `warn`, `info`, `debug`, `trace`), or a filter directive.
     pub log_level: String,
     /// How log lines are written.
@@ -202,14 +204,27 @@ struct Reader<'a, F> {
 }
 
 impl<F: Fn(&str) -> Option<String>> Reader<'_, F> {
-    /// The value of a key.
+    /// The value of a key: its variable when set and not blank, otherwise the file.
     fn value(&self, path: &str) -> Option<String> {
-        (self.env)(&file::variable(path)).or_else(|| self.file.get(path).map(str::to_owned))
+        (self.env)(&file::variable(path))
+            .filter(|value| !value.trim().is_empty())
+            .or_else(|| self.file.get(path).map(str::to_owned))
     }
 
     /// Records a problem with a key.
     fn fail(&mut self, path: &str, rule: &str) {
         self.fields.push(FieldError::new(file::variable(path), rule));
+    }
+
+    /// The proxies in front of the server, none unless they are listed.
+    fn trusted_proxies(&mut self) -> crate::http::client::TrustedProxies {
+        match self.value("server.trusted_proxies") {
+            None => crate::http::client::TrustedProxies::default(),
+            Some(text) => crate::http::client::TrustedProxies::parse(&text).unwrap_or_else(|| {
+                self.fail("server.trusted_proxies", "networks");
+                crate::http::client::TrustedProxies::default()
+            }),
+        }
     }
 
     /// The `[server]` section and the site's address.
@@ -418,6 +433,7 @@ impl Config {
             fields,
         };
         let (role, site_url, http_address, upgrade_on_start) = reader.server();
+        let trusted_proxies = reader.trusted_proxies();
         let runs_services = matches!(role, Role::Server | Role::Worker | Role::All);
         let (database_url, database_prefix, database_pool_size) = reader.database();
         let (storage_url, storage_options, cache_url) = reader.storage(runs_services);
@@ -439,6 +455,7 @@ impl Config {
             database_prefix,
             database_pool_size,
             upgrade_on_start,
+            trusted_proxies,
             log_level,
             log_format,
             storage_url,

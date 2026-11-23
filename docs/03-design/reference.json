@@ -1,0 +1,2490 @@
+{
+  "modules": [
+    {
+      "events": [
+        {
+          "audited": false,
+          "code": "events.any",
+          "fields": [],
+          "personal_fields": [],
+          "summary": "Any event: a listener of it receives every event; it is never published",
+          "version": 1
+        }
+      ],
+      "flags": [],
+      "jobs": [
+        {
+          "code": "events.purge",
+          "max_attempts": 3,
+          "schedule": {
+            "cron": "45 3 * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Remove events and audit entries past their retention"
+        }
+      ],
+      "name": "events",
+      "notification_types": [],
+      "permissions": [],
+      "settings": [],
+      "summary": "Events with their outbox, listeners and the audit log",
+      "terms": []
+    },
+    {
+      "events": [],
+      "flags": [],
+      "jobs": [
+        {
+          "code": "tasks.purge",
+          "max_attempts": 3,
+          "schedule": {
+            "cron": "30 3 * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Remove finished jobs and their attempts past their retention"
+        }
+      ],
+      "name": "tasks",
+      "notification_types": [],
+      "permissions": [],
+      "settings": [],
+      "summary": "Durable job queue and schedules",
+      "terms": []
+    },
+    {
+      "events": [],
+      "flags": [],
+      "jobs": [],
+      "name": "access",
+      "notification_types": [],
+      "permissions": [
+        {
+          "code": "access.grant.create",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "section_leader",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "section",
+          "risks": [
+            "trust_escalation"
+          ]
+        },
+        {
+          "code": "access.grant.delete",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "section",
+          "risks": [
+            "trust_escalation"
+          ]
+        },
+        {
+          "code": "access.override.update",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "activity",
+          "risks": [
+            "trust_escalation"
+          ]
+        },
+        {
+          "code": "access.override.risky",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "activity",
+          "risks": [
+            "trust_escalation"
+          ]
+        },
+        {
+          "code": "access.role.manage",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "trust_escalation",
+            "configuration"
+          ]
+        },
+        {
+          "code": "access.scope.freeze",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "activity",
+          "risks": [
+            "data_loss"
+          ]
+        },
+        {
+          "code": "access.view_as",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "activity",
+          "risks": []
+        },
+        {
+          "code": "access.review",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "non_editing_teacher",
+            "platform_administrator",
+            "section_leader",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "activity",
+          "risks": [
+            "personal_data"
+          ]
+        }
+      ],
+      "settings": [],
+      "summary": "Scopes, principals, roles, grants, overrides and permission checks",
+      "terms": []
+    },
+    {
+      "events": [
+        {
+          "audited": true,
+          "code": "settings.changed",
+          "fields": [
+            "key",
+            "scope"
+          ],
+          "personal_fields": [],
+          "summary": "A setting changed in a scope",
+          "version": 1
+        }
+      ],
+      "flags": [],
+      "jobs": [],
+      "name": "settings",
+      "notification_types": [],
+      "permissions": [],
+      "settings": [],
+      "summary": "Typed settings resolved through the scope tree",
+      "terms": []
+    },
+    {
+      "events": [],
+      "flags": [],
+      "jobs": [
+        {
+          "code": "identity.purge",
+          "max_attempts": 3,
+          "schedule": {
+            "cron": "0 3 * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Remove expired one-time tokens and sessions, and sign-in attempts past their retention"
+        },
+        {
+          "code": "identity.run_deletions",
+          "max_attempts": 5,
+          "schedule": {
+            "cron": "15 * * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Delete the accounts whose grace period ended, leaving their tombstones"
+        }
+      ],
+      "name": "identity",
+      "notification_types": [],
+      "permissions": [
+        {
+          "code": "identity.account.invite",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "personal_data",
+            "spam"
+          ]
+        },
+        {
+          "code": "identity.account.suspend",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "personal_data"
+          ]
+        },
+        {
+          "code": "identity.account.delete",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "personal_data",
+            "data_loss"
+          ]
+        },
+        {
+          "code": "identity.account.read",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "read",
+          "lowest_scope": "campus",
+          "risks": [
+            "personal_data"
+          ]
+        },
+        {
+          "code": "identity.provider.manage",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "trust_escalation",
+            "configuration"
+          ]
+        },
+        {
+          "code": "identity.token.manage_own",
+          "granted_by": [
+            "authenticated_user",
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": []
+        },
+        {
+          "code": "identity.token.manage_any",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "trust_escalation"
+          ]
+        },
+        {
+          "code": "identity.policy.manage",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "configuration",
+            "trust_escalation"
+          ]
+        }
+      ],
+      "settings": [
+        {
+          "accepts": {
+            "default": false,
+            "type": "boolean"
+          },
+          "key": "identity.self_sign_up",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "Whether visitors may sign up by themselves"
+        },
+        {
+          "accepts": {
+            "default": "",
+            "max": 2000,
+            "type": "text"
+          },
+          "key": "identity.allowed_domains",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "The email domains allowed to sign up, separated by commas; empty allows any"
+        },
+        {
+          "accepts": {
+            "default": 12,
+            "max": 128,
+            "min": 8,
+            "type": "integer"
+          },
+          "key": "identity.password_min_length",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "The shortest password"
+        },
+        {
+          "accepts": {
+            "default": false,
+            "type": "boolean"
+          },
+          "key": "identity.second_factor_required",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "Whether every account needs a second factor"
+        },
+        {
+          "accepts": {
+            "default": 24,
+            "max": 168,
+            "min": 1,
+            "type": "integer"
+          },
+          "key": "identity.confirmation_hours",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "How long a confirmation link lasts, in hours"
+        },
+        {
+          "accepts": {
+            "default": 7,
+            "max": 90,
+            "min": 1,
+            "type": "integer"
+          },
+          "key": "identity.invitation_days",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "How long an invitation link lasts, in days"
+        },
+        {
+          "accepts": {
+            "default": 30,
+            "max": 1440,
+            "min": 5,
+            "type": "integer"
+          },
+          "key": "identity.recovery_minutes",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "How long a recovery link lasts, in minutes"
+        },
+        {
+          "accepts": {
+            "default": 8,
+            "max": 720,
+            "min": 1,
+            "type": "integer"
+          },
+          "key": "identity.session_idle_hours",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "How long a session lasts without being used, in hours"
+        },
+        {
+          "accepts": {
+            "default": 7,
+            "max": 365,
+            "min": 1,
+            "type": "integer"
+          },
+          "key": "identity.session_lifetime_days",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "How long a session lasts at most, in days"
+        },
+        {
+          "accepts": {
+            "default": 15,
+            "max": 1440,
+            "min": 1,
+            "type": "integer"
+          },
+          "key": "identity.step_up_minutes",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "How old the last sign-in may be for a sensitive operation, in minutes"
+        },
+        {
+          "accepts": {
+            "default": 90,
+            "max": 3650,
+            "min": 1,
+            "type": "integer"
+          },
+          "key": "identity.token_default_days",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "The lifetime of an API token when none is asked, in days"
+        },
+        {
+          "accepts": {
+            "default": 365,
+            "max": 3650,
+            "min": 1,
+            "type": "integer"
+          },
+          "key": "identity.token_max_days",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "The longest lifetime of an API token, in days"
+        },
+        {
+          "accepts": {
+            "default": 14,
+            "max": 365,
+            "min": 0,
+            "type": "integer"
+          },
+          "key": "identity.deletion_grace_days",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "The grace period before a deletion runs, in days"
+        },
+        {
+          "accepts": {
+            "default": 30,
+            "max": 3650,
+            "min": 1,
+            "type": "integer"
+          },
+          "key": "identity.attempt_retention_days",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "How long sign-in attempts are kept, in days"
+        },
+        {
+          "accepts": {
+            "default": 3,
+            "max": 1000,
+            "min": 1,
+            "type": "integer"
+          },
+          "key": "identity.throttle_slow_after",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "Failed sign-ins after which each new try waits longer"
+        },
+        {
+          "accepts": {
+            "default": 10,
+            "max": 1000,
+            "min": 1,
+            "type": "integer"
+          },
+          "key": "identity.throttle_lock_after",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "Failed sign-ins after which sign-in locks"
+        },
+        {
+          "accepts": {
+            "default": 15,
+            "max": 1440,
+            "min": 1,
+            "type": "integer"
+          },
+          "key": "identity.throttle_lock_minutes",
+          "levels": [
+            "platform",
+            "campus"
+          ],
+          "permission": "identity.policy.manage",
+          "restart_required": false,
+          "summary": "How long a sign-in lock lasts, in minutes"
+        }
+      ],
+      "summary": "Accounts, credentials, sign-in, second factors, sessions and API tokens",
+      "terms": []
+    },
+    {
+      "events": [
+        {
+          "audited": false,
+          "code": "files.uploaded",
+          "fields": [
+            "file",
+            "area",
+            "size",
+            "media_type"
+          ],
+          "personal_fields": [],
+          "summary": "A file finished uploading into an area and waits to be attached",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "files.attached",
+          "fields": [
+            "file",
+            "area"
+          ],
+          "personal_fields": [],
+          "summary": "A file was attached to the record that owns it",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "files.detached",
+          "fields": [
+            "file",
+            "area"
+          ],
+          "personal_fields": [],
+          "summary": "A file was detached from its owner and deleted",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "files.converted",
+          "fields": [
+            "conversion",
+            "kind",
+            "blob"
+          ],
+          "personal_fields": [],
+          "summary": "A conversion of some content, such as a thumbnail, finished",
+          "version": 1
+        }
+      ],
+      "flags": [],
+      "jobs": [
+        {
+          "code": "files.convert",
+          "max_attempts": 5,
+          "schedule": null,
+          "summary": "Make a conversion of some content, such as a thumbnail"
+        },
+        {
+          "code": "files.purge",
+          "max_attempts": 3,
+          "schedule": {
+            "cron": "20 * * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Remove expired uploads, files nobody attached, and content past its time in the trash"
+        }
+      ],
+      "name": "files",
+      "notification_types": [],
+      "permissions": [
+        {
+          "code": "files.quota.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": [
+            "configuration"
+          ]
+        }
+      ],
+      "settings": [],
+      "summary": "Uploads, de-duplicated storage and permission-checked serving of files",
+      "terms": []
+    },
+    {
+      "events": [
+        {
+          "audited": true,
+          "code": "customise.changed",
+          "fields": [
+            "kind",
+            "object",
+            "scope"
+          ],
+          "personal_fields": [],
+          "summary": "A customisation changed in a scope",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "customise.rule_failed",
+          "fields": [
+            "rule",
+            "event",
+            "error"
+          ],
+          "personal_fields": [],
+          "summary": "A rule failed to run its actions for an event",
+          "version": 1
+        }
+      ],
+      "flags": [],
+      "jobs": [],
+      "name": "customise",
+      "notification_types": [],
+      "permissions": [
+        {
+          "code": "customise.term.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "section",
+          "risks": [
+            "configuration"
+          ]
+        },
+        {
+          "code": "customise.flag.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "section",
+          "risks": [
+            "configuration"
+          ]
+        },
+        {
+          "code": "customise.field.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": [
+            "configuration",
+            "data_loss"
+          ]
+        },
+        {
+          "code": "customise.field.view",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "non_editing_teacher",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "activity",
+          "risks": [
+            "personal_data"
+          ]
+        },
+        {
+          "code": "customise.field.edit",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "activity",
+          "risks": []
+        },
+        {
+          "code": "customise.layout.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": [
+            "configuration"
+          ]
+        },
+        {
+          "code": "customise.menu.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": [
+            "configuration"
+          ]
+        },
+        {
+          "code": "customise.theme.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": [
+            "configuration"
+          ]
+        },
+        {
+          "code": "customise.rule.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": [
+            "configuration"
+          ]
+        },
+        {
+          "code": "customise.package.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": [
+            "configuration"
+          ]
+        }
+      ],
+      "settings": [],
+      "summary": "Terminology, feature flags, custom fields, layouts, menus and themes resolved through the scope tree",
+      "terms": []
+    },
+    {
+      "events": [
+        {
+          "audited": false,
+          "code": "users.system_group_members_changed",
+          "fields": [
+            "group"
+          ],
+          "personal_fields": [],
+          "summary": "The members of a system group changed",
+          "version": 1
+        }
+      ],
+      "flags": [],
+      "jobs": [],
+      "name": "users",
+      "notification_types": [],
+      "permissions": [
+        {
+          "code": "users.profile.update_own",
+          "granted_by": [
+            "authenticated_user",
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": []
+        },
+        {
+          "code": "users.profile.update_any",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "personal_data"
+          ]
+        },
+        {
+          "code": "users.system_group.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "category",
+          "risks": [
+            "personal_data"
+          ]
+        }
+      ],
+      "settings": [],
+      "summary": "Profiles, preferences and system groups",
+      "terms": []
+    },
+    {
+      "events": [
+        {
+          "audited": false,
+          "code": "courses.course_created",
+          "fields": [
+            "course",
+            "category"
+          ],
+          "personal_fields": [],
+          "summary": "A course was created",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "courses.course_state_changed",
+          "fields": [
+            "course",
+            "from",
+            "to"
+          ],
+          "personal_fields": [],
+          "summary": "A course moved to another state of its lifecycle",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "courses.course_deleted",
+          "fields": [
+            "course"
+          ],
+          "personal_fields": [],
+          "summary": "A course was deleted with everything it owns",
+          "version": 1
+        }
+      ],
+      "flags": [
+        {
+          "code": "courses.groups",
+          "default": true,
+          "summary": "Groups and group sets in courses"
+        }
+      ],
+      "jobs": [
+        {
+          "code": "courses.run_deletions",
+          "max_attempts": 5,
+          "schedule": {
+            "cron": "20 * * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Delete the courses whose scheduled deletion is due, with everything they own"
+        }
+      ],
+      "name": "courses",
+      "notification_types": [],
+      "permissions": [
+        {
+          "code": "courses.category.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "category",
+          "risks": [
+            "configuration",
+            "data_loss"
+          ]
+        },
+        {
+          "code": "courses.course.create",
+          "granted_by": [
+            "campus_administrator",
+            "course_creator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "category",
+          "risks": []
+        },
+        {
+          "code": "courses.course.update",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": []
+        },
+        {
+          "code": "courses.course.archive",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": []
+        },
+        {
+          "code": "courses.course.delete",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": [
+            "data_loss"
+          ]
+        },
+        {
+          "code": "courses.hidden.view",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "non_editing_teacher",
+            "platform_administrator",
+            "section_leader",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "section",
+          "risks": []
+        },
+        {
+          "code": "courses.section.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "section_leader",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "section",
+          "risks": []
+        },
+        {
+          "code": "courses.groups.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": [
+            "personal_data"
+          ]
+        },
+        {
+          "code": "courses.groups.access_all",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "non_editing_teacher",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "section",
+          "risks": [
+            "personal_data"
+          ]
+        }
+      ],
+      "settings": [
+        {
+          "accepts": {
+            "default": "none",
+            "options": [
+              "none",
+              "separate",
+              "visible"
+            ],
+            "type": "choice"
+          },
+          "key": "courses.group_mode",
+          "levels": [
+            "course",
+            "section",
+            "activity"
+          ],
+          "permission": "courses.groups.manage",
+          "restart_required": false,
+          "summary": "Whether people work in groups: none, separate (each group on its own) or visible"
+        }
+      ],
+      "summary": "Categories, courses, sections, groups and group sets",
+      "terms": [
+        {
+          "code": "courses.category",
+          "forms": [
+            {
+              "language": "en",
+              "plural": "categories",
+              "singular": "category"
+            },
+            {
+              "language": "es",
+              "plural": "categorías",
+              "singular": "categoría"
+            }
+          ]
+        },
+        {
+          "code": "courses.course",
+          "forms": [
+            {
+              "language": "en",
+              "plural": "courses",
+              "singular": "course"
+            },
+            {
+              "language": "es",
+              "plural": "cursos",
+              "singular": "curso"
+            }
+          ]
+        },
+        {
+          "code": "courses.section",
+          "forms": [
+            {
+              "language": "en",
+              "plural": "sections",
+              "singular": "section"
+            },
+            {
+              "language": "es",
+              "plural": "secciones",
+              "singular": "sección"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "events": [
+        {
+          "audited": false,
+          "code": "enrol.enrolment_created",
+          "fields": [
+            "enrolment",
+            "course",
+            "account",
+            "instance"
+          ],
+          "personal_fields": [],
+          "summary": "Someone was enrolled in a course",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "enrol.enrolment_updated",
+          "fields": [
+            "enrolment",
+            "course",
+            "account",
+            "status"
+          ],
+          "personal_fields": [],
+          "summary": "The status or period of an enrolment changed",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "enrol.enrolment_removed",
+          "fields": [
+            "enrolment",
+            "course",
+            "account"
+          ],
+          "personal_fields": [],
+          "summary": "An enrolment was removed",
+          "version": 1
+        }
+      ],
+      "flags": [],
+      "jobs": [
+        {
+          "code": "enrol.sync",
+          "max_attempts": 5,
+          "schedule": {
+            "cron": "*/15 * * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Bring the enrolments of every system group instance in step with its group"
+        },
+        {
+          "code": "enrol.run_expiry",
+          "max_attempts": 5,
+          "schedule": {
+            "cron": "5 * * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Apply the expiry rule to the enrolments whose end has passed"
+        }
+      ],
+      "name": "enrol",
+      "notification_types": [],
+      "permissions": [
+        {
+          "code": "enrol.instance.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": [
+            "trust_escalation"
+          ]
+        },
+        {
+          "code": "enrol.enrolment.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": [
+            "personal_data",
+            "trust_escalation"
+          ]
+        },
+        {
+          "code": "enrol.enrolment.read",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "non_editing_teacher",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "course",
+          "risks": [
+            "personal_data"
+          ]
+        },
+        {
+          "code": "enrol.request.decide",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": [
+            "personal_data"
+          ]
+        },
+        {
+          "code": "enrol.self",
+          "granted_by": [
+            "authenticated_user",
+            "campus_administrator",
+            "manager",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": []
+        }
+      ],
+      "settings": [],
+      "summary": "Method instances, enrolments and requests to join",
+      "terms": []
+    },
+    {
+      "events": [
+        {
+          "audited": false,
+          "code": "activities.module_created",
+          "fields": [
+            "module",
+            "section",
+            "type"
+          ],
+          "personal_fields": [],
+          "summary": "A course module was added to a section",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "activities.module_updated",
+          "fields": [
+            "module",
+            "section",
+            "type"
+          ],
+          "personal_fields": [],
+          "summary": "A course module changed",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "activities.module_moved",
+          "fields": [
+            "module",
+            "section",
+            "type"
+          ],
+          "personal_fields": [],
+          "summary": "A course module moved to another place",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "activities.module_deleted",
+          "fields": [
+            "module",
+            "section",
+            "type"
+          ],
+          "personal_fields": [],
+          "summary": "A course module went to the recycle bin",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "activities.module_restored",
+          "fields": [
+            "module",
+            "section",
+            "type"
+          ],
+          "personal_fields": [],
+          "summary": "A course module came back from the recycle bin",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "activities.module_purged",
+          "fields": [
+            "module",
+            "section",
+            "type"
+          ],
+          "personal_fields": [],
+          "summary": "A course module was removed for good",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "activities.exception_changed",
+          "fields": [
+            "module",
+            "section",
+            "type"
+          ],
+          "personal_fields": [],
+          "summary": "An exception of a course module was granted, changed or removed",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "activities.conditions_changed",
+          "fields": [
+            "module",
+            "section"
+          ],
+          "personal_fields": [],
+          "summary": "The access conditions of a course module or a section changed",
+          "version": 1
+        }
+      ],
+      "flags": [],
+      "jobs": [
+        {
+          "code": "activities.purge",
+          "max_attempts": 3,
+          "schedule": {
+            "cron": "30 3 * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Remove the course modules whose time in the recycle bin ended"
+        }
+      ],
+      "name": "activities",
+      "notification_types": [],
+      "permissions": [
+        {
+          "code": "activities.module.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "section_leader",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "activity",
+          "risks": [
+            "data_loss"
+          ]
+        },
+        {
+          "code": "activities.exception.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "section_leader",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "activity",
+          "risks": []
+        },
+        {
+          "code": "activities.conditions.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "section_leader",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "activity",
+          "risks": []
+        },
+        {
+          "code": "activities.conditions.ignore",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "section_leader",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "activity",
+          "risks": []
+        }
+      ],
+      "settings": [],
+      "summary": "Course modules: activities and materials placed in the sections of a course",
+      "terms": [
+        {
+          "code": "activities.activity",
+          "forms": [
+            {
+              "language": "en",
+              "plural": "activities",
+              "singular": "activity"
+            },
+            {
+              "language": "es",
+              "plural": "actividades",
+              "singular": "actividad"
+            }
+          ]
+        },
+        {
+          "code": "activities.material",
+          "forms": [
+            {
+              "language": "en",
+              "plural": "materials",
+              "singular": "material"
+            },
+            {
+              "language": "es",
+              "plural": "materiales",
+              "singular": "material"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "events": [
+        {
+          "audited": false,
+          "code": "records.record_created",
+          "fields": [
+            "record",
+            "course"
+          ],
+          "personal_fields": [],
+          "summary": "A grade record was added to a course",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "records.record_updated",
+          "fields": [
+            "record",
+            "course"
+          ],
+          "personal_fields": [],
+          "summary": "A grade record changed",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "records.record_deleted",
+          "fields": [
+            "record",
+            "course"
+          ],
+          "personal_fields": [],
+          "summary": "A grade record was deleted",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "records.grade_changed",
+          "fields": [
+            "record",
+            "course",
+            "account"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "The grade of a person on a record changed",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "records.overridden",
+          "fields": [
+            "record",
+            "course",
+            "account"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "The grade of a person was overridden, or its override removed",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "records.total_changed",
+          "fields": [
+            "record",
+            "course",
+            "account"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "A total of a person changed with the grades it adds up",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "records.locked",
+          "fields": [
+            "record",
+            "course"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "A record or a grade was locked or unlocked",
+          "version": 1
+        }
+      ],
+      "flags": [],
+      "jobs": [
+        {
+          "code": "records.recalculate",
+          "max_attempts": 5,
+          "schedule": {
+            "cron": "* * * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Recalculate the totals of the people whose grades changed"
+        },
+        {
+          "code": "records.export",
+          "max_attempts": 3,
+          "schedule": {
+            "cron": "*/5 * * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Write the files of the exports of grades that were asked for"
+        },
+        {
+          "code": "records.export_expire",
+          "max_attempts": 3,
+          "schedule": {
+            "cron": "45 4 * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Remove the files of the exports of grades whose week ended"
+        }
+      ],
+      "name": "records",
+      "notification_types": [
+        {
+          "channels": [
+            "inbox"
+          ],
+          "code": "records.grade_posted",
+          "required": false,
+          "summary": "You have a new grade"
+        }
+      ],
+      "permissions": [
+        {
+          "code": "records.view_own",
+          "granted_by": [
+            "campus_administrator",
+            "learner",
+            "manager",
+            "non_editing_teacher",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "course",
+          "risks": []
+        },
+        {
+          "code": "records.view_all",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "non_editing_teacher",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "course",
+          "risks": [
+            "personal_data"
+          ]
+        },
+        {
+          "code": "records.view_hidden",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "course",
+          "risks": [
+            "personal_data"
+          ]
+        },
+        {
+          "code": "records.grade",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "non_editing_teacher",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": []
+        },
+        {
+          "code": "records.override",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": []
+        },
+        {
+          "code": "records.lock",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": []
+        },
+        {
+          "code": "records.hide",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": []
+        },
+        {
+          "code": "records.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": [
+            "data_loss"
+          ]
+        },
+        {
+          "code": "records.export",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "course",
+          "risks": [
+            "personal_data"
+          ]
+        }
+      ],
+      "settings": [],
+      "summary": "Academic records: the grade records of a course, their categories and the grades people get",
+      "terms": []
+    },
+    {
+      "events": [
+        {
+          "audited": false,
+          "code": "progress.activity_changed",
+          "fields": [
+            "module",
+            "course",
+            "account",
+            "state"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "The state of a person on a course module changed",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "progress.rules_changed",
+          "fields": [
+            "module",
+            "course"
+          ],
+          "personal_fields": [],
+          "summary": "The rules of a course module changed",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "progress.exception_changed",
+          "fields": [
+            "module",
+            "course",
+            "account"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "A teacher decided the state of a person on a course module, or removed the decision",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "progress.course_completed",
+          "fields": [
+            "course",
+            "account"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "A person completed a course",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "progress.course_revoked",
+          "fields": [
+            "course",
+            "account"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "The completion of a course by a person was revoked",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "progress.criteria_changed",
+          "fields": [
+            "course"
+          ],
+          "personal_fields": [],
+          "summary": "What a course requires changed",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "progress.approved",
+          "fields": [
+            "course",
+            "criterion",
+            "account"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "Someone of a role approved a person for a criterion of a course",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "progress.prerequisites_changed",
+          "fields": [
+            "course"
+          ],
+          "personal_fields": [],
+          "summary": "The courses a course requires first changed",
+          "version": 1
+        }
+      ],
+      "flags": [],
+      "jobs": [
+        {
+          "code": "progress.recalculate",
+          "max_attempts": 5,
+          "schedule": {
+            "cron": "*/5 * * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Re-evaluate the people of the course modules whose rules changed"
+        },
+        {
+          "code": "progress.course_recalculate",
+          "max_attempts": 5,
+          "schedule": {
+            "cron": "*/5 * * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Evaluate the people of a course whose progress may have changed"
+        },
+        {
+          "code": "progress.course_timed",
+          "max_attempts": 3,
+          "schedule": {
+            "cron": "30 2 * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Queue the people of the courses whose criteria depend on a date or a duration"
+        }
+      ],
+      "name": "progress",
+      "notification_types": [
+        {
+          "channels": [
+            "inbox"
+          ],
+          "code": "progress.state_decided",
+          "required": false,
+          "summary": "A teacher decided your progress on an activity"
+        },
+        {
+          "channels": [
+            "inbox"
+          ],
+          "code": "progress.course_completed",
+          "required": false,
+          "summary": "You completed a course"
+        }
+      ],
+      "permissions": [
+        {
+          "code": "progress.view_own",
+          "granted_by": [
+            "campus_administrator",
+            "learner",
+            "manager",
+            "non_editing_teacher",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "activity",
+          "risks": []
+        },
+        {
+          "code": "progress.view_all",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "non_editing_teacher",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "activity",
+          "risks": [
+            "personal_data"
+          ]
+        },
+        {
+          "code": "progress.mark_own",
+          "granted_by": [
+            "learner"
+          ],
+          "kind": "write",
+          "lowest_scope": "activity",
+          "risks": []
+        },
+        {
+          "code": "progress.exception",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "activity",
+          "risks": []
+        },
+        {
+          "code": "progress.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "activity",
+          "risks": []
+        },
+        {
+          "code": "progress.tracked",
+          "granted_by": [
+            "learner"
+          ],
+          "kind": "read",
+          "lowest_scope": "activity",
+          "risks": []
+        }
+      ],
+      "settings": [
+        {
+          "accepts": {
+            "default": true,
+            "type": "boolean"
+          },
+          "key": "progress.notify",
+          "levels": [
+            "campus",
+            "category",
+            "course"
+          ],
+          "permission": "progress.manage",
+          "restart_required": false,
+          "summary": "Whether the people of a course are told when they complete it or a teacher decides their progress"
+        }
+      ],
+      "summary": "Progress: whether a person has done what a course module asks, derived from rules and kept apart from teacher decisions",
+      "terms": []
+    },
+    {
+      "events": [
+        {
+          "audited": false,
+          "code": "notify.delivered",
+          "fields": [
+            "notification",
+            "type",
+            "recipient"
+          ],
+          "personal_fields": [
+            "recipient"
+          ],
+          "summary": "A notification was delivered to the inbox of a person",
+          "version": 1
+        }
+      ],
+      "flags": [],
+      "jobs": [
+        {
+          "code": "notify.deliver",
+          "max_attempts": 3,
+          "schedule": {
+            "cron": "* * * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Send the notifications of email and push whose time came"
+        },
+        {
+          "code": "notify.message_purge",
+          "max_attempts": 3,
+          "schedule": {
+            "cron": "40 3 * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Purge the messages every member deleted and those older than their campus keeps"
+        }
+      ],
+      "name": "notify",
+      "notification_types": [
+        {
+          "channels": [
+            "inbox",
+            "push"
+          ],
+          "code": "notify.message_received",
+          "required": false,
+          "summary": "You received a message"
+        }
+      ],
+      "permissions": [
+        {
+          "code": "notify.template.manage",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "configuration",
+            "spam"
+          ]
+        },
+        {
+          "code": "notify.defaults.manage",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "configuration"
+          ]
+        },
+        {
+          "code": "notify.message.attach",
+          "granted_by": [
+            "authenticated_user",
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "spam"
+          ]
+        },
+        {
+          "code": "notify.message.anyone",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "spam"
+          ]
+        }
+      ],
+      "settings": [
+        {
+          "accepts": {
+            "default": "course",
+            "options": [
+              "course",
+              "campus",
+              "nobody"
+            ],
+            "type": "choice"
+          },
+          "key": "notify.messaging",
+          "levels": [
+            "campus"
+          ],
+          "permission": "notify.defaults.manage",
+          "restart_required": false,
+          "summary": "Who may write to whom: people who take part in a course together, anyone of the campus, or nobody"
+        },
+        {
+          "accepts": {
+            "default": 0,
+            "max": 3650,
+            "min": 0,
+            "type": "integer"
+          },
+          "key": "notify.message_retention_days",
+          "levels": [
+            "campus"
+          ],
+          "permission": "notify.defaults.manage",
+          "restart_required": false,
+          "summary": "How many days messages are kept before they are removed; 0 keeps them until every member deletes them"
+        }
+      ],
+      "summary": "Notifications: types declared by modules, the inbox of each person and their preferences, and messaging",
+      "terms": []
+    },
+    {
+      "events": [
+        {
+          "audited": false,
+          "code": "calendar.entry_created",
+          "fields": [
+            "entry"
+          ],
+          "personal_fields": [],
+          "summary": "A calendar entry was created",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "calendar.entry_updated",
+          "fields": [
+            "entry"
+          ],
+          "personal_fields": [],
+          "summary": "A calendar entry changed",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "calendar.entry_deleted",
+          "fields": [
+            "entry"
+          ],
+          "personal_fields": [],
+          "summary": "A calendar entry was deleted",
+          "version": 1
+        },
+        {
+          "audited": false,
+          "code": "calendar.subscription_refreshed",
+          "fields": [
+            "subscription",
+            "added",
+            "changed",
+            "removed"
+          ],
+          "personal_fields": [],
+          "summary": "A calendar a scope subscribes to was read again",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "calendar.feed_created",
+          "fields": [
+            "feed",
+            "account"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "A personal calendar feed was made",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "calendar.feed_revoked",
+          "fields": [
+            "feed",
+            "account"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "A personal calendar feed was revoked",
+          "version": 1
+        }
+      ],
+      "flags": [],
+      "jobs": [
+        {
+          "code": "calendar.refresh",
+          "max_attempts": 3,
+          "schedule": {
+            "cron": "*/15 * * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Read again the calendars scopes subscribe to whose time came"
+        }
+      ],
+      "name": "calendar",
+      "notification_types": [],
+      "permissions": [
+        {
+          "code": "calendar.view",
+          "granted_by": [
+            "campus_administrator",
+            "learner",
+            "manager",
+            "non_editing_teacher",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "read",
+          "lowest_scope": "course",
+          "risks": []
+        },
+        {
+          "code": "calendar.manage",
+          "granted_by": [
+            "campus_administrator",
+            "manager",
+            "platform_administrator",
+            "teacher"
+          ],
+          "kind": "write",
+          "lowest_scope": "course",
+          "risks": []
+        }
+      ],
+      "settings": [],
+      "summary": "Calendar: entries of campuses, courses and people, and the dates of activities",
+      "terms": []
+    },
+    {
+      "events": [
+        {
+          "audited": true,
+          "code": "privacy.request_created",
+          "fields": [
+            "request",
+            "account"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "A request for personal data was made",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "privacy.request_completed",
+          "fields": [
+            "request",
+            "account"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "Every part of a request for personal data was answered",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "privacy.policy_published",
+          "fields": [
+            "policy",
+            "code",
+            "version"
+          ],
+          "personal_fields": [],
+          "summary": "A new version of a policy was published",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "privacy.policy_accepted",
+          "fields": [
+            "policy",
+            "version",
+            "account"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "A person accepted a version of a policy",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "privacy.request_decided",
+          "fields": [
+            "request",
+            "account",
+            "approved"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "A deletion of personal data was approved or rejected",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "privacy.account_erased",
+          "fields": [
+            "request",
+            "account"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "The personal data of an account was erased",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "privacy.hold_placed",
+          "fields": [
+            "hold",
+            "account",
+            "campus"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "A legal hold was placed",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "privacy.hold_released",
+          "fields": [
+            "hold"
+          ],
+          "personal_fields": [],
+          "summary": "A legal hold was released",
+          "version": 1
+        },
+        {
+          "audited": true,
+          "code": "privacy.data_purged",
+          "fields": [
+            "account",
+            "category"
+          ],
+          "personal_fields": [
+            "account"
+          ],
+          "summary": "The data of a deleted account was purged when its retention period ended",
+          "version": 1
+        }
+      ],
+      "flags": [],
+      "jobs": [
+        {
+          "code": "privacy.run",
+          "max_attempts": 5,
+          "schedule": {
+            "cron": "*/5 * * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Ask each module for its part of the pending privacy requests"
+        },
+        {
+          "code": "privacy.expire",
+          "max_attempts": 3,
+          "schedule": {
+            "cron": "15 4 * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Forget the exported data whose time ended"
+        },
+        {
+          "code": "privacy.retain",
+          "max_attempts": 3,
+          "schedule": {
+            "cron": "30 3 * * *",
+            "time_zone": "UTC"
+          },
+          "summary": "Purge the data of deleted accounts whose retention period ended"
+        }
+      ],
+      "name": "privacy",
+      "notification_types": [],
+      "permissions": [
+        {
+          "code": "privacy.request.manage",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "read",
+          "lowest_scope": "campus",
+          "risks": [
+            "personal_data"
+          ]
+        },
+        {
+          "code": "privacy.request.approve",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "data_loss",
+            "personal_data"
+          ]
+        },
+        {
+          "code": "privacy.hold.manage",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "personal_data"
+          ]
+        },
+        {
+          "code": "privacy.retention.manage",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "data_loss"
+          ]
+        },
+        {
+          "code": "privacy.policy.manage",
+          "granted_by": [
+            "campus_administrator",
+            "platform_administrator"
+          ],
+          "kind": "write",
+          "lowest_scope": "campus",
+          "risks": [
+            "configuration"
+          ]
+        }
+      ],
+      "settings": [],
+      "summary": "Privacy: exports of personal data answered by each module, and the policies of a campus",
+      "terms": []
+    }
+  ],
+  "version": "0.1.0"
+}
