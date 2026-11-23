@@ -42,6 +42,7 @@ import "@fontsource-variable/inter/index.css";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import type { ReactNode } from "react";
 
 import { currentAccount } from "../features/session/current-account";
@@ -63,11 +64,12 @@ export default async function RootLayout({ children }: { readonly children: Reac
   const { language, direction } = await requestI18n();
   const account = await currentAccount();
   const theme = await scopeTheme(account?.campus);
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html lang={language} dir={direction} suppressHydrationWarning>
       <body>
-        <InitColorSchemeScript attribute="data-theme" defaultMode={theme.tokens.scheme ?? "system"} modeStorageKey="kampus-scheme" />
-        <AppRouterCacheProvider options={{ key: "k" }}>
+        <InitColorSchemeScript nonce={nonce} attribute="data-theme" defaultMode={theme.tokens.scheme ?? "system"} modeStorageKey="kampus-scheme" />
+        <AppRouterCacheProvider options={{ key: "k", nonce }}>
           <Providers language={language} theme={theme}>
             {children}
           </Providers>
