@@ -41,7 +41,7 @@ import Typography from "@mui/material/Typography";
 
 import { text, type WidgetProps } from "@kampus/web/host";
 
-/** `customise.text` */
+/** A heading and a text. */
 export function TextWidget({ settings }: WidgetProps) {
   const heading = text(settings, "heading");
   const body = text(settings, "text");

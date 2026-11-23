@@ -72,12 +72,17 @@ export interface CourseCatalogueProps {
   readonly size?: number;
   /** The sizes of page offered, such as 5, 10 and 200; 12, 24, 48 and 96 when none. */
   readonly sizes?: readonly number[];
+  /**
+   * Whether it fits the height it is given, as a widget does: its heading, tools and pager stay, and only the courses
+   * scroll.
+   */
+  readonly contained?: boolean;
   /** A link to the page of every course, for a catalogue shown as a widget. */
   readonly more?: { readonly href: string; readonly label: string };
 }
 
 /** `<CourseCatalogue catalogue={…} initial="q=phys" />` */
-export function CourseCatalogue({ catalogue, initial = "", heading, titleless = false, inAddress = true, view, size: startSize, sizes, more }: CourseCatalogueProps) {
+export function CourseCatalogue({ catalogue, initial = "", heading, titleless = false, inAddress = true, view, size: startSize, sizes, more, contained = false }: CourseCatalogueProps) {
   const { t, language } = useI18n();
   const start = useMemo<CatalogueQuery>(() => ({ ...FRESH, ...(view ? { view } : {}), ...(startSize ? { size: startSize } : {}) }), [view, startSize]);
   const [query, setQuery] = useState<CatalogueQuery>(() => ({ ...start, ...readQuery(new URLSearchParams(initial), start) }));
@@ -105,7 +110,11 @@ export function CourseCatalogue({ catalogue, initial = "", heading, titleless = 
   const active = query.categories.length + query.states.length;
 
   return (
-    <Box component="section" aria-labelledby={titleless ? undefined : headingId}>
+    <Box
+      component="section"
+      aria-labelledby={titleless ? undefined : headingId}
+      sx={contained ? { display: "flex", flexDirection: "column", minBlockSize: 0, "& > *": { flex: "none" } } : undefined}
+    >
       <Stack direction="row" spacing={2} sx={{ alignItems: "center", justifyContent: "space-between", mb: 2 }}>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: "baseline" }}>
           {titleless ? null : (
@@ -170,6 +179,7 @@ export function CourseCatalogue({ catalogue, initial = "", heading, titleless = 
           </>
         }
       />
+      <Box sx={contained ? { flex: "1 1 auto !important", minBlockSize: 0, overflowY: "auto", p: 0.75, mx: -0.75 } : undefined}>
       {found.length === 0 ? (
         <Card>
           <EmptyState
@@ -200,6 +210,7 @@ export function CourseCatalogue({ catalogue, initial = "", heading, titleless = 
           </Stack>
         </Card>
       )}
+      </Box>
       {found.length > 0 ? (
         <Pager
           preferred={startSize ?? 0}

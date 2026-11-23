@@ -37,7 +37,7 @@
 
 import { GradesCard, text, type WidgetProps } from "@kampus/web/host";
 
-/** `records.grades` */
+/** The grades of the reader in the course. */
 export function GradesWidget({ settings, context }: WidgetProps) {
   const course = context.course;
   return course ? <GradesCard heading={text(settings, "heading")} grades={course.grades} titles={course.recordTitles} /> : null;

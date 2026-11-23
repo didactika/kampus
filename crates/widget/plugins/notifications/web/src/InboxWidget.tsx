@@ -35,16 +35,12 @@
 
 /** The latest notifications of the person, unread first in colour, with a way to the inbox. */
 
-import { fitting, number, optional, type Inbox, type WidgetProps } from "@kampus/web/host";
+import { number, optional, type Inbox, type WidgetProps } from "@kampus/web/host";
 import { LatestNotifications } from "./LatestNotifications";
 
-/** The height of the heading of the list and of one notification, in pixels. */
-const HEADING = 110;
-const NOTIFICATION = 64;
-
-/** `notify.inbox`: as many of the latest notifications as its height holds, up to the limit it sets. */
-export async function InboxWidget({ settings, size }: WidgetProps) {
-  const limit = Math.min(number(settings, "limit", 5), fitting(size, HEADING, NOTIFICATION));
+/** The latest notifications, up to the limit it sets; those its height does not show scroll under its heading. */
+export async function InboxWidget({ settings }: WidgetProps) {
+  const limit = number(settings, "limit", 5);
   const inbox = await optional<Inbox | null>(`/notify/inbox?limit=${limit}`, null);
   if (!inbox) return null;
   return <LatestNotifications inbox={inbox} />;

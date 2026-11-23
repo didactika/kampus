@@ -37,7 +37,7 @@
 
 import { CourseOutline, type WidgetProps } from "@kampus/web/host";
 
-/** `courses.outline` */
+/** The content of the course: its sections and activities as the reader sees them. */
 export function OutlineWidget({ settings, context }: WidgetProps) {
   const course = context.course;
   if (!course) return null;

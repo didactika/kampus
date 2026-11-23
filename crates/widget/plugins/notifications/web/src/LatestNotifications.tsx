@@ -52,8 +52,8 @@ export function LatestNotifications({ inbox }: { readonly inbox: Inbox }) {
   const { t } = useI18n();
   const heading = useId();
   return (
-    <Card component="section" aria-labelledby={heading}>
-      <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", px: 2.5, pt: 2, pb: 1 }}>
+    <Card component="section" aria-labelledby={heading} sx={{ display: "flex", flexDirection: "column", minBlockSize: 0 }}>
+      <Stack direction="row" sx={{ flex: "none", alignItems: "center", justifyContent: "space-between", px: 2.5, pt: 2, pb: 1 }}>
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
           <Typography id={heading} variant="h4" component="h2">
             {t("widget_notifications.name")}
@@ -67,7 +67,8 @@ export function LatestNotifications({ inbox }: { readonly inbox: Inbox }) {
       {inbox.notifications.length === 0 ? (
         <EmptyState icon="notifications" message={t("notifications.empty")} />
       ) : (
-        <Stack spacing={0.5} sx={{ p: 1 }}>
+        // The heading stays; the notifications scroll when the widget is shorter than they are.
+        <Stack spacing={0.5} sx={{ p: 1, minBlockSize: 0, overflowY: "auto" }}>
           {inbox.notifications.map((n) => (
             <NotificationRow key={n.id} notification={n} dense />
           ))}
