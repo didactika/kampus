@@ -101,6 +101,8 @@ enum Command {
     /// Generate a VAPID key for push notifications: the private key for `KAMPUS_PUSH_VAPID_PRIVATE_KEY` and the
     /// public key browsers subscribe with.
     PushKey,
+    /// Generate the secret key of an installation for `KAMPUS_SECURITY_SECRET_KEY`: 32 random bytes in base64.
+    SecretKey,
     /// Print what every module of the build declares (permissions, settings, features, terms, events,
     /// notification types, jobs) as JSON, without a configuration or a database.
     Reference,
@@ -140,6 +142,9 @@ pub async fn run() -> ExitCode {
     }
     if let Some(Command::PushKey) = cli.command {
         return finish(push_key());
+    }
+    if let Some(Command::SecretKey) = cli.command {
+        return finish(secret_key());
     }
     if let Some(Command::Reference) = cli.command {
         print(
@@ -213,7 +218,7 @@ async fn execute(command: Command, config: &Config) -> kampus_common::Result<()>
     match command {
         Command::Serve => super::serve(config).await,
         Command::Component(arguments) => component(config, &arguments).await,
-        Command::Install { .. } | Command::PushKey | Command::Reference => Ok(()),
+        Command::Install { .. } | Command::PushKey | Command::SecretKey | Command::Reference => Ok(()),
         Command::Upgrade { new_installation } => {
             let applied = super::upgrade(config, new_installation).await?;
             report(&format!(
@@ -396,6 +401,15 @@ fn push_key() -> kampus_common::Result<()> {
     )?);
     print(&format!("KAMPUS_PUSH_VAPID_PRIVATE_KEY={private_key}"));
     report(&format!("kampus-server: public key {public_key}"));
+    Ok(())
+}
+
+/// Prints a new secret key for the installation.
+fn secret_key() -> kampus_common::Result<()> {
+    print(&format!(
+        "KAMPUS_SECURITY_SECRET_KEY={}",
+        kampus_identity::SecretKey::generate()?.to_base64()
+    ));
     Ok(())
 }
 

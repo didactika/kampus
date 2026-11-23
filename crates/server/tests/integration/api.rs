@@ -43,7 +43,7 @@ use openidconnect::reqwest;
 use openidconnect::url::Url;
 use serde_json::json;
 
-use crate::site::{PASSWORD, SITE, site};
+use crate::site::{PASSWORD, SITE, site, site_with_pool};
 
 #[tokio::test]
 async fn a_session_cookie_reads_the_account_and_needs_the_csrf_header_to_change_things() {
@@ -525,6 +525,76 @@ async fn the_web_client_knows_the_api_it_talks_to() {
     assert!(
         known == served,
         "web/sdk/openapi.json is not the API the server serves: run the server tests with KAMPUS_UPDATE_OPENAPI=1, then npm run generate -w @kampus/sdk"
+    );
+    site.drop().await;
+}
+
+#[tokio::test]
+async fn the_pages_of_the_client_are_served_with_a_single_connection() {
+    // A request that holds a connection while it waits for another one hangs here, where under load it would
+    // starve the pool: with one connection, every answer comes at once or never.
+    let site = site_with_pool(1).await;
+    let wait = std::time::Duration::from_secs(10);
+    let signed_in = tokio::time::timeout(wait, site.sign_in("admin"))
+        .await
+        .expect("signing in waits for no second connection");
+    let session = signed_in.session();
+    let campus = site.campus.as_uuid();
+    let paths = [
+        "/api/v1/identity/me".to_owned(),
+        "/api/v1/users/me/profile".to_owned(),
+        format!("/api/v1/customise/scopes/{campus}/menus/customise.main"),
+        format!("/api/v1/customise/scopes/{campus}/layouts/customise.dashboard"),
+        format!("/api/v1/customise/scopes/{campus}/theme"),
+        "/api/v1/notify/inbox?limit=5".to_owned(),
+        "/api/v1/notify/preferences".to_owned(),
+        format!("/api/v1/courses/campuses/{campus}/categories"),
+        "/api/v1/identity/me/sessions".to_owned(),
+        "/api/v1/identity/me/second-factors".to_owned(),
+    ];
+    for path in &paths {
+        let answer = tokio::time::timeout(wait, site.call(Method::GET, path, Some(&session), &[], None))
+            .await
+            .unwrap_or_else(|_| panic!("{path} waits for a second connection"));
+        assert!(answer.status.is_success(), "{path}: {}", answer.body);
+    }
+    site.drop().await;
+}
+
+#[tokio::test]
+async fn metrics_count_requests_by_route_template_not_by_path() {
+    kampus_server::http::metrics::install();
+    let site = site().await;
+    for id in [
+        "00000000-0000-0000-0000-000000000001",
+        "00000000-0000-0000-0000-000000000002",
+    ] {
+        site.call(
+            Method::GET,
+            &format!("/api/v1/courses/courses/{id}"),
+            None,
+            &[],
+            None,
+        )
+        .await;
+    }
+    let answer = site.call(Method::GET, "/metrics", None, &[], None).await;
+    assert_eq!(answer.status, StatusCode::OK);
+    let text = answer.body.as_str().unwrap_or_default().to_owned();
+    assert!(text.contains("kampus_http_requests_total"), "{text}");
+    assert!(text.contains("route=\"/api/v1/courses/courses/{id}\""), "{text}");
+    assert!(
+        !text.contains("00000000-0000-0000-0000-000000000001"),
+        "no path ever becomes a label"
+    );
+    assert!(text.contains("kampus_db_connections"));
+    assert!(text.contains("kampus_build_info"));
+    let me = site
+        .call(Method::GET, "/api/v1/identity/me", None, &[], None)
+        .await;
+    assert_eq!(
+        me.headers["cache-control"], "no-store",
+        "answers of the API are never stored"
     );
     site.drop().await;
 }

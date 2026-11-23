@@ -214,8 +214,15 @@ fn client_of(request: &Request) -> Client {
             .map(|v| v.chars().take(500).collect()),
         address: request
             .extensions()
-            .get::<ConnectInfo<SocketAddr>>()
-            .map(|c| c.0.ip().to_string()),
+            .get::<kampus_module::http::ClientAddress>()
+            .map(|c| c.0)
+            .or_else(|| {
+                request
+                    .extensions()
+                    .get::<ConnectInfo<SocketAddr>>()
+                    .map(|c| c.0.ip())
+            })
+            .map(|address| address.to_string()),
     }
 }
 

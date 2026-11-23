@@ -40,6 +40,7 @@
     reason = "a failing test stops on the first error"
 )]
 
+mod client;
 mod config;
 mod modules;
 mod openapi;

@@ -103,6 +103,7 @@ pub(crate) fn upgrader(db: &Database) -> Result<Upgrader<'_>> {
 /// A `conflict` error when the database does not match this build, and an `unavailable` error when the
 /// database or the listener cannot be reached.
 pub async fn serve(config: &Config) -> Result<()> {
+    crate::http::metrics::install();
     let db = connect(config).await?;
     let upgrader = upgrader(&db)?;
     let plan = upgrader.plan().await?;
@@ -164,6 +165,7 @@ pub async fn serve(config: &Config) -> Result<()> {
             db: db.clone(),
             modules: SCHEMAS.as_slice(),
             ports,
+            trusted_proxies: std::sync::Arc::new(config.trusted_proxies.clone()),
         },
         api.as_ref(),
     );

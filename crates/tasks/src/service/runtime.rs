@@ -109,11 +109,21 @@ impl Worker {
             services: &self.services,
         };
         let timeout = Duration::from_secs(u64::try_from(job.timeout_seconds).unwrap_or(60));
+        let started = std::time::Instant::now();
         let ended = match tokio::time::timeout(timeout, (handler.run)(run)).await {
             Ok(Ok(())) => Ended::Succeeded,
             Ok(Err(error)) => Ended::Failed(error.to_string()),
             Err(_) => Ended::TimedOut,
         };
+        let outcome = match &ended {
+            Ended::Succeeded => "succeeded",
+            Ended::Failed(_) => "failed",
+            Ended::TimedOut => "timed_out",
+        };
+        metrics::counter!("kampus_jobs_total", "job" => job.type_code.clone(), "outcome" => outcome)
+            .increment(1);
+        metrics::histogram!("kampus_job_duration_seconds", "job" => job.type_code.clone())
+            .record(started.elapsed().as_secs_f64());
         self.tasks.finish(&job, ended).await?;
         Ok(true)
     }
