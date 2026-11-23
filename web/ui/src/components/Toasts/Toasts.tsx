@@ -108,11 +108,14 @@ function ToastCard({ toast, lifetime, closeLabel, onClose }: { readonly toast: T
     };
   }, [paused, onClose]);
 
+  // The colour of the tone is a wash over the paper, never a dark block: it reads in light and in dark alike.
+  const tone = `var(--k-palette-${colour}-main)`;
+  const tint = (at: number) => `color-mix(in srgb, ${tone} ${at}%, var(--k-palette-background-paper))`;
   return (
     <Paper
       role={toast.tone === "danger" ? "alert" : "status"}
       aria-live={toast.tone === "danger" ? "assertive" : "polite"}
-      elevation={3}
+      elevation={0}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocus={() => setPaused(true)}
@@ -121,31 +124,38 @@ function ToastCard({ toast, lifetime, closeLabel, onClose }: { readonly toast: T
         position: "relative",
         overflow: "hidden",
         display: "flex",
-        alignItems: "flex-start",
-        gap: 1.5,
-        pl: 1,
+        alignItems: "center",
+        gap: 1.25,
+        pl: 0.75,
         pr: 2,
-        py: 1.25,
+        py: 1,
+        minBlockSize: 56,
         inlineSize: 380,
         maxInlineSize: "calc(100vw - 32px)",
         borderRadius: 4,
-        bgcolor: `${colour}.container`,
-        color: `${colour}.onContainer`,
+        bgcolor: tint(8),
+        color: "text.primary",
         border: 1,
-        borderColor: `color-mix(in srgb, var(--k-palette-${colour}-main) 30%, transparent)`,
-        boxShadow: `0 12px 32px -10px color-mix(in srgb, var(--k-palette-${colour}-main) 40%, transparent)`,
+        borderColor: `color-mix(in srgb, ${tone} 24%, transparent)`,
+        boxShadow: `0 1px 2px color-mix(in srgb, ${tone} 10%, transparent), 0 12px 28px -12px color-mix(in srgb, ${tone} 32%, transparent)`,
+        backdropFilter: "blur(8px)",
         pointerEvents: "auto",
         animation: `${enter} 220ms cubic-bezier(0.2, 0, 0, 1)`,
         "@media (prefers-reduced-motion: reduce)": { animation: "none" },
       }}
     >
-      <IconButton aria-label={closeLabel} size="small" onClick={onClose} sx={{ color: "inherit", opacity: 0.75, "&:hover": { opacity: 1 } }}>
+      <IconButton
+        aria-label={closeLabel}
+        size="small"
+        onClick={onClose}
+        sx={{ flex: "none", inlineSize: 32, blockSize: 32, color: "text.secondary", "&:hover": { color: "text.primary", bgcolor: tint(16) } }}
+      >
         <Icon name="close" size="small" />
       </IconButton>
-      <Box sx={{ display: "grid", placeItems: "center", inlineSize: 28, blockSize: 28, flex: "none", borderRadius: "50%", bgcolor: `${colour}.main`, color: `${colour}.contrastText` }}>
+      <Box sx={{ display: "grid", placeItems: "center", inlineSize: 32, blockSize: 32, flex: "none", borderRadius: "50%", bgcolor: tint(18), color: tone, "& > *": { display: "block" } }}>
         <Icon name={icon} size="small" />
       </Box>
-      <Typography variant="body2" sx={{ flex: 1, minInlineSize: 0, py: 0.5, fontWeight: 600 }}>
+      <Typography variant="body2" sx={{ flex: 1, minInlineSize: 0, fontWeight: 500, lineHeight: 1.45 }}>
         {toast.message}
       </Typography>
       <Box
@@ -154,19 +164,20 @@ function ToastCard({ toast, lifetime, closeLabel, onClose }: { readonly toast: T
           position: "absolute",
           insetInline: 0,
           insetBlockEnd: 0,
-          blockSize: 3,
-          bgcolor: `${colour}.main`,
+          blockSize: 2,
+          bgcolor: tone,
+          opacity: 0.55,
           transformOrigin: "left",
           animation: `${drain} ${lifetime}ms linear forwards`,
           animationPlayState: paused ? "paused" : "running",
-          "@media (prefers-reduced-motion: reduce)": { animation: "none", opacity: 0.6 },
+          "@media (prefers-reduced-motion: reduce)": { animation: "none", opacity: 0.35 },
         }}
       />
     </Paper>
   );
 }
 
-/** Holds the messages of a page and shows them stacked at its top right. */
+/** Holds the messages of a page and shows them stacked at its bottom right. */
 export function ToastProvider({ closeLabel, lifetime = 5000, children }: ToastProviderProps) {
   const [queue, setQueue] = useState<Toast[]>([]);
   const show = useCallback<ShowToast>((message, tone = "info") => {
