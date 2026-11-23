@@ -40,6 +40,8 @@
 
 export type { PageContext, Widget, WidgetPlugin, WidgetProps, WidgetSize } from "./widget";
 export { fitting, heightOf, number, text } from "./widget";
+export { translated } from "../features/editor/translated";
+export { EditableRichText, EditableText } from "../features/editor/EditInPlace";
 
 export { optional } from "../api/server";
 export type { Inbox } from "../api/types";

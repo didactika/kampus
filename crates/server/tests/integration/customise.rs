@@ -160,29 +160,15 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
             Some(json!({ "placements": [
                 { "widget": "widget_course_content", "x": 0, "y": 0, "w": 8, "h": 10 },
                 { "widget": "widget_course_summary", "x": 8, "y": 3, "w": 4, "h": 4 },
-                { "widget": "widget_text", "x": 8, "y": 0, "w": 4, "h": 3, "settings": { "heading": "Office hours" } }
+                { "widget": "widget_text", "x": 8, "y": 0, "w": 4, "h": 3, "settings": { "heading": "Office hours", "text": "<p>Tuesdays<script>x()</script></p>" } }
             ] })),
         )
         .await;
     assert_eq!(layout.status, StatusCode::OK, "{}", layout.body);
     assert_eq!(layout.body["placements"][0]["settings"]["collapsed"], false);
-    assert_eq!(layout.body["placements"][1]["settings"]["text"], "");
-    let grown = site
-        .call(
-            Method::PUT,
-            &format!("/api/v1/customise/scopes/{scope}/layouts/courses.course"),
-            Some(&admin),
-            &[],
-            Some(json!({ "placements": [
-                { "widget": "widget_course_content", "x": 0, "y": 0, "w": 12, "h": 10 },
-                { "widget": "widget_course_summary", "x": 0, "y": 10, "w": 4, "h": 4 }
-            ] })),
-        )
-        .await;
     assert_eq!(
-        grown.status,
-        StatusCode::UNPROCESSABLE_ENTITY,
-        "the content of a course keeps its one size"
+        layout.body["placements"][1]["settings"]["text"], "<p>Tuesdays</p>",
+        "rich text is kept sanitised"
     );
 
     let campus = site.campus.to_string();
@@ -397,4 +383,38 @@ async fn a_campus_exports_its_customisation_and_a_course_imports_it_after_review
         .await;
     assert_eq!(term.body["origin"]["scope"], scope.as_str());
     site.drop().await;
+}
+
+#[tokio::test]
+async fn the_content_of_a_course_keeps_its_one_size() {
+    let site = site().await;
+    let admin = site.session("admin").await;
+    let (_, course) = site.course(&admin).await;
+    let read = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/courses/courses/{course}"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    let scope = read.body["scope"].as_str().unwrap().to_owned();
+    let grown = site
+        .call(
+            Method::PUT,
+            &format!("/api/v1/customise/scopes/{scope}/layouts/courses.course"),
+            Some(&admin),
+            &[],
+            Some(json!({ "placements": [
+                { "widget": "widget_course_content", "x": 0, "y": 0, "w": 12, "h": 10 },
+                { "widget": "widget_course_summary", "x": 0, "y": 10, "w": 4, "h": 4 }
+            ] })),
+        )
+        .await;
+    assert_eq!(
+        grown.status,
+        StatusCode::UNPROCESSABLE_ENTITY,
+        "the content of a course keeps its one size"
+    );
 }

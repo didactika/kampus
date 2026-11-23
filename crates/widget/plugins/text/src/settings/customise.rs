@@ -74,13 +74,14 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
                 max: 100,
                 default: "",
             },
+            required: false,
+            translatable: true,
         },
         WidgetSetting {
             key: "text",
-            kind: ValueKind::Text {
-                max: 2000,
-                default: "",
-            },
+            kind: ValueKind::RichText { max: 20000 },
+            required: true,
+            translatable: true,
         },
     ],
 }];

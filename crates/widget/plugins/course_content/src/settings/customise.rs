@@ -50,5 +50,7 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
     settings: &[WidgetSetting {
         key: "collapsed",
         kind: ValueKind::Boolean { default: false },
+        required: false,
+        translatable: false,
     }],
 }];

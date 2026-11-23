@@ -1,4 +1,6 @@
 {
   "widget_text.about": "A heading and free text",
-  "widget_text.name": "Text"
+  "widget_text.heading": "Heading",
+  "widget_text.name": "Text",
+  "widget_text.write": "Write the text here"
 }

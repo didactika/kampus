@@ -151,7 +151,15 @@ impl Customise {
                 let settings: Vec<Value> = widget
                     .settings
                     .iter()
-                    .map(|s| json!({ "key": s.key, "kind": s.kind.stored(), "default": s.kind.default_value() }))
+                    .map(|s| {
+                        json!({
+                            "key": s.key,
+                            "kind": s.kind.stored(),
+                            "default": s.kind.default_value(),
+                            "required": s.required,
+                            "translatable": s.translatable,
+                        })
+                    })
                     .collect();
                 let sizes: serde_json::Map<String, Value> = widget
                     .sizes

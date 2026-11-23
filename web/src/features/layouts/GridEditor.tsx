@@ -49,6 +49,7 @@ import { useI18n } from "../../i18n/I18nProvider";
 import { place, reading, step as past, within, type Item, type Sizes } from "./grid/engine";
 import { GAP } from "./GridView";
 import { rows, spots } from "./grid/spots";
+import type { EditInPlaceValue } from "../editor/EditInPlace";
 import { WidgetFrame } from "./WidgetFrame";
 
 /** The pixels of one unit of spacing of the theme. */
@@ -70,6 +71,8 @@ export interface EditedWidget extends Item {
   readonly node: ReactNode;
   /** Opens its settings; none when it has none. */
   readonly onSettings?: () => void;
+  /** Its settings and how to change one, for the texts it edits in place. */
+  readonly edit?: EditInPlaceValue;
   /** Whether the person may remove it; a widget every page holds is not removed. */
   readonly removable: boolean;
 }
@@ -370,6 +373,7 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
                     onPointerCancel={() => setGesture(null)}
                     onKeyDown={(event) => key(event, item)}
                     onSettings={item.onSettings}
+                    edit={item.edit}
                     onRemove={item.removable ? () => onRemove(item.key) : undefined}
                     pinned={Boolean(item.pinned)}
                     onPin={() => onPin(item.key)}

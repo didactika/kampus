@@ -61,6 +61,8 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
                 max: 100,
                 default: "",
             },
+            required: false,
+            translatable: true,
         },
         WidgetSetting {
             key: "view",
@@ -68,6 +70,8 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
                 options: &["grid", "list"],
                 default: "grid",
             },
+            required: false,
+            translatable: false,
         },
         WidgetSetting {
             key: "size",
@@ -76,10 +80,14 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
                 max: 48,
                 default: 8,
             },
+            required: false,
+            translatable: false,
         },
         WidgetSetting {
             key: "sizes",
             kind: ValueKind::Text { max: 60, default: "" },
+            required: false,
+            translatable: false,
         },
     ],
 }];

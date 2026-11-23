@@ -39,7 +39,7 @@
  * The frame of a widget on a page being arranged. The widget shows exactly as it reads, with nothing added around it:
  * an outline marks it under the pointer or when selected, and a small bar floating over its corner names it and holds
  * its actions (pin, settings, remove). The whole widget is what the person drags; its content is a preview that
- * cannot be used.
+ * cannot be used, except for its texts, which are edited where they are.
  */
 
 import Box from "@mui/material/Box";
@@ -52,6 +52,7 @@ import { forwardRef, type HTMLAttributes, type ReactNode, type Ref } from "react
 import { Icon } from "@kampus/ui";
 
 import { useI18n } from "../../i18n/I18nProvider";
+import { EditInPlaceProvider, type EditInPlaceValue } from "../editor/EditInPlace";
 
 /** The props of `WidgetFrame`. */
 export interface WidgetFrameProps extends HTMLAttributes<HTMLDivElement> {
@@ -77,6 +78,8 @@ export interface WidgetFrameProps extends HTMLAttributes<HTMLDivElement> {
   readonly contentRef?: Ref<HTMLDivElement>;
   /** The most its content shows, in pixels: the height of its rows. */
   readonly maxContent?: number;
+  /** Its settings and how to change one, for the texts it edits in place. */
+  readonly edit?: EditInPlaceValue;
   /** Its content, or its shape until the page is rendered again. */
   readonly children: ReactNode;
 }
@@ -89,7 +92,7 @@ const own = {
 
 /** `<WidgetFrame name="Catalogue" icon="school">{preview}</WidgetFrame>` */
 export const WidgetFrame = forwardRef<HTMLDivElement, WidgetFrameProps>(function WidgetFrame(
-  { name, icon, selected = false, lifted = false, fixed = false, pinned = false, onPin, onSettings, onRemove, contentRef, maxContent, children, style, ...rest },
+  { name, icon, selected = false, lifted = false, fixed = false, pinned = false, onPin, onSettings, onRemove, contentRef, maxContent, edit, children, style, ...rest },
   ref,
 ) {
   const { t } = useI18n();
@@ -127,10 +130,12 @@ export const WidgetFrame = forwardRef<HTMLDivElement, WidgetFrameProps>(function
         "&:focus-visible .widget-content > *": { outlineWidth: 3, outlineColor: "var(--k-palette-primary-main)" },
         "& .widget-actions": { opacity: selected ? 1 : 0, transform: selected ? "none" : "translateY(-4px)", transition: "opacity 120ms, transform 120ms" },
         "&:hover .widget-actions, &:focus-within .widget-actions": { opacity: 1, transform: "none" },
+        // While one of its texts is being written, its actions step aside so they never cover the text.
+        "&:has(.editable-text:focus-within) .widget-actions": { opacity: 0, pointerEvents: "none" },
       }}
     >
-      <Box ref={contentRef} inert className="widget-content" sx={{ pointerEvents: "none", overflow: "clip", overflowClipMargin: 40, maxBlockSize: maxContent, display: "flex", flexDirection: "column", "& > *": { minBlockSize: 0 } }}>
-        {children}
+      <Box ref={contentRef} className="widget-content" sx={{ pointerEvents: "none", overflow: "clip", overflowClipMargin: 40, maxBlockSize: maxContent, display: "flex", flexDirection: "column", "& > *": { minBlockSize: 0 } }}>
+        <EditInPlaceProvider value={lifted ? null : (edit ?? null)}>{children}</EditInPlaceProvider>
       </Box>
       {lifted ? null : (
         <Stack

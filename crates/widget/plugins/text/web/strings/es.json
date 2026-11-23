@@ -1,4 +1,6 @@
 {
   "widget_text.about": "Título y texto libre",
-  "widget_text.name": "Texto"
+  "widget_text.heading": "Título",
+  "widget_text.name": "Texto",
+  "widget_text.write": "Escriba aquí el texto"
 }

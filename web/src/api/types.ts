@@ -91,6 +91,11 @@ export interface DeclaredSetting {
     | { readonly type: "boolean" }
     | { readonly type: "choice"; readonly options: readonly string[] }
     | { readonly type: "integer"; readonly min: number; readonly max: number }
-    | { readonly type: "text"; readonly max: number };
+    | { readonly type: "text"; readonly max: number }
+    | { readonly type: "rich_text"; readonly max: number };
   readonly default: unknown;
+  /** Whether it may not be left empty. */
+  readonly required?: boolean;
+  /** Whether a text takes one value per language. */
+  readonly translatable?: boolean;
 }

@@ -32,28 +32,35 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-
 "use client";
 
 /**
- * The settings of a widget, in a panel at the side of the page so the widget stays in sight, as a form made from what
- * its module declares: a text field for text (several lines for a
- * long one), a switch for on or off, a list for a choice, a number within its bounds.
+ * The settings of a widget, in a dialog over the page: each setting by its kind, checked as it is typed, with a text
+ * that takes one value per language written in each installed language and rich text in the rich editor. A setting
+ * that may not be empty says so, and nothing applies while one is wrong. Before a widget goes in, the same dialog asks
+ * for its settings.
  */
 
 import Box from "@mui/material/Box";
-import Drawer from "@mui/material/Drawer";
-import IconButton from "@mui/material/IconButton";
-import Typography from "@mui/material/Typography";
+import ButtonBase from "@mui/material/ButtonBase";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogTitle from "@mui/material/DialogTitle";
 import FormControlLabel from "@mui/material/FormControlLabel";
+import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
+import Typography from "@mui/material/Typography";
 import { useId, useState } from "react";
 
 import { Button, Icon, SelectField, TextField } from "@kampus/ui";
 
 import type { DeclaredSetting } from "../../api/types";
+import { RichTextEditor } from "../editor/RichTextEditor";
+import { textIn, translated, withText } from "../editor/translated";
 import { useI18n } from "../../i18n/I18nProvider";
+import { LANGUAGES } from "../../i18n/translator";
 
 /** The props of `WidgetSettings`. */
 export interface WidgetSettingsProps {
@@ -71,12 +78,19 @@ export interface WidgetSettingsProps {
 /** The largest page size a list of sizes may offer. */
 const LARGEST_SIZE = 500;
 
+/** The language every text starts in when it has none of its own. */
+const FALLBACK = "en";
+
 /** Settings whose text has a form of its own: a list of page sizes, such as "5, 10, 200". */
 const FORMS: Readonly<Record<string, (text: string) => boolean>> = {
   sizes: (text) =>
     text.trim() === "" ||
     text.split(",").every((part) => /^\s*\d+\s*$/.test(part) && Number(part) >= 1 && Number(part) <= LARGEST_SIZE),
 };
+
+/** The texts of a value: itself, or one per language. */
+const textsOf = (value: unknown): string[] =>
+  typeof value === "string" ? [value] : value && typeof value === "object" ? Object.values(value).filter((v): v is string => typeof v === "string") : [];
 
 /** What is wrong with the value of a setting, in the language of the page; nothing when it is right. */
 function problemOf(setting: DeclaredSetting, value: unknown, t: (key: string, values?: Record<string, string | number>) => string): string | undefined {
@@ -88,11 +102,14 @@ function problemOf(setting: DeclaredSetting, value: unknown, t: (key: string, va
       if (text === "" || !Number.isInteger(number) || number < min || number > max) return t("setting.error.range", { min, max });
       return undefined;
     }
-    case "text": {
-      const text = String(value ?? "");
-      if (text.length > setting.kind.max) return t("setting.error.long", { max: setting.kind.max });
+    case "text":
+    case "rich_text": {
+      const { max } = setting.kind;
+      const texts = textsOf(value);
+      if (setting.required && texts.every((text) => !text.trim())) return t("setting.error.required");
+      if (texts.some((text) => text.length > max)) return t("setting.error.long", { max });
       const form = FORMS[setting.key];
-      if (form && !form(text)) return t(`setting.error.${setting.key}`, { max: LARGEST_SIZE });
+      if (form && texts.some((text) => !form(text))) return t(`setting.error.${setting.key}`, { max: LARGEST_SIZE });
       return undefined;
     }
     default:
@@ -100,32 +117,62 @@ function problemOf(setting: DeclaredSetting, value: unknown, t: (key: string, va
   }
 }
 
+/** The languages a text is written in, to switch between them. */
+function Languages({ writing, onWrite, label }: { readonly writing: string; readonly onWrite: (code: string) => void; readonly label: string }) {
+  return (
+    <Stack direction="row" role="group" aria-label={label} sx={{ gap: 0.5, mb: 0.75 }}>
+      {LANGUAGES.map((code) => (
+        <ButtonBase
+          key={code}
+          aria-pressed={code === writing}
+          onClick={() => onWrite(code)}
+          sx={{
+            px: 1.25,
+            py: 0.25,
+            borderRadius: 999,
+            typography: "caption",
+            fontWeight: 700,
+            textTransform: "uppercase",
+            border: 1,
+            borderColor: "divider",
+            ...(code === writing ? { bgcolor: "primary.main", color: "primary.contrastText", borderColor: "primary.main" } : {}),
+          }}
+        >
+          {code}
+        </ButtonBase>
+      ))}
+    </Stack>
+  );
+}
+
 /** `<WidgetSettings title="…" declared={…} values={…} onApply={…} onClose={…} />` */
 export function WidgetSettings({ title, icon = "tune", declared, values, applyLabel, onApply, onClose }: WidgetSettingsProps) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const heading = useId();
   const [draft, setDraft] = useState<Record<string, unknown>>({ ...values });
+  const [writing, setWriting] = useState(language);
   const label = (key: string) => (t(`setting.${key}`) === `setting.${key}` ? key : t(`setting.${key}`));
   const set = (key: string, value: unknown) => setDraft((d) => ({ ...d, [key]: value }));
   const problems = Object.fromEntries(declared.map((s) => [s.key, problemOf(s, draft[s.key] ?? s.default, t)]));
   const valid = Object.values(problems).every((p) => p === undefined);
+  const many = LANGUAGES.length > 1;
   // Numbers are typed as text and become numbers only when applied, so the person can type freely.
   const applied = () =>
     Object.fromEntries(declared.map((s) => [s.key, s.kind.type === "integer" ? Number(draft[s.key] ?? s.default) : (draft[s.key] ?? s.default)]));
+  /** The text of a setting in the language being written, and how to write it. */
+  const textOf = (setting: DeclaredSetting) => {
+    const value = draft[setting.key] ?? setting.default;
+    const per = Boolean(setting.translatable) && many;
+    return {
+      // A language with no text of its own starts from the text it reads now.
+      text: (per ? textIn(value, writing, FALLBACK) : "") || translated(value, per ? writing : language),
+      write: (text: string) => set(setting.key, per ? withText(value, writing, text, FALLBACK) : text),
+      per,
+    };
+  };
   return (
-    <Drawer
-      open
-      anchor="right"
-      onClose={onClose}
-      slotProps={{
-        paper: {
-          role: "dialog",
-          "aria-labelledby": heading,
-          sx: { inlineSize: 420, maxInlineSize: "100vw", display: "flex", flexDirection: "column", borderStartStartRadius: 20, borderEndStartRadius: 20 },
-        },
-      }}
-    >
-      <Stack direction="row" sx={{ alignItems: "center", gap: 1.5, px: 3, pt: 3, pb: 2 }}>
+    <Dialog open onClose={onClose} maxWidth="sm" fullWidth aria-labelledby={heading}>
+      <DialogTitle component="div" sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
         <Box sx={{ display: "grid", placeItems: "center", inlineSize: 40, blockSize: 40, flex: "none", borderRadius: 2.5, backgroundImage: "var(--k-palette-gradient-soft)", color: "primary.main" }}>
           <Icon name={icon} />
         </Box>
@@ -135,82 +182,106 @@ export function WidgetSettings({ title, icon = "tune", declared, values, applyLa
         <IconButton aria-label={t("dashboard.cancel")} onClick={onClose}>
           <Icon name="close" />
         </IconButton>
-      </Stack>
-      <Box
-        component="form"
-        id={`${heading}-form`}
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (valid) onApply(applied());
-        }}
-        sx={{ flex: 1, overflowY: "auto", px: 3, py: 1 }}
-      >
-        <Stack spacing={2.5}>
-          {declared.map((setting) => {
-            const value = draft[setting.key] ?? setting.default;
-            switch (setting.kind.type) {
-              case "boolean":
-                return (
-                  <FormControlLabel
-                    key={setting.key}
-                    labelPlacement="start"
-                    control={<Switch checked={Boolean(value)} onChange={(e) => set(setting.key, e.target.checked)} />}
-                    label={label(setting.key)}
-                    sx={{ mx: 0, justifyContent: "space-between", px: 2, py: 1, borderRadius: 3, border: 1, borderColor: "divider" }}
-                  />
-                );
-              case "choice":
-                return (
-                  <SelectField
-                    key={setting.key}
-                    label={label(setting.key)}
-                    value={String(value)}
-                    onChange={(next) => set(setting.key, next)}
-                    options={setting.kind.options.map((o) => ({ value: o, label: t(`choice.${o}`) === `choice.${o}` ? o : t(`choice.${o}`) }))}
-                  />
-                );
-              case "integer": {
-                const { min, max } = setting.kind;
-                return (
-                  <TextField
-                    key={setting.key}
-                    label={label(setting.key)}
-                    type="number"
-                    value={String(value)}
-                    inputProps={{ min, max, inputMode: "numeric" }}
-                    hint={problems[setting.key] ? undefined : t("setting.range", { min, max })}
-                    error={problems[setting.key]}
-                    onChange={(e) => set(setting.key, e.target.value)}
-                  />
-                );
+      </DialogTitle>
+      <DialogContent>
+        <Box
+          component="form"
+          id={`${heading}-form`}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (valid) onApply(applied());
+          }}
+          sx={{ pt: 1 }}
+        >
+          <Stack spacing={2.5}>
+            {declared.map((setting) => {
+              const value = draft[setting.key] ?? setting.default;
+              switch (setting.kind.type) {
+                case "boolean":
+                  return (
+                    <FormControlLabel
+                      key={setting.key}
+                      labelPlacement="start"
+                      control={<Switch checked={Boolean(value)} onChange={(e) => set(setting.key, e.target.checked)} />}
+                      label={label(setting.key)}
+                      sx={{ mx: 0, justifyContent: "space-between", px: 2, py: 1, borderRadius: 3, border: 1, borderColor: "divider" }}
+                    />
+                  );
+                case "choice":
+                  return (
+                    <SelectField
+                      key={setting.key}
+                      label={label(setting.key)}
+                      value={String(value)}
+                      onChange={(next) => set(setting.key, next)}
+                      options={setting.kind.options.map((o) => ({ value: o, label: t(`choice.${o}`) === `choice.${o}` ? o : t(`choice.${o}`) }))}
+                    />
+                  );
+                case "integer": {
+                  const { min, max } = setting.kind;
+                  return (
+                    <TextField
+                      key={setting.key}
+                      label={label(setting.key)}
+                      type="number"
+                      value={String(value)}
+                      inputProps={{ min, max, inputMode: "numeric" }}
+                      hint={problems[setting.key] ? undefined : t("setting.range", { min, max })}
+                      error={problems[setting.key]}
+                      onChange={(e) => set(setting.key, e.target.value)}
+                    />
+                  );
+                }
+                case "rich_text": {
+                  const { text, write, per } = textOf(setting);
+                  return (
+                    <Box key={setting.key}>
+                      <Typography variant="subtitle2" component="p" sx={{ mb: 0.75 }}>
+                        {label(setting.key)}
+                        {setting.required ? " *" : ""}
+                      </Typography>
+                      {per ? <Languages writing={writing} onWrite={setWriting} label={t("editor.languages")} /> : null}
+                      <RichTextEditor label={label(setting.key)} value={text} onChange={write} />
+                      {problems[setting.key] ? (
+                        <Typography variant="caption" color="error" role="alert">
+                          {problems[setting.key]}
+                        </Typography>
+                      ) : null}
+                    </Box>
+                  );
+                }
+                default: {
+                  const { max } = setting.kind;
+                  const { text, write, per } = textOf(setting);
+                  return (
+                    <Box key={setting.key}>
+                      {per ? <Languages writing={writing} onWrite={setWriting} label={t("editor.languages")} /> : null}
+                      <TextField
+                        label={label(setting.key)}
+                        required={Boolean(setting.required)}
+                        value={text}
+                        multiline={max > 200}
+                        minRows={max > 200 ? 4 : undefined}
+                        inputProps={{ maxLength: max }}
+                        error={problems[setting.key]}
+                        onChange={(e) => write(e.target.value)}
+                      />
+                    </Box>
+                  );
+                }
               }
-              default: {
-                const { max } = setting.kind;
-                return (
-                  <TextField
-                    key={setting.key}
-                    label={label(setting.key)}
-                    value={String(value ?? "")}
-                    multiline={max > 200}
-                    minRows={max > 200 ? 4 : undefined}
-                    inputProps={{ maxLength: max }}
-                    error={problems[setting.key]}
-                    onChange={(e) => set(setting.key, e.target.value)}
-                  />
-                );
-              }
-            }
-          })}
-        </Stack>
-      </Box>
-      <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end", px: 3, py: 2, borderTop: 1, borderColor: "divider" }}>
+            })}
+          </Stack>
+        </Box>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, pb: 2.5 }}>
         <Button variant="text" onClick={onClose}>
           {t("dashboard.cancel")}
         </Button>
         <Button variant="filled" type="submit" form={`${heading}-form`} disabled={!valid}>
           {applyLabel ?? t("dashboard.apply")}
         </Button>
-      </Stack>
-    </Drawer>
+      </DialogActions>
+    </Dialog>
   );
 }

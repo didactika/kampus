@@ -247,6 +247,13 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, availab
     onSettings: settingsOf(declared(d.placement.widget)).length > 0 ? () => setConfiguring(d.key) : undefined,
     // A widget every page holds is never removed.
     removable: !declared(d.placement.widget)?.required,
+    // Its texts are edited on it: each change is a change of its settings, saved as any other.
+    edit: {
+      settings: d.placement.settings,
+      declared: settingsOf(declared(d.placement.widget)),
+      set: (key: string, value: unknown) =>
+        change((items) => items.map((x) => (x.key === d.key ? { ...x, placement: { ...x.placement, settings: { ...x.placement.settings, [key]: value } } } : x))),
+    },
   });
 
   return (

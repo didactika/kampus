@@ -37,28 +37,17 @@
 
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
-import Typography from "@mui/material/Typography";
 
-import { text, type WidgetProps } from "@kampus/web/host";
+import { EditableRichText, EditableText, requestI18n, type WidgetProps } from "@kampus/web/host";
 
-/** A heading and a text. */
-export function TextWidget({ settings }: WidgetProps) {
-  const heading = text(settings, "heading");
-  const body = text(settings, "text");
-  if (!heading && !body) return null;
+/** A heading and a text, in the language of the reader; both are edited on the widget while its page is arranged. */
+export async function TextWidget({ settings }: WidgetProps) {
+  const { t } = await requestI18n();
   return (
     <Card>
       <CardContent sx={{ p: 3 }}>
-        {heading ? (
-          <Typography variant="h3" component="h2" sx={{ mb: 1 }}>
-            {heading}
-          </Typography>
-        ) : null}
-        {body ? (
-          <Typography color="text.secondary" sx={{ whiteSpace: "pre-line" }}>
-            {body}
-          </Typography>
-        ) : null}
+        <EditableText setting="heading" value={settings["heading"]} placeholder={t("widget_text.heading")} variant="h3" component="h2" sx={{ mb: 1 }} />
+        <EditableRichText setting="text" value={settings["text"]} placeholder={t("widget_text.write")} />
       </CardContent>
     </Card>
   );

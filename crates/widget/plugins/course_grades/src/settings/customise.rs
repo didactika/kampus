@@ -60,5 +60,7 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
             max: 100,
             default: "",
         },
+        required: false,
+        translatable: true,
     }],
 }];
