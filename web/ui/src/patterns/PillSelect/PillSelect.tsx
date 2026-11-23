@@ -32,17 +32,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-
 "use client";
 
 /**
- * A short native list in the chrome of a list (its order, the size of its pages): a pill as tall as the other
- * controls of the toolbar, with an optional icon before it and a name for assistive technology.
+ * A short list in the chrome of a list (its order, the size of its pages): a pill as tall as the other controls of
+ * the toolbar, with an optional icon before it and a name for assistive technology. It opens a list of the design
+ * system, never the one of the browser, with a mark on the option chosen; `compact` makes it smaller, for a pager.
  */
 
 import Box from "@mui/material/Box";
-import NativeSelect from "@mui/material/NativeSelect";
+import ListItemIcon from "@mui/material/ListItemIcon";
+import MenuItem from "@mui/material/MenuItem";
 import OutlinedInput from "@mui/material/OutlinedInput";
+import Select from "@mui/material/Select";
 import { useId } from "react";
 
 import { Icon } from "../../components/Icon";
@@ -59,22 +61,23 @@ export interface PillSelectProps {
   readonly onChange: (value: string) => void;
   /** An icon before the list. */
   readonly icon?: string;
-}
-
-/** The arrow of the list. */
-function Arrow(props: { className?: string }) {
-  return <Icon name="keyboard_arrow_down" size="small" className={props.className} sx={{ position: "absolute", insetInlineEnd: 10, pointerEvents: "none" }} />;
+  /** Smaller, for a pager. */
+  readonly compact?: boolean;
 }
 
 /** `<PillSelect label="Order" icon="sort" options={…} value="name" onChange={…} />` */
-export function PillSelect({ label, options, value, onChange, icon }: PillSelectProps) {
+export function PillSelect({ label, options, value, onChange, icon, compact = false }: PillSelectProps) {
   const id = useId();
   return (
-    <NativeSelect
+    <Select
       value={value}
-      onChange={(event) => onChange(event.target.value)}
-      IconComponent={Arrow}
+      onChange={(event) => onChange(String(event.target.value))}
       inputProps={{ id, "aria-label": label, title: label }}
+      IconComponent={(iconProps: { className?: string }) => (
+        <Icon name="keyboard_arrow_down" size="small" className={iconProps.className} sx={{ position: "absolute", insetInlineEnd: compact ? 6 : 10, pointerEvents: "none" }} />
+      )}
+      renderValue={(chosen) => options.find((o) => o.value === chosen)?.label ?? ""}
+      MenuProps={{ slotProps: { paper: { sx: { mt: 0.5, minWidth: 160 } } } }}
       input={
         <OutlinedInput
           startAdornment={
@@ -86,19 +89,21 @@ export function PillSelect({ label, options, value, onChange, icon }: PillSelect
           }
           sx={{
             borderRadius: (theme) => `${theme.shape.full}px`,
-            fontSize: "0.875rem",
+            fontSize: compact ? "0.8125rem" : "0.875rem",
             fontWeight: 600,
+            minHeight: compact ? 30 : undefined,
             pl: icon ? 1.5 : 0,
-            "& select": { pl: icon ? 0.5 : 2, pr: "36px !important", py: 0 },
+            "& .MuiSelect-select": { pl: icon ? 0.5 : compact ? 1.5 : 2, pr: compact ? "28px !important" : "36px !important", py: compact ? 0.5 : undefined, minHeight: compact ? "22px !important" : "24px" },
           }}
         />
       }
     >
       {options.map((option) => (
-        <option key={option.value} value={option.value}>
+        <MenuItem key={option.value} value={option.value} dense={compact}>
+          <ListItemIcon sx={{ minWidth: "28px !important", color: "inherit" }}>{option.value === value ? <Icon name="check" size="small" /> : null}</ListItemIcon>
           {option.label}
-        </option>
+        </MenuItem>
       ))}
-    </NativeSelect>
+    </Select>
   );
 }

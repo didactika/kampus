@@ -40,6 +40,12 @@ import { CourseCatalogue } from "../../features/courses/CourseCatalogue";
 import { requestI18n } from "../../i18n/server";
 import { number, text, type WidgetProps } from "./widget";
 
+/** The sizes of page a widget sets, as "5, 10, 200"; none when empty or unreadable. */
+function sizesOf(text: string | undefined): number[] | undefined {
+  const sizes = (text ?? "").split(",").map((part) => Number(part.trim())).filter((size) => Number.isInteger(size) && size > 0);
+  return sizes.length ? sizes : undefined;
+}
+
 /** `courses.catalogue` */
 export async function CatalogueWidget({ settings, context }: WidgetProps) {
   const [{ t }, catalogue] = await Promise.all([requestI18n(), catalogueOf(context.campus)]);
@@ -50,6 +56,7 @@ export async function CatalogueWidget({ settings, context }: WidgetProps) {
       heading={text(settings, "heading")}
       view={text(settings, "view") === "list" ? "list" : "grid"}
       size={number(settings, "size", 8)}
+      sizes={sizesOf(text(settings, "sizes"))}
       more={{ href: "/courses", label: t("catalogue.all") }}
     />
   );

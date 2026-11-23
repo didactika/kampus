@@ -117,6 +117,43 @@ describe("form fields", () => {
   });
 });
 
+describe("lists to choose from", () => {
+  it("open a list of the design system, never the browser's, and choose with the keyboard", async () => {
+    const chosen: string[] = [];
+    const screen = await themed(
+      <SelectField label="Language" options={[{ value: "en", label: "English" }, { value: "es", label: "Español" }]} onChange={(v) => chosen.push(v)} />,
+    );
+    expect(document.querySelector("select"), "no native list").toBeNull();
+    await userEvent.click(screen.getByRole("combobox", { name: "Language" }));
+    const listbox = screen.getByRole("listbox");
+    await expect.element(listbox.getByRole("option", { name: "English" })).toHaveAttribute("aria-selected", "true");
+    await userEvent.keyboard("{ArrowDown}{Enter}");
+    expect(chosen).toEqual(["es"]);
+    await expect.element(screen.getByRole("combobox", { name: "Language" })).toHaveTextContent("Español");
+  });
+
+  it("search inside a long list and still submit with the form", async () => {
+    const zones = Array.from({ length: 30 }, (_, i) => ({ value: `Zone/${i}`, label: `Zone ${i}` }));
+    const submitted: FormData[] = [];
+    const screen = await themed(
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          submitted.push(new FormData(event.currentTarget));
+        }}
+      >
+        <SelectField name="zone" label="Time zone" options={zones} defaultValue="Zone/0" searchPlaceholder="Search" noMatch="None" />
+        <Button type="submit">Save</Button>
+      </form>,
+    );
+    const search = screen.getByRole("combobox", { name: "Time zone" });
+    await userEvent.fill(search, "Zone 17");
+    await userEvent.click(screen.getByRole("option", { name: "Zone 17" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    expect(submitted[0]!.get("zone")).toBe("Zone/17");
+  });
+});
+
 describe("buttons", () => {
   it("cannot be pressed twice while busy", async () => {
     let pressed = 0;

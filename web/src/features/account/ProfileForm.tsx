@@ -132,6 +132,8 @@ export function ProfileForm({ account, profile }: ProfileFormProps) {
               <SelectField
                 name="time_zone"
                 label={t("profile.timezone")}
+                searchPlaceholder={t("select.search")}
+                noMatch={t("select.nomatch")}
                 defaultValue={profile.time_zone ?? ""}
                 options={[{ value: "", label: t("profile.timezone.auto") }, ...zones.map((z) => ({ value: z, label: z.replaceAll("_", " ") }))]}
               />

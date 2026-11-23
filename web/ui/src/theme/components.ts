@@ -190,6 +190,24 @@ export function componentStyles({ compact, still, fontSize }: ComponentOptions):
         input: { minHeight: control - 2, paddingBlock: 0, boxSizing: "border-box" },
       },
     },
+    MuiSelect: {
+      styleOverrides: {
+        select: { minHeight: `${control - 2}px !important`, display: "flex", alignItems: "center", "&:focus": { backgroundColor: "transparent" } },
+      },
+    },
+    MuiAutocomplete: {
+      styleOverrides: {
+        inputRoot: { paddingBlock: "0 !important", minHeight: control },
+        paper: ({ theme }) => ({ borderRadius: theme.shape.borderRadius, boxShadow: theme.shadows[3], marginTop: theme.spacing(0.5) }),
+        listbox: ({ theme }) => ({ padding: theme.spacing(0.75) }),
+        option: ({ theme }) => ({
+          borderRadius: theme.shape.small,
+          minHeight: control,
+          "&.Mui-focused": { backgroundColor: `${mix(vars(theme).primary.main, "transparent", 8)} !important` },
+          "&[aria-selected=\"true\"]": { backgroundColor: `${vars(theme).primary.container} !important`, color: vars(theme).primary.onContainer },
+        }),
+      },
+    },
     MuiNativeSelect: { styleOverrides: { select: { "&:focus": { backgroundColor: "transparent" } } } },
     MuiFormLabel: {
       styleOverrides: {
