@@ -1,13 +1,4 @@
 {
-  "about.calendar.upcoming": "Dates of the course in the coming days",
-  "about.courses.catalogue": "Courses of the campus with search and filters",
-  "about.courses.outline": "Sections and activities of the course, with the progress of the user",
-  "about.courses.summary": "Summary and dates of the course",
-  "about.customise.text": "A heading and free text",
-  "about.customise.welcome": "Welcome message with the visual identity of the institution and the indicators of the user",
-  "about.notify.inbox": "Recent notifications of the user",
-  "about.progress.course": "Progress of the user in the course",
-  "about.records.grades": "Grades of the user in the course",
   "account.lead": "Personal details, language and security of your account.",
   "account.tab.profile": "Profile",
   "account.tab.security": "Security",
@@ -28,6 +19,8 @@
   "calendar.opens": "Opens",
   "calendar.title": "Calendar of the course",
   "calendar.window": "Next {n} days",
+  "card.summary": "Course summary",
+  "card.upcoming": "Upcoming dates",
   "catalogue.all": "All courses",
   "catalogue.category": "Category",
   "catalogue.filters": "Filters",
@@ -312,14 +305,5 @@
   "totp.scan": "Scan the code with the authenticator app, or enter the key manually. Then enter the code the app shows.",
   "totp.secret": "Key",
   "view.grid": "Cards",
-  "view.list": "List",
-  "widget.calendar.upcoming": "Upcoming dates",
-  "widget.courses.catalogue": "Course catalogue",
-  "widget.courses.outline": "Course content",
-  "widget.courses.summary": "Course summary",
-  "widget.customise.text": "Text",
-  "widget.customise.welcome": "Welcome",
-  "widget.notify.inbox": "Recent notifications",
-  "widget.progress.course": "Progress",
-  "widget.records.grades": "Grades"
+  "view.list": "List"
 }

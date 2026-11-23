@@ -34,7 +34,7 @@
 
 [workspace]
 resolver = "3"
-members = ["crates/*", "crates/*/adapters/*"]
+members = ["crates/*", "crates/*/adapters/*", "crates/*/plugins/*"]
 
 [workspace.package]
 version = "0.1.0"
@@ -49,6 +49,7 @@ kampus-macros = { path = "crates/macros" }
 kampus-common = { path = "crates/common" }
 kampus-db = { path = "crates/db" }
 kampus-module = { path = "crates/module" }
+kampus-widget = { path = "crates/widget" }
 kampus-storage = { path = "crates/storage" }
 kampus-cache = { path = "crates/cache" }
 kampus-mail = { path = "crates/mail" }

@@ -48,6 +48,7 @@ import { checkArchitecture } from './architecture.mjs';
 import { checkConnections } from './connections.mjs';
 import { checkHeaders } from './headers.mjs';
 import { checkModules } from './modules.mjs';
+import { checkPlugins } from './plugins.mjs';
 import { checkVersions, workspaceVersion } from './versions.mjs';
 
 const args = process.argv.slice(2);
@@ -96,6 +97,7 @@ const results = [
   checkVersions(root, { branch, changed }),
   checkArchitecture(root),
   checkConnections(root),
+  checkPlugins(root),
   checkAdapters(root, { fix: args.includes('--fix'), author: option('--author') ?? process.env.KAMPUS_AUTHOR ?? 'unknown', since: workspaceVersion(root) ?? '0.1.0' }),
   checkModules(root, { fix: args.includes('--fix'), author: option('--author') ?? process.env.KAMPUS_AUTHOR ?? 'unknown', since: workspaceVersion(root) ?? '0.1.0' }),
 ];

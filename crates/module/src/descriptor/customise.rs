@@ -255,13 +255,20 @@ pub struct WidgetSetting {
     pub kind: crate::ValueKind,
 }
 
-/// A widget a module offers for layouts.
+/// The widget a plugin of the widget type offers for layouts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct WidgetDeclaration {
-    /// `<module>.<widget>`, unique in the build.
+    /// The name of its plugin, `widget_<name>`, unique in the build.
     pub code: &'static str,
     /// What it shows.
     pub summary: &'static str,
+    /// Its icon, by the name the design system gives it.
+    pub icon: &'static str,
+    /// Whether a page holds it once at most, such as the welcome or the content of a course.
+    pub single: bool,
+    /// Whether every page it goes on holds it, at one size and never removed, though it may move, such as the content
+    /// of a course.
+    pub required: bool,
     /// The sizes it takes on each page kind it may be placed on; it is placed on no other.
     pub sizes: &'static [WidgetSize],
     /// Its settings; a placement sets only these, each of its kind.

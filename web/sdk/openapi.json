@@ -280,10 +280,22 @@
             "description": "Its code.",
             "type": "string"
           },
+          "icon": {
+            "description": "Its icon, by the name the design system gives it.",
+            "type": "string"
+          },
+          "required": {
+            "description": "Whether every page holds it, at one size and never removed.",
+            "type": "boolean"
+          },
           "settings": {
             "description": "Its settings as declared: key, kind and default.",
             "items": true,
             "type": "array"
+          },
+          "single": {
+            "description": "Whether a page holds it once at most.",
+            "type": "boolean"
           },
           "sizes": {
             "$ref": "#/components/schemas/WidgetSizes",
@@ -297,6 +309,9 @@
         "required": [
           "code",
           "summary",
+          "icon",
+          "single",
+          "required",
           "sizes",
           "settings"
         ],

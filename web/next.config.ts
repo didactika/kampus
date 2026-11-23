@@ -42,11 +42,14 @@ import path from "node:path";
 
 import type { NextConfig } from "next";
 
+import PACKAGES from "./src/plugins/packages.generated.json" with { type: "json" };
+
 
 const config: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: path.resolve(process.cwd(), ".."),
-  transpilePackages: ["@kampus/ui", "@kampus/sdk"],
+  // The design system, the types of the API and the web parts of the plugins are compiled with the client.
+  transpilePackages: ["@kampus/ui", "@kampus/sdk", ...PACKAGES],
   poweredByHeader: false,
   reactStrictMode: true,
   async headers() {

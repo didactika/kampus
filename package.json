@@ -7,7 +7,8 @@
     "web",
     "web/ui",
     "web/sdk",
-    "crates/*/web"
+    "crates/*/web",
+    "crates/*/plugins/*/web"
   ],
   "scripts": {
     "check": "npm run check --workspaces --if-present",

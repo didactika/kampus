@@ -1,0 +1,11 @@
+[
+  "@kampus/widget-catalogue",
+  "@kampus/widget-course-content",
+  "@kampus/widget-course-grades",
+  "@kampus/widget-course-progress",
+  "@kampus/widget-course-summary",
+  "@kampus/widget-notifications",
+  "@kampus/widget-text",
+  "@kampus/widget-upcoming",
+  "@kampus/widget-welcome"
+]

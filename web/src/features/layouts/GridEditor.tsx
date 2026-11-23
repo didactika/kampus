@@ -69,6 +69,8 @@ export interface EditedWidget extends Item {
   readonly node: ReactNode;
   /** Opens its settings; none when it has none. */
   readonly onSettings?: () => void;
+  /** Whether the person may remove it; a widget every page holds is not removed. */
+  readonly removable: boolean;
 }
 
 /** The props of `GridEditor`. */
@@ -294,7 +296,7 @@ export function GridEditor({ columns, row, items, onChange, onRemove }: GridEdit
                     onPointerCancel={() => setGesture(null)}
                     onKeyDown={(event) => key(event, item)}
                     onSettings={item.onSettings}
-                    onRemove={() => onRemove(item.key)}
+                    onRemove={item.removable ? () => onRemove(item.key) : undefined}
                   >
                     {item.node}
                   </WidgetFrame>

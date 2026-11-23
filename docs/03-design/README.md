@@ -39,6 +39,10 @@ OpenAPI fragments per module, following DEC-025 and DEC-026: [access](./api/acce
 
 Shell, UI module contract, extension points, data and quality: [web client](./web/README.md) (DEC-004, DEC-074, DEC-076, DEC-089). How every screen looks and behaves: [Kampus design system](./web/design-system.md) (DEC-013, DEC-089). The documentation for every role and the help inside the product: [handbook](./handbook/README.md) (DEC-011, DEC-077, DEC-078).
 
+## Plugins
+
+The types of plugin, the folder of each, what a plugin may depend on and the checklist of each type: [plugins guide](./plugins/README.md), with [widget plugins](./plugins/widget.md).
+
 ## Plugin SDK
 
 ![Plugin lifecycle](./sdk/lifecycle.svg)

@@ -140,7 +140,7 @@ export function CalendarCard({ items, days }: { readonly items: readonly Calenda
   const until = Date.now() + days * 864e5;
   const shown = items.filter((item) => new Date(item.starts_at).getTime() <= until);
   return (
-    <SideCard heading={t("widget.calendar.upcoming")} icon="calendar_month">
+    <SideCard heading={t("card.upcoming")} icon="calendar_month">
       <Typography variant="caption" color="text.secondary">
         {t("calendar.window", { n: days })}
       </Typography>
@@ -175,7 +175,7 @@ export function CalendarCard({ items, days }: { readonly items: readonly Calenda
 export function SummaryCard({ course }: { readonly course: CourseWithOwners }) {
   const { t, day } = useI18n();
   return (
-    <SideCard heading={t("widget.courses.summary")} icon="info">
+    <SideCard heading={t("card.summary")} icon="info">
       <Stack spacing={1.25}>
         {course.summary ? <Typography variant="body2">{course.summary}</Typography> : null}
         {course.starts_at ? (

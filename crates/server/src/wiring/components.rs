@@ -67,10 +67,11 @@ impl BuildComponent {
     }
 }
 
-/// The plugin types of this build: the ports, whose plugins are adapters, and those modules define.
+/// The plugin types of this build: the ports, whose plugins are adapters, the types with a crate of their own, and
+/// those modules define.
 #[must_use]
 pub fn plugin_types() -> Vec<&'static str> {
-    let mut types = vec!["cache", "storage"];
+    let mut types = vec!["cache", "storage", kampus_widget::TYPE];
     types.extend(
         registry::MODULES
             .iter()

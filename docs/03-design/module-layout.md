@@ -401,6 +401,7 @@ Foundation, port, adapter and server crates follow the same principle: `src/` ho
 | `foundation` | `lib.rs` | — | — |
 | `port` | `lib.rs` | `port/` (the trait and its types), `registry/` (`Adapter` and `open`), `conformance/` (the suite every adapter passes) | `adapters/` |
 | `adapter` | `lib.rs` with `ADAPTER` | `store/` (the implementation) | — |
+| `type` | `lib.rs` with `TYPE` | `declaration/` (what its plugins declare), `conformance/` (the rules they keep) | `plugins/`, `web/`, `assets/`, `version.toml` |
 | `server` | `lib.rs`, `main.rs` | `commands/`, `config/`, `http/`, `wiring/` (the generated registries and the composition) | `adapters.toml`, `modules.toml` |
 | `module` | `lib.rs`, `module.rs` | `db/`, `permissions/`, and the folders above | `web/`, `lang/`, `assets/` |
 
@@ -424,9 +425,10 @@ The name of a component comes from its package, and its folder follows from its 
 | --- | --- | --- | --- |
 | Core module | `kampus-identity` | `identity` | `crates/identity` |
 | Adapter of the `cache` port | `kampus-cache-redis` | `cache_redis` | `crates/cache/adapters/redis` |
-| Plugin of a type that a module defines | `kampus-<type>-<name>` | `<type>_<name>` | `crates/<owner>/<type>/<name>` |
+| Plugin type | `kampus-widget` | `widget` | `crates/widget` |
+| Plugin of a type | `kampus-widget-catalogue` | `widget_catalogue` | `crates/<type>/plugins/<name>` |
 
-Plugins and adapters carry their type as prefix, so their names never collide with the core. Only plugins and adapters may come from outside the repository; they are declared in `crates/server/modules.toml` or `crates/server/adapters.toml`. A module that defines a plugin type lists it in `plugin_types` of its descriptor.
+Plugins and adapters carry their type as prefix, so their names never collide with the core. Only plugins and adapters may come from outside the repository; they are declared in `crates/server/modules.toml` or `crates/server/adapters.toml`. A plugin depends on core modules and on the crate of its type only. The types, their folders and their rules are in the [plugins guide](./plugins/README.md); a module whose contract defines a type that has no crate yet lists it in `plugin_types` of its descriptor.
 
 `tools/repo-check` checks that every package matches its folder. The server checks names, versions, supported releases and requirements before it installs, upgrades or starts, and refuses with the list of problems.
 

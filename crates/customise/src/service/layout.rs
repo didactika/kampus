@@ -54,8 +54,11 @@ const MAX_PLACEMENTS: usize = 50;
 /// The lowest row a widget may start on.
 const MAX_ROW: u16 = 400;
 
-/// A widget as declared: the sizes it takes on each page kind and its settings.
+/// A widget as declared: the sizes it takes on each page kind, whether a page holds it once at most, and its
+/// settings.
 pub(super) struct Widget {
+    /// Whether a page holds it once at most.
+    single: bool,
     /// Its sizes, by page kind; it is placed on no other.
     sizes: BTreeMap<String, WidgetSizes>,
     /// Its settings as stored: key, kind and default.
@@ -88,6 +91,7 @@ impl Widget {
 pub(super) fn widget(row: &sqlx::postgres::PgRow, settings: &str) -> Widget {
     let sizes: Option<Value> = row.get("sizes");
     Widget {
+        single: row.try_get::<bool, _>("single").unwrap_or(false),
         sizes: sizes
             .and_then(|s| serde_json::from_value(s).ok())
             .unwrap_or_default(),
@@ -99,14 +103,20 @@ pub(super) fn widget(row: &sqlx::postgres::PgRow, settings: &str) -> Widget {
     }
 }
 
-/// The problems of the placements of a layout of a page kind on its grid.
+/// The problems of the placements of a layout of a page kind on its grid, which must hold the widgets every page of
+/// the kind holds.
 pub(super) fn problems(
     page_kind: &str,
     grid: PageGrid,
-    widgets: &BTreeMap<String, Widget>,
+    (widgets, required): (&BTreeMap<String, Widget>, &[AvailableWidget]),
     placements: &[Placement],
 ) -> Vec<FieldError> {
     let mut problems = Vec::new();
+    for kept in required {
+        if !placements.iter().any(|p| p.widget == kept.code) {
+            problems.push(FieldError::new(format!("placements.{}", kept.code), "required"));
+        }
+    }
     if placements.len() > MAX_PLACEMENTS {
         problems.push(FieldError::new("placements", "length"));
     }
@@ -132,6 +142,13 @@ pub(super) fn problems(
         if placement.y > MAX_ROW {
             problems.push(FieldError::new(name("y"), "range"));
         }
+        if widget.single
+            && placements[..at]
+                .iter()
+                .any(|other| other.widget == placement.widget)
+        {
+            problems.push(FieldError::new(name("widget"), "single"));
+        }
         if placements[..at].iter().any(|other| other.overlaps(placement)) {
             problems.push(FieldError::new(name("y"), "overlap"));
         }
@@ -149,6 +166,29 @@ pub(super) fn problems(
         }
     }
     problems
+}
+
+/// The first cell, in reading order, where a rectangle of a size fits among placements without moving any; under all
+/// of them when none does.
+fn room(placements: &[Placement], w: u16, h: u16, columns: u16) -> (u16, u16) {
+    let bottom = placements.iter().map(|p| p.y + p.h).max().unwrap_or(0);
+    let probe = |x: u16, y: u16| Placement {
+        widget: String::new(),
+        x,
+        y,
+        w,
+        h,
+        settings: BTreeMap::new(),
+        permission: None,
+    };
+    for y in 0..=bottom {
+        for x in 0..=columns.saturating_sub(w) {
+            if !placements.iter().any(|p| p.overlaps(&probe(x, y))) {
+                return (x, y);
+            }
+        }
+    }
+    (0, bottom)
 }
 
 /// The grid of a page kind, as stored.
@@ -222,7 +262,7 @@ impl Customise {
         let available = self.available(&mut conn, page_kind).await?;
         let rows = match &nearest {
             Some((id, _)) => sqlx::query(sql(format!(
-                "select p.widget_code, p.x, p.y, p.w, p.h, p.settings, p.permission, w.sizes, w.settings as declared
+                "select p.widget_code, p.x, p.y, p.w, p.h, p.settings, p.permission, w.single, w.sizes, w.settings as declared
                  from {} p join {} w on w.code = p.widget_code
                  where p.layout_id = $1 and w.retired_at is null order by p.y, p.x",
                 self.table("placement"),
@@ -238,13 +278,18 @@ impl Customise {
         let origin = nearest.map_or(Origin::Declared, |(_, origin)| origin);
         let locked_above = matches!(origin, Origin::Scope { scope: at, locked: true } if at != scope);
         let editable = !locked_above && self.arranges(actor, page_kind, scope).await?;
-        let widgets = if editable { available } else { Vec::new() };
-        let mut placements = Vec::new();
+        let mut placements: Vec<Placement> = Vec::new();
         for row in &rows {
             let declared = widget(row, "declared");
             let Some(sizes) = declared.sizes.get(page_kind) else {
                 continue;
             };
+            let code: String = row.get("widget_code");
+            // A widget a page holds once shows once, in reading order, even when a layout written before it said so
+            // holds more: the page never breaks, and the next arrangement saved keeps only the one shown.
+            if declared.single && placements.iter().any(|p| p.widget == code) {
+                continue;
+            }
             let permission: Option<String> = row.get("permission");
             if !self.holds(actor, permission.as_deref(), scope).await? {
                 continue;
@@ -255,7 +300,7 @@ impl Customise {
             // A widget whose sizes changed since it was placed takes the nearest size it now allows.
             let w = cell("w").clamp(sizes.min.w, sizes.max.w).min(grid.columns);
             placements.push(Placement {
-                widget: row.get("widget_code"),
+                widget: code,
                 x: cell("x").min(grid.columns.saturating_sub(w)),
                 y: cell("y"),
                 w,
@@ -264,6 +309,31 @@ impl Customise {
                 permission,
             });
         }
+        // A widget every page holds is on the page even when the layout was written before it was declared so: it takes
+        // the first room that holds it, and the next arrangement saved keeps it there.
+        if nearest.is_some() {
+            for kept in available.iter().filter(|w| w.required) {
+                if !placements.iter().any(|p| p.widget == kept.code) {
+                    let (w, h) = (kept.sizes.default.w.min(grid.columns), kept.sizes.default.h);
+                    let (x, y) = room(&placements, w, h, grid.columns);
+                    let settings = kept
+                        .settings
+                        .iter()
+                        .filter_map(|s| Some((s.get("key")?.as_str()?.to_owned(), s.get("default")?.clone())))
+                        .collect();
+                    placements.push(Placement {
+                        widget: kept.code.clone(),
+                        x,
+                        y,
+                        w,
+                        h,
+                        settings,
+                        permission: None,
+                    });
+                }
+            }
+        }
+        let widgets = if editable { available } else { Vec::new() };
         Ok(Layout {
             page_kind: page_kind.to_owned(),
             grid,
@@ -277,7 +347,7 @@ impl Customise {
     /// The widgets that may be placed on a page kind, with their sizes there and their settings as declared.
     async fn available(&self, conn: &mut PgConnection, page_kind: &str) -> Result<Vec<AvailableWidget>> {
         let rows = sqlx::query(sql(format!(
-            "select code, summary, sizes, settings from {} where retired_at is null order by code",
+            "select code, summary, icon, single, required, sizes, settings from {} where retired_at is null order by code",
             self.table("widget")
         )))
         .fetch_all(&mut *conn)
@@ -291,6 +361,9 @@ impl Customise {
                 Some(AvailableWidget {
                     code: row.get("code"),
                     summary: row.get("summary"),
+                    icon: row.get::<Option<String>, _>("icon").unwrap_or_default(),
+                    single: declared.single,
+                    required: row.get("required"),
                     sizes,
                     settings: declared.settings,
                 })
@@ -304,7 +377,8 @@ impl Customise {
     ///
     /// `not_found` for an unknown page kind, `permission_denied` when the actor may not arrange it, `validation`
     /// (`customise.layout_invalid`) for an unknown widget, one not offered for the page kind, a rectangle outside
-    /// the grid or the sizes of its widget, two rectangles that overlap or a setting the widget does not declare,
+    /// the grid or the sizes of its widget, two rectangles that overlap, a second of a widget a page holds once, or a
+    /// setting the widget does not declare,
     /// `conflict` (`customise.locked_above`) below a scope that locks it.
     pub async fn set_layout(
         &self,
@@ -318,7 +392,8 @@ impl Customise {
         let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
         let grid = self.grid(&mut conn, page_kind).await?;
         let widgets = self.widgets(&mut conn, &placements).await?;
-        let problems = problems(page_kind, grid, &widgets, &placements);
+        let required = self.required(&mut conn, page_kind).await?;
+        let problems = problems(page_kind, grid, (&widgets, &required), &placements);
         if !problems.is_empty() {
             return Err(Error::validation("customise.layout_invalid", problems));
         }
@@ -357,6 +432,20 @@ impl Customise {
         self.layout(actor, page_kind, scope).await
     }
 
+    /// The widgets every page of a kind holds.
+    pub(super) async fn required(
+        &self,
+        conn: &mut PgConnection,
+        page_kind: &str,
+    ) -> Result<Vec<AvailableWidget>> {
+        Ok(self
+            .available(conn, page_kind)
+            .await?
+            .into_iter()
+            .filter(|w| w.required)
+            .collect())
+    }
+
     /// The declared widgets that placements name, by code.
     pub(super) async fn widgets(
         &self,
@@ -365,7 +454,7 @@ impl Customise {
     ) -> Result<BTreeMap<String, Widget>> {
         let codes: Vec<&str> = placements.iter().map(|p| p.widget.as_str()).collect();
         let rows = sqlx::query(sql(format!(
-            "select code, sizes, settings from {} where code = any($1) and retired_at is null",
+            "select code, single, sizes, settings from {} where code = any($1) and retired_at is null",
             self.table("widget")
         )))
         .bind(&codes)

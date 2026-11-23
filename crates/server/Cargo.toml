@@ -63,6 +63,15 @@ kampus-progress = { path = "../progress" }
 kampus-notify = { path = "../notify" }
 kampus-calendar = { path = "../calendar" }
 kampus-privacy = { path = "../privacy" }
+kampus-widget-catalogue = { path = "../widget/plugins/catalogue" }
+kampus-widget-course-content = { path = "../widget/plugins/course_content" }
+kampus-widget-course-grades = { path = "../widget/plugins/course_grades" }
+kampus-widget-course-progress = { path = "../widget/plugins/course_progress" }
+kampus-widget-course-summary = { path = "../widget/plugins/course_summary" }
+kampus-widget-notifications = { path = "../widget/plugins/notifications" }
+kampus-widget-text = { path = "../widget/plugins/text" }
+kampus-widget-upcoming = { path = "../widget/plugins/upcoming" }
+kampus-widget-welcome = { path = "../widget/plugins/welcome" }
 # modules:end
 # adapters:start
 kampus-cache-moka = { path = "../cache/adapters/moka" }
@@ -75,6 +84,7 @@ kampus-storage-opendal = { path = "../storage/adapters/opendal" }
 kampus-common.workspace = true
 kampus-db.workspace = true
 kampus-module.workspace = true
+kampus-widget.workspace = true
 kampus-cache.workspace = true
 kampus-storage.workspace = true
 kampus-mail.workspace = true

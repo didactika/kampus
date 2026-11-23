@@ -85,6 +85,17 @@ export function checkArchitecture(root) {
       if (!fs.existsSync(manifest)) continue;
       const text = read(manifest);
       crates.push({ name: nameOf(text, dir), text, port: null });
+      // Plugins live in crates/<type>/plugins/<name>, next to the crate of their type.
+      for (const group of fs.readdirSync(path.join(cratesDir, dir), { withFileTypes: true })) {
+        if (!group.isDirectory() || ['adapters', 'src', 'tests', 'web', 'lang', 'assets'].includes(group.name)) continue;
+        for (const plugin of fs.readdirSync(path.join(cratesDir, dir, group.name))) {
+          const pluginManifest = path.join(cratesDir, dir, group.name, plugin, 'Cargo.toml');
+          if (fs.existsSync(pluginManifest)) {
+            const pluginText = read(pluginManifest);
+            crates.push({ name: nameOf(pluginText, plugin), text: pluginText, port: null, type: group.name === 'plugins' ? nameOf(text, dir).replace(/^kampus-/, '') : group.name });
+          }
+        }
+      }
       const adapters = path.join(cratesDir, dir, 'adapters');
       if (!fs.existsSync(adapters)) continue;
       for (const adapter of fs.readdirSync(adapters)) {
@@ -98,8 +109,18 @@ export function checkArchitecture(root) {
   }
   /** Whether a crate name is an adapter of a port of the table, inside or outside the repository. */
   const isAdapter = (name) => crates.some((c) => c.port && c.name === name) || order.some((m) => name.startsWith(`${m}-`) && !order.includes(name));
+  /** Whether a crate name is a plugin of the repository. */
+  const isPlugin = (name) => crates.some((c) => c.type && c.name === name);
   const problems = [];
-  for (const { name, text, port } of crates) {
+  for (const { name, text, port, type } of crates) {
+    if (type) {
+      // A plugin depends only on core modules, and only the server depends on it.
+      if (!name.startsWith(`kampus-${type}-`)) problems.push(`${name}: a plugin of type ${type} is named kampus-${type}-<name>`);
+      for (const dep of moduleDependencies(text)) {
+        if (!order.includes(dep)) problems.push(`${name}: a plugin depends only on core modules, not on ${dep}`);
+      }
+      continue;
+    }
     if (port) {
       if (!order.includes(port)) problems.push(`${name}: adapter of ${port}, which is not in the module table`);
       if (!name.startsWith(`${port}-`)) problems.push(`${name}: an adapter of ${port} is named ${port}-<name>`);
@@ -108,7 +129,9 @@ export function checkArchitecture(root) {
       continue;
     }
     for (const dep of moduleDependencies(text)) {
-      if (isAdapter(dep)) {
+      if (isPlugin(dep)) {
+        if (name !== 'kampus-server') problems.push(`${name}: depends on the plugin ${dep}; only kampus-server installs plugins`);
+      } else if (isAdapter(dep)) {
         if (name !== 'kampus-server') problems.push(`${name}: depends on the adapter ${dep}; only kampus-server chooses adapters`);
       } else if (!order.includes(dep)) {
         problems.push(`${name}: depends on ${dep}, which is not in the module table`);

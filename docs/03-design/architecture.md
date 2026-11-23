@@ -29,6 +29,7 @@ Modules call **down** the ranking through service APIs, and learn about things *
 | 0 Foundation | `kampus-common` | Errors, identifiers, time, money, pagination, request context | macros |
 | 0 Foundation | `kampus-db` | Database port: neutral schema, dialect adapters (PostgreSQL first), migrations, transactions | common |
 | 0 Foundation | `kampus-module` | The module contract (DEC-015, DEC-087): the descriptor every module exposes and the vocabulary of its declarations | common, db |
+| 0 Foundation | `kampus-widget` | The widget type: what a widget plugin declares and the rules it keeps; its plugins live in `crates/widget/plugins` (DEC-091) | common, module |
 | 0 Foundation | `kampus-storage` | File storage port: local and S3-compatible first (DEC-009) | common |
 | 0 Foundation | `kampus-cache` | Cache port: in-process in front of Redis or Valkey, invalidation by event | common |
 | 0 Foundation | `kampus-scan` | Malware scanning port: content is scanned before it is kept, with a clamd adapter (RN-129) | common |

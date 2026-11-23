@@ -77,3 +77,25 @@ fn every_widget_declares_sizes_that_fit_the_pages_it_goes_on() {
     }
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
+
+#[test]
+fn only_widget_plugins_declare_widgets_one_each_named_as_their_plugin() {
+    use kampus_server::wiring::registry::MODULES;
+    let mut problems = Vec::new();
+    for module in MODULES {
+        let plugin = module.name.starts_with("widget_");
+        match (plugin, module.widgets) {
+            (false, []) => {}
+            (false, _) => problems.push(format!(
+                "{} declares widgets, but only widget plugins do",
+                module.name
+            )),
+            (true, [widget]) if widget.code == module.name => {}
+            (true, _) => problems.push(format!(
+                "{} declares one widget, whose code is its name",
+                module.name
+            )),
+        }
+    }
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}

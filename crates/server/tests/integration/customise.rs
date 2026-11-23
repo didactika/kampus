@@ -158,8 +158,9 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
             Some(&admin),
             &[],
             Some(json!({ "placements": [
-                { "widget": "courses.outline", "x": 0, "y": 0, "w": 8, "h": 10 },
-                { "widget": "customise.text", "x": 8, "y": 0, "w": 4, "h": 3, "settings": { "heading": "Office hours" } }
+                { "widget": "widget_course_content", "x": 0, "y": 0, "w": 8, "h": 10 },
+                { "widget": "widget_course_summary", "x": 8, "y": 3, "w": 4, "h": 4 },
+                { "widget": "widget_text", "x": 8, "y": 0, "w": 4, "h": 3, "settings": { "heading": "Office hours" } }
             ] })),
         )
         .await;
@@ -172,9 +173,10 @@ async fn a_course_page_is_arranged_and_the_theme_reaches_the_client_as_css() {
             &format!("/api/v1/customise/scopes/{scope}/layouts/courses.course"),
             Some(&admin),
             &[],
-            Some(
-                json!({ "placements": [{ "widget": "courses.outline", "x": 0, "y": 0, "w": 12, "h": 10 }] }),
-            ),
+            Some(json!({ "placements": [
+                { "widget": "widget_course_content", "x": 0, "y": 0, "w": 12, "h": 10 },
+                { "widget": "widget_course_summary", "x": 0, "y": 10, "w": 4, "h": 4 }
+            ] })),
         )
         .await;
     assert_eq!(
