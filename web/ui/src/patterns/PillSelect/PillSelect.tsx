@@ -63,11 +63,15 @@ export interface PillSelectProps {
   readonly icon?: string;
   /** Smaller, for a pager. */
   readonly compact?: boolean;
+  /** Where its list opens: below it, or above it when it sits at the foot of a page, such as a pager. */
+  readonly opens?: "below" | "above";
 }
 
 /** `<PillSelect label="Order" icon="sort" options={…} value="name" onChange={…} />` */
-export function PillSelect({ label, options, value, onChange, icon, compact = false }: PillSelectProps) {
+export function PillSelect({ label, options, value, onChange, icon, compact = false, opens = "below" }: PillSelectProps) {
   const id = useId();
+  // As wide as its longest option, so choosing another never changes its size nor moves what follows it.
+  const longest = Math.max(1, ...options.map((option) => option.label.length));
   return (
     <Select
       value={value}
@@ -77,7 +81,11 @@ export function PillSelect({ label, options, value, onChange, icon, compact = fa
         <Icon name="keyboard_arrow_down" size="small" className={iconProps.className} sx={{ position: "absolute", insetInlineEnd: compact ? 6 : 10, pointerEvents: "none" }} />
       )}
       renderValue={(chosen) => options.find((o) => o.value === chosen)?.label ?? ""}
-      MenuProps={{ slotProps: { paper: { sx: { mt: 0.5, minWidth: 160 } } } }}
+      MenuProps={{
+        anchorOrigin: { vertical: opens === "above" ? "top" : "bottom", horizontal: "left" },
+        transformOrigin: { vertical: opens === "above" ? "bottom" : "top", horizontal: "left" },
+        slotProps: { paper: { sx: { mt: opens === "above" ? -0.5 : 0.5, minWidth: 160 } } },
+      }}
       input={
         <OutlinedInput
           startAdornment={
@@ -93,7 +101,7 @@ export function PillSelect({ label, options, value, onChange, icon, compact = fa
             fontWeight: 600,
             minHeight: compact ? 30 : undefined,
             pl: icon ? 1.5 : 0,
-            "& .MuiSelect-select": { pl: icon ? 0.5 : compact ? 1.5 : 2, pr: compact ? "28px !important" : "36px !important", py: compact ? 0.5 : undefined, minHeight: compact ? "22px !important" : "24px" },
+            "& .MuiSelect-select": { minWidth: `calc(${longest + 1}ch + ${compact ? 40 : icon ? 40 : 52}px) !important`, pl: icon ? 0.5 : compact ? 1.5 : 2, pr: compact ? "28px !important" : "36px !important", py: compact ? 0.5 : undefined, minHeight: compact ? "22px !important" : "24px" },
           }}
         />
       }

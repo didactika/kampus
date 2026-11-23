@@ -173,7 +173,7 @@ export function SelectField(props: SelectFieldProps) {
           inputProps={{ id: field, "aria-describedby": described, "aria-invalid": error ? true : undefined }}
           labelId={`${field}-label`}
           renderValue={(chosen) => options.find((o) => o.value === chosen)?.label ?? ""}
-          MenuProps={{ slotProps: { paper: { sx: { mt: 0.5 } } } }}
+          MenuProps={{ anchorOrigin: { vertical: "bottom", horizontal: "left" }, transformOrigin: { vertical: "top", horizontal: "left" }, slotProps: { paper: { sx: { mt: 0.5 } } } }}
         >
           {options.map((option) => (
             <MenuItem key={option.value} value={option.value} disabled={option.disabled}>

@@ -124,6 +124,7 @@ export function Pager({ total, page, size, onPage, onSize, labels, preferred = 0
           <Box id={select}>
             <PillSelect
               compact
+              opens="above"
               label={labels.perPage}
               value={String(size)}
               onChange={(value) => onSize(Number(value))}

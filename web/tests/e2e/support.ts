@@ -33,15 +33,29 @@
 // ------------------------------------------------------------------------------
 
 
-/** What every end-to-end test shares: the texts of the client in English, the account and the accessibility check. */
+/**
+ * What every end-to-end test shares: the texts of the client, the account and the accessibility check. Pages before
+ * signing in speak the language of the browser (English); pages of the account speak the language of its profile,
+ * which the sign-in of the tests reads and keeps.
+ */
 
 import AxeBuilder from "@axe-core/playwright";
 import { expect, type Page } from "@playwright/test";
+import fs from "node:fs";
 
 import { translator } from "../../src/i18n/translator";
 
-/** The texts of the client, so tests read what a person reads, in English. */
+/** The texts of the pages before signing in, in English. */
 export const t = translator("en");
+
+/** Where the sign-in of the tests keeps the language of the profile of the account. */
+export const LANGUAGE_FILE = ".e2e-results/language.txt";
+
+/** The texts of the pages of the account, in the language of its profile; English when it has none. */
+export const tAccount: typeof t = (key, values) => {
+  const language = fs.existsSync(LANGUAGE_FILE) ? fs.readFileSync(LANGUAGE_FILE, "utf8").trim() : "";
+  return translator(language || "en")(key, values);
+};
 
 /** The account the tests sign in with. */
 export function account(): { readonly user: string; readonly password: string } {

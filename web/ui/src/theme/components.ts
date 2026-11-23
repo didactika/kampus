@@ -115,6 +115,8 @@ export function componentStyles({ compact, still, fontSize }: ComponentOptions):
           paddingBlock: 0,
           paddingInline: theme.spacing(2),
           whiteSpace: "nowrap",
+          // Every variant has the same border, transparent but for outlined, so a button changing variant keeps its size.
+          border: "1px solid transparent",
           transition: `background-color ${EASE}, border-color ${EASE}, color ${EASE}, box-shadow 200ms cubic-bezier(0.2, 0, 0, 1), transform 120ms cubic-bezier(0.2, 0, 0, 1)`,
           "&:active:not(.Mui-disabled)": { transform: "translateY(0)" },
         }),
