@@ -159,17 +159,22 @@ test("a widget of the home moves and resizes with the keyboard and every change 
   try {
     const frame = page.getByRole("group", { name: new RegExp(`^${t("widget_welcome.name")}:`) }).first();
     await frame.focus();
+    // Down goes past the next widget; widgets rise, so a plain row down would settle back.
     await page.keyboard.press("ArrowDown");
-    await expect.poll(async () => (await welcomeOf())?.y, { timeout: 5000 }).toBe(welcome!.y + 1);
+    await expect.poll(async () => (await welcomeOf())?.y, { timeout: 5000 }).not.toBe(welcome!.y);
     expect(await (await page.request.get(campusLayout)).text(), "the home of the campus does not change").toBe(campusBefore);
     await frame.focus();
     await page.keyboard.press("ArrowUp");
     await expect.poll(async () => (await welcomeOf())?.y, { timeout: 5000 }).toBe(welcome!.y);
-    // Shift and an arrow resize it, within the sizes the widget declares.
+    // Shift and an arrow resize it, within the sizes the widget declares: shorter when it can be, taller otherwise.
+    const smallest = 3;
     await frame.focus();
-    await page.keyboard.press("Shift+ArrowDown");
-    await expect.poll(async () => (await welcomeOf())?.h, { timeout: 5000 }).not.toBe(undefined);
+    await page.keyboard.press(welcome!.h > smallest ? "Shift+ArrowUp" : "Shift+ArrowDown");
+    await expect.poll(async () => (await welcomeOf())?.h, { timeout: 5000 }).not.toBe(welcome!.h);
   } finally {
+    // Leaving the mode saves whatever is still pending, so nothing the page saves lands after the home is restored.
+    if (await mode.isChecked()) await mode.uncheck();
+    await page.waitForLoadState("networkidle");
     // The home of the person is left exactly as it was: their own arrangement, or the campus's when they had none.
     if (own) {
       await page.request.put(layout, { headers: { "x-kampus": "1" }, data: { placements: before.map(({ widget, x, y, w, h, settings }) => ({ widget, x, y, w, h, settings })) } });
@@ -177,7 +182,6 @@ test("a widget of the home moves and resizes with the keyboard and every change 
       await page.request.delete(layout, { headers: { "x-kampus": "1" } });
     }
   }
-  await mode.uncheck();
 });
 
 test("the settings of a widget are checked before they apply", async ({ page }) => {

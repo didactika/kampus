@@ -5564,6 +5564,11 @@ export type components = {
              */
             permission: string | null;
             /**
+             * @description Whether the person pinned it where it is; otherwise it rises to the widgets above it, so no row is left empty.
+             * @default false
+             */
+            pinned: boolean;
+            /**
              * @description Its settings, each of the kind the widget declares; the defaults fill what is left out.
              * @default {}
              */
@@ -11085,6 +11090,11 @@ export interface operations {
                              */
                             permission?: string | null;
                             /**
+                             * @description Whether the person pinned it where it is; otherwise it rises to the widgets above it, so no row is left empty.
+                             * @default false
+                             */
+                            pinned?: boolean;
+                            /**
                              * @description Its settings, each of the kind the widget declares; the defaults fill what is left out.
                              * @default {}
                              */
@@ -11314,6 +11324,11 @@ export interface operations {
                          * @default null
                          */
                         permission?: string | null;
+                        /**
+                         * @description Whether the person pinned it where it is; otherwise it rises to the widgets above it, so no row is left empty.
+                         * @default false
+                         */
+                        pinned?: boolean;
                         /**
                          * @description Its settings, each of the kind the widget declares; the defaults fill what is left out.
                          * @default {}

@@ -98,6 +98,7 @@ async fn customised(w: &World) {
         y: 0,
         w: 3,
         h: 2,
+        pinned: false,
         settings: BTreeMap::new(),
         permission: None,
     };

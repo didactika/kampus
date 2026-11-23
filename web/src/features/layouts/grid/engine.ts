@@ -34,8 +34,8 @@
 
 /**
  * The rules of a grid of widgets, without the page: rectangles of cells that never overlap, moved and resized within
- * the sizes each widget declares, and the ones in the way pushed down. The grid is free: a widget stays where it is
- * put, and room left empty stays empty.
+ * the sizes each widget declares, and the ones in the way pushed down. Every widget not pinned then rises as far as
+ * the ones above it let it, so no row is left empty above a widget; the server settles a layout the same way.
  */
 
 /** A size in cells. */
@@ -62,6 +62,8 @@ export interface Item {
   readonly y: number;
   readonly w: number;
   readonly h: number;
+  /** Whether the person pinned it where it is; otherwise it rises. */
+  readonly pinned?: boolean;
 }
 
 /** Whether two rectangles share a cell. */
@@ -74,13 +76,28 @@ export function reading<T extends Item>(items: readonly T[]): T[] {
   return [...items].sort((a, b) => a.y - b.y || a.x - b.x || a.key - b.key);
 }
 
+/**
+ * The items with every one not pinned risen as far as the ones above it let it, in reading order; a pinned one stays,
+ * and one that overlaps an item before it goes down until it does not.
+ */
+export function settle<T extends Item>(items: readonly T[]): T[] {
+  const settled: T[] = items.filter((i) => i.pinned);
+  for (const item of reading(items.filter((i) => !i.pinned))) {
+    let y = item.y;
+    while (y > 0 && !settled.some((s) => collides({ ...item, y: y - 1 }, s))) y -= 1;
+    while (settled.some((s) => collides({ ...item, y }, s))) y += 1;
+    settled.push({ ...item, y });
+  }
+  return items.map((i) => settled.find((s) => s.key === i.key)!);
+}
+
 /** A number kept between two others. */
 const clamp = (value: number, low: number, high: number) => Math.min(Math.max(value, low), high);
 
 /**
  * Puts an item at a rectangle, kept within the grid; the items in its way go just under it, in reading order, each
- * pushing down those it then covers. Placing from where the items were when a move began brings back those it no
- * longer covers.
+ * pushing down those it then covers, and then everything settles. Placing from where the items were when a move began
+ * brings back those it no longer covers.
  */
 export function place<T extends Item>(items: readonly T[], key: number, to: Pick<Item, "x" | "y" | "w" | "h">, columns: number): T[] {
   const w = clamp(to.w, 1, columns);
@@ -94,7 +111,7 @@ export function place<T extends Item>(items: readonly T[], key: number, to: Pick
     while (settled.some((s) => collides({ ...item, y }, s))) y += 1;
     settled.push({ ...item, y });
   }
-  return moved.map((i) => settled.find((p) => p.key === i.key)!);
+  return settle(moved.map((i) => settled.find((p) => p.key === i.key)!));
 }
 
 /** A size kept within the sizes of a widget and the directions it may change in. */
@@ -105,6 +122,21 @@ export function within(sizes: Sizes, size: Cells, columns: number): Cells {
     w: horizontal ? clamp(size.w, sizes.min.w, Math.min(sizes.max.w, columns)) : Math.min(sizes.default.w, columns),
     h: vertical ? clamp(size.h, sizes.min.h, sizes.max.h) : sizes.default.h,
   };
+}
+
+/**
+ * Moves an item one step up or down in the order of the page: down, it goes under the next item in its way; up, over
+ * the one above it. A plain move by one row would only settle back where it was.
+ */
+export function step<T extends Item>(items: readonly T[], key: number, down: boolean, columns: number): T[] {
+  const start = items.find((i) => i.key === key);
+  if (!start) return [...items];
+  for (let y = start.y + (down ? 1 : -1); y >= 0 && y <= start.y + 200; y += down ? 1 : -1) {
+    const placed = place(items, key, { ...start, y }, columns);
+    const now = placed.find((i) => i.key === key)!;
+    if (now.y !== start.y || now.x !== start.x) return placed;
+  }
+  return [...items];
 }
 
 /** The first place, in reading order, where a size fits without moving anything; under everything when none does. */

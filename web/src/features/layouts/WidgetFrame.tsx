@@ -69,6 +69,10 @@ export interface WidgetFrameProps extends HTMLAttributes<HTMLDivElement> {
   readonly onSettings?: () => void;
   /** Removes it from the page. */
   readonly onRemove?: () => void;
+  /** Whether it is pinned where it is, rather than rising to the widgets above it. */
+  readonly pinned?: boolean;
+  /** Pins it, or lets it rise again. */
+  readonly onPin?: () => void;
   /** Its content, or what stands for it until the page is saved. */
   readonly children: ReactNode;
 }
@@ -81,7 +85,7 @@ const own = {
 
 /** `<WidgetFrame name="Catalogue" icon="school">{preview}</WidgetFrame>` */
 export const WidgetFrame = forwardRef<HTMLDivElement, WidgetFrameProps>(function WidgetFrame(
-  { name, icon, selected = false, lifted = false, fixed = false, onSettings, onRemove, children, style, ...rest },
+  { name, icon, selected = false, lifted = false, fixed = false, pinned = false, onPin, onSettings, onRemove, children, style, ...rest },
   ref,
 ) {
   const { t } = useI18n();
@@ -117,6 +121,11 @@ export const WidgetFrame = forwardRef<HTMLDivElement, WidgetFrameProps>(function
         <Typography variant="subtitle2" sx={{ flex: 1 }} noWrap>
           {name}
         </Typography>
+        {pinned ? (
+          <Box sx={{ color: "primary.main", display: "flex" }} role="img" aria-label={t("grid.pinned")}>
+            <Icon name="keep" size="small" />
+          </Box>
+        ) : null}
         {fixed ? (
           <Tooltip title={t("grid.fixed")}>
             <Box sx={{ color: "text.secondary", display: "flex" }} role="img" aria-label={t("grid.fixed")}>
@@ -126,6 +135,20 @@ export const WidgetFrame = forwardRef<HTMLDivElement, WidgetFrameProps>(function
         ) : null}
         {lifted ? null : (
           <Stack direction="row" className="widget-actions">
+            {onPin ? (
+              <Tooltip title={t(pinned ? "grid.unpin" : "grid.pin")}>
+                <IconButton
+                  size="small"
+                  aria-label={t(pinned ? "grid.unpin" : "grid.pin")}
+                  aria-pressed={pinned}
+                  sx={{ color: pinned ? "primary.main" : undefined }}
+                  {...own}
+                  onClick={(event) => (event.stopPropagation(), onPin())}
+                >
+                  <Icon name={pinned ? "keep" : "keep_off"} size="small" />
+                </IconButton>
+              </Tooltip>
+            ) : null}
             {onSettings ? (
               <Tooltip title={t("dashboard.settings")}>
                 <IconButton size="small" aria-label={t("dashboard.settings")} {...own} onClick={(event) => (event.stopPropagation(), onSettings())}>

@@ -55,11 +55,11 @@ const COURSE_PAGE = "courses.course";
 
 /** The page of a course until its teachers arrange their own: the content, and beside it the summary, progress and grades. */
 const DEFAULT_COURSE: readonly Placement[] = [
-  { widget: "widget_course_content", x: 0, y: 0, w: 8, h: 10, settings: { collapsed: false }, permission: null },
-  { widget: "widget_course_summary", x: 8, y: 0, w: 4, h: 4, settings: {}, permission: null },
-  { widget: "widget_course_progress", x: 8, y: 4, w: 4, h: 3, settings: { heading: "" }, permission: null },
-  { widget: "widget_course_grades", x: 8, y: 7, w: 4, h: 4, settings: { heading: "" }, permission: null },
-  { widget: "widget_upcoming", x: 0, y: 10, w: 4, h: 4, settings: { days: 30 }, permission: null },
+  { widget: "widget_course_content", x: 0, y: 0, w: 8, h: 10, settings: { collapsed: false }, pinned: false, permission: null },
+  { widget: "widget_course_summary", x: 8, y: 0, w: 4, h: 4, settings: {}, pinned: false, permission: null },
+  { widget: "widget_course_progress", x: 8, y: 4, w: 4, h: 3, settings: { heading: "" }, pinned: false, permission: null },
+  { widget: "widget_course_grades", x: 8, y: 7, w: 4, h: 4, settings: { heading: "" }, pinned: false, permission: null },
+  { widget: "widget_upcoming", x: 0, y: 10, w: 4, h: 4, settings: { days: 30 }, pinned: false, permission: null },
 ];
 
 /** The props of a page of a course. */

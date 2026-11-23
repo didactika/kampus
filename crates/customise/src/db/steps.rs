@@ -561,4 +561,13 @@ alter table {schema}.\"placement\" alter column \"position\" drop not null;",
         table: "widget",
         column: Column::new("required", Type::Boolean).default(ColumnDefault::Bool(false)),
     }],
+}, Step {
+    sequence: 8,
+    name: "pinned widgets",
+    revert: &[],
+    action: None,
+    changes: &[Change::AddColumn {
+        table: "placement",
+        column: Column::new("pinned", Type::Boolean).default(ColumnDefault::Bool(false)),
+    }],
 }];
