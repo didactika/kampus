@@ -34,7 +34,7 @@
 
 //! The widget this plugin offers: its icon, the sizes it takes on each page kind and its settings.
 
-use kampus_widget::{Cells, Resize, ValueKind, WidgetDeclaration, WidgetSetting, WidgetSize};
+use kampus_widget::{Band, Cells, Resize, ValueKind, WidgetDeclaration, WidgetSetting, WidgetSize};
 
 /// The home, which customise declares.
 const DASHBOARD: &str = "customise.dashboard";
@@ -52,6 +52,8 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
         default: Cells::new(12, 4),
         max: Cells::new(12, 6),
         resize: Resize::Both,
+        // Wider than half the page its greeting and figures fit in four rows; narrower, they wrap and need six.
+        bands: &[Band::new((6, 6), (3, 6)), Band::new((7, 12), (3, 4))],
     }],
     settings: &[
         WidgetSetting {

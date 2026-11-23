@@ -52,7 +52,8 @@ use kampus_db::Database;
 use kampus_module::{Module, RuleActionDeclaration};
 
 pub use model::layout::{
-    AvailableWidget, Layout, Menu, MenuItem, PageGrid, Placement, Resize, RowHeight, Size, WidgetSizes,
+    AvailableWidget, Layout, Menu, MenuItem, PageGrid, Placement, Resize, RowHeight, Size, SizeBand,
+    WidgetSizes,
 };
 pub use model::package::{
     Difference, Exported, Import, ImportId, Package, PackageField, PackageFlag, PackageKind, PackageLayout,

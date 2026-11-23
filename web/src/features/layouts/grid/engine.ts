@@ -47,12 +47,26 @@ export interface Cells {
 /** How a widget may be resized. */
 export type Resize = "none" | "horizontal" | "vertical" | "both";
 
+/** The heights a widget takes between two widths. */
+export interface Band {
+  readonly widths: readonly [number, number] | readonly number[];
+  readonly heights: readonly [number, number] | readonly number[];
+}
+
 /** The sizes a widget takes on a page. */
 export interface Sizes {
   readonly min: Cells;
   readonly default: Cells;
   readonly max: Cells;
   readonly resize: Resize;
+  /** The heights it takes at some widths; every height between min and max at the others. */
+  readonly bands?: readonly Band[];
+}
+
+/** The lowest and highest heights a widget takes at a width. */
+export function heights(sizes: Sizes, w: number): readonly [number, number] {
+  const band = sizes.bands?.find((b) => (b.widths[0] ?? 0) <= w && w <= (b.widths[1] ?? 0));
+  return band ? [band.heights[0] ?? sizes.min.h, band.heights[1] ?? sizes.max.h] : [sizes.min.h, sizes.max.h];
 }
 
 /** A widget on the grid. */
@@ -118,10 +132,10 @@ export function place<T extends Item>(items: readonly T[], key: number, to: Pick
 export function within(sizes: Sizes, size: Cells, columns: number): Cells {
   const horizontal = sizes.resize === "both" || sizes.resize === "horizontal";
   const vertical = sizes.resize === "both" || sizes.resize === "vertical";
-  return {
-    w: horizontal ? clamp(size.w, sizes.min.w, Math.min(sizes.max.w, columns)) : Math.min(sizes.default.w, columns),
-    h: vertical ? clamp(size.h, sizes.min.h, sizes.max.h) : sizes.default.h,
-  };
+  const w = horizontal ? clamp(size.w, sizes.min.w, Math.min(sizes.max.w, columns)) : Math.min(sizes.default.w, columns);
+  // The height keeps to the band of the width, so a wider widget is never taller than its content needs.
+  const [low, high] = heights(sizes, w);
+  return { w, h: clamp(vertical ? size.h : sizes.default.h, low, high) };
 }
 
 /**

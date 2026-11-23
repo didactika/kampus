@@ -52,6 +52,7 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
         default: Cells::new(4, 4),
         max: Cells::new(6, 8),
         resize: Resize::Both,
+        bands: &[],
     }],
     settings: &[WidgetSetting {
         key: "days",

@@ -41,7 +41,7 @@ pub mod conformance;
 pub mod declaration;
 
 pub use declaration::{
-    Cells, Grid, Resize, RowHeight, ValueKind, WidgetDeclaration, WidgetSetting, WidgetSize,
+    Band, Cells, Grid, Resize, RowHeight, ValueKind, WidgetDeclaration, WidgetSetting, WidgetSize,
 };
 
 /// The name of the type, the prefix of every plugin of it: `widget_<name>`, package `kampus-widget-<name>`.

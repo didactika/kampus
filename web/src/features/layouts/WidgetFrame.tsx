@@ -121,11 +121,6 @@ export const WidgetFrame = forwardRef<HTMLDivElement, WidgetFrameProps>(function
         <Typography variant="subtitle2" sx={{ flex: 1 }} noWrap>
           {name}
         </Typography>
-        {pinned ? (
-          <Box sx={{ color: "primary.main", display: "flex" }} role="img" aria-label={t("grid.pinned")}>
-            <Icon name="keep" size="small" />
-          </Box>
-        ) : null}
         {fixed ? (
           <Tooltip title={t("grid.fixed")}>
             <Box sx={{ color: "text.secondary", display: "flex" }} role="img" aria-label={t("grid.fixed")}>

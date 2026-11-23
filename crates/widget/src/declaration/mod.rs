@@ -36,5 +36,5 @@
 //! belong to the module contract, which every module and plugin shares; a plugin takes them from here.
 
 pub use kampus_module::{
-    Cells, Grid, Resize, RowHeight, ValueKind, WidgetDeclaration, WidgetSetting, WidgetSize,
+    Band, Cells, Grid, Resize, RowHeight, ValueKind, WidgetDeclaration, WidgetSetting, WidgetSize,
 };

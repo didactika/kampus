@@ -134,7 +134,8 @@ pub(super) fn problems(
         if !(sizes.min.w..=sizes.max.w).contains(&placement.w) {
             problems.push(FieldError::new(name("w"), "range"));
         }
-        if !(sizes.min.h..=sizes.max.h).contains(&placement.h) {
+        let (low, high) = sizes.heights(placement.w);
+        if !(low..=high).contains(&placement.h) {
             problems.push(FieldError::new(name("h"), "range"));
         }
         if u32::from(placement.x) + u32::from(placement.w) > u32::from(grid.columns) {
@@ -282,7 +283,10 @@ impl Customise {
                 x: cell("x").min(grid.columns.saturating_sub(w)),
                 y: cell("y"),
                 w,
-                h: cell("h").clamp(sizes.min.h, sizes.max.h),
+                h: {
+                    let (low, high) = sizes.heights(w);
+                    cell("h").clamp(low, high)
+                },
                 pinned: row.get("pinned"),
                 settings: declared.with_defaults(settings),
                 permission,
@@ -338,7 +342,7 @@ impl Customise {
             .iter()
             .filter_map(|row| {
                 let declared = widget(row, "settings");
-                let sizes = *declared.sizes.get(page_kind)?;
+                let sizes = declared.sizes.get(page_kind)?.clone();
                 Some(AvailableWidget {
                     code: row.get("code"),
                     summary: row.get("summary"),

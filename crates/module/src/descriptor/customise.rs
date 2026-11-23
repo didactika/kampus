@@ -169,6 +169,24 @@ impl Resize {
     }
 }
 
+/// The heights a widget takes at some widths: wider, a widget often needs fewer rows to show the same content, so a
+/// band says which heights it takes between two widths, and the editor never makes it taller than its content.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Band {
+    /// The narrowest and the widest it applies to, in columns.
+    pub widths: (u8, u8),
+    /// The lowest and the highest it takes there, in rows.
+    pub heights: (u8, u8),
+}
+
+impl Band {
+    /// The band of widths `from` to `to`, with heights `low` to `high`.
+    #[must_use]
+    pub const fn new(widths: (u8, u8), heights: (u8, u8)) -> Self {
+        Self { widths, heights }
+    }
+}
+
 /// The sizes a widget takes on one kind of page: the smallest, the one it starts with and the largest, and how a
 /// person may change it between them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -183,6 +201,9 @@ pub struct WidgetSize {
     pub max: Cells,
     /// How it may be resized.
     pub resize: Resize,
+    /// The heights it takes at some widths, when they are narrower than `min` and `max` say; none when every
+    /// height between them suits every width. Every width between `min` and `max` is in one band at most.
+    pub bands: &'static [Band],
 }
 
 impl WidgetSize {
@@ -195,6 +216,7 @@ impl WidgetSize {
             default: size,
             max: size,
             resize: Resize::None,
+            bands: &[],
         }
     }
 
@@ -224,11 +246,50 @@ impl WidgetSize {
             Resize::Vertical => !wide,
             Resize::Both => true,
         };
-        if allowed {
-            None
-        } else {
-            Some("the sizes change in a direction the widget may not be resized in")
+        if !allowed {
+            return Some("the sizes change in a direction the widget may not be resized in");
         }
+        self.band_problem()
+    }
+
+    /// What is wrong with the bands; nothing when each lies within the sizes, none overlaps another, and the default
+    /// size keeps to its band.
+    fn band_problem(&self) -> Option<&'static str> {
+        let Self {
+            min,
+            default,
+            max,
+            bands,
+            ..
+        } = *self;
+        for (at, band) in bands.iter().enumerate() {
+            let (narrow, wide) = band.widths;
+            let (low, high) = band.heights;
+            if narrow > wide || low > high || narrow < min.w || wide > max.w || low < min.h || high > max.h {
+                return Some("a band lies outside the sizes of the widget");
+            }
+            if bands[..at]
+                .iter()
+                .any(|other| other.widths.0 <= wide && narrow <= other.widths.1)
+            {
+                return Some("two bands share a width");
+            }
+        }
+        let (low, high) = self.heights(default.w);
+        if default.h < low || default.h > high {
+            Some("the default size is outside its band")
+        } else {
+            None
+        }
+    }
+
+    /// The lowest and highest heights the widget takes at a width: its band's, or its sizes' when no band holds it.
+    #[must_use]
+    pub fn heights(&self, width: u8) -> (u8, u8) {
+        self.bands
+            .iter()
+            .find(|b| b.widths.0 <= width && width <= b.widths.1)
+            .map_or((self.min.h, self.max.h), |b| b.heights)
     }
 }
 

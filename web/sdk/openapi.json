@@ -5677,6 +5677,40 @@
         ],
         "type": "object"
       },
+      "SizeBand": {
+        "description": "The heights a widget takes between two widths.",
+        "properties": {
+          "heights": {
+            "description": "The lowest and the highest it takes there, in rows.",
+            "items": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "widths": {
+            "description": "The narrowest and the widest it applies to, in columns.",
+            "items": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          }
+        },
+        "required": [
+          "widths",
+          "heights"
+        ],
+        "type": "object"
+      },
       "Source": {
         "description": "Where a state came from.",
         "oneOf": [
@@ -6352,6 +6386,14 @@
       "WidgetSizes": {
         "description": "The sizes a widget takes on a page kind.",
         "properties": {
+          "bands": {
+            "default": [],
+            "description": "The heights it takes at some widths; every height between `min` and `max` at the widths no band holds.",
+            "items": {
+              "$ref": "#/components/schemas/SizeBand"
+            },
+            "type": "array"
+          },
           "default": {
             "$ref": "#/components/schemas/Size",
             "description": "The one it takes when it is placed."
@@ -6373,7 +6415,8 @@
           "min",
           "default",
           "max",
-          "resize"
+          "resize",
+          "bands"
         ],
         "type": "object"
       },

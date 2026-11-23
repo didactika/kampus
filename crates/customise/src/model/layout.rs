@@ -124,7 +124,7 @@ pub enum Resize {
 }
 
 /// The sizes a widget takes on a page kind.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct WidgetSizes {
     /// The smallest.
     pub min: Size,
@@ -134,13 +134,35 @@ pub struct WidgetSizes {
     pub max: Size,
     /// How it may be resized between them.
     pub resize: Resize,
+    /// The heights it takes at some widths; every height between `min` and `max` at the widths no band holds.
+    #[serde(default)]
+    pub bands: Vec<SizeBand>,
+}
+
+/// The heights a widget takes between two widths.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+pub struct SizeBand {
+    /// The narrowest and the widest it applies to, in columns.
+    pub widths: [u16; 2],
+    /// The lowest and the highest it takes there, in rows.
+    pub heights: [u16; 2],
 }
 
 impl WidgetSizes {
     /// Whether a width and a height are within them.
     #[must_use]
-    pub const fn hold(&self, w: u16, h: u16) -> bool {
-        self.min.w <= w && w <= self.max.w && self.min.h <= h && h <= self.max.h
+    pub fn hold(&self, w: u16, h: u16) -> bool {
+        let (low, high) = self.heights(w);
+        self.min.w <= w && w <= self.max.w && low <= h && h <= high
+    }
+
+    /// The lowest and highest heights it takes at a width.
+    #[must_use]
+    pub fn heights(&self, w: u16) -> (u16, u16) {
+        self.bands
+            .iter()
+            .find(|b| b.widths[0] <= w && w <= b.widths[1])
+            .map_or((self.min.h, self.max.h), |b| (b.heights[0], b.heights[1]))
     }
 }
 

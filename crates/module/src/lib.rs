@@ -54,8 +54,8 @@ pub use descriptor::{
     ScheduleDeclaration, SettingDeclaration, ValueKind,
 };
 pub use descriptor::{
-    Cells, FieldKindDeclaration, FlagDeclaration, Grid, MenuKindDeclaration, PageKindDeclaration, Resize,
-    RowHeight, TermDeclaration, TermForms, WidgetDeclaration, WidgetSetting, WidgetSize,
+    Band, Cells, FieldKindDeclaration, FlagDeclaration, Grid, MenuKindDeclaration, PageKindDeclaration,
+    Resize, RowHeight, TermDeclaration, TermForms, WidgetDeclaration, WidgetSetting, WidgetSize,
 };
 pub use descriptor::{Content, Method, Operation, SchemaOf, schema_of};
 pub use descriptor::{FileAreaDeclaration, FileRead, ReadFuture};

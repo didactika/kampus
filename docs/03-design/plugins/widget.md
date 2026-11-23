@@ -38,6 +38,7 @@ crates/widget/plugins/<name>/
 | `single` | A page holds it once at most (the welcome, the content of a course) |
 | `required` | Every page it goes on holds it, at one size and never removed, though it may move (the content and the summary of a course); a required widget is single and of one size |
 | `sizes` | For each page kind it goes on, its smallest, default and largest size in cells and how it may be resized; it goes on no other page kind. `WidgetSize::fixed` gives one size |
+| `bands` (of a size) | The heights it takes between two widths, when it needs fewer rows wider: the welcome takes up to six rows at six columns and up to four when wider. Every width is in one band at most, and the default size keeps to its band |
 | `settings` | Its settings, each with its kind and default |
 
 The server checks the sizes against the grid of each page kind when it reads the declarations, refuses a layout with a rectangle outside them, two of a single widget or a required one left out, and places a required widget that a layout written before lacks in the first room that holds it.
