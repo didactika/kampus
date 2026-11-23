@@ -39,7 +39,7 @@ crates/widget/plugins/<name>/
 | `required` | Every page it goes on holds it, at one size and never removed, though it may move (the content and the summary of a course); a required widget is single and of one size |
 | `sizes` | For each page kind it goes on, its smallest, default and largest size in cells and how it may be resized; it goes on no other page kind. `WidgetSize::fixed` gives one size |
 | `bands` (of a size) | The heights it takes between two widths, when it needs fewer rows wider: the welcome takes up to six rows at six columns and up to four when wider. Every width is in one band at most, and the default size keeps to its band |
-| `settings` | Its settings, each with its kind and default |
+| `settings` | Its settings, each with its kind and default, whether it may not be left empty (`required`) and whether a text takes one value per language (`translatable`). The kind `rich_text` holds HTML in the format of user content, sanitised by the server when it is written and when it is read |
 
 The server checks the sizes against the grid of each page kind when it reads the declarations, refuses a layout with a rectangle outside them, two of a single widget or a required one left out, and places a required widget that a layout written before lacks in the first room that holds it.
 
@@ -49,6 +49,7 @@ The server checks the sizes against the grid of each page kind when it reads the
 - It must look right at **every size it allows**, from its smallest to its largest: it chooses how much to show from its size (`fitting` and `heightOf` of the host API help), keeps its heading and footer fixed and scrolls only its list, and never spills out of its rectangle.
 - It reads data only through the host API and the API of the core, as the reader; it never calls another plugin.
 - Its texts come from its strings; it writes none in code.
+- A text the person writes on the widget is rendered with `EditableText` or `EditableRichText` of the host API: outside the editor they show the text in the language of the reader, and while the page is arranged they are its fields. Rich text read elsewhere is shown with `RichText`, and a plugin adds formats to the rich editor with `registerEditorExtension`.
 
 ## Checklist
 

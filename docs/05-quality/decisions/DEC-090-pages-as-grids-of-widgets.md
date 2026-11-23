@@ -24,6 +24,6 @@ status: accepted
   - `WidgetDeclaration.page_kinds` is replaced by `sizes`, one entry per page kind. Every module that declares widgets declares their sizes.
   - The layout API returns and takes rectangles; the widgets a reader may place come with their sizes for the page kind.
   - The editor of a page is a grid where widgets are dragged and resized from their edges, with the pointer, by touch or with the keyboard (arrows move, shift and arrows resize).
-- Delivered in two steps: the grid, the sizes and the editor first; required, translatable and rich settings, editing in place and the rich editor next.
+- Delivered in two steps: the grid, the sizes and the editor first; required, translatable and rich settings, editing in place and the rich editor next, both done.
 - Later, noted by the owner: a left side as well as a right one, and preset arrangements of each page kind (such as content with a left side, or content between two sides) that the administration offers and a scope chooses as its default.
 - Affected artifacts: the customisation data model and its API, `kampus-module` (page kind and widget declarations), every module that declares widgets, the [Kampus design system](../../03-design/web/design-system.md), RN-216, the web client.

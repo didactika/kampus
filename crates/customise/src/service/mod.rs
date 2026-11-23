@@ -47,6 +47,7 @@ pub mod rule;
 pub mod run;
 pub mod term;
 pub mod theme;
+pub mod values;
 
 use std::collections::BTreeMap;
 

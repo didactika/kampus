@@ -49,7 +49,7 @@ import Link from "next/link";
 
 import { Icon } from "@kampus/ui";
 
-import { useI18n } from "@kampus/web/host/client";
+import { EditableText, useI18n } from "@kampus/web/host/client";
 
 /** One figure of the welcome. */
 interface Figure {
@@ -73,8 +73,8 @@ export interface WelcomeFigures {
 export interface WelcomeProps {
   /** The name to greet. */
   readonly name: string;
-  /** A heading of the scope instead of the greeting. */
-  readonly heading?: string;
+  /** A heading of the scope instead of the greeting: a text, or one per language. */
+  readonly heading?: unknown;
   /** The figures, when the welcome shows them. */
   readonly figures: WelcomeFigures | null;
 }
@@ -121,9 +121,7 @@ export function Welcome({ name, heading, figures: counts }: WelcomeProps) {
       <Typography variant="overline" sx={{ position: "relative", opacity: 0.85, letterSpacing: "0.12em", textTransform: "uppercase" }}>
         {t("app.name")}
       </Typography>
-      <Typography id={title} variant="h1" sx={{ position: "relative", mt: 1, fontSize: { md: "2.75rem" }, lineHeight: 1.15, maxInlineSize: "30ch" }}>
-        {heading || t("home.greeting", { name })}
-      </Typography>
+      <EditableText id={title} setting="heading" value={heading} fallback={t("home.greeting", { name })} variant="h1" component="h1" sx={{ position: "relative", mt: 1, fontSize: { md: "2.75rem" }, lineHeight: 1.15, maxInlineSize: "30ch" }} />
       <Typography variant="body1" sx={{ position: "relative", mt: 1.5, opacity: 0.9, maxInlineSize: "52ch" }}>
         {t("home.lead")}
       </Typography>

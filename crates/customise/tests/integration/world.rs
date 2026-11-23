@@ -128,6 +128,8 @@ const WIDGETS: &[WidgetDeclaration] = &[
         settings: &[WidgetSetting {
             key: "seconds",
             kind: ValueKind::Boolean { default: false },
+            required: false,
+            translatable: false,
         }],
     },
     WidgetDeclaration {
@@ -138,6 +140,28 @@ const WIDGETS: &[WidgetDeclaration] = &[
         required: false,
         sizes: &[clock("testing.other")],
         settings: &[],
+    },
+    WidgetDeclaration {
+        code: "testing.note",
+        summary: "A title and a body, in every language",
+        icon: "notes",
+        single: false,
+        required: false,
+        sizes: &[clock("testing.page")],
+        settings: &[
+            WidgetSetting {
+                key: "title",
+                kind: ValueKind::Text { max: 40, default: "" },
+                required: true,
+                translatable: true,
+            },
+            WidgetSetting {
+                key: "body",
+                kind: ValueKind::RichText { max: 2000 },
+                required: false,
+                translatable: true,
+            },
+        ],
     },
     WidgetDeclaration {
         code: "testing.anchor",

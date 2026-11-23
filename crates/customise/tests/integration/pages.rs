@@ -531,3 +531,74 @@ async fn widgets_rise_so_no_row_is_left_empty_unless_one_is_pinned() {
     );
     w.drop().await;
 }
+
+#[tokio::test]
+async fn settings_take_a_text_per_language_may_be_required_and_keep_rich_text_sanitised() {
+    let w = world().await;
+    let c = &w.customise;
+    let note = |settings: Value| placement([0, 0, 3, 2], "testing.note", settings);
+    let layout = c
+        .set_layout(
+            &w.admin,
+            "testing.page",
+            w.category,
+            vec![note(json!({
+                "title": { "en": "Welcome", "es": "Bienvenida" },
+                "body": { "en": "<p>Hello <strong>all</strong><script>alert(1)</script></p>", "es": "<p onclick=\"x()\">Hola</p>" }
+            }))],
+            false,
+        )
+        .await
+        .unwrap();
+    let settings = &layout.placements[0].settings;
+    assert_eq!(
+        settings["title"]["es"],
+        json!("Bienvenida"),
+        "a text per language"
+    );
+    assert_eq!(
+        settings["body"]["en"],
+        json!("<p>Hello <strong>all</strong></p>"),
+        "nothing that runs is kept"
+    );
+    assert_eq!(settings["body"]["es"], json!("<p>Hola</p>"));
+    for wrong in [
+        json!({ "title": "" }),
+        json!({}),
+        json!({ "title": { "en": "  " } }),
+        json!({ "title": { "english": "Hi" } }),
+        json!({ "title": "Hi", "body": { "en": 3 } }),
+    ] {
+        let refused = c
+            .set_layout(
+                &w.admin,
+                "testing.page",
+                w.course,
+                vec![note(wrong.clone())],
+                false,
+            )
+            .await
+            .unwrap_err();
+        assert_eq!(refused.code(), "customise.layout_invalid", "{wrong}");
+    }
+    let flat = c
+        .set_layout(
+            &w.admin,
+            "testing.page",
+            w.course,
+            vec![placement(
+                [0, 0, 3, 2],
+                "testing.clock",
+                json!({ "seconds": { "en": true } }),
+            )],
+            false,
+        )
+        .await
+        .unwrap_err();
+    assert_eq!(
+        flat.code(),
+        "customise.layout_invalid",
+        "only a translatable setting takes languages"
+    );
+    w.drop().await;
+}

@@ -314,6 +314,11 @@ pub struct WidgetSetting {
     pub key: &'static str,
     /// The kind of value, with its default.
     pub kind: crate::ValueKind,
+    /// Whether it may not be left empty: a text with no characters, or one in no language, is refused.
+    pub required: bool,
+    /// Whether a text takes one value per language, edited in every language installed and read in the language of
+    /// the reader, falling back to the one it has.
+    pub translatable: bool,
 }
 
 /// The widget a plugin of the widget type offers for layouts.

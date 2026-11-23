@@ -229,3 +229,37 @@ test("a course being arranged keeps its content and summary: they move, but are 
     await mode.uncheck();
   }
 });
+
+test("a text of the home is written on the widget itself and kept per language", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("heading", { level: 1 }).first().waitFor();
+  const mode = page.getByRole("switch", { name: t("editmode.label") });
+  await mode.waitFor({ timeout: 5000 }).catch(() => undefined);
+  test.skip(!(await mode.isVisible()), "the account cannot arrange the home");
+  const me = (await (await page.request.get("/api/v1/identity/me")).json()) as { scope: string };
+  const layout = `/api/v1/customise/scopes/${me.scope}/layouts/customise.dashboard`;
+  type Placed = { widget: string; x: number; y: number; w: number; h: number; pinned: boolean; settings: Record<string, unknown> };
+  const read = async () => (await (await page.request.get(layout)).json()) as { placements: Placed[]; origin: { from: string; scope?: string } };
+  const start = await read();
+  const own = start.origin.from === "scope" && start.origin.scope === me.scope;
+  test.skip(!start.placements.some((p) => p.widget === "widget_text"), "the home has no text widget");
+  await mode.check();
+  try {
+    const heading = page.getByRole("textbox", { name: t("editor.text", { setting: "heading" }) }).first();
+    await heading.click();
+    await heading.press("End");
+    await heading.pressSequentially(" e2e");
+    // The text is kept in the language it was written in, with the others it had.
+    await expect
+      .poll(async () => JSON.stringify((await read()).placements.find((p) => p.widget === "widget_text")?.settings["heading"]), { timeout: 5000 })
+      .toContain("e2e");
+  } finally {
+    if (await mode.isChecked()) await mode.uncheck();
+    await page.waitForLoadState("networkidle");
+    if (own) {
+      await page.request.put(layout, { headers: { "x-kampus": "1" }, data: { placements: start.placements.map(({ widget, x, y, w, h, pinned, settings }) => ({ widget, x, y, w, h, pinned, settings })) } });
+    } else {
+      await page.request.delete(layout, { headers: { "x-kampus": "1" } });
+    }
+  }
+});

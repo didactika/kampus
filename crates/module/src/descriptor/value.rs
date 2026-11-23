@@ -68,6 +68,12 @@ pub enum ValueKind {
         /// The value when none was chosen.
         default: &'static str,
     },
+    /// Rich text in the one format of user content, kept sanitised: at most some characters of HTML, empty when none
+    /// was chosen.
+    RichText {
+        /// The longest HTML.
+        max: usize,
+    },
 }
 
 impl ValueKind {
@@ -77,6 +83,7 @@ impl ValueKind {
         match self {
             Self::Boolean { default } => Value::Bool(default),
             Self::Choice { default, .. } | Self::Text { default, .. } => Value::String(default.to_owned()),
+            Self::RichText { .. } => Value::String(String::new()),
             Self::Integer { default, .. } => Value::from(default),
         }
     }
@@ -90,7 +97,9 @@ impl ValueKind {
             (Self::Integer { min, max, .. }, Value::Number(n)) => {
                 n.as_i64().is_some_and(|n| (min..=max).contains(&n))
             }
-            (Self::Text { max, .. }, Value::String(text)) => text.chars().count() <= max,
+            (Self::Text { max, .. } | Self::RichText { max }, Value::String(text)) => {
+                text.chars().count() <= max
+            }
             _ => false,
         }
     }
@@ -105,6 +114,7 @@ impl ValueKind {
                 serde_json::json!({ "type": "integer", "min": min, "max": max })
             }
             Self::Text { max, .. } => serde_json::json!({ "type": "text", "max": max }),
+            Self::RichText { max } => serde_json::json!({ "type": "rich_text", "max": max }),
         }
     }
 
@@ -118,7 +128,7 @@ impl ValueKind {
                 (Some(n), Some(min), Some(max)) => (min..=max).contains(&n),
                 _ => false,
             },
-            (Some("text"), Value::String(text)) => bound("max")
+            (Some("text" | "rich_text"), Value::String(text)) => bound("max")
                 .and_then(|m| usize::try_from(m).ok())
                 .is_some_and(|m| text.chars().count() <= m),
             (Some("choice"), Value::String(text)) => kind

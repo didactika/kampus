@@ -35,7 +35,7 @@
 
 /** The welcome of the home: a greeting in the colours of the brand with the figures of the person. */
 
-import { catalogueOf, currentAccount, optional, text, type Inbox, type WidgetProps } from "@kampus/web/host";
+import { catalogueOf, currentAccount, optional, type Inbox, type WidgetProps } from "@kampus/web/host";
 import { Welcome } from "./Welcome";
 
 /** The fewest rows that hold the figures under the greeting. */
@@ -52,7 +52,7 @@ export async function WelcomeWidget({ settings, context, size }: WidgetProps) {
   return (
     <Welcome
       name={account?.username ?? ""}
-      heading={text(settings, "heading")}
+      heading={settings["heading"]}
       figures={
         catalogue
           ? { courses: catalogue.courses.length, categories: catalogue.categories.length, unread: inbox ? inbox.unread : null }

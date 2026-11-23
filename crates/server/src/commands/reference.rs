@@ -51,6 +51,7 @@ fn accepts(kind: ValueKind) -> Value {
             json!({ "type": "integer", "min": min, "max": max, "default": default })
         }
         ValueKind::Text { max, default } => json!({ "type": "text", "max": max, "default": default }),
+        ValueKind::RichText { max } => json!({ "type": "rich_text", "max": max, "default": "" }),
     }
 }
 

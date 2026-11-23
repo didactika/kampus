@@ -39,5 +39,10 @@
  */
 
 export { useI18n } from "../i18n/I18nProvider";
+export { EditableRichText, EditableText } from "../features/editor/EditInPlace";
+export { RichText } from "../features/editor/RichText";
+export { RichTextEditor } from "../features/editor/RichTextEditor";
+export { registerEditorExtension, type EditorButton, type EditorExtension } from "../features/editor/registry";
+export { translated } from "../features/editor/translated";
 export { EmptyState } from "../features/shell/EmptyState";
 export { NotificationRow } from "../features/notifications/NotificationRow";

@@ -40,11 +40,11 @@ use std::collections::BTreeMap;
 
 use kampus_access::{Actor, ScopeId};
 use kampus_common::{Error, FieldError, Result};
-use kampus_module::ValueKind;
 use serde_json::{Value, json};
 use sqlx::{PgConnection, Row};
 
 use super::gravity::{room, settle};
+use super::values;
 use super::{is_code, principal, refuse_below_lock};
 use crate::permissions::{LAYOUT_MANAGE, LAYOUT_OWN};
 use crate::{AvailableWidget, Customise, Layout, Origin, PageGrid, Placement, RowHeight, WidgetSizes, sql};
@@ -157,12 +157,23 @@ pub(super) fn problems(
             problems.push(FieldError::new(name("y"), "overlap"));
         }
         for (key, value) in &placement.settings {
-            let fits = widget
+            let rule = widget
                 .setting(key)
-                .and_then(|s| s.get("kind"))
-                .is_some_and(|kind| ValueKind::stored_accepts(kind, value));
-            if !fits {
-                problems.push(FieldError::new(name(&format!("settings.{key}")), "type"));
+                .map_or(Some("type"), |declared| values::problem(declared, value));
+            if let Some(rule) = rule {
+                problems.push(FieldError::new(name(&format!("settings.{key}")), rule));
+            }
+        }
+        // A setting that may not be left empty is refused when the placement leaves it out, too.
+        for declared in &widget.settings {
+            let Some(key) = declared.get("key").and_then(Value::as_str) else {
+                continue;
+            };
+            if !placement.settings.contains_key(key) {
+                let default = declared.get("default").cloned().unwrap_or(Value::Null);
+                if values::problem(declared, &default) == Some("required") {
+                    problems.push(FieldError::new(name(&format!("settings.{key}")), "required"));
+                }
             }
         }
         if placement.permission.as_deref().is_some_and(|p| !is_code(p)) {
@@ -290,7 +301,7 @@ impl Customise {
                     cell("h").clamp(low, high)
                 },
                 pinned: row.get("pinned"),
-                settings: declared.with_defaults(settings),
+                settings: values::clean(&declared.settings, declared.with_defaults(settings)),
                 permission,
             });
         }
@@ -391,8 +402,18 @@ impl Customise {
             refuse_below_lock(origin, scope)?;
         }
         drop(conn);
-        // What is stored is what the page shows: every widget not pinned risen to the ones above it.
-        let placements = settle(placements);
+        // What is stored is what the page shows: every widget not pinned risen to the ones above it, and rich text
+        // sanitised.
+        let placements: Vec<Placement> = settle(placements)
+            .into_iter()
+            .map(|p| {
+                let settings = widgets.get(&p.widget).map_or_else(
+                    || p.settings.clone(),
+                    |w| values::clean(&w.settings, p.settings.clone()),
+                );
+                Placement { settings, ..p }
+            })
+            .collect();
         let mut tx = self.db.begin().await?;
         self.write_layout_in(&mut tx, page_kind, scope, &placements, locked)
             .await?;
