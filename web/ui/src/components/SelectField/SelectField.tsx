@@ -48,7 +48,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import MenuItem from "@mui/material/MenuItem";
 import OutlinedInput from "@mui/material/OutlinedInput";
 import Select from "@mui/material/Select";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { Icon } from "../Icon/index";
 
@@ -106,7 +106,17 @@ export function SelectField(props: SelectFieldProps) {
   const { label, options, name, hint, error, id, required, disabled, onChange, searchPlaceholder, noMatch } = props;
   const own = useId();
   const field = id ?? own;
-  const [inner, setInner] = useState(props.defaultValue ?? options[0]?.value ?? "");
+  const initial = props.defaultValue ?? options[0]?.value ?? "";
+  const [inner, setInner] = useState(initial);
+  const root = useRef<HTMLDivElement>(null);
+  // An uncontrolled list goes back to its first value when its form is reset, as native fields do.
+  useEffect(() => {
+    const form = root.current?.closest("form");
+    if (!form || props.value !== undefined) return undefined;
+    const reset = () => setInner(initial);
+    form.addEventListener("reset", reset);
+    return () => form.removeEventListener("reset", reset);
+  }, [initial, props.value]);
   const value = props.value ?? inner;
   const choose = (next: string) => {
     if (props.value === undefined) setInner(next);
@@ -116,7 +126,7 @@ export function SelectField(props: SelectFieldProps) {
   const searchable = options.length >= SEARCH_FROM;
 
   return (
-    <FormControl fullWidth required={required} disabled={disabled} error={Boolean(error)}>
+    <FormControl ref={root} fullWidth required={required} disabled={disabled} error={Boolean(error)}>
       <FormLabel htmlFor={field} id={`${field}-label`}>
         {label}
       </FormLabel>

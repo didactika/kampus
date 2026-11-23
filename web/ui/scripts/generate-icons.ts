@@ -74,6 +74,7 @@ const NAMES = [
   "draft",
   "drag_indicator",
   "edit",
+  "edit_note",
   "edit_square",
   "error",
   "event",

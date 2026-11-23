@@ -48,7 +48,7 @@ test("the home greets the person and offers to arrange it to whoever may", async
   if (await customise.isVisible()) {
     await customise.click();
     await expect(page.getByText(t("dashboard.editing"))).toBeVisible();
-    await page.getByRole("button", { name: t("dashboard.cancel") }).click();
+    await page.getByRole("region", { name: t("dashboard.customise") }).getByRole("button", { name: t("changes.done") }).click();
     await expect(page.getByText(t("dashboard.editing"))).toBeHidden();
   }
 });
@@ -113,4 +113,21 @@ test("the security of the account offers an authenticator app with its QR code a
   await expect(dialog.getByText(t("totp.secret"), { exact: true })).toBeVisible();
   await dialog.getByRole("button", { name: t("action.cancel") }).click();
   await expect(dialog).toBeHidden();
+});
+
+test("the profile offers its unsaved changes in a floating bar and asks before leaving them", async ({ page }) => {
+  await page.goto("/account");
+  const given = page.getByRole("textbox", { name: t("profile.given") });
+  const before = await given.inputValue();
+  await given.fill(`${before}-x`);
+  const bar = page.getByRole("region", { name: t("account.tab.profile") });
+  await expect(bar).toContainText(t("changes.unsaved"));
+  await page.getByRole("navigation", { name: t("nav.primary") }).getByRole("link").first().click();
+  const leave = page.getByRole("dialog", { name: t("leave.title") });
+  await expect(leave).toBeVisible();
+  await leave.getByRole("button", { name: t("leave.stay") }).click();
+  await expect(page).toHaveURL(/\/account$/);
+  await bar.getByRole("button", { name: t("changes.discard") }).click();
+  await expect(given).toHaveValue(before);
+  await expect(bar).toBeHidden();
 });

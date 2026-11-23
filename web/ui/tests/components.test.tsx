@@ -48,6 +48,7 @@ import { useState, type ReactNode } from "react";
 import {
   Button,
   ButtonGroup,
+  ChangesBar,
   ConfirmDialog,
   DIDACTIKA,
   Icon,
@@ -232,6 +233,72 @@ describe("toasts", () => {
     expect(status.element().getAttribute("aria-live")).toBe("polite");
     await userEvent.click(screen.getByRole("button", { name: "Dismiss" }));
     await expect.poll(() => document.body.textContent?.includes("Saved")).toBe(false);
+  });
+
+  it("stack at the right, an error read at once, and leave by themselves", async () => {
+    function Page() {
+      const toast = useToast();
+      return (
+        <Button
+          onClick={() => {
+            toast("Saved", "success");
+            toast("Not saved", "danger");
+          }}
+        >
+          Save
+        </Button>
+      );
+    }
+    const screen = await themed(
+      <ToastProvider closeLabel="Dismiss" lifetime={300}>
+        <Page />
+      </ToastProvider>,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
+    const error = screen.getByRole("alert").filter({ hasText: "Not saved" });
+    await expect.element(error).toBeVisible();
+    expect(error.element().getAttribute("aria-live")).toBe("assertive");
+    const saved = screen.getByRole("status").filter({ hasText: "Saved" }).element().getBoundingClientRect();
+    expect(saved.right).toBeGreaterThan(window.innerWidth - 40);
+    await expect.poll(() => document.body.textContent?.includes("Saved"), { timeout: 3000 }).toBe(false);
+  });
+});
+
+describe("the bar of changes", () => {
+  it("floats at the foot of the page while there are changes, and saves or discards them", async () => {
+    const done: string[] = [];
+    function Page() {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <Button onClick={() => setOpen(true)}>Change</Button>
+          <ChangesBar
+            open={open}
+            label="Profile"
+            message="2 unsaved changes"
+            saveLabel="Save"
+            discardLabel="Discard"
+            onSave={() => done.push("save")}
+            onDiscard={() => {
+              done.push("discard");
+              setOpen(false);
+            }}
+          />
+        </>
+      );
+    }
+    const screen = await themed(<Page />);
+    expect(document.body.textContent).not.toContain("2 unsaved changes");
+    await userEvent.click(screen.getByRole("button", { name: "Change" }));
+    const bar = screen.getByRole("region", { name: "Profile" });
+    await expect.element(bar).toBeVisible();
+    expect(bar.element().textContent).toContain("2 unsaved changes");
+    expect(bar.element().getBoundingClientRect().bottom).toBeGreaterThan(window.innerHeight - 60);
+    await userEvent.click(bar.getByRole("button", { name: "Save" }));
+    await userEvent.click(bar.getByRole("button", { name: "Discard" }));
+    expect(done).toEqual(["save", "discard"]);
+    await expect.poll(() => document.body.textContent?.includes("2 unsaved changes")).toBe(false);
+    expect(await violations()).toEqual([]);
   });
 });
 

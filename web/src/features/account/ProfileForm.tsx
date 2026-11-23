@@ -45,15 +45,16 @@ import CardContent from "@mui/material/CardContent";
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
-import { Button, SelectField, TextField, useToast } from "@kampus/ui";
+import { ChangesBar, SelectField, TextField, useToast } from "@kampus/ui";
 
 import { browserApi } from "../../api/browser";
 import { ApiError } from "../../api/problem";
 import type { Me, Profile } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { LANGUAGES } from "../../i18n/translator";
+import { useLeaveGuard } from "../shell/LeaveGuard";
 
 /** The props of `ProfileForm`. */
 export interface ProfileFormProps {
@@ -69,6 +70,22 @@ export function ProfileForm({ account, profile }: ProfileFormProps) {
   const [version, setVersion] = useState(profile.version);
   const [busy, setBusy] = useState(false);
   const zones = useMemo(() => Intl.supportedValuesOf("timeZone"), []);
+  const form = useRef<HTMLFormElement>(null);
+  const saved = useRef("");
+  const [dirty, setDirty] = useState(false);
+  const snapshot = () => (form.current ? JSON.stringify([...new FormData(form.current).entries()]) : "");
+  // Compared after the fields render their new value, since a list sets its hidden input a moment later.
+  const check = useCallback(() => setTimeout(() => setDirty(snapshot() !== saved.current), 0), []);
+  useEffect(() => {
+    saved.current = snapshot();
+  }, []);
+  const guard = useLeaveGuard(dirty);
+
+  /** What the form holds now becomes what is saved. */
+  function savedValues() {
+    saved.current = snapshot();
+    setDirty(false);
+  }
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -79,7 +96,7 @@ export function ProfileForm({ account, profile }: ProfileFormProps) {
     };
     setBusy(true);
     try {
-      const saved = await browserApi<Profile>("/users/me/profile", {
+      const stored = await browserApi<Profile>("/users/me/profile", {
         method: "PUT",
         headers: { "If-Match": `"${version}"` },
         body: {
@@ -90,7 +107,8 @@ export function ProfileForm({ account, profile }: ProfileFormProps) {
           time_zone: value("time_zone"),
         },
       });
-      setVersion(saved.version);
+      setVersion(stored.version);
+      savedValues();
       toast(t("profile.saved"), "success");
       router.refresh();
     } catch (failure) {
@@ -103,7 +121,7 @@ export function ProfileForm({ account, profile }: ProfileFormProps) {
   return (
     <Card>
       <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-        <Stack component="form" spacing={3} onSubmit={(event) => void save(event)}>
+        <Stack component="form" ref={form} spacing={3} onSubmit={(event) => void save(event)} onInput={check} onReset={check}>
           <Grid container spacing={2.5}>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField label={t("profile.username")} value={account.username} disabled />
@@ -123,6 +141,7 @@ export function ProfileForm({ account, profile }: ProfileFormProps) {
             <Grid size={{ xs: 12, md: 6 }}>
               <SelectField
                 name="language_code"
+                onChange={check}
                 label={t("profile.language")}
                 defaultValue={profile.language_code ?? ""}
                 options={[{ value: "", label: t("profile.language.auto") }, ...LANGUAGES.map((l) => ({ value: l, label: t(`language.${l}`) === `language.${l}` ? l : t(`language.${l}`) }))]}
@@ -131,6 +150,7 @@ export function ProfileForm({ account, profile }: ProfileFormProps) {
             <Grid size={{ xs: 12, md: 6 }}>
               <SelectField
                 name="time_zone"
+                onChange={check}
                 label={t("profile.timezone")}
                 searchPlaceholder={t("select.search")}
                 noMatch={t("select.nomatch")}
@@ -139,11 +159,17 @@ export function ProfileForm({ account, profile }: ProfileFormProps) {
               />
             </Grid>
           </Grid>
-          <Stack direction="row" sx={{ justifyContent: "flex-end" }}>
-            <Button type="submit" variant="filled" icon="save" busy={busy}>
-              {t("profile.save")}
-            </Button>
-          </Stack>
+          <ChangesBar
+            open={dirty}
+            label={t("account.tab.profile")}
+            message={t("changes.unsaved")}
+            saveLabel={t("profile.save")}
+            discardLabel={t("changes.discard")}
+            busy={busy}
+            onSave={() => form.current?.requestSubmit()}
+            onDiscard={() => form.current?.reset()}
+          />
+          {guard}
         </Stack>
       </CardContent>
     </Card>

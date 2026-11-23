@@ -42,7 +42,6 @@
  * widget, and the arrangement is saved for the scope, or put back to the default.
  */
 
-import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardActionArea from "@mui/material/CardActionArea";
@@ -60,11 +59,12 @@ import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
-import { Button, ConfirmDialog, Icon, useToast } from "@kampus/ui";
+import { Button, ChangesBar, ConfirmDialog, Icon, useToast } from "@kampus/ui";
 
 import { browserApi } from "../../api/browser";
 import type { AvailableWidget, DeclaredSetting, Placement } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
+import { useLeaveGuard } from "../shell/LeaveGuard";
 import { WidgetSettings } from "./WidgetSettings";
 import { WIDGET_ICONS } from "./widget-icons";
 
@@ -103,6 +103,17 @@ let keys = 0;
 
 /** The settings a widget declares, as the API sends them. */
 const settingsOf = (widget: AvailableWidget | undefined): DeclaredSetting[] => (widget?.settings ?? []) as DeclaredSetting[];
+
+/** How many places differ between two arrangements: each widget moved, changed, added or removed counts once. */
+function changesBetween(before: readonly Placement[], after: readonly Placement[]): number {
+  const key = (p: Placement) => JSON.stringify([p.region, p.widget, p.settings]);
+  const longest = Math.max(before.length, after.length);
+  let differ = 0;
+  for (let i = 0; i < longest; i++) {
+    if (!before[i] || !after[i] || key(before[i]!) !== key(after[i]!)) differ += 1;
+  }
+  return differ;
+}
 
 /** `<ArrangedPage scope="…" pageKind="customise.dashboard" regions={["top", "main", "side"]} widgets={…} … />` */
 export function ArrangedPage({ scope, pageKind, regions, widgets, editable, available, editingText }: ArrangedPageProps) {
@@ -172,6 +183,8 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
     }
   }
 
+  const changes = editing ? changesBetween(widgets.map((w) => w.placement), draft.map((d) => d.placement)) : 0;
+  const guard = useLeaveGuard(changes > 0);
   const sideUsed = editing || shown.some((d) => d.placement.region === "side");
   const span = (region: string) => (region === "main" ? (sideUsed ? 8 : 12) : region === "side" ? 4 : 12);
   const configured = draft.find((d) => d.key === configuring);
@@ -184,28 +197,6 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
             {t("dashboard.customise")}
           </Button>
         </Box>
-      ) : null}
-      {editing ? (
-        <Alert
-          severity="info"
-          icon={<Icon name="edit_square" />}
-          sx={{ mb: 3, alignItems: "center", position: "sticky", top: 72, zIndex: "appBar", boxShadow: 3 }}
-          action={
-            <Stack direction="row" spacing={1}>
-              <Button variant="text" tone="danger" icon="restart_alt" onClick={() => setResetting(true)} disabled={busy}>
-                {t("dashboard.reset")}
-              </Button>
-              <Button variant="outlined" onClick={() => setEditing(false)} disabled={busy}>
-                {t("dashboard.cancel")}
-              </Button>
-              <Button variant="filled" icon="save" busy={busy} onClick={() => void save()}>
-                {t("dashboard.save")}
-              </Button>
-            </Stack>
-          }
-        >
-          {editingText}
-        </Alert>
       ) : null}
       <Grid container spacing={3}>
         {regions.map((region) => {
@@ -344,6 +335,23 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
       >
         {t("dashboard.reset.body")}
       </ConfirmDialog>
+      <ChangesBar
+        open={editing}
+        dirty={changes > 0}
+        label={t("dashboard.customise")}
+        message={changes > 0 ? t("changes.count", { n: changes }) : editingText}
+        saveLabel={t("dashboard.save")}
+        discardLabel={changes > 0 ? t("dashboard.cancel") : t("changes.done")}
+        busy={busy}
+        onSave={() => void save()}
+        onDiscard={() => setEditing(false)}
+        actions={
+          <Button variant="text" icon="restart_alt" onClick={() => setResetting(true)} disabled={busy} sx={{ color: "inherit" }}>
+            {t("dashboard.reset")}
+          </Button>
+        }
+      />
+      {guard}
     </>
   );
 }
