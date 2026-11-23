@@ -87,12 +87,20 @@ export interface GridEditorProps {
   readonly onPin: (key: number) => void;
 }
 
+/** The edges of a widget a resize moves. */
+interface Edges {
+  readonly left?: boolean;
+  readonly right?: boolean;
+  readonly top?: boolean;
+  readonly bottom?: boolean;
+}
+
 /** What the pointer is doing to a widget. */
 interface Gesture {
   readonly key: number;
   readonly kind: "move" | "resize";
-  /** The edges a resize moves: the right one, the bottom one or both. */
-  readonly edges: { readonly right: boolean; readonly bottom: boolean };
+  /** The edges a resize moves: one side, or the two of a corner. */
+  readonly edges: Edges;
   readonly startX: number;
   readonly startY: number;
   /** The rectangles when it began, which every step places from. */
@@ -138,12 +146,19 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
     if (g.kind === "move") {
       to = { ...start, x: Math.round((start.x * pitchX + g.dx) / pitchX), y: Math.max(0, Math.round((start.y * pitchY + g.dy) / pitchY)) };
     } else {
-      const size = {
-        w: g.edges.right ? Math.round((box(start).width + g.dx + gap) / pitchX) : start.w,
-        h: g.edges.bottom ? Math.round((box(start).height + g.dy + gap) / pitchY) : start.h,
-      };
+      // The edge the person holds moves; the opposite one stays where it was.
+      const { left, right, top, bottom } = g.edges;
+      const wide = left ? box(start).width - g.dx : right ? box(start).width + g.dx : box(start).width;
+      const tall = top ? box(start).height - g.dy : bottom ? box(start).height + g.dy : box(start).height;
+      const size = { w: Math.round((wide + gap) / pitchX), h: Math.round((tall + gap) / pitchY) };
       const sizes = sizesOf(g.key);
-      to = { ...start, ...(sizes ? within(sizes, size, columns) : start) };
+      const kept = sizes ? within(sizes, size, columns) : { w: start.w, h: start.h };
+      to = {
+        ...start,
+        ...kept,
+        x: left ? Math.max(0, start.x + start.w - kept.w) : start.x,
+        y: top ? Math.max(0, start.y + start.h - kept.h) : start.y,
+      };
     }
     const placed = place(g.origin, g.key, to, columns);
     return { target: placed.find((i) => i.key === g.key)!, placed };
@@ -159,7 +174,7 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
     setAnnounced(t("grid.position", { widget: widget?.name ?? "", x: item.x + 1, y: item.y + 1, w: item.w, h: item.h }));
   };
 
-  function begin(event: ReactPointerEvent<HTMLElement>, key: number, kind: Gesture["kind"], edges = { right: true, bottom: true }) {
+  function begin(event: ReactPointerEvent<HTMLElement>, key: number, kind: Gesture["kind"], edges: Edges = {}) {
     if (event.button !== 0) return;
     event.stopPropagation();
     (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
@@ -282,8 +297,6 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
                   sx={{
                     position: "absolute",
                     ...style,
-                    // The corner that resizes shows only while the pointer or the focus is on the widget.
-                    "&:hover .resize-corner::after, &:focus-within .resize-corner::after": { opacity: 0.55 },
                     transition: moving ? "none" : "left 200ms cubic-bezier(0.2, 0, 0, 1), top 200ms cubic-bezier(0.2, 0, 0, 1), width 200ms cubic-bezier(0.2, 0, 0, 1), height 200ms cubic-bezier(0.2, 0, 0, 1)",
                     "@media (prefers-reduced-motion: reduce)": { transition: "none" },
                   }}
@@ -334,51 +347,79 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
 interface ResizeHandlesProps {
   readonly name: string;
   readonly resize: Sizes["resize"];
-  readonly onPointerDown: (event: ReactPointerEvent<HTMLElement>, edges: Gesture["edges"]) => void;
+  readonly onPointerDown: (event: ReactPointerEvent<HTMLElement>, edges: Edges) => void;
   readonly onPointerMove: (event: ReactPointerEvent<HTMLElement>) => void;
   readonly onPointerUp: () => void;
   readonly onPointerCancel: () => void;
 }
 
-/** The edges of a widget that resize it: the right one, the bottom one and the corner between, as it allows. */
+/** The thickness of the band along an edge that resizes, and the side of a corner, in pixels. */
+const EDGE = 10;
+const CORNER = 22;
+
+/** The radius of a card, which a highlighted corner follows. */
+const RADIUS = 16;
+
+/** A handle: the edges it moves, where it sits and the cursor it shows. */
+interface Handle {
+  readonly edges: Edges;
+  readonly cursor: string;
+  readonly at: Record<string, number | string>;
+  /** The part of the border it lights up. */
+  readonly border: Record<string, number | string>;
+}
+
+/** Every handle a widget may have: four sides and four corners. */
+const HANDLES: readonly Handle[] = [
+  { edges: { right: true }, cursor: "ew-resize", at: { insetBlock: CORNER, insetInlineEnd: -EDGE / 2, inlineSize: EDGE }, border: { insetBlock: 0, insetInlineEnd: EDGE / 2 - 1, inlineSize: 3 } },
+  { edges: { left: true }, cursor: "ew-resize", at: { insetBlock: CORNER, insetInlineStart: -EDGE / 2, inlineSize: EDGE }, border: { insetBlock: 0, insetInlineStart: EDGE / 2 - 1, inlineSize: 3 } },
+  { edges: { bottom: true }, cursor: "ns-resize", at: { insetInline: CORNER, insetBlockEnd: -EDGE / 2, blockSize: EDGE }, border: { insetInline: 0, insetBlockEnd: EDGE / 2 - 1, blockSize: 3 } },
+  { edges: { top: true }, cursor: "ns-resize", at: { insetInline: CORNER, insetBlockStart: -EDGE / 2, blockSize: EDGE }, border: { insetInline: 0, insetBlockStart: EDGE / 2 - 1, blockSize: 3 } },
+  { edges: { right: true, bottom: true }, cursor: "nwse-resize", at: { insetInlineEnd: -EDGE / 2, insetBlockEnd: -EDGE / 2, inlineSize: CORNER, blockSize: CORNER }, border: { insetInlineEnd: EDGE / 2 - 1, insetBlockEnd: EDGE / 2 - 1, inlineSize: CORNER, blockSize: CORNER, borderInlineEnd: "3px solid", borderBlockEnd: "3px solid", borderEndEndRadius: RADIUS } },
+  { edges: { left: true, bottom: true }, cursor: "nesw-resize", at: { insetInlineStart: -EDGE / 2, insetBlockEnd: -EDGE / 2, inlineSize: CORNER, blockSize: CORNER }, border: { insetInlineStart: EDGE / 2 - 1, insetBlockEnd: EDGE / 2 - 1, inlineSize: CORNER, blockSize: CORNER, borderInlineStart: "3px solid", borderBlockEnd: "3px solid", borderEndStartRadius: RADIUS } },
+  { edges: { right: true, top: true }, cursor: "nesw-resize", at: { insetInlineEnd: -EDGE / 2, insetBlockStart: -EDGE / 2, inlineSize: CORNER, blockSize: CORNER }, border: { insetInlineEnd: EDGE / 2 - 1, insetBlockStart: EDGE / 2 - 1, inlineSize: CORNER, blockSize: CORNER, borderInlineEnd: "3px solid", borderBlockStart: "3px solid", borderStartEndRadius: RADIUS } },
+  { edges: { left: true, top: true }, cursor: "nwse-resize", at: { insetInlineStart: -EDGE / 2, insetBlockStart: -EDGE / 2, inlineSize: CORNER, blockSize: CORNER }, border: { insetInlineStart: EDGE / 2 - 1, insetBlockStart: EDGE / 2 - 1, inlineSize: CORNER, blockSize: CORNER, borderInlineStart: "3px solid", borderBlockStart: "3px solid", borderStartStartRadius: RADIUS } },
+];
+
+/**
+ * The edges and corners of a widget that resize it, as far as it may be resized. They are invisible: only the one
+ * under the pointer lights up its part of the border of the card, so the person sees what they will pull.
+ */
 function ResizeHandles({ name, resize, onPointerDown, onPointerMove, onPointerUp, onPointerCancel }: ResizeHandlesProps) {
   const horizontal = resize === "both" || resize === "horizontal";
   const vertical = resize === "both" || resize === "vertical";
-  const common = { onPointerMove, onPointerUp, onPointerCancel, "aria-hidden": true as const, title: name };
-  const edge = { position: "absolute", zIndex: 4, touchAction: "none", "&:hover::after, &:active::after": { opacity: 1 } } as const;
-  const bar = { content: '""', position: "absolute", borderRadius: 1, bgcolor: "primary.main", opacity: 0, transition: "opacity 120ms" } as const;
+  const allowed = (e: Edges) => (horizontal || !(e.left || e.right)) && (vertical || !(e.top || e.bottom));
   return (
     <>
-      {horizontal ? (
+      {HANDLES.filter((h) => allowed(h.edges)).map((handle) => (
         <Box
-          {...common}
-          onPointerDown={(event) => onPointerDown(event, { right: true, bottom: false })}
-          sx={{ ...edge, insetBlock: 16, insetInlineEnd: -6, inlineSize: 12, cursor: "ew-resize", "&::after": { ...bar, insetBlock: "30%", insetInlineStart: 4, inlineSize: 4 } }}
-        />
-      ) : null}
-      {vertical ? (
-        <Box
-          {...common}
-          onPointerDown={(event) => onPointerDown(event, { right: false, bottom: true })}
-          sx={{ ...edge, insetInline: 16, insetBlockEnd: -6, blockSize: 12, cursor: "ns-resize", "&::after": { ...bar, insetInline: "35%", insetBlockStart: 4, blockSize: 4 } }}
-        />
-      ) : null}
-      {horizontal && vertical ? (
-        <Box
-          {...common}
-          className="resize-corner"
-          onPointerDown={(event) => onPointerDown(event, { right: true, bottom: true })}
+          key={handle.cursor + Object.keys(handle.edges).join()}
+          aria-hidden
+          title={name}
+          onPointerDown={(event) => onPointerDown(event, handle.edges)}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
           sx={{
-            ...edge,
-            insetInlineEnd: -4,
-            insetBlockEnd: -4,
-            inlineSize: 22,
-            blockSize: 22,
-            cursor: "nwse-resize",
-            "&::after": { ...bar, insetInlineEnd: 6, insetBlockEnd: 6, inlineSize: 10, blockSize: 10, bgcolor: "transparent", borderInlineEnd: "3px solid", borderBlockEnd: "3px solid", borderColor: "primary.main", borderEndEndRadius: 6 },
+            position: "absolute",
+            zIndex: 4,
+            touchAction: "none",
+            cursor: handle.cursor,
+            ...handle.at,
+            "&::after": {
+              content: '""',
+              position: "absolute",
+              ...handle.border,
+              ...(handle.border["borderInlineStart"] || handle.border["borderInlineEnd"] || handle.border["borderBlockStart"] || handle.border["borderBlockEnd"]
+                ? { borderColor: "primary.main", bgcolor: "transparent" }
+                : { bgcolor: "primary.main", borderRadius: 2 }),
+              opacity: 0,
+              transition: "opacity 120ms",
+            },
+            "&:hover::after, &:active::after": { opacity: 1 },
           }}
         />
-      ) : null}
+      ))}
     </>
   );
 }

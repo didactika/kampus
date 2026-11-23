@@ -6254,6 +6254,13 @@ export type components = {
              */
             w: number;
         };
+        /** @description The heights a widget takes between two widths. */
+        SizeBand: {
+            /** @description The lowest and the highest it takes there, in rows. */
+            heights: number[];
+            /** @description The narrowest and the widest it applies to, in columns. */
+            widths: number[];
+        };
         /** @description Where a state came from. */
         Source: "automatic" | "exception";
         /** @description Where the change of a grade came from. */
@@ -6544,6 +6551,11 @@ export type components = {
         };
         /** @description The sizes a widget takes on a page kind. */
         WidgetSizes: {
+            /**
+             * @description The heights it takes at some widths; every height between `min` and `max` at the widths no band holds.
+             * @default []
+             */
+            bands: components["schemas"]["SizeBand"][];
             /** @description The one it takes when it is placed. */
             default: components["schemas"]["Size"];
             /** @description The largest. */

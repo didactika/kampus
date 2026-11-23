@@ -159,12 +159,14 @@ test("a widget of the home moves and resizes with the keyboard and every change 
   try {
     const frame = page.getByRole("group", { name: new RegExp(`^${t("widget_welcome.name")}:`) }).first();
     await frame.focus();
-    // Down goes past the next widget; widgets rise, so a plain row down would settle back.
-    await page.keyboard.press("ArrowDown");
+    // Up or down moves it past the next widget, since widgets rise and a plain row would settle back: up when it is
+    // below another, down otherwise, and then back.
+    const [there, back] = welcome!.y > 0 ? ["ArrowUp", "ArrowDown"] : ["ArrowDown", "ArrowUp"];
+    await page.keyboard.press(there);
     await expect.poll(async () => (await welcomeOf())?.y, { timeout: 5000 }).not.toBe(welcome!.y);
     expect(await (await page.request.get(campusLayout)).text(), "the home of the campus does not change").toBe(campusBefore);
     await frame.focus();
-    await page.keyboard.press("ArrowUp");
+    await page.keyboard.press(back);
     await expect.poll(async () => (await welcomeOf())?.y, { timeout: 5000 }).toBe(welcome!.y);
     // Shift and an arrow resize it, within the sizes the widget declares: shorter when it can be, taller otherwise.
     const smallest = 3;

@@ -56,6 +56,7 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
             default: Cells::new(4, 3),
             max: Cells::new(12, 12),
             resize: Resize::Both,
+            bands: &[],
         },
         WidgetSize {
             page_kind: COURSE_PAGE,
@@ -63,6 +64,7 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
             default: Cells::new(4, 3),
             max: Cells::new(12, 12),
             resize: Resize::Both,
+            bands: &[],
         },
     ],
     settings: &[

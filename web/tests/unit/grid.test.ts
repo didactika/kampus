@@ -80,6 +80,9 @@ describe("the grid of a page", () => {
     expect(within({ ...sizes, resize: "vertical" }, { w: 6, h: 7 }, 12)).toEqual({ w: 4, h: 7 });
     const fixed: Sizes = { min: { w: 8, h: 10 }, default: { w: 8, h: 10 }, max: { w: 8, h: 10 }, resize: "none" };
     expect(within(fixed, { w: 2, h: 2 }, 12)).toEqual({ w: 8, h: 10 });
+    const banded: Sizes = { min: { w: 6, h: 3 }, default: { w: 12, h: 4 }, max: { w: 12, h: 6 }, resize: "both", bands: [{ widths: [6, 6], heights: [3, 6] }, { widths: [7, 12], heights: [3, 4] }] };
+    expect(within(banded, { w: 6, h: 6 }, 12)).toEqual({ w: 6, h: 6 });
+    expect(within(banded, { w: 12, h: 6 }, 12)).toEqual({ w: 12, h: 4 });
   });
 
   it("finds the first room that holds a new widget, in reading order", () => {

@@ -52,6 +52,7 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
         default: Cells::new(4, 5),
         max: Cells::new(6, 10),
         resize: Resize::Both,
+        bands: &[],
     }],
     settings: &[WidgetSetting {
         key: "limit",

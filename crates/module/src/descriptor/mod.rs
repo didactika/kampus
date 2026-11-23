@@ -57,8 +57,8 @@ pub use condition::{
     nothing_depends,
 };
 pub use customise::{
-    Cells, FieldKindDeclaration, FlagDeclaration, Grid, MenuKindDeclaration, PageKindDeclaration, Resize,
-    RowHeight, TermDeclaration, TermForms, WidgetDeclaration, WidgetSetting, WidgetSize,
+    Band, Cells, FieldKindDeclaration, FlagDeclaration, Grid, MenuKindDeclaration, PageKindDeclaration,
+    Resize, RowHeight, TermDeclaration, TermForms, WidgetDeclaration, WidgetSetting, WidgetSize,
 };
 pub use event::{Event, EventDeclaration, EventRun, ListenerDeclaration};
 pub use file::{FileAreaDeclaration, FileRead, ReadFuture};

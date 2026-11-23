@@ -34,7 +34,7 @@
 
 //! The sizes a widget declares, checked against the grid of a page.
 
-use kampus_module::{Cells, Grid, Resize, WidgetSize};
+use kampus_module::{Band, Cells, Grid, Resize, WidgetSize};
 
 /// A size on the standard grid, between two sizes, starting at the smaller.
 const fn size(min: Cells, max: Cells, resize: Resize) -> WidgetSize {
@@ -44,6 +44,7 @@ const fn size(min: Cells, max: Cells, resize: Resize) -> WidgetSize {
         default: min,
         max,
         resize,
+        bands: &[],
     }
 }
 
@@ -72,4 +73,38 @@ fn a_size_fits_its_grid_only_between_its_bounds_and_in_the_directions_it_resizes
         size(Cells::new(2, 2), Cells::new(6, 2), Resize::Horizontal).problem(grid),
         None
     );
+}
+
+/// Bands of the welcome: six columns up to six rows, wider up to four.
+const WELCOME: &[Band] = &[Band::new((6, 6), (3, 6)), Band::new((7, 12), (3, 4))];
+/// Two bands that share a width.
+const SHARED: &[Band] = &[Band::new((6, 8), (3, 6)), Band::new((7, 12), (3, 4))];
+/// A band where the default size does not fit.
+const LOW: &[Band] = &[Band::new((7, 12), (3, 3))];
+/// A band narrower than the widget may be.
+const OUTSIDE: &[Band] = &[Band::new((5, 12), (3, 4))];
+
+#[test]
+fn bands_say_the_heights_a_widget_takes_at_each_width() {
+    let banded = WidgetSize {
+        page_kind: "testing.page",
+        min: Cells::new(6, 3),
+        default: Cells::new(12, 4),
+        max: Cells::new(12, 6),
+        resize: Resize::Both,
+        bands: WELCOME,
+    };
+    assert_eq!(banded.problem(Grid::STANDARD), None);
+    assert_eq!((banded.heights(6), banded.heights(9)), ((3, 6), (3, 4)));
+    for wrong in [SHARED, LOW, OUTSIDE] {
+        assert!(
+            WidgetSize {
+                bands: wrong,
+                ..banded
+            }
+            .problem(Grid::STANDARD)
+            .is_some(),
+            "{wrong:?}"
+        );
+    }
 }

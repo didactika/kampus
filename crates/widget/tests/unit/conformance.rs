@@ -45,6 +45,7 @@ const SIZE: WidgetSize = WidgetSize {
     default: Cells::new(3, 2),
     max: Cells::new(6, 4),
     resize: Resize::Both,
+    bands: &[],
 };
 
 /// A widget named as its plugin, with an icon and a size.
