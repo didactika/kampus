@@ -56,13 +56,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** The home of the person: their own arrangement, or the one of their campus until they make one. */
 export default async function HomePage() {
-  const account = (await currentAccount())!;
+  const [account, { language }] = [(await currentAccount())!, await requestI18n()];
   const layout = await optional<Layout | null>(`/customise/scopes/${account.scope}/layouts/${DASHBOARD}`, null);
   const placements = layout?.placements.length ? layout.placements : DEFAULT_DASHBOARD;
   const widgets = await Promise.all(
     placements.map(async (placement) => {
       const plugin = WIDGETS[placement.widget];
-      return { placement, node: plugin ? await plugin.render({ settings: placement.settings, context: { campus: account.campus }, size: { w: placement.w, h: placement.h } }) : null };
+      return { placement, node: plugin ? await plugin.render({ settings: placement.settings, context: { campus: account.campus }, size: { w: placement.w, h: placement.h }, language }) : null };
     }),
   );
   return (

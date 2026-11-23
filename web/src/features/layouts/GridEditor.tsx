@@ -188,7 +188,7 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
   /** The most rows a widget may take: those its content fills, so it never grows past what it shows. */
   const fill = (key: number, size: { readonly w: number; readonly h: number }, low: number) => {
     const content = naturals[key];
-    if (content === undefined) return size;
+    if (content === undefined || items.find((i) => i.key === key)?.grows) return size;
     return { ...size, h: Math.max(low, Math.min(size.h, Math.ceil((content + gap) / pitchY))) };
   };
   // A widget shows the height of its content, as on the page; the one being resized shows the rows it will take.
@@ -222,7 +222,7 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
     return { target: placed.find((i) => i.key === g.key)!, placed };
   }
 
-  const rectangles = (list: readonly Item[]) => list.map(({ key, x, y, w, h, pinned }) => ({ key, x, y, w, h, pinned }));
+  const rectangles = (list: readonly Item[]) => list.map(({ key, x, y, w, h, pinned, grows }) => ({ key, x, y, w, h, pinned, grows }));
   const lifted = gesture?.started ? gesture : null;
   const shown = lifted ? preview(lifted).placed : rectangles(items);
   const now = layout(shown, lifted?.kind === "resize" ? lifted.key : null);
@@ -371,7 +371,7 @@ export function GridEditor({ columns, row, items, onChange, onRemove, onPin }: G
                         contents.current.set(item.key, element);
                       } else contents.current.delete(item.key);
                     }}
-                    maxContent={rows(metrics, item.h)}
+                    maxContent={item.grows ? undefined : rows(metrics, item.h)}
                     onFocus={() => setSelected(item.key)}
                     onPointerDown={item.held ? undefined : (event) => begin(event, item.key, "move")}
                     onPointerMove={follow}

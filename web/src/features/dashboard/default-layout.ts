@@ -45,7 +45,7 @@ export const DASHBOARD = "customise.dashboard";
 
 /** The widgets of the home by default: the welcome and the latest notifications side by side, the catalogue under them. */
 export const DEFAULT_DASHBOARD: readonly Placement[] = [
-  { widget: "widget_welcome", x: 0, y: 0, w: 8, h: 5, settings: { heading: "" }, pinned: false, locked: false, held: false, permission: null },
-  { widget: "widget_notifications", x: 8, y: 0, w: 4, h: 5, settings: { limit: 5 }, pinned: false, locked: false, held: false, permission: null },
-  { widget: "widget_catalogue", x: 0, y: 5, w: 12, h: 8, settings: { heading: "", view: "grid", size: 8 }, pinned: false, locked: false, held: false, permission: null },
+  { widget: "widget_welcome", x: 0, y: 0, w: 8, h: 5, settings: { heading: "" }, pinned: false, locked: false, held: false, grows: false, permission: null },
+  { widget: "widget_notifications", x: 8, y: 0, w: 4, h: 5, settings: { limit: 5 }, pinned: false, locked: false, held: false, grows: false, permission: null },
+  { widget: "widget_catalogue", x: 0, y: 5, w: 12, h: 8, settings: { heading: "", view: "grid", size: 8 }, pinned: false, locked: false, held: false, grows: false, permission: null },
 ];

@@ -45,6 +45,7 @@ const fn size(min: Cells, max: Cells, resize: Resize) -> WidgetSize {
         max,
         resize,
         bands: &[],
+        grows: false,
     }
 }
 
@@ -93,6 +94,7 @@ fn bands_say_the_heights_a_widget_takes_at_each_width() {
         max: Cells::new(12, 6),
         resize: Resize::Both,
         bands: WELCOME,
+        grows: false,
     };
     assert_eq!(banded.problem(Grid::STANDARD), None);
     assert_eq!((banded.heights(6), banded.heights(9)), ((3, 6), (3, 4)));
@@ -100,6 +102,7 @@ fn bands_say_the_heights_a_widget_takes_at_each_width() {
         assert!(
             WidgetSize {
                 bands: wrong,
+                grows: false,
                 ..banded
             }
             .problem(Grid::STANDARD)

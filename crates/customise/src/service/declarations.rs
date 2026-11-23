@@ -228,6 +228,7 @@ fn stored_size(size: &WidgetSize) -> Value {
         "default": cells(size.default),
         "max": cells(size.max),
         "resize": size.resize.code(),
+        "grows": size.grows,
         "bands": size.bands.iter().map(|b| json!({ "widths": [b.widths.0, b.widths.1], "heights": [b.heights.0, b.heights.1] })).collect::<Vec<_>>(),
     })
 }

@@ -42,7 +42,6 @@
  */
 
 import Box from "@mui/material/Box";
-import ButtonBase from "@mui/material/ButtonBase";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -57,6 +56,7 @@ import { useId, useState } from "react";
 import { Button, Icon, SelectField, TextField } from "@kampus/ui";
 
 import type { DeclaredSetting } from "../../api/types";
+import { LanguagePicker, filledIn } from "../editor/LanguagePicker";
 import { RichTextEditor } from "../editor/RichTextEditor";
 import { textIn, translated, withText } from "../editor/translated";
 import { useI18n } from "../../i18n/I18nProvider";
@@ -117,42 +117,21 @@ function problemOf(setting: DeclaredSetting, value: unknown, t: (key: string, va
   }
 }
 
-/** The languages a text is written in, to switch between them. */
-function Languages({ writing, onWrite, label }: { readonly writing: string; readonly onWrite: (code: string) => void; readonly label: string }) {
-  return (
-    <Stack direction="row" role="group" aria-label={label} sx={{ gap: 0.5, mb: 0.75 }}>
-      {LANGUAGES.map((code) => (
-        <ButtonBase
-          key={code}
-          aria-pressed={code === writing}
-          onClick={() => onWrite(code)}
-          sx={{
-            px: 1.25,
-            py: 0.25,
-            borderRadius: 999,
-            typography: "caption",
-            fontWeight: 700,
-            textTransform: "uppercase",
-            border: 1,
-            borderColor: "divider",
-            ...(code === writing ? { bgcolor: "primary.main", color: "primary.contrastText", borderColor: "primary.main" } : {}),
-          }}
-        >
-          {code}
-        </ButtonBase>
-      ))}
-    </Stack>
-  );
-}
-
 /** `<WidgetSettings title="…" declared={…} values={…} onApply={…} onClose={…} />` */
 export function WidgetSettings({ title, icon = "tune", declared, values, applyLabel, onApply, onClose }: WidgetSettingsProps) {
   const { t, language } = useI18n();
   const heading = useId();
   const [draft, setDraft] = useState<Record<string, unknown>>({ ...values });
   const [writing, setWriting] = useState(language);
+  // A field says what is wrong once it was touched, or when the person tries to apply.
+  const [touched, setTouched] = useState<ReadonlySet<string>>(new Set());
+  const [tried, setTried] = useState(false);
+  const shows = (key: string) => (tried || touched.has(key) ? problems[key] : undefined);
   const label = (key: string) => (t(`setting.${key}`) === `setting.${key}` ? key : t(`setting.${key}`));
-  const set = (key: string, value: unknown) => setDraft((d) => ({ ...d, [key]: value }));
+  const set = (key: string, value: unknown) => {
+    setDraft((d) => ({ ...d, [key]: value }));
+    setTouched((t) => new Set([...t, key]));
+  };
   const problems = Object.fromEntries(declared.map((s) => [s.key, problemOf(s, draft[s.key] ?? s.default, t)]));
   const valid = Object.values(problems).every((p) => p === undefined);
   const many = LANGUAGES.length > 1;
@@ -179,6 +158,14 @@ export function WidgetSettings({ title, icon = "tune", declared, values, applyLa
         <Typography id={heading} variant="h4" component="h2" sx={{ flex: 1 }}>
           {title}
         </Typography>
+        {many && declared.some((s) => s.translatable) ? (
+          <LanguagePicker
+            languages={LANGUAGES}
+            value={writing}
+            onChange={setWriting}
+            filled={new Set(declared.filter((s) => s.translatable).flatMap((s) => [...filledIn(draft[s.key])]))}
+          />
+        ) : null}
         <IconButton aria-label={t("dashboard.cancel")} onClick={onClose}>
           <Icon name="close" />
         </IconButton>
@@ -189,6 +176,7 @@ export function WidgetSettings({ title, icon = "tune", declared, values, applyLa
           id={`${heading}-form`}
           onSubmit={(event) => {
             event.preventDefault();
+            setTried(true);
             if (valid) onApply(applied());
           }}
           sx={{ pt: 1 }}
@@ -226,25 +214,24 @@ export function WidgetSettings({ title, icon = "tune", declared, values, applyLa
                       type="number"
                       value={String(value)}
                       inputProps={{ min, max, inputMode: "numeric" }}
-                      hint={problems[setting.key] ? undefined : t("setting.range", { min, max })}
-                      error={problems[setting.key]}
+                      hint={shows(setting.key) ? undefined : t("setting.range", { min, max })}
+                      error={shows(setting.key)}
                       onChange={(e) => set(setting.key, e.target.value)}
                     />
                   );
                 }
                 case "rich_text": {
-                  const { text, write, per } = textOf(setting);
+                  const { text, write } = textOf(setting);
                   return (
                     <Box key={setting.key}>
                       <Typography variant="subtitle2" component="p" sx={{ mb: 0.75 }}>
                         {label(setting.key)}
                         {setting.required ? " *" : ""}
                       </Typography>
-                      {per ? <Languages writing={writing} onWrite={setWriting} label={t("editor.languages")} /> : null}
-                      <RichTextEditor label={label(setting.key)} value={text} onChange={write} />
-                      {problems[setting.key] ? (
+                                            <RichTextEditor label={label(setting.key)} value={text} onChange={write} />
+                      {shows(setting.key) ? (
                         <Typography variant="caption" color="error" role="alert">
-                          {problems[setting.key]}
+                          {shows(setting.key)}
                         </Typography>
                       ) : null}
                     </Box>
@@ -252,18 +239,17 @@ export function WidgetSettings({ title, icon = "tune", declared, values, applyLa
                 }
                 default: {
                   const { max } = setting.kind;
-                  const { text, write, per } = textOf(setting);
+                  const { text, write } = textOf(setting);
                   return (
                     <Box key={setting.key}>
-                      {per ? <Languages writing={writing} onWrite={setWriting} label={t("editor.languages")} /> : null}
-                      <TextField
+                                            <TextField
                         label={label(setting.key)}
                         required={Boolean(setting.required)}
                         value={text}
                         multiline={max > 200}
                         minRows={max > 200 ? 4 : undefined}
                         inputProps={{ maxLength: max }}
-                        error={problems[setting.key]}
+                        error={shows(setting.key)}
                         onChange={(e) => write(e.target.value)}
                       />
                     </Box>
@@ -278,7 +264,7 @@ export function WidgetSettings({ title, icon = "tune", declared, values, applyLa
         <Button variant="text" onClick={onClose}>
           {t("dashboard.cancel")}
         </Button>
-        <Button variant="filled" type="submit" form={`${heading}-form`} disabled={!valid}>
+        <Button variant="filled" type="submit" form={`${heading}-form`}>
           {applyLabel ?? t("dashboard.apply")}
         </Button>
       </DialogActions>

@@ -53,6 +53,7 @@ pub const WIDGETS: &[WidgetDeclaration] = &[WidgetDeclaration {
         max: Cells::new(6, 10),
         resize: Resize::Both,
         bands: &[],
+        grows: false,
     }],
     settings: &[WidgetSetting {
         key: "limit",

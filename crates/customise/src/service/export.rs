@@ -206,6 +206,7 @@ impl Customise {
                         pinned: r.get("pinned"),
                         locked: r.get("locked"),
                         held: false,
+                        grows: false,
                         settings: serde_json::from_value::<BTreeMap<String, Value>>(r.get("settings"))
                             .unwrap_or_default(),
                         permission: r.get("permission"),

@@ -56,11 +56,15 @@ import { useId, type ReactNode } from "react";
 import { Icon, ProgressRing } from "@kampus/ui";
 
 import type { CalendarItem, CourseWithOwners, Grade } from "../../api/types";
+import { EditableText } from "../editor/EditInPlace";
 import { useI18n } from "../../i18n/I18nProvider";
 import { EmptyState } from "../shell/EmptyState";
 
-/** A card with a heading and an icon. */
-function SideCard({ heading, icon, children }: { readonly heading: string; readonly icon: string; readonly children: ReactNode }) {
+/**
+ * A card with a heading and an icon. A heading set by a widget is written in place while its page is arranged; the
+ * fallback is the title the card has otherwise.
+ */
+function SideCard({ heading, fallback, editable = false, icon, children }: { readonly heading?: unknown; readonly fallback: string; readonly editable?: boolean; readonly icon: string; readonly children: ReactNode }) {
   const id = useId();
   return (
     <Card component="section" aria-labelledby={id}>
@@ -69,9 +73,13 @@ function SideCard({ heading, icon, children }: { readonly heading: string; reado
           <Box sx={{ display: "grid", placeItems: "center", inlineSize: 32, blockSize: 32, borderRadius: 2, backgroundImage: "var(--k-palette-gradient-soft)", color: "primary.main" }}>
             <Icon name={icon} size="small" />
           </Box>
-          <Typography id={id} variant="h4" component="h2">
-            {heading}
-          </Typography>
+          {editable ? (
+            <EditableText id={id} setting="heading" value={heading} fallback={fallback} variant="h4" component="h2" />
+          ) : (
+            <Typography id={id} variant="h4" component="h2">
+              {fallback}
+            </Typography>
+          )}
         </Stack>
         {children}
       </CardContent>
@@ -80,10 +88,10 @@ function SideCard({ heading, icon, children }: { readonly heading: string; reado
 }
 
 /** How far the person has gone in the course. */
-export function ProgressCard({ heading, done, total }: { readonly heading: string; readonly done: number; readonly total: number }) {
+export function ProgressCard({ heading, done, total }: { readonly heading?: unknown; readonly done: number; readonly total: number }) {
   const { t } = useI18n();
   return (
-    <SideCard heading={heading || t("course.progress")} icon="trending_up">
+    <SideCard editable heading={heading} fallback={t("course.progress")} icon="trending_up">
       {total === 0 ? (
         <EmptyState compact icon="trending_up" message={t("course.empty.progress")} />
       ) : (
@@ -99,10 +107,10 @@ export function ProgressCard({ heading, done, total }: { readonly heading: strin
 }
 
 /** The grades of the person in the course. */
-export function GradesCard({ heading, grades, titles }: { readonly heading: string; readonly grades: readonly Grade[]; readonly titles: Readonly<Record<string, string>> }) {
+export function GradesCard({ heading, grades, titles }: { readonly heading?: unknown; readonly grades: readonly Grade[]; readonly titles: Readonly<Record<string, string>> }) {
   const { t, number } = useI18n();
   return (
-    <SideCard heading={heading || t("course.grades")} icon="check_circle">
+    <SideCard editable heading={heading} fallback={t("course.grades")} icon="check_circle">
       {grades.length === 0 ? (
         <EmptyState compact icon="check_circle" message={t("course.empty.grades")} />
       ) : (
@@ -140,7 +148,7 @@ export function CalendarCard({ items, days }: { readonly items: readonly Calenda
   const until = Date.now() + days * 864e5;
   const shown = items.filter((item) => new Date(item.starts_at).getTime() <= until);
   return (
-    <SideCard heading={t("card.upcoming")} icon="calendar_month">
+    <SideCard fallback={t("card.upcoming")} icon="calendar_month">
       <Typography variant="caption" color="text.secondary">
         {t("calendar.window", { n: days })}
       </Typography>
@@ -175,7 +183,7 @@ export function CalendarCard({ items, days }: { readonly items: readonly Calenda
 export function SummaryCard({ course }: { readonly course: CourseWithOwners }) {
   const { t, day } = useI18n();
   return (
-    <SideCard heading={t("card.summary")} icon="info">
+    <SideCard fallback={t("card.summary")} icon="info">
       <Stack spacing={1.25}>
         {course.summary ? <Typography variant="body2">{course.summary}</Typography> : null}
         {course.starts_at ? (

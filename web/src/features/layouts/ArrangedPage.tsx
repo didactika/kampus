@@ -207,7 +207,7 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, lockabl
     change((items) => {
       const size = { w: Math.min(widget.sizes.default.w, grid.columns), h: widget.sizes.default.h };
       const at = room(items.map((d) => ({ key: d.key, ...d.placement })), size, grid.columns);
-      return fall([...items, { key: ++keys, placement: { widget: widget.code, ...at, ...size, pinned: false, locked: false, held: false, settings, permission: null }, node: null }]);
+      return fall([...items, { key: ++keys, placement: { widget: widget.code, ...at, ...size, pinned: false, locked: false, held: false, grows: widget.sizes.grows ?? false, settings, permission: null }, node: null }]);
     });
 
   /** Locks a widget for the scopes below, or frees it. */
@@ -245,7 +245,7 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, lockabl
       <Skeleton variant="rounded" height={64} animation="wave" />
     </Stack>
   );
-  const rectangle = (d: Draft) => ({ key: d.key, x: d.placement.x, y: d.placement.y, w: d.placement.w, h: d.placement.h, pinned: d.placement.pinned });
+  const rectangle = (d: Draft) => ({ key: d.key, x: d.placement.x, y: d.placement.y, w: d.placement.w, h: d.placement.h, pinned: d.placement.pinned, grows: d.placement.grows });
   const remove = (key: number) => change((d) => fall(d.filter((x) => x.key !== key)));
   const framed = (d: Draft) => ({
     ...rectangle(d),

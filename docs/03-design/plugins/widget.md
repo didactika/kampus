@@ -38,6 +38,7 @@ crates/widget/plugins/<name>/
 | `single` | A page holds it once at most (the welcome, the content of a course) |
 | `required` | Every page it goes on holds it, at one size and never removed, though it may move (the content and the summary of a course); a required widget is single and of one size |
 | `sizes` | For each page kind it goes on, its smallest, default and largest size in cells and how it may be resized; it goes on no other page kind. `WidgetSize::fixed` gives one size |
+| `grows` (of a size) | Its height is the height of its content, however tall, and only its width is chosen: resized horizontally or not at all. The text widget grows, so a long text is never cut |
 | `bands` (of a size) | The heights it takes between two widths, when it needs fewer rows wider: the welcome takes up to six rows at six columns and up to four when wider. Every width is in one band at most, and the default size keeps to its band |
 | `settings` | Its settings, each with its kind and default, whether it may not be left empty (`required`) and whether a text takes one value per language (`translatable`). The kind `rich_text` holds HTML in the format of user content, sanitised by the server when it is written and when it is read |
 
@@ -45,7 +46,7 @@ The server checks the sizes against the grid of each page kind when it reads the
 
 ## Rendering
 
-- The render function is a server component. It receives its settings with their defaults, the page it is on (the campus and, on a course, what the page read of it) and its **size in cells**.
+- The render function is a server component. It receives its settings with their defaults, the page it is on (the campus and, on a course, what the page read of it), its **size in cells** and the **language** of the reader, in which a text written per language is read (`translated` of the host API).
 - It must look right at **every size it allows**, from its smallest to its largest: it chooses how much to show from its size (`fitting` and `heightOf` of the host API help), keeps its heading and footer fixed and scrolls only its list, and never spills out of its rectangle.
 - It reads data only through the host API and the API of the core, as the reader; it never calls another plugin.
 - Its texts come from its strings; it writes none in code.

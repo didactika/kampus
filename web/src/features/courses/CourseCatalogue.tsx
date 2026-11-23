@@ -48,6 +48,7 @@ import { useCallback, useEffect, useId, useMemo, useState } from "react";
 
 import { Button, FilterGroup, ListToolbar, Pager, PillSelect, ViewToggle, pageSize } from "@kampus/ui";
 
+import { EditableText } from "../editor/EditInPlace";
 import { useI18n } from "../../i18n/I18nProvider";
 import { EmptyState } from "../shell/EmptyState";
 import type { Catalogue } from "./catalogue";
@@ -60,8 +61,9 @@ export interface CourseCatalogueProps {
   readonly catalogue: Catalogue;
   /** The parameters of the address the page was asked with. */
   readonly initial?: string;
-  /** Its heading; the title of the catalogue when none is given. */
-  readonly heading?: string;
+  /** Its heading: a text, or one per language; the title of the catalogue when none is given. It is written in place
+   * while the page that holds it is arranged. */
+  readonly heading?: unknown;
   /** Whether it goes without a heading, under the head of its page. */
   readonly titleless?: boolean;
   /** Whether what the person asks is kept in the address; a widget among others does not. */
@@ -118,9 +120,7 @@ export function CourseCatalogue({ catalogue, initial = "", heading, titleless = 
       <Stack direction="row" spacing={2} sx={{ alignItems: "center", justifyContent: "space-between", mb: 2 }}>
         <Stack direction="row" spacing={1.5} sx={{ alignItems: "baseline" }}>
           {titleless ? null : (
-            <Typography id={headingId} variant="h2">
-              {heading || t("catalogue.title")}
-            </Typography>
+            <EditableText id={headingId} setting="heading" value={heading} fallback={t("catalogue.title")} variant="h2" component="h2" />
           )}
           <Typography variant="body2" color="text.secondary" aria-live="polite">
             {t("catalogue.found", { n: found.length })}

@@ -44,6 +44,10 @@ use super::Origin;
 
 /// A widget on the grid of a layout: the rectangle of cells it takes, and its settings.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, schemars::JsonSchema)]
+#[allow(
+    clippy::struct_excessive_bools,
+    reason = "each is a separate fact of the API: pinned and locked by the writer, held and grows given by the server"
+)]
 pub struct Placement {
     /// The widget, by code.
     pub widget: String,
@@ -66,6 +70,10 @@ pub struct Placement {
     /// ignored when a layout is written.
     #[serde(default)]
     pub held: bool,
+    /// Whether its height is the height of its content rather than its rows, as its widget declares on the page kind;
+    /// given by the server and ignored when a layout is written.
+    #[serde(default)]
+    pub grows: bool,
     /// Its settings, each of the kind the widget declares; the defaults fill what is left out.
     #[serde(default)]
     pub settings: BTreeMap<String, Value>,
@@ -145,6 +153,9 @@ pub struct WidgetSizes {
     /// The heights it takes at some widths; every height between `min` and `max` at the widths no band holds.
     #[serde(default)]
     pub bands: Vec<SizeBand>,
+    /// Whether its height is the height of its content, however tall, rather than its rows.
+    #[serde(default)]
+    pub grows: bool,
 }
 
 /// The heights a widget takes between two widths.

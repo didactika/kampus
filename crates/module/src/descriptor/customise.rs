@@ -204,6 +204,9 @@ pub struct WidgetSize {
     /// The heights it takes at some widths, when they are narrower than `min` and `max` say; none when every
     /// height between them suits every width. Every width between `min` and `max` is in one band at most.
     pub bands: &'static [Band],
+    /// Whether its height is the height of its content, however tall, rather than its rows: a text that may be very
+    /// long. Only its width is chosen, so it is resized horizontally or not at all.
+    pub grows: bool,
 }
 
 impl WidgetSize {
@@ -217,6 +220,7 @@ impl WidgetSize {
             max: size,
             resize: Resize::None,
             bands: &[],
+            grows: false,
         }
     }
 
@@ -246,6 +250,9 @@ impl WidgetSize {
             Resize::Vertical => !wide,
             Resize::Both => true,
         };
+        if self.grows && matches!(resize, Resize::Vertical | Resize::Both) {
+            return Some("a widget whose height is its content is resized horizontally or not at all");
+        }
         if !allowed {
             return Some("the sizes change in a direction the widget may not be resized in");
         }

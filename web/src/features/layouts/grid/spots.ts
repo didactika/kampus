@@ -73,7 +73,8 @@ export function spots(items: readonly Item[], metrics: Metrics, heightOf: (item:
   for (const item of reading(items)) {
     const floor = placed.filter((p) => p.x < item.x + item.w && item.x < p.x + p.w).reduce((low, p) => Math.max(low, p.end + gap), 0);
     const top = item.pinned ? Math.max(floor, item.y * (row + gap)) : floor;
-    const height = Math.min(heightOf(item), rows(metrics, item.h));
+    // A widget that grows is as tall as its content; any other at most as tall as its rows.
+    const height = item.grows ? heightOf(item) : Math.min(heightOf(item), rows(metrics, item.h));
     at.set(item.key, { left: item.x * (column + gap), top, width: item.w * column + (item.w - 1) * gap, height });
     placed.push({ x: item.x, w: item.w, end: top + height });
     bottom = Math.max(bottom, top + height);

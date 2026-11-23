@@ -4137,6 +4137,11 @@
       "Placement": {
         "description": "A widget on the grid of a layout: the rectangle of cells it takes, and its settings.",
         "properties": {
+          "grows": {
+            "default": false,
+            "description": "Whether its height is the height of its content rather than its rows, as its widget declares on the page kind;\ngiven by the server and ignored when a layout is written.",
+            "type": "boolean"
+          },
           "h": {
             "description": "How many rows it takes, within the sizes the widget declares for the page kind.",
             "format": "uint16",
@@ -4208,6 +4213,7 @@
           "pinned",
           "locked",
           "held",
+          "grows",
           "settings",
           "permission"
         ],
@@ -6415,6 +6421,11 @@
             "$ref": "#/components/schemas/Size",
             "description": "The one it takes when it is placed."
           },
+          "grows": {
+            "default": false,
+            "description": "Whether its height is the height of its content, however tall, rather than its rows.",
+            "type": "boolean"
+          },
           "max": {
             "$ref": "#/components/schemas/Size",
             "description": "The largest."
@@ -6433,7 +6444,8 @@
           "default",
           "max",
           "resize",
-          "bands"
+          "bands",
+          "grows"
         ],
         "type": "object"
       },
@@ -15174,6 +15186,11 @@
                           "items": {
                             "description": "A widget on the grid of a layout: the rectangle of cells it takes, and its settings.",
                             "properties": {
+                              "grows": {
+                                "default": false,
+                                "description": "Whether its height is the height of its content rather than its rows, as its widget declares on the page kind;\ngiven by the server and ignored when a layout is written.",
+                                "type": "boolean"
+                              },
                               "h": {
                                 "description": "How many rows it takes, within the sizes the widget declares for the page kind.",
                                 "format": "uint16",
@@ -15754,6 +15771,11 @@
                     "items": {
                       "description": "A widget on the grid of a layout: the rectangle of cells it takes, and its settings.",
                       "properties": {
+                        "grows": {
+                          "default": false,
+                          "description": "Whether its height is the height of its content rather than its rows, as its widget declares on the page kind;\ngiven by the server and ignored when a layout is written.",
+                          "type": "boolean"
+                        },
                         "h": {
                           "description": "How many rows it takes, within the sizes the widget declares for the page kind.",
                           "format": "uint16",
