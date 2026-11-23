@@ -80,6 +80,8 @@ pub fn room(placements: &[Placement], w: u16, h: u16, columns: u16) -> (u16, u16
         w,
         h,
         pinned: false,
+        locked: false,
+        held: false,
         settings: BTreeMap::new(),
         permission: None,
     };

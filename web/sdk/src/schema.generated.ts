@@ -5111,6 +5111,8 @@ export type components = {
             editable: boolean;
             /** @description The grid its widgets are placed on. */
             grid: components["schemas"]["PageGrid"];
+            /** @description Whether the reader may lock widgets here for the scopes below: never on a page a person arranges for themselves. */
+            lockable: boolean;
             /** @description Where the layout came from. */
             origin: components["schemas"]["Origin"];
             /** @description The page kind. */
@@ -5558,6 +5560,18 @@ export type components = {
              * @description How many rows it takes, within the sizes the widget declares for the page kind.
              */
             h: number;
+            /**
+             * @description Whether a scope above locked it on this page, so it shows as that scope placed it; given by the server and
+             *     ignored when a layout is written.
+             * @default false
+             */
+            held: boolean;
+            /**
+             * @description Whether the scope it is placed in locks it for the scopes below: there it shows as placed here, and it cannot
+             *     be moved, resized, edited or removed.
+             * @default false
+             */
+            locked: boolean;
             /**
              * @description The permission a person needs to see it; everyone who sees the page when absent.
              * @default null
@@ -11097,6 +11111,18 @@ export interface operations {
                              */
                             h: number;
                             /**
+                             * @description Whether a scope above locked it on this page, so it shows as that scope placed it; given by the server and
+                             *     ignored when a layout is written.
+                             * @default false
+                             */
+                            held?: boolean;
+                            /**
+                             * @description Whether the scope it is placed in locks it for the scopes below: there it shows as placed here, and it cannot
+                             *     be moved, resized, edited or removed.
+                             * @default false
+                             */
+                            locked?: boolean;
+                            /**
                              * @description The permission a person needs to see it; everyone who sees the page when absent.
                              * @default null
                              */
@@ -11331,6 +11357,18 @@ export interface operations {
                          * @description How many rows it takes, within the sizes the widget declares for the page kind.
                          */
                         h: number;
+                        /**
+                         * @description Whether a scope above locked it on this page, so it shows as that scope placed it; given by the server and
+                         *     ignored when a layout is written.
+                         * @default false
+                         */
+                        held?: boolean;
+                        /**
+                         * @description Whether the scope it is placed in locks it for the scopes below: there it shows as placed here, and it cannot
+                         *     be moved, resized, edited or removed.
+                         * @default false
+                         */
+                        locked?: boolean;
                         /**
                          * @description The permission a person needs to see it; everyone who sees the page when absent.
                          * @default null

@@ -3042,6 +3042,10 @@
             "$ref": "#/components/schemas/PageGrid",
             "description": "The grid its widgets are placed on."
           },
+          "lockable": {
+            "description": "Whether the reader may lock widgets here for the scopes below: never on a page a person arranges for themselves.",
+            "type": "boolean"
+          },
           "origin": {
             "$ref": "#/components/schemas/Origin",
             "description": "Where the layout came from."
@@ -3071,6 +3075,7 @@
           "placements",
           "origin",
           "editable",
+          "lockable",
           "widgets"
         ],
         "type": "object"
@@ -4139,6 +4144,16 @@
             "minimum": 0,
             "type": "integer"
           },
+          "held": {
+            "default": false,
+            "description": "Whether a scope above locked it on this page, so it shows as that scope placed it; given by the server and\nignored when a layout is written.",
+            "type": "boolean"
+          },
+          "locked": {
+            "default": false,
+            "description": "Whether the scope it is placed in locks it for the scopes below: there it shows as placed here, and it cannot\nbe moved, resized, edited or removed.",
+            "type": "boolean"
+          },
           "permission": {
             "default": null,
             "description": "The permission a person needs to see it; everyone who sees the page when absent.",
@@ -4191,6 +4206,8 @@
           "w",
           "h",
           "pinned",
+          "locked",
+          "held",
           "settings",
           "permission"
         ],
@@ -15164,6 +15181,16 @@
                                 "minimum": 0,
                                 "type": "integer"
                               },
+                              "held": {
+                                "default": false,
+                                "description": "Whether a scope above locked it on this page, so it shows as that scope placed it; given by the server and\nignored when a layout is written.",
+                                "type": "boolean"
+                              },
+                              "locked": {
+                                "default": false,
+                                "description": "Whether the scope it is placed in locks it for the scopes below: there it shows as placed here, and it cannot\nbe moved, resized, edited or removed.",
+                                "type": "boolean"
+                              },
                               "permission": {
                                 "default": null,
                                 "description": "The permission a person needs to see it; everyone who sees the page when absent.",
@@ -15733,6 +15760,16 @@
                           "maximum": 65535,
                           "minimum": 0,
                           "type": "integer"
+                        },
+                        "held": {
+                          "default": false,
+                          "description": "Whether a scope above locked it on this page, so it shows as that scope placed it; given by the server and\nignored when a layout is written.",
+                          "type": "boolean"
+                        },
+                        "locked": {
+                          "default": false,
+                          "description": "Whether the scope it is placed in locks it for the scopes below: there it shows as placed here, and it cannot\nbe moved, resized, edited or removed.",
+                          "type": "boolean"
                         },
                         "permission": {
                           "default": null,

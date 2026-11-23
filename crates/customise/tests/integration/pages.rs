@@ -54,6 +54,8 @@ fn placement(at: [u16; 4], widget: &str, settings: Value) -> Placement {
         w,
         h,
         pinned: false,
+        locked: false,
+        held: false,
         settings: serde_json::from_value(settings).unwrap(),
         permission: None,
     }
@@ -600,5 +602,85 @@ async fn settings_take_a_text_per_language_may_be_required_and_keep_rich_text_sa
         "customise.layout_invalid",
         "only a translatable setting takes languages"
     );
+    w.drop().await;
+}
+
+#[tokio::test]
+async fn a_widget_locked_by_a_scope_shows_below_as_placed_there_and_is_never_changed_there() {
+    let w = world().await;
+    let c = &w.customise;
+    let mut clock = placement([0, 0, 3, 2], "testing.clock", json!({ "seconds": true }));
+    clock.locked = true;
+    c.set_layout(&w.admin, "testing.page", w.category, vec![clock.clone()], false)
+        .await
+        .unwrap();
+    // The course arranges its own page, moving what it was given of the clock: that part is the category's.
+    let mut moved = Placement {
+        held: true,
+        x: 8,
+        ..clock.clone()
+    };
+    moved.settings.insert("seconds".to_owned(), json!(false));
+    let own = c
+        .set_layout(
+            &w.admin,
+            "testing.page",
+            w.course,
+            vec![moved, placement([4, 0, 3, 2], "testing.banner", json!({}))],
+            false,
+        )
+        .await
+        .unwrap();
+    let held = own
+        .placements
+        .iter()
+        .find(|p| p.widget == "testing.clock")
+        .expect("the clock is there");
+    assert_eq!(
+        (held.x, held.y, held.held, held.pinned),
+        (0, 0, true, true),
+        "as the category placed it, pinned"
+    );
+    assert_eq!(
+        held.settings["seconds"],
+        json!(true),
+        "with the category's settings"
+    );
+    assert!(
+        own.placements.iter().any(|p| p.widget == "testing.banner"),
+        "beside what the course placed"
+    );
+    assert!(
+        !own.lockable,
+        "a course has no scopes below that arrange its page"
+    );
+    let category = c.layout(&w.admin, "testing.page", w.category).await.unwrap();
+    assert!(
+        category.lockable,
+        "a category locks widgets for the courses in it"
+    );
+    // A section with no layout of its own reads the course's, with the clock still held.
+    let below = c.layout(&w.admin, "testing.page", w.section).await.unwrap();
+    assert!(
+        below
+            .placements
+            .iter()
+            .any(|p| p.widget == "testing.clock" && p.held)
+    );
+    // On a page each person arranges, the campus locks for every person, and a person locks nothing.
+    c.set_layout(&w.admin, "testing.home", w.campus, vec![clock], false)
+        .await
+        .unwrap();
+    c.set_layout(&w.person, "testing.home", w.person_scope, Vec::new(), false)
+        .await
+        .unwrap();
+    let home = c.layout(&w.person, "testing.home", w.person_scope).await.unwrap();
+    assert!(
+        home.placements
+            .iter()
+            .any(|p| p.widget == "testing.clock" && p.held),
+        "the person keeps it"
+    );
+    assert!(!home.lockable, "a person's own home has no scopes below");
     w.drop().await;
 }
