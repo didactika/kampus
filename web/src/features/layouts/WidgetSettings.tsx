@@ -58,27 +58,77 @@ import { useI18n } from "../../i18n/I18nProvider";
 /** The props of `WidgetSettings`. */
 export interface WidgetSettingsProps {
   readonly title: string;
+  /** The icon of the widget. */
+  readonly icon?: string;
   readonly declared: readonly DeclaredSetting[];
   readonly values: Readonly<Record<string, unknown>>;
+  /** The text of the button that applies them: "Apply" by default, "Add" before a widget goes in. */
+  readonly applyLabel?: string;
   readonly onApply: (values: Record<string, unknown>) => void;
   readonly onClose: () => void;
 }
 
+/** The largest page size a list of sizes may offer. */
+const LARGEST_SIZE = 500;
+
+/** Settings whose text has a form of its own: a list of page sizes, such as "5, 10, 200". */
+const FORMS: Readonly<Record<string, (text: string) => boolean>> = {
+  sizes: (text) =>
+    text.trim() === "" ||
+    text.split(",").every((part) => /^\s*\d+\s*$/.test(part) && Number(part) >= 1 && Number(part) <= LARGEST_SIZE),
+};
+
+/** What is wrong with the value of a setting, in the language of the page; nothing when it is right. */
+function problemOf(setting: DeclaredSetting, value: unknown, t: (key: string, values?: Record<string, string | number>) => string): string | undefined {
+  switch (setting.kind.type) {
+    case "integer": {
+      const { min, max } = setting.kind;
+      const text = String(value ?? "").trim();
+      const number = Number(text);
+      if (text === "" || !Number.isInteger(number) || number < min || number > max) return t("setting.error.range", { min, max });
+      return undefined;
+    }
+    case "text": {
+      const text = String(value ?? "");
+      if (text.length > setting.kind.max) return t("setting.error.long", { max: setting.kind.max });
+      const form = FORMS[setting.key];
+      if (form && !form(text)) return t(`setting.error.${setting.key}`, { max: LARGEST_SIZE });
+      return undefined;
+    }
+    default:
+      return undefined;
+  }
+}
+
 /** `<WidgetSettings title="…" declared={…} values={…} onApply={…} onClose={…} />` */
-export function WidgetSettings({ title, declared, values, onApply, onClose }: WidgetSettingsProps) {
+export function WidgetSettings({ title, icon = "tune", declared, values, applyLabel, onApply, onClose }: WidgetSettingsProps) {
   const { t } = useI18n();
   const heading = useId();
   const [draft, setDraft] = useState<Record<string, unknown>>({ ...values });
   const label = (key: string) => (t(`setting.${key}`) === `setting.${key}` ? key : t(`setting.${key}`));
   const set = (key: string, value: unknown) => setDraft((d) => ({ ...d, [key]: value }));
+  const problems = Object.fromEntries(declared.map((s) => [s.key, problemOf(s, draft[s.key] ?? s.default, t)]));
+  const valid = Object.values(problems).every((p) => p === undefined);
+  // Numbers are typed as text and become numbers only when applied, so the person can type freely.
+  const applied = () =>
+    Object.fromEntries(declared.map((s) => [s.key, s.kind.type === "integer" ? Number(draft[s.key] ?? s.default) : (draft[s.key] ?? s.default)]));
   return (
     <Drawer
       open
       anchor="right"
       onClose={onClose}
-      slotProps={{ paper: { role: "dialog", "aria-labelledby": heading, sx: { inlineSize: 400, maxInlineSize: "100vw", display: "flex", flexDirection: "column" } } }}
+      slotProps={{
+        paper: {
+          role: "dialog",
+          "aria-labelledby": heading,
+          sx: { inlineSize: 420, maxInlineSize: "100vw", display: "flex", flexDirection: "column", borderStartStartRadius: 20, borderEndStartRadius: 20 },
+        },
+      }}
     >
-      <Stack direction="row" sx={{ alignItems: "center", gap: 1, px: 3, py: 2, borderBottom: 1, borderColor: "divider" }}>
+      <Stack direction="row" sx={{ alignItems: "center", gap: 1.5, px: 3, pt: 3, pb: 2 }}>
+        <Box sx={{ display: "grid", placeItems: "center", inlineSize: 40, blockSize: 40, flex: "none", borderRadius: 2.5, backgroundImage: "var(--k-palette-gradient-soft)", color: "primary.main" }}>
+          <Icon name={icon} />
+        </Box>
         <Typography id={heading} variant="h4" component="h2" sx={{ flex: 1 }}>
           {title}
         </Typography>
@@ -86,7 +136,15 @@ export function WidgetSettings({ title, declared, values, onApply, onClose }: Wi
           <Icon name="close" />
         </IconButton>
       </Stack>
-      <Box sx={{ flex: 1, overflowY: "auto", px: 3, py: 3 }}>
+      <Box
+        component="form"
+        id={`${heading}-form`}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (valid) onApply(applied());
+        }}
+        sx={{ flex: 1, overflowY: "auto", px: 3, py: 1 }}
+      >
         <Stack spacing={2.5}>
           {declared.map((setting) => {
             const value = draft[setting.key] ?? setting.default;
@@ -95,8 +153,10 @@ export function WidgetSettings({ title, declared, values, onApply, onClose }: Wi
                 return (
                   <FormControlLabel
                     key={setting.key}
+                    labelPlacement="start"
                     control={<Switch checked={Boolean(value)} onChange={(e) => set(setting.key, e.target.checked)} />}
                     label={label(setting.key)}
+                    sx={{ mx: 0, justifyContent: "space-between", px: 2, py: 1, borderRadius: 3, border: 1, borderColor: "divider" }}
                   />
                 );
               case "choice":
@@ -117,9 +177,10 @@ export function WidgetSettings({ title, declared, values, onApply, onClose }: Wi
                     label={label(setting.key)}
                     type="number"
                     value={String(value)}
-                    inputProps={{ min, max }}
-                    hint={`${min}–${max}`}
-                    onChange={(e) => set(setting.key, Math.min(max, Math.max(min, Number(e.target.value) || min)))}
+                    inputProps={{ min, max, inputMode: "numeric" }}
+                    hint={problems[setting.key] ? undefined : t("setting.range", { min, max })}
+                    error={problems[setting.key]}
+                    onChange={(e) => set(setting.key, e.target.value)}
                   />
                 );
               }
@@ -133,6 +194,7 @@ export function WidgetSettings({ title, declared, values, onApply, onClose }: Wi
                     multiline={max > 200}
                     minRows={max > 200 ? 4 : undefined}
                     inputProps={{ maxLength: max }}
+                    error={problems[setting.key]}
                     onChange={(e) => set(setting.key, e.target.value)}
                   />
                 );
@@ -145,8 +207,8 @@ export function WidgetSettings({ title, declared, values, onApply, onClose }: Wi
         <Button variant="text" onClick={onClose}>
           {t("dashboard.cancel")}
         </Button>
-        <Button variant="filled" onClick={() => onApply(draft)}>
-          {t("dashboard.apply")}
+        <Button variant="filled" type="submit" form={`${heading}-form`} disabled={!valid}>
+          {applyLabel ?? t("dashboard.apply")}
         </Button>
       </Stack>
     </Drawer>

@@ -50,6 +50,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
+import Skeleton from "@mui/material/Skeleton";
 import Typography from "@mui/material/Typography";
 import {
   DndContext,
@@ -58,6 +59,7 @@ import {
   PointerSensor,
   TouchSensor,
   closestCenter,
+  defaultDropAnimationSideEffects,
   useSensor,
   useSensors,
   type Announcements,
@@ -79,7 +81,7 @@ import { DropRegion } from "./DropRegion";
 import { SortableWidget } from "./SortableWidget";
 import { WidgetFrame } from "./WidgetFrame";
 import { WidgetSettings } from "./WidgetSettings";
-import { WIDGET_ICONS } from "./widget-icons";
+import { WIDGET_ICONS, fits } from "./widget-icons";
 
 /** A widget placed on the page, with what it shows when it was rendered by the server. */
 export interface PlacedWidget {
@@ -121,7 +123,9 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
   const router = useRouter();
   const toast = useToast();
   const editing = useOfferEditMode(editable);
-  const [draft, setDraft] = useState<Draft[]>([]);
+  const [draft, setDraft] = useState<Draft[]>(() => widgets.map((w) => ({ key: ++keys, placement: w.placement, node: w.node })));
+  const [opened, setOpened] = useState<ReadonlySet<string>>(new Set());
+  const [preparing, setPreparing] = useState<{ readonly widget: AvailableWidget; readonly region: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [pending, setPending] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
@@ -143,10 +147,10 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
   const name = (code: string) => (t(`widget.${code}`) === `widget.${code}` ? code : t(`widget.${code}`));
   const fresh = () => widgets.map((w) => ({ key: ++keys, placement: w.placement, node: w.node }));
 
-  // The arrangement starts from the page as rendered, and follows it again after each save that brought new content.
+  // The arrangement follows the page each time the server renders it again, unless a change or a move is under way.
   useEffect(() => {
-    if (editing && !pending && dragged === null) setDraft(fresh());
-  }, [editing, widgets]);
+    if (!pending && dragged === null) setDraft(fresh());
+  }, [widgets]);
 
   /** Saves the arrangement as it is now; content is asked again only when a widget needs it. */
   const save = useCallback(async () => {
@@ -171,12 +175,17 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
     return () => clearTimeout(timer);
   }, [changed, save]);
 
-  // Leaving the mode saves what is still pending at once.
+  // Leaving the mode saves what is still pending at once, then shows the page as it now is, without a reload.
   const wasEditing = useRef(editing);
   useEffect(() => {
-    if (wasEditing.current && !editing && pending) void save();
+    if (wasEditing.current && !editing) {
+      setOpened(new Set());
+    } else if (!wasEditing.current && editing) {
+      setOpened(new Set(latest.current.map((d) => d.placement.region)));
+      void (pending ? save() : Promise.resolve()).then(() => router.refresh());
+    }
     wasEditing.current = editing;
-  }, [editing, pending, save]);
+  }, [editing, pending, save, router]);
 
   /** Records a change of the person, to be saved. */
   const change = (update: (items: Draft[]) => Draft[]) => {
@@ -206,7 +215,7 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
     setDraft((items) => {
       const item = items.find((d) => d.key === key);
       const to = typeof over === "string" && over.startsWith("region:") ? over.slice("region:".length) : items.find((d) => d.key === over)?.placement.region;
-      if (!to || !item || item.placement.region === to) return items;
+      if (!to || !item || item.placement.region === to || !fits(item.placement.widget, to)) return items;
       justMoved.current = true;
       requestAnimationFrame(() => {
         justMoved.current = false;
@@ -246,23 +255,38 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
     }
   }
 
-  const shown: Draft[] = editing ? draft : widgets.map((w) => ({ key: 0, placement: w.placement, node: w.node }));
+  const shown: Draft[] = draft;
+  // The regions shown while arranging: the main one, those with widgets (or that had some when the mode began, so a
+  // widget can go back to a region it emptied), and those the person opened.
+  const used = new Set([...draft.map((d) => d.placement.region), ...opened]);
+  const always = regions.includes("main") ? "main" : regions[0];
+  const visible = regions.filter((r) => r === always || used.has(r) || opened.has(r));
+  const hidden = regions.filter((r) => !visible.includes(r));
   const lifted = dragged === null ? undefined : draft.find((d) => d.key === dragged);
   const guard = useLeaveGuard(pending);
-  const sideUsed = editing || shown.some((d) => d.placement.region === "side");
+  const sideUsed = editing ? visible.includes("side") : shown.some((d) => d.placement.region === "side");
   const span = (region: string) => (region === "main" ? (sideUsed ? 8 : 12) : region === "side" ? 4 : 12);
   const configured = draft.find((d) => d.key === configuring);
-  const preview = (code: string) => (
-    <Stack spacing={1} sx={{ alignItems: "center", py: 4, color: "text.secondary" }}>
-      <Icon name={WIDGET_ICONS[code] ?? "widgets"} size="large" />
-      <Typography variant="body2">{t("dashboard.preview")}</Typography>
+  const preview = (_code: string) => (
+    <Stack spacing={1.25} sx={{ py: 1 }} role="status" aria-label={t("loading")}>
+      <Skeleton variant="rounded" height={26} width="45%" animation="wave" />
+      <Skeleton variant="rounded" height={64} animation="wave" />
+      <Skeleton variant="rounded" height={64} animation="wave" />
     </Stack>
   );
+  /** Puts a widget on the page; with settings, they are asked first. */
+  const insert = (widget: AvailableWidget, region: string, settings: Record<string, unknown>) =>
+    change((d) => [...d, { key: ++keys, placement: { region, widget: widget.code, settings, permission: null }, node: null }]);
 
   return (
     <>
       {editing ? (
-        <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end", mb: 2 }}>
+        <Stack direction="row" spacing={1} sx={{ justifyContent: "flex-end", alignItems: "center", flexWrap: "wrap", gap: 1, mb: 2 }}>
+          {hidden.map((region) => (
+            <Button key={region} variant="outlined" icon={region === "side" ? "view_sidebar" : "add_row_above"} onClick={() => setOpened((o) => new Set([...o, region]))} sx={{ borderStyle: "dashed" }}>
+              {t(`region.add.${region}`)}
+            </Button>
+          ))}
           <Tooltip title={t("dashboard.reset.hint")}>
             <span>
               <Button variant="tonal" icon="restart_alt" onClick={() => setResetting(true)} disabled={busy}>
@@ -286,7 +310,7 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
           onDragCancel={() => setDragged(null)}
         >
           <Grid container spacing={3}>
-            {regions.map((region) => {
+            {visible.map((region) => {
               const items = shown.filter((d) => d.placement.region === region);
               return (
                 <Grid key={region} size={{ xs: 12, md: span(region) }}>
@@ -313,7 +337,7 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
               );
             })}
           </Grid>
-          <DragOverlay dropAnimation={{ duration: 180, easing: "cubic-bezier(0.2, 0, 0, 1)" }}>
+          <DragOverlay dropAnimation={{ duration: 220, easing: "cubic-bezier(0.2, 0, 0, 1)", sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: "0.4" } } }) }}>
             {lifted ? (
               <WidgetFrame lifted name={name(lifted.placement.widget)} icon={WIDGET_ICONS[lifted.placement.widget] ?? "widgets"}>
                 {lifted.node ?? preview(lifted.placement.widget)}
@@ -343,15 +367,16 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
         <DialogTitle id="add-widget">{t("dashboard.add.title", { region: adding ? t(`region.${adding}`) : "" })}</DialogTitle>
         <DialogContent>
           <Grid container spacing={1.5}>
-            {available.map((widget) => (
+            {available.filter((widget) => fits(widget.code, adding ?? always ?? "main")).map((widget) => (
               <Grid key={widget.code} size={{ xs: 12, sm: 6 }}>
                 <Card sx={{ blockSize: "100%" }}>
                   <CardActionArea
                     sx={{ p: 2, blockSize: "100%", display: "flex", alignItems: "flex-start", justifyContent: "flex-start", gap: 1.5 }}
                     onClick={() => {
-                      const settings = Object.fromEntries(settingsOf(widget).map((s) => [s.key, s.default]));
-                      change((d) => [...d, { key: ++keys, placement: { region: adding ?? "main", widget: widget.code, settings, permission: null }, node: null }]);
+                      const region = adding ?? always ?? "main";
                       setAdding(null);
+                      if (settingsOf(widget).length > 0) setPreparing({ widget, region });
+                      else insert(widget, region, {});
                     }}
                   >
                     <Box sx={{ display: "grid", placeItems: "center", inlineSize: 40, blockSize: 40, flex: "none", borderRadius: 2.5, backgroundImage: "var(--k-palette-gradient-soft)", color: "primary.main" }}>
@@ -371,9 +396,25 @@ export function ArrangedPage({ scope, pageKind, regions, widgets, editable, avai
         </DialogContent>
       </Dialog>
 
+      {preparing ? (
+        <WidgetSettings
+          title={t("dashboard.add.widget", { widget: name(preparing.widget.code) })}
+          icon={WIDGET_ICONS[preparing.widget.code] ?? "widgets"}
+          applyLabel={t("dashboard.insert")}
+          declared={settingsOf(preparing.widget)}
+          values={Object.fromEntries(settingsOf(preparing.widget).map((s) => [s.key, s.default]))}
+          onClose={() => setPreparing(null)}
+          onApply={(settings) => {
+            insert(preparing.widget, preparing.region, settings);
+            setPreparing(null);
+          }}
+        />
+      ) : null}
+
       {configured ? (
         <WidgetSettings
           title={t("dashboard.settings.title", { widget: name(configured.placement.widget) })}
+          icon={WIDGET_ICONS[configured.placement.widget] ?? "widgets"}
           declared={settingsOf(declared(configured.placement.widget))}
           values={configured.placement.settings}
           onClose={() => setConfiguring(null)}

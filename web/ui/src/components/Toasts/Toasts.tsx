@@ -35,8 +35,8 @@
 "use client";
 
 /**
- * The results of actions, as short messages stacked at the top right of the page, under its bar: each with the
- * icon and colour of what it tells, a close button, and a line that shows the time it has left. A message leaves
+ * The results of actions, as short messages stacked at the bottom right of the page: each in the tonal colour of what
+ * it tells, with its icon, a close button before it, and a line that shows the time it has left. A message leaves
  * by itself (an error later than the rest), and waits while the pointer or the focus is on it. Messages are read
  * out without moving focus: an error at once, the rest politely. At most three show at a time; the next wait.
  */
@@ -76,7 +76,7 @@ const LOOK: Readonly<Record<ToastTone, { readonly icon: string; readonly colour:
   danger: { icon: "error", colour: "error" },
 };
 
-const enter = keyframes`from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: none; }`;
+const enter = keyframes`from { opacity: 0; transform: translateY(16px) scale(0.96); } to { opacity: 1; transform: none; }`;
 const drain = keyframes`from { transform: scaleX(1); } to { transform: scaleX(0); }`;
 
 /** The props of `ToastProvider`. */
@@ -123,28 +123,31 @@ function ToastCard({ toast, lifetime, closeLabel, onClose }: { readonly toast: T
         display: "flex",
         alignItems: "flex-start",
         gap: 1.5,
-        pl: 2,
-        pr: 1,
-        py: 1.5,
-        inlineSize: 360,
+        pl: 1,
+        pr: 2,
+        py: 1.25,
+        inlineSize: 380,
         maxInlineSize: "calc(100vw - 32px)",
-        borderRadius: 3,
-        bgcolor: "surface.inverse",
-        color: "surface.onInverse",
+        borderRadius: 4,
+        bgcolor: `${colour}.container`,
+        color: `${colour}.onContainer`,
+        border: 1,
+        borderColor: `color-mix(in srgb, var(--k-palette-${colour}-main) 30%, transparent)`,
+        boxShadow: `0 12px 32px -10px color-mix(in srgb, var(--k-palette-${colour}-main) 40%, transparent)`,
         pointerEvents: "auto",
         animation: `${enter} 220ms cubic-bezier(0.2, 0, 0, 1)`,
         "@media (prefers-reduced-motion: reduce)": { animation: "none" },
       }}
     >
-      <Box sx={{ display: "flex", color: `${colour}.main`, filter: "brightness(1.35)", mt: 0.25 }}>
-        <Icon name={icon} size="small" />
-      </Box>
-      <Typography variant="body2" sx={{ flex: 1, minInlineSize: 0, py: 0.25, fontWeight: 500 }}>
-        {toast.message}
-      </Typography>
-      <IconButton aria-label={closeLabel} size="small" onClick={onClose} sx={{ color: "inherit", mt: -0.5 }}>
+      <IconButton aria-label={closeLabel} size="small" onClick={onClose} sx={{ color: "inherit", opacity: 0.75, "&:hover": { opacity: 1 } }}>
         <Icon name="close" size="small" />
       </IconButton>
+      <Box sx={{ display: "grid", placeItems: "center", inlineSize: 28, blockSize: 28, flex: "none", borderRadius: "50%", bgcolor: `${colour}.main`, color: `${colour}.contrastText` }}>
+        <Icon name={icon} size="small" />
+      </Box>
+      <Typography variant="body2" sx={{ flex: 1, minInlineSize: 0, py: 0.5, fontWeight: 600 }}>
+        {toast.message}
+      </Typography>
       <Box
         aria-hidden
         sx={{
@@ -179,11 +182,11 @@ export function ToastProvider({ closeLabel, lifetime = 5000, children }: ToastPr
       <Box
         sx={{
           position: "fixed",
-          insetBlockStart: { xs: 72, md: 80 },
-          insetInlineEnd: 16,
+          insetBlockEnd: 24,
+          insetInlineEnd: 24,
           zIndex: "snackbar",
           display: "flex",
-          flexDirection: "column",
+          flexDirection: "column-reverse",
           alignItems: "flex-end",
           gap: 1,
           pointerEvents: "none",

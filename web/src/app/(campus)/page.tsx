@@ -57,10 +57,10 @@ export async function generateMetadata(): Promise<Metadata> {
 /** The regions of the home when the server does not say. */
 const REGIONS = ["top", "main", "side"];
 
-/** The home of the campus of the person. */
+/** The home of the person: their own arrangement, or the one of their campus until they make one. */
 export default async function HomePage() {
   const account = (await currentAccount())!;
-  const layout = await optional<Layout | null>(`/customise/scopes/${account.campus}/layouts/${DASHBOARD}`, null);
+  const layout = await optional<Layout | null>(`/customise/scopes/${account.scope}/layouts/${DASHBOARD}`, null);
   const placements = layout?.placements.length ? layout.placements : DEFAULT_DASHBOARD;
   const widgets = await Promise.all(
     placements.map(async (placement) => {
@@ -70,7 +70,7 @@ export default async function HomePage() {
   );
   return (
     <ArrangedPage
-      scope={account.campus}
+      scope={account.scope}
       pageKind={DASHBOARD}
       regions={layout?.regions.length ? layout.regions : REGIONS}
       widgets={widgets}
