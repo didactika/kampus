@@ -32,20 +32,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-
 "use client";
 
 /** The security of the account: changing the password, its second factors, and the sessions open on other devices, each of which can be closed. */
 
 import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
+
+import { Button, Row, RowList, SectionCard, useToast } from "@kampus/ui";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-
-import { Button, Icon, useToast } from "@kampus/ui";
 
 import { browserApi } from "../../api/browser";
 import { ApiError } from "../../api/problem";
@@ -87,11 +83,7 @@ function PasswordForm() {
   }
 
   return (
-    <Card component="section" aria-labelledby="password-title">
-      <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-        <Typography id="password-title" variant="h3" component="h2" sx={{ mb: 2.5 }}>
-          {t("password.title")}
-        </Typography>
+    <SectionCard icon="lock" title={t("password.title")}>
         <Box sx={{ maxInlineSize: 480 }}>
           <NewPasswordForm
             label={t("password.title")}
@@ -108,8 +100,7 @@ function PasswordForm() {
             <PasswordField name="current" label={t("password.current")} autoComplete="current-password" required error={wrong || undefined} onChange={() => setWrong("")} />
           </NewPasswordForm>
         </Box>
-      </CardContent>
-    </Card>
+    </SectionCard>
   );
 }
 
@@ -136,38 +127,28 @@ function Sessions({ sessions }: { readonly sessions: readonly SessionSummary[] }
   }
 
   return (
-    <Card component="section" aria-labelledby="sessions-title">
-      <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-        <Typography id="sessions-title" variant="h3" component="h2">
-          {t("sessions.title")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
-          {t("sessions.lead")}
-        </Typography>
+    <SectionCard icon="devices" title={t("sessions.title")} lead={t("sessions.lead")}>
         {items.length === 0 ? (
           <EmptyState compact icon="devices" message={t("sessions.empty")} />
         ) : (
           <Stack spacing={1}>
-            {(all ? items : items.slice(0, SHOWN)).map((session) => (
-              <Stack key={session.id} direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" }, p: 1.5, borderRadius: 3, border: 1, borderColor: "divider" }}>
-                <Box sx={{ display: "grid", placeItems: "center", inlineSize: 40, blockSize: 40, flex: "none", borderRadius: 2.5, backgroundImage: "var(--k-palette-gradient-soft)", color: "primary.main" }}>
-                  <Icon name="devices" size="small" />
-                </Box>
-                <Box sx={{ flex: 1, minInlineSize: 0 }}>
-                  <Typography variant="subtitle2" noWrap>
-                    {name(session.client)}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {[session.address, t("sessions.started", { date: date(session.created_at) }), session.last_seen_at ? t("sessions.seen", { date: relative(session.last_seen_at) }) : null]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </Typography>
-                </Box>
-                <Button variant="outlined" tone="danger" icon="logout" size="small" onClick={() => void close(session.id)}>
-                  {t("sessions.close")}
-                </Button>
-              </Stack>
-            ))}
+            <RowList label={t("sessions.title")}>
+              {(all ? items : items.slice(0, SHOWN)).map((session) => (
+                <Row
+                  key={session.id}
+                  icon="devices"
+                  title={name(session.client)}
+                  meta={[session.address, t("sessions.started", { date: date(session.created_at) }), session.last_seen_at ? t("sessions.seen", { date: relative(session.last_seen_at) }) : null]
+                    .filter(Boolean)
+                    .join(" · ")}
+                  actions={
+                    <Button variant="text" tone="danger" icon="logout" size="small" onClick={() => void close(session.id)}>
+                      {t("sessions.close")}
+                    </Button>
+                  }
+                />
+              ))}
+            </RowList>
             {!all && items.length > SHOWN ? (
               <Box>
                 <Button variant="text" icon="keyboard_arrow_down" onClick={() => setAll(true)}>
@@ -177,8 +158,7 @@ function Sessions({ sessions }: { readonly sessions: readonly SessionSummary[] }
             ) : null}
           </Stack>
         )}
-      </CardContent>
-    </Card>
+    </SectionCard>
   );
 }
 

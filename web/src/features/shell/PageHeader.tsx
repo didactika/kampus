@@ -55,10 +55,14 @@ export interface PageHeaderProps {
   readonly back?: { readonly href: string; readonly label: string };
   /** The actions of the page. */
   readonly actions?: ReactNode;
+  /** Something before the title, such as the picture of a person. */
+  readonly leading?: ReactNode;
+  /** A short fact beside the title, such as how many there are. */
+  readonly meta?: ReactNode;
 }
 
 /** `<PageHeader title="Courses" lead="…" />` */
-export function PageHeader({ title, lead, back, actions }: PageHeaderProps) {
+export function PageHeader({ title, lead, back, actions, leading, meta }: PageHeaderProps) {
   return (
     <Box component="header" sx={{ mb: 4 }}>
       {back ? (
@@ -67,14 +71,24 @@ export function PageHeader({ title, lead, back, actions }: PageHeaderProps) {
         </Button>
       ) : null}
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-end" }, justifyContent: "space-between" }}>
-        <Box>
-          <Typography variant="h1">{title}</Typography>
+        <Stack direction="row" spacing={2.5} sx={{ alignItems: "center", minInlineSize: 0 }}>
+          {leading}
+          <Box sx={{ minInlineSize: 0 }}>
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: "baseline", flexWrap: "wrap" }}>
+            <Typography variant="h1">{title}</Typography>
+            {meta ? (
+              <Typography variant="body2" color="text.secondary">
+                {meta}
+              </Typography>
+            ) : null}
+          </Stack>
           {lead ? (
             <Typography variant="body1" color="text.secondary" sx={{ mt: 1, maxInlineSize: "70ch" }}>
               {lead}
             </Typography>
           ) : null}
-        </Box>
+          </Box>
+        </Stack>
         {actions ? <Stack direction="row" spacing={1.5}>{actions}</Stack> : null}
       </Stack>
     </Box>

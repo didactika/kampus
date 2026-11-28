@@ -32,7 +32,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-
 "use client";
 
 /** The cards of the side of the page of a course: the progress of the person, their grades, the dates ahead and the summary. */
@@ -51,9 +50,9 @@ import TableCell from "@mui/material/TableCell";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Typography from "@mui/material/Typography";
-import { useId, type ReactNode } from "react";
 
-import { Icon, ProgressRing } from "@kampus/ui";
+import { Icon, IconTile, ProgressRing } from "@kampus/ui";
+import { useId, type ReactNode } from "react";
 
 import type { CalendarItem, CourseWithOwners, Grade } from "../../api/types";
 import { EditableText } from "../editor/EditInPlace";
@@ -70,9 +69,7 @@ function SideCard({ heading, fallback, editable = false, icon, children }: { rea
     <Card component="section" aria-labelledby={id}>
       <CardContent sx={{ p: 2.5 }}>
         <Stack direction="row" spacing={1.25} sx={{ alignItems: "center", mb: 1.5 }}>
-          <Box sx={{ display: "grid", placeItems: "center", inlineSize: 32, blockSize: 32, borderRadius: 2, backgroundImage: "var(--k-palette-gradient-soft)", color: "primary.main" }}>
-            <Icon name={icon} size="small" />
-          </Box>
+          <IconTile name={icon} size="small" />
           {editable ? (
             <EditableText id={id} setting="heading" value={heading} fallback={fallback} variant="h4" component="h2" />
           ) : (
