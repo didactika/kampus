@@ -69,10 +69,14 @@ export interface LanguagePickerProps {
   readonly compact?: boolean;
   /** Called when its list opens or closes, so what holds it may keep it visible. */
   readonly onOpen?: (open: boolean) => void;
+  /** Whether it sits on a surface, or on the bar of the campus, where it takes the colour of the bar. */
+  readonly tone?: "surface" | "bar";
+  /** What it is called, given the name of the language chosen; the language of a text when not given. */
+  readonly label?: (name: string) => string;
 }
 
 /** `<LanguagePicker languages={LANGUAGES} value="es" onChange={setLanguage} filled={new Set(["en"])} />` */
-export function LanguagePicker({ languages, value, onChange, filled = new Set(), compact = false, onOpen }: LanguagePickerProps) {
+export function LanguagePicker({ languages, value, onChange, filled = new Set(), compact = false, onOpen, tone = "surface", label }: LanguagePickerProps) {
   const { t, language } = useI18n();
   const anchor = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
@@ -99,21 +103,20 @@ export function LanguagePicker({ languages, value, onChange, filled = new Set(),
         ref={anchor}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label={t("editor.language", { language: names.get(value) ?? value })}
+        aria-label={label ? label(names.get(value) ?? value) : t("editor.language", { language: names.get(value) ?? value })}
         onMouseDown={(event) => event.preventDefault()}
         onClick={() => toggle(true)}
         sx={{
           gap: 0.5,
-          px: compact ? 1 : 1.5,
+          px: tone === "bar" ? 1.25 : compact ? 1 : 1.5,
           py: compact ? 0.25 : 0.75,
           borderRadius: 999,
           border: 1,
-          borderColor: "divider",
-          bgcolor: "background.paper",
-          color: "text.primary",
+          ...(tone === "bar"
+            ? { borderColor: "transparent", bgcolor: "transparent", color: "inherit", minBlockSize: 40, "&:hover": { bgcolor: "color-mix(in srgb, currentColor 12%, transparent)" } }
+            : { borderColor: "divider", bgcolor: "background.paper", color: "text.primary", boxShadow: compact ? 3 : 0 }),
           typography: compact ? "caption" : "body2",
           fontWeight: 600,
-          boxShadow: compact ? 3 : 0,
         }}
       >
         <Icon name="translate" size="small" />

@@ -265,3 +265,13 @@ test("a text of the home is written on the widget itself and kept per language",
     }
   }
 });
+
+test("every page of the campus has its frame: the notifications, the language and the foot with the version", async ({ page }) => {
+  await page.goto("/courses");
+  await page.getByRole("button", { name: new RegExp(t("nav.language", { language: ".+" })) }).click();
+  await expect(page.getByRole("listbox", { name: t("editor.languages") }).getByRole("option")).not.toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("contentinfo")).toContainText(t("footer.version", { version: "0.1.0" }));
+  await page.getByRole("banner").getByRole("link", { name: new RegExp(t("nav.notifications")) }).click();
+  await expect(page.getByRole("heading", { level: 1, name: t("notifications.title") })).toBeVisible();
+});

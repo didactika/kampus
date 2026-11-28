@@ -227,8 +227,11 @@ pub struct AvailableWidget {
 /// An item of a navigation menu, with the items under it.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct MenuItem {
-    /// What it says.
+    /// What it says, in the language it was written in; the label of an item for a language that has none of its own.
     pub label: String,
+    /// What it says in each language that has its own label, by language tag (`en`, `es`, `pt-BR`).
+    #[serde(default)]
+    pub labels: BTreeMap<String, String>,
     /// A path of the site (`/…`) or an `http`/`https` address.
     pub target: String,
     /// The permission a person needs to see it, and the items under it; everyone when absent.

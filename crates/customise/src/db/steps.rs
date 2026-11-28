@@ -579,4 +579,13 @@ alter table {schema}.\"placement\" alter column \"position\" drop not null;",
         table: "placement",
         column: Column::new("locked", Type::Boolean).default(ColumnDefault::Bool(false)),
     }],
+}, Step {
+    sequence: 10,
+    name: "labels of menu items per language",
+    revert: &[],
+    action: None,
+    changes: &[Change::AddColumn {
+        table: "menu_item",
+        column: Column::new("labels", Type::Json("customise.menu_item_labels")).nullable(),
+    }],
 }];

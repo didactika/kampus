@@ -66,6 +66,7 @@ fn placement(at: [u16; 4], widget: &str, settings: Value) -> Placement {
 fn item(label: &str, target: &str, permission: Option<&str>) -> MenuItem {
     MenuItem {
         label: label.to_owned(),
+        labels: BTreeMap::new(),
         target: target.to_owned(),
         permission: permission.map(str::to_owned),
         children: Vec::new(),
@@ -683,5 +684,31 @@ async fn a_widget_locked_by_a_scope_shows_below_as_placed_there_and_is_never_cha
         "the person keeps it"
     );
     assert!(!home.lockable, "a person's own home has no scopes below");
+    w.drop().await;
+}
+
+#[tokio::test]
+async fn a_menu_item_says_its_label_in_each_language_it_has() {
+    let w = world().await;
+    let c = &w.customise;
+    let mut courses = item("Courses", "/courses", None);
+    courses.labels.insert("es".to_owned(), "Cursos".to_owned());
+    let menu = c
+        .set_menu(&w.admin, "testing.menu", w.category, vec![courses.clone()], false)
+        .await
+        .unwrap();
+    assert_eq!(
+        (menu.items[0].label.as_str(), menu.items[0].labels["es"].as_str()),
+        ("Courses", "Cursos")
+    );
+    for (language, text) in [("spanish", "Cursos"), ("es", " ")] {
+        let mut wrong = courses.clone();
+        wrong.labels = BTreeMap::from([(language.to_owned(), text.to_owned())]);
+        let refused = c
+            .set_menu(&w.admin, "testing.menu", w.category, vec![wrong], false)
+            .await
+            .unwrap_err();
+        assert_eq!(refused.code(), "customise.menu_invalid", "{language}");
+    }
     w.drop().await;
 }

@@ -110,6 +110,7 @@ async fn customised(w: &World) {
         .unwrap();
     let item = MenuItem {
         label: "Home".to_owned(),
+        labels: BTreeMap::new(),
         target: "/".to_owned(),
         permission: None,
         children: Vec::new(),

@@ -226,7 +226,7 @@ impl Customise {
         let mut exported = Vec::new();
         for menu in &menus {
             let rows = sqlx::query(sql(format!(
-                "select id, parent_id, label, target, permission from {} where menu_id = $1 order by position",
+                "select id, parent_id, label, labels, target, permission from {} where menu_id = $1 order by position",
                 self.table("menu_item")
             )))
             .bind(menu.get::<uuid::Uuid, _>("id"))
@@ -240,6 +240,10 @@ impl Customise {
                     parent: r.get("parent_id"),
                     item: MenuItem {
                         label: r.get("label"),
+                        labels: r
+                            .get::<Option<Value>, _>("labels")
+                            .and_then(|v| serde_json::from_value(v).ok())
+                            .unwrap_or_default(),
                         target: r.get("target"),
                         permission: r.get("permission"),
                         children: Vec::new(),

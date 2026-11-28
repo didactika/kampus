@@ -41,7 +41,7 @@ use kampus_module::ValueKind;
 use serde_json::Value;
 
 /// Whether a key names a language: `en`, `es`, `pt-BR`.
-fn is_language(key: &str) -> bool {
+pub(crate) fn is_language(key: &str) -> bool {
     let (code, region) = key.split_once('-').map_or((key, None), |(c, r)| (c, Some(r)));
     (2..=3).contains(&code.len())
         && code.chars().all(|c| c.is_ascii_lowercase())
