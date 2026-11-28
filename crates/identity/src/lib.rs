@@ -64,6 +64,7 @@ pub use model::{
 pub use module::MODULE;
 pub use ports::courier::{Courier, LogCourier, MemoryCourier, Message, Notice};
 pub use ports::policy::{CampusPolicy, FixedPolicies, Policies, Throttle};
+pub use service::directory::AccountFilter;
 pub use settings::SettingsPolicies;
 pub use support::secret::{PasswordCost, PasswordHasher, SecretKey};
 

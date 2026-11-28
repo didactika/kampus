@@ -160,7 +160,7 @@ pub struct SecondFactor {
 }
 
 /// The status of an account, a state machine.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AccountStatus {
     /// Invited by a manager; the invitation link sets the password.
@@ -234,7 +234,7 @@ impl FromStr for AccountStatus {
 }
 
 /// Who an account is for.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, serde::Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum AccountKind {
     /// A person.

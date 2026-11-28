@@ -35,25 +35,36 @@
 //! The accounts of a campus, for those who manage them: invitations, service accounts, reading an account,
 //! the changes of its status with `If-Match`, and the API tokens of other accounts.
 
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::{delete, get, post};
 use axum::{Extension, Json, Router};
-use kampus_access::ScopeId;
-use kampus_common::{Error, FieldError};
+use kampus_access::{Actor, ScopeId};
+use kampus_common::{Error, FieldError, PageRequest};
 use kampus_db::references::ExternalReference;
 use kampus_module::Operation;
 use kampus_module::http::{ApiResult, Body, Identified, id, if_match, with_etag};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use super::me::{TokenBody, created_token};
 use super::{Caller, Shared};
 use crate::permissions::{ACCOUNT_DELETE, ACCOUNT_INVITE, ACCOUNT_READ, ACCOUNT_SUSPEND, TOKEN_MANAGE_ANY};
-use crate::{AccountId, TokenId};
+use crate::{AccountFilter, AccountId, AccountKind, AccountStatus, Identity, TokenId};
 
 /// The operations of accounts managed by others.
 pub(super) const OPERATIONS: &[Operation] = &[
+    Operation::get(
+        "/campuses/{campus}/accounts",
+        "The accounts of a campus, newest first, a page at a time (query `q`, `status`, `kind`, `limit`, `after`)",
+    )
+    .returns::<kampus_common::Page<crate::Account>>(),
+    Operation::post(
+        "/campuses/{campus}/accounts/transitions",
+        "Suspend, reactivate or delete several accounts of a campus, each on its own",
+    )
+    .body::<BulkBody>()
+    .returns::<Vec<Outcome>>(),
     Operation::post("/campuses/{campus}/accounts", "Invite a person to a campus")
         .body::<InviteBody>()
         .creates::<Identified<AccountId>>(),
@@ -103,7 +114,8 @@ pub(super) const OPERATIONS: &[Operation] = &[
 /// The routes.
 pub(super) fn routes() -> Router<Shared> {
     Router::new()
-        .route("/campuses/{campus}/accounts", post(invite))
+        .route("/campuses/{campus}/accounts", get(list).post(invite))
+        .route("/campuses/{campus}/accounts/transitions", post(bulk))
         .route(
             "/campuses/{campus}/service-accounts",
             post(create_service_account),
@@ -147,6 +159,80 @@ struct TransitionBody {
     /// Why; kept with the change.
     #[serde(default)]
     reason: String,
+}
+
+/// The permission a change of status needs.
+fn permission_of(to: &str) -> Result<&'static str, Error> {
+    match to {
+        "suspended" | "active" => Ok(ACCOUNT_SUSPEND),
+        "deletion_scheduled" | "deletion_cancelled" => Ok(ACCOUNT_DELETE),
+        _ => Err(Error::validation(
+            "identity.transition_invalid",
+            vec![FieldError::new("to", "one_of")],
+        )),
+    }
+}
+
+/// Applies a change of status to an account, on the version read when one is given.
+async fn apply(
+    identity: &Identity,
+    actor: &Actor,
+    account: AccountId,
+    body: &TransitionBody,
+    expected: Option<i32>,
+) -> Result<(), Error> {
+    match body.to.as_str() {
+        "suspended" => identity.suspend(actor, account, &body.reason, expected).await,
+        "active" => identity.reactivate(actor, account, &body.reason, expected).await,
+        "deletion_scheduled" => {
+            identity
+                .schedule_deletion(actor, account, &body.reason, expected)
+                .await
+        }
+        _ => identity.cancel_deletion(actor, account, expected).await,
+    }
+}
+
+/// The most accounts one change of status in bulk takes.
+const MAX_BULK: usize = 200;
+
+/// What a list of accounts keeps, and its page.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+struct ListQuery {
+    /// Words found in the username or the email.
+    #[serde(default)]
+    q: Option<String>,
+    /// Only the accounts in this status.
+    #[serde(default)]
+    status: Option<AccountStatus>,
+    /// Only the accounts of this kind.
+    #[serde(default)]
+    kind: Option<AccountKind>,
+    /// How many accounts the page holds.
+    #[serde(default)]
+    limit: Option<u32>,
+    /// The cursor of the page before.
+    #[serde(default)]
+    after: Option<String>,
+}
+
+/// A change of status for several accounts of a campus.
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+struct BulkBody {
+    /// The accounts, at most two hundred.
+    accounts: Vec<AccountId>,
+    /// The change.
+    #[serde(flatten)]
+    change: TransitionBody,
+}
+
+/// What a change in bulk did to one account.
+#[derive(Debug, Serialize, schemars::JsonSchema)]
+struct Outcome {
+    /// The account.
+    account: AccountId,
+    /// The code of the problem that stopped the change for it; absent when it was made.
+    problem: Option<String>,
 }
 
 /// A created account.
@@ -201,6 +287,60 @@ async fn account(
     Ok(with_etag(Json(read), version))
 }
 
+/// The accounts of a campus, a page at a time.
+async fn list(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(campus): Path<String>,
+    Query(query): Query<ListQuery>,
+) -> ApiResult<Response> {
+    let identity = shared.identity()?;
+    let campus: ScopeId = id(&campus)?;
+    let page = PageRequest::new(query.limit, query.after.as_deref())?;
+    let actor = caller.acting(identity, ACCOUNT_READ, campus).await?;
+    let filter = AccountFilter {
+        words: query.q,
+        status: query.status,
+        kind: query.kind,
+    };
+    Ok(Json(identity.accounts(actor, campus, &filter, &page).await?).into_response())
+}
+
+/// Changes the status of several accounts of a campus, each on its own: one that cannot change says why,
+/// and the others change.
+async fn bulk(
+    State(shared): State<Shared>,
+    Extension(caller): Extension<Caller>,
+    Path(campus): Path<String>,
+    Body(body): Body<BulkBody>,
+) -> ApiResult<Response> {
+    let identity = shared.identity()?;
+    let campus: ScopeId = id(&campus)?;
+    if body.accounts.is_empty() || body.accounts.len() > MAX_BULK {
+        return Err(Error::validation(
+            "identity.bulk_invalid",
+            vec![FieldError::new("accounts", "length")],
+        )
+        .with_param("max", MAX_BULK.to_string())
+        .into());
+    }
+    let actor = caller
+        .acting(identity, permission_of(&body.change.to)?, campus)
+        .await?;
+    let mut outcomes = Vec::with_capacity(body.accounts.len());
+    for &account in &body.accounts {
+        let done = match identity.campus_of(account).await {
+            Ok(of) if of == campus => apply(identity, actor, account, &body.change, None).await,
+            Ok(_) | Err(_) => Err(Error::not_found("identity.account_not_found")),
+        };
+        outcomes.push(Outcome {
+            account,
+            problem: done.err().map(|e| e.code().to_owned()),
+        });
+    }
+    Ok(Json(outcomes).into_response())
+}
+
 /// Changes the status of an account; `If-Match` refuses a change made on an old version.
 async fn transition(
     State(shared): State<Shared>,
@@ -213,32 +353,8 @@ async fn transition(
     let account: AccountId = id(&account)?;
     let expected = Some(if_match(&headers)?);
     let campus = identity.campus_of(account).await?;
-    let permission = match body.to.as_str() {
-        "suspended" | "active" => ACCOUNT_SUSPEND,
-        "deletion_scheduled" | "deletion_cancelled" => ACCOUNT_DELETE,
-        _ => {
-            return Err(Error::validation(
-                "identity.transition_invalid",
-                vec![FieldError::new("to", "one_of")],
-            )
-            .into());
-        }
-    };
-    let actor = caller.acting(identity, permission, campus).await?;
-    match body.to.as_str() {
-        "suspended" => identity.suspend(actor, account, &body.reason, expected).await?,
-        "active" => {
-            identity
-                .reactivate(actor, account, &body.reason, expected)
-                .await?;
-        }
-        "deletion_scheduled" => {
-            identity
-                .schedule_deletion(actor, account, &body.reason, expected)
-                .await?;
-        }
-        _ => identity.cancel_deletion(actor, account, expected).await?,
-    }
+    let actor = caller.acting(identity, permission_of(&body.to)?, campus).await?;
+    apply(identity, actor, account, &body, expected).await?;
     Ok(StatusCode::NO_CONTENT)
 }
 

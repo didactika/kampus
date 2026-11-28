@@ -2153,7 +2153,8 @@ export type paths = {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** The accounts of a campus, newest first, a page at a time (query `q`, `status`, `kind`, `limit`, `after`) */
+        get: operations["get_identity_campuses_campus_accounts"];
         put?: never;
         /** Invite a person to a campus */
         post: operations["post_identity_campuses_campus_accounts"];
@@ -2174,6 +2175,23 @@ export type paths = {
         get: operations["get_identity_campuses_campus_accounts_by_reference_system_external_id"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/identity/campuses/{campus}/accounts/transitions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suspend, reactivate or delete several accounts of a campus, each on its own */
+        post: operations["post_identity_campuses_campus_accounts_transitions"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5706,6 +5724,16 @@ export type components = {
         };
         /** @description Where a membership comes from; a rule or a sync removes only the memberships it made. */
         Origin3: "manual" | "rule" | "sync";
+        /** @description What a change in bulk did to one account. */
+        Outcome: {
+            /**
+             * Format: uuid
+             * @description The account.
+             */
+            account: string;
+            /** @description The code of the problem that stopped the change for it; absent when it was made. */
+            problem: string | null;
+        };
         /** @description The value a scope gives a permission for a role, in place of the value of the role. */
         OverrideView: {
             /** @description The permission. */
@@ -5867,12 +5895,19 @@ export type components = {
         /** @description One page of a list, with the cursor of the next page when there is one. */
         Page: {
             /** @description The items of the page. */
-            items: components["schemas"]["Conversation"][];
+            items: components["schemas"]["Account"][];
             /** @description The cursor of the next page, absent on the last page. */
             next: string | null;
         };
         /** @description One page of a list, with the cursor of the next page when there is one. */
         Page2: {
+            /** @description The items of the page. */
+            items: components["schemas"]["Conversation"][];
+            /** @description The cursor of the next page, absent on the last page. */
+            next: string | null;
+        };
+        /** @description One page of a list, with the cursor of the next page when there is one. */
+        Page3: {
             /** @description The items of the page. */
             items: components["schemas"]["Message"][];
             /** @description The cursor of the next page, absent on the last page. */
@@ -15123,6 +15158,37 @@ export interface operations {
             };
         };
     };
+    get_identity_campuses_campus_accounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campus: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page"];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     post_identity_campuses_campus_accounts: {
         parameters: {
             query?: never;
@@ -15186,6 +15252,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Account"];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    post_identity_campuses_campus_accounts_transitions: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Any value; a request that changes something with a session cookie must carry it. */
+                "x-kampus": string;
+            };
+            path: {
+                campus: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The accounts, at most two hundred. */
+                    accounts: string[];
+                    /**
+                     * @description Why; kept with the change.
+                     * @default
+                     */
+                    reason?: string;
+                    /** @description `suspended`, `active`, `deletion_scheduled` or `deletion_cancelled`. */
+                    to: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Outcome"][];
                 };
             };
             /** @description A problem (RFC 9457) */
@@ -16176,7 +16290,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Page"];
+                    "application/json": components["schemas"]["Page2"];
                 };
             };
             /** @description A problem (RFC 9457) */
@@ -16329,7 +16443,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Page2"];
+                    "application/json": components["schemas"]["Page3"];
                 };
             };
             /** @description A problem (RFC 9457) */

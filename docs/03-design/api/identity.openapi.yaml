@@ -73,10 +73,12 @@ paths:
     get: { summary: 'My preferences, by key, with their defaults', responses: { '200': { description: Preferences } } }
     patch: { summary: 'Set preferences; null goes back to the default', responses: { '204': { description: Set } } }
   /api/v1/identity/campuses/{campus_id}/accounts:
-    get: { summary: 'Accounts of a campus, filtered by permission before paging', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page of accounts } } }
+    get: { summary: 'Accounts of a campus, newest first; q finds words of the username or email, status and kind keep some', parameters: [{ name: q, in: query, schema: { type: string } }, { name: status, in: query, schema: { type: string } }, { name: kind, in: query, schema: { type: string } }, { $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page of accounts } } }
     post: { summary: 'Invite a person (a set-password link is sent; no password is generated)', parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }], responses: { '201': { description: Invited } } }
   /api/v1/identity/campuses/{campus_id}/service-accounts:
     post: { summary: 'Create a service account, which acts only with API tokens', responses: { '201': { description: Created } } }
+  /api/v1/identity/campuses/{campus_id}/accounts/transitions:
+    post: { summary: 'Suspend, reactivate or delete up to two hundred accounts of the campus, each on its own, answering what happened to each', responses: { '200': { description: The outcome of each account }, '422': { description: No accounts or too many } } }
   /api/v1/identity/campuses/{campus_id}/accounts/bulk:
     post: { summary: 'Bulk invite, suspend or delete from a file; runs as a job with a per-row report (RN-038)', responses: { '202': { description: Job accepted } } }
   /api/v1/identity/accounts/{account_id}:
