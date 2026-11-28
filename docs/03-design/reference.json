@@ -1124,6 +1124,23 @@
           "permission": "courses.groups.manage",
           "restart_required": false,
           "summary": "Whether people work in groups: none, separate (each group on its own) or visible"
+        },
+        {
+          "accepts": {
+            "default": "outline_sections",
+            "max": 64,
+            "type": "text"
+          },
+          "key": "courses.outline",
+          "levels": [
+            "platform",
+            "campus",
+            "category",
+            "course"
+          ],
+          "permission": "courses.course.update",
+          "restart_required": false,
+          "summary": "How the content of a course presents its sections and activities: the code of an outline plugin"
         }
       ],
       "summary": "Categories, courses, sections, groups and group sets",
@@ -2495,6 +2512,17 @@
       ],
       "settings": [],
       "summary": "Privacy: exports of personal data answered by each module, and the policies of a campus",
+      "terms": []
+    },
+    {
+      "events": [],
+      "flags": [],
+      "jobs": [],
+      "name": "outline_sections",
+      "notification_types": [],
+      "permissions": [],
+      "settings": [],
+      "summary": "The sections of a course in their order, each with its activities",
       "terms": []
     },
     {
