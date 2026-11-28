@@ -52,6 +52,7 @@ import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import Badge from "@mui/material/Badge";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
@@ -68,6 +69,9 @@ import { browserApi } from "../../api/browser";
 import type { Me, MenuItem as MenuEntry, Profile } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { SchemeMenu } from "../../theme/SchemeMenu";
+import { CampusFooter } from "./CampusFooter";
+import { LanguageSwitch } from "./LanguageSwitch";
+import { labelOf } from "./label";
 import { EditModeProvider, EditModeSwitch } from "../shell/EditMode";
 import { helpAddress } from "./help";
 import { initialsOf, nameOf } from "../account/names";
@@ -90,8 +94,8 @@ function iconOf(target: string): string {
 }
 
 /** The places of a menu of the campus. */
-function placesOf(items: readonly MenuEntry[]): Place[] {
-  return items.map((item) => ({ href: item.target, label: item.label, icon: iconOf(item.target), children: placesOf(item.children) }));
+function placesOf(items: readonly MenuEntry[], language: string): Place[] {
+  return items.map((item) => ({ href: item.target, label: labelOf(item, language), icon: iconOf(item.target), children: placesOf(item.children, language) }));
 }
 
 /** Whether a place holds the page shown. */
@@ -107,6 +111,10 @@ export interface CampusFrameProps {
   readonly profile: Profile | null;
   /** The main menu the campus set; the default places when it set none. */
   readonly menu: readonly MenuEntry[];
+  /** The footer menu the campus set. */
+  readonly footer?: readonly MenuEntry[];
+  /** How many notifications the person has not read. */
+  readonly unread?: number;
   /** The address of the handbook, for the help of each screen; no help link without it. */
   readonly help?: string | null;
   /** The page. */
@@ -114,10 +122,10 @@ export interface CampusFrameProps {
 }
 
 /** The frame of the pages of a campus. */
-export function CampusFrame({ account, profile, menu, help, children }: CampusFrameProps) {
+export function CampusFrame({ account, profile, menu, footer = [], unread = 0, help, children }: CampusFrameProps) {
   const { t, language } = useI18n();
   const places: Place[] = menu.length
-    ? placesOf(menu)
+    ? placesOf(menu, language)
     : [
         { href: "/", label: t("nav.home"), icon: "home", children: [] },
         { href: "/courses", label: t("nav.courses"), icon: "school", children: [] },
@@ -140,8 +148,24 @@ export function CampusFrame({ account, profile, menu, help, children }: CampusFr
     }
   }
 
+  /** The help, the language and the appearance: on the bar, or in the drawer where the bar has no room for them. */
+  const tools = (tone: "bar" | "surface") => (
+    <>
+      {helpAddress(help, language, path) ? (
+        <Tooltip title={t("nav.help")}>
+          <IconButton color="inherit" component="a" href={helpAddress(help, language, path) ?? undefined} target="_blank" rel="noopener" aria-label={t("nav.help")}>
+            <Icon name="help" />
+          </IconButton>
+        </Tooltip>
+      ) : null}
+      <LanguageSwitch profile={profile} tone={tone} />
+      <SchemeMenu />
+    </>
+  );
+
   return (
     <EditModeProvider>
+      <Box sx={{ display: "flex", flexDirection: "column", minBlockSize: "100dvh" }}>
       <Box
         component="a"
         href="#content"
@@ -228,14 +252,16 @@ export function CampusFrame({ account, profile, menu, help, children }: CampusFr
           </Box>
           <Box sx={{ flex: 1 }} />
           <EditModeSwitch />
-          {helpAddress(help, language, path) ? (
-            <Tooltip title={t("nav.help")}>
-              <IconButton color="inherit" component="a" href={helpAddress(help, language, path) ?? undefined} target="_blank" rel="noopener" aria-label={t("nav.help")}>
-                <Icon name="help" />
-              </IconButton>
-            </Tooltip>
-          ) : null}
-          <SchemeMenu />
+          <Tooltip title={t("nav.notifications")}>
+            <IconButton color="inherit" component={Link} href="/notifications" aria-label={unread ? t("nav.notifications.unread", { n: unread }) : t("nav.notifications")}>
+              <Badge badgeContent={unread} max={99} color="error" overlap="circular">
+                <Icon name="notifications" />
+              </Badge>
+            </IconButton>
+          </Tooltip>
+          <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 1 }}>
+            {tools("bar")}
+          </Box>
           <IconButton
             color="inherit"
             aria-label={t("nav.account")}
@@ -313,11 +339,17 @@ export function CampusFrame({ account, profile, menu, help, children }: CampusFr
               </ListItemButton>
             ))}
           </List>
+          <Divider sx={{ mx: 2, my: 1, display: { sm: "none" } }} />
+          <Stack direction="row" spacing={1} sx={{ display: { xs: "flex", sm: "none" }, alignItems: "center", px: 2, py: 1 }}>
+            {tools("surface")}
+          </Stack>
         </Box>
       </Drawer>
-      <Container component="main" id="content" tabIndex={-1} maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, outline: "none" }}>
+      <Container component="main" id="content" tabIndex={-1} maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, outline: "none", flex: 1 }}>
         {children}
       </Container>
+      <CampusFooter items={footer} />
+      </Box>
     </EditModeProvider>
   );
 }

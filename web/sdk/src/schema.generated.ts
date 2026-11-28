@@ -5202,8 +5202,15 @@ export type components = {
              * @default []
              */
             children: components["schemas"]["MenuItem"][];
-            /** @description What it says. */
+            /** @description What it says, in the language it was written in; the label of an item for a language that has none of its own. */
             label: string;
+            /**
+             * @description What it says in each language that has its own label, by language tag (`en`, `es`, `pt-BR`).
+             * @default {}
+             */
+            labels: {
+                [key: string]: string;
+            };
             /**
              * @description The permission a person needs to see it, and the items under it; everyone when absent.
              * @default null
@@ -11189,8 +11196,15 @@ export interface operations {
                              * @default []
                              */
                             children?: components["schemas"]["MenuItem"][];
-                            /** @description What it says. */
+                            /** @description What it says, in the language it was written in; the label of an item for a language that has none of its own. */
                             label: string;
+                            /**
+                             * @description What it says in each language that has its own label, by language tag (`en`, `es`, `pt-BR`).
+                             * @default {}
+                             */
+                            labels?: {
+                                [key: string]: string;
+                            };
                             /**
                              * @description The permission a person needs to see it, and the items under it; everyone when absent.
                              * @default null
@@ -11543,8 +11557,15 @@ export interface operations {
                          * @default []
                          */
                         children?: components["schemas"]["MenuItem"][];
-                        /** @description What it says. */
+                        /** @description What it says, in the language it was written in; the label of an item for a language that has none of its own. */
                         label: string;
+                        /**
+                         * @description What it says in each language that has its own label, by language tag (`en`, `es`, `pt-BR`).
+                         * @default {}
+                         */
+                        labels?: {
+                            [key: string]: string;
+                        };
                         /**
                          * @description The permission a person needs to see it, and the items under it; everyone when absent.
                          * @default null

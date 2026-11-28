@@ -3264,8 +3264,16 @@
             "type": "array"
           },
           "label": {
-            "description": "What it says.",
+            "description": "What it says, in the language it was written in; the label of an item for a language that has none of its own.",
             "type": "string"
+          },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "description": "What it says in each language that has its own label, by language tag (`en`, `es`, `pt-BR`).",
+            "type": "object"
           },
           "permission": {
             "default": null,
@@ -3282,6 +3290,7 @@
         },
         "required": [
           "label",
+          "labels",
           "target",
           "permission",
           "children"
@@ -15298,8 +15307,16 @@
                                 "type": "array"
                               },
                               "label": {
-                                "description": "What it says.",
+                                "description": "What it says, in the language it was written in; the label of an item for a language that has none of its own.",
                                 "type": "string"
+                              },
+                              "labels": {
+                                "additionalProperties": {
+                                  "type": "string"
+                                },
+                                "default": {},
+                                "description": "What it says in each language that has its own label, by language tag (`en`, `es`, `pt-BR`).",
+                                "type": "object"
                               },
                               "permission": {
                                 "default": null,
@@ -16069,8 +16086,16 @@
                           "type": "array"
                         },
                         "label": {
-                          "description": "What it says.",
+                          "description": "What it says, in the language it was written in; the label of an item for a language that has none of its own.",
                           "type": "string"
+                        },
+                        "labels": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "default": {},
+                          "description": "What it says in each language that has its own label, by language tag (`en`, `es`, `pt-BR`).",
+                          "type": "object"
                         },
                         "permission": {
                           "default": null,

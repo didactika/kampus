@@ -80,6 +80,13 @@ pub(super) fn flatten(items: &[MenuItem]) -> (Vec<Flat<'_>>, Vec<FieldError>) {
             if label.is_empty() || label.chars().count() > MAX_LABEL {
                 problems.push(FieldError::new(format!("{name}.label"), "length"));
             }
+            for (language, text) in &item.labels {
+                if !super::values::is_language(language) {
+                    problems.push(FieldError::new(format!("{name}.labels.{language}"), "language"));
+                } else if text.trim().is_empty() || text.trim().chars().count() > MAX_LABEL {
+                    problems.push(FieldError::new(format!("{name}.labels.{language}"), "length"));
+                }
+            }
             if !is_target(&item.target) {
                 problems.push(FieldError::new(format!("{name}.target"), "target"));
             }
@@ -137,7 +144,7 @@ impl Customise {
             });
         };
         let rows = sqlx::query(sql(format!(
-            "select id, parent_id, label, target, permission from {} where menu_id = $1 order by position",
+            "select id, parent_id, label, labels, target, permission from {} where menu_id = $1 order by position",
             self.table("menu_item")
         )))
         .bind(id)
@@ -163,6 +170,10 @@ impl Customise {
                 parent: row.get("parent_id"),
                 item: MenuItem {
                     label: row.get("label"),
+                    labels: row
+                        .get::<Option<serde_json::Value>, _>("labels")
+                        .and_then(|v| serde_json::from_value(v).ok())
+                        .unwrap_or_default(),
                     target: row.get("target"),
                     permission,
                     children: Vec::new(),
@@ -278,14 +289,20 @@ impl Customise {
         .map_err(kampus_db::classify)?;
         for (id, parent, position, item) in flat {
             sqlx::query(sql(format!(
-                "insert into {} (id, menu_id, parent_id, label, target, permission, position)
-                 values ($1, $2, $3, $4, $5, $6, $7)",
+                "insert into {} (id, menu_id, parent_id, label, labels, target, permission, position)
+                 values ($1, $2, $3, $4, $5, $6, $7, $8)",
                 self.table("menu_item")
             )))
             .bind(id)
             .bind(menu)
             .bind(parent)
             .bind(item.label.trim())
+            .bind(serde_json::json!(
+                item.labels
+                    .iter()
+                    .map(|(k, v)| (k.clone(), v.trim().to_owned()))
+                    .collect::<BTreeMap<_, _>>()
+            ))
             .bind(&item.target)
             .bind(item.permission.as_deref())
             .bind(position)
