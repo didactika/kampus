@@ -39,7 +39,7 @@ import { test } from "@playwright/test";
 
 import { expectAccessible, t } from "./support";
 
-for (const path of ["/", "/courses", "/notifications", "/notifications/preferences", "/account", "/account?tab=security", "/admin/settings"]) {
+for (const path of ["/", "/courses", "/notifications", "/notifications/preferences", "/account", "/account?tab=security", "/admin/settings", "/admin/roles", "/admin/roles?tab=grants", "/admin/roles?tab=explain"]) {
   test(`${path} has no WCAG 2.2 AA violations`, async ({ page }) => {
     await page.goto(path);
     await page.waitForLoadState("networkidle");

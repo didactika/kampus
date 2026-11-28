@@ -105,3 +105,15 @@ export type ScopeSetting = Schema<"ScopeSetting">;
 
 /** The type and bounds of a setting. */
 export type StoredKind = Schema<"StoredKind">;
+
+/** A role of a campus with its values. */
+export type RoleView = Schema<"RoleView">;
+
+/** A declared permission. */
+export type PermissionInfo = Schema<"PermissionInfo">;
+
+/** A role granted in a scope. */
+export type GrantView = Schema<"GrantView">;
+
+/** The decision of a check, with its explanation. */
+export type Decision = Schema<"Decision">;

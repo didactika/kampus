@@ -43,4 +43,7 @@ export interface AdminSection {
 }
 
 /** The sections. */
-export const ADMIN_SECTIONS: readonly AdminSection[] = [{ href: "/admin/settings", label: "admin.section.settings", icon: "tune" }];
+export const ADMIN_SECTIONS: readonly AdminSection[] = [
+  { href: "/admin/settings", label: "admin.section.settings", icon: "tune" },
+  { href: "/admin/roles", label: "admin.section.roles", icon: "shield" },
+];
