@@ -1,5 +1,11 @@
 {
+  "progress.exception.permission": "Decidir el progreso de una persona",
   "progress.group.completion": "Finalización",
+  "progress.manage.permission": "Definir las reglas de finalización",
+  "progress.mark_own.permission": "Marcar su propio progreso",
   "progress.notify": "Avisar a las personas cuando completan un curso",
-  "progress.notify.hint": "Las personas reciben un aviso cuando completan un curso o un profesor decide su progreso."
+  "progress.notify.hint": "Las personas reciben un aviso cuando completan un curso o un profesor decide su progreso.",
+  "progress.tracked.permission": "Tener seguimiento de su progreso",
+  "progress.view_all.permission": "Ver el progreso de todos",
+  "progress.view_own.permission": "Ver su propio progreso"
 }

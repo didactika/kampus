@@ -1,0 +1,11 @@
+{
+  "records.export.permission": "Export grades",
+  "records.grade.permission": "Grade",
+  "records.hide.permission": "Hide grades",
+  "records.lock.permission": "Lock grades",
+  "records.manage.permission": "Set up the gradebook",
+  "records.override.permission": "Override grades",
+  "records.view_all.permission": "See everyone's grades",
+  "records.view_hidden.permission": "See hidden grades",
+  "records.view_own.permission": "See one's own grades"
+}

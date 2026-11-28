@@ -1,4 +1,9 @@
 {
+  "access.grant.create.permission": "Asignar roles",
+  "access.grant.delete.permission": "Retirar roles",
+  "access.override.risky.permission": "Modificar permisos de riesgo",
+  "access.override.update.permission": "Modificar permisos en un lugar",
+  "access.review.permission": "Revisar quién puede hacer qué",
   "access.risk.configuration": "la configuración",
   "access.risk.data_loss": "pérdida de datos",
   "access.risk.personal_data": "datos personales",
@@ -10,6 +15,7 @@
   "access.role.course_creator": "Creación de cursos",
   "access.role.guest": "Invitado",
   "access.role.learner": "Estudiante",
+  "access.role.manage.permission": "Gestionar roles",
   "access.role.manager": "Gestión",
   "access.role.mentor": "Mentor",
   "access.role.non_editing_teacher": "Profesor sin edición",
@@ -24,8 +30,10 @@
   "access.rule.no_allow": "Ningún rol lo permite aquí.",
   "access.rule.unknown_permission": "Ningún módulo declara este permiso.",
   "access.rule.view_as_limit": "Ver como otro rol solo permite consultar.",
+  "access.scope.freeze.permission": "Congelar un lugar",
   "access.value.allow": "Permitir",
   "access.value.deny": "Denegar",
   "access.value.forbid": "Prohibir",
-  "access.value.none": "Sin definir"
+  "access.value.none": "Sin definir",
+  "access.view_as.permission": "Ver como otro rol"
 }

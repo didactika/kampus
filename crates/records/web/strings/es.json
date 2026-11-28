@@ -1,0 +1,11 @@
+{
+  "records.export.permission": "Exportar calificaciones",
+  "records.grade.permission": "Calificar",
+  "records.hide.permission": "Ocultar calificaciones",
+  "records.lock.permission": "Bloquear calificaciones",
+  "records.manage.permission": "Configurar el libro de calificaciones",
+  "records.override.permission": "Sustituir calificaciones",
+  "records.view_all.permission": "Ver las calificaciones de todos",
+  "records.view_hidden.permission": "Ver calificaciones ocultas",
+  "records.view_own.permission": "Ver sus propias calificaciones"
+}

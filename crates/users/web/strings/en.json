@@ -1,0 +1,5 @@
+{
+  "users.profile.update_any.permission": "Change anyone's profile",
+  "users.profile.update_own.permission": "Change one's own profile",
+  "users.system_group.manage.permission": "Manage system groups"
+}

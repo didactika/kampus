@@ -1,0 +1,5 @@
+{
+  "users.profile.update_any.permission": "Modificar el perfil de cualquiera",
+  "users.profile.update_own.permission": "Modificar su propio perfil",
+  "users.system_group.manage.permission": "Gestionar grupos del sistema"
+}

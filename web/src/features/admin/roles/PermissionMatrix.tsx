@@ -58,7 +58,7 @@ import { browserApi } from "../../../api/browser";
 import type { PermissionInfo, RoleView } from "../../../api/types";
 import { useI18n } from "../../../i18n/I18nProvider";
 import { moduleName } from "../names";
-import { CHOICES, type Choice, LOOK, roleName, valueName } from "./words";
+import { CHOICES, type Choice, LOOK, permissionName, roleName, valueName } from "./words";
 
 /** The cell a menu is open for. */
 interface Open {
@@ -184,8 +184,8 @@ export function PermissionMatrix({ roles: initial, permissions }: PermissionMatr
                 <tr key={permission.code}>
                   <Box component="th" scope="row" sx={{ ...sticky, textAlign: "start", px: 2, py: 1, fontWeight: 400 }}>
                     <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                      <Typography variant="body2" sx={{ fontFamily: "monospace" }}>
-                        {permission.code}
+                      <Typography variant="body2" title={permission.code}>
+                        {permissionName(t, permission.code)}
                       </Typography>
                       {permission.risks.length ? (
                         <Tooltip title={t("admin.roles.risk", { risks: permission.risks.map((r) => t(`access.risk.${r}`)).join(", ") })}>

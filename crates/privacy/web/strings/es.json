@@ -1,0 +1,7 @@
+{
+  "privacy.hold.manage.permission": "Gestionar retenciones legales",
+  "privacy.policy.manage.permission": "Publicar políticas",
+  "privacy.request.approve.permission": "Aprobar solicitudes de eliminación",
+  "privacy.request.manage.permission": "Atender solicitudes de privacidad",
+  "privacy.retention.manage.permission": "Fijar cuánto se conservan los datos"
+}

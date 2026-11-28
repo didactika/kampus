@@ -314,7 +314,7 @@ test("the administration is found from the bar, searched, and a setting is saved
 });
 
 test("the matrix of roles changes a value at once and the check explains why a person may", async ({ page }) => {
-  await page.goto("/admin/roles");
+  await page.goto("/admin/roles/compare");
   await page.getByLabel(t("admin.roles.search")).fill("access.view_as");
   const cell = page.getByRole("button", { name: /^Mentor, access\.view_as: / });
   const before = (await cell.getAttribute("aria-label"))!.split(": ").pop()!;
@@ -366,4 +366,14 @@ test("the courses of the campus are browsed by category and a course opens with 
   await course.click();
   await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
   await expect(page.getByLabel(t("admin.courses.field.full_name"))).toHaveValue(name);
+});
+
+test("a role opens with its permissions by module, found by their names", async ({ page }) => {
+  await page.goto("/admin/roles");
+  await page.getByRole("link", { name: new RegExp(t("access.role.teacher")) }).first().click();
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  await page.getByLabel(t("admin.roles.search")).fill(t("access.review.permission"));
+  const row = page.getByRole("group", { name: t("access.review.permission") });
+  await expect(row).toBeVisible();
+  await expect(row.getByRole("button", { pressed: true })).toHaveCount(1);
 });

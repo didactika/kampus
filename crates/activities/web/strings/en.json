@@ -1,0 +1,6 @@
+{
+  "activities.conditions.ignore.permission": "Open activities whatever their conditions",
+  "activities.conditions.manage.permission": "Set the conditions of activities",
+  "activities.exception.manage.permission": "Grant exceptions on activities",
+  "activities.module.manage.permission": "Add and change activities"
+}

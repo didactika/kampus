@@ -1,10 +1,14 @@
 {
+  "notify.defaults.manage.permission": "Set notification and messaging defaults",
   "notify.group.messaging": "Messaging",
+  "notify.message.anyone.permission": "Write to anyone",
+  "notify.message.attach.permission": "Attach files to messages",
   "notify.message_retention_days": "Days messages are kept",
   "notify.message_retention_days.hint": "With 0 they are kept until every member deletes them.",
   "notify.messaging": "Who may write to whom",
   "notify.messaging.campus": "Anyone of the campus",
   "notify.messaging.course": "People who share a course",
   "notify.messaging.hint": "Limits who may start a conversation with whom.",
-  "notify.messaging.nobody": "Nobody"
+  "notify.messaging.nobody": "Nobody",
+  "notify.template.manage.permission": "Write notification templates"
 }

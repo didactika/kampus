@@ -1,0 +1,13 @@
+{
+  "customise.field.edit.permission": "Fill in custom fields",
+  "customise.field.manage.permission": "Define custom fields",
+  "customise.field.view.permission": "See custom fields",
+  "customise.flag.manage.permission": "Turn features on or off",
+  "customise.layout.manage.permission": "Arrange the pages of others",
+  "customise.layout.own.permission": "Arrange one's own home",
+  "customise.menu.manage.permission": "Edit menus",
+  "customise.package.manage.permission": "Export and import customisation",
+  "customise.rule.manage.permission": "Manage automatic rules",
+  "customise.term.manage.permission": "Rename terms",
+  "customise.theme.manage.permission": "Change the theme"
+}
