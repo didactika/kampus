@@ -46,6 +46,22 @@ import FormLabel from "@mui/material/FormLabel";
 import OutlinedInput, { type OutlinedInputProps } from "@mui/material/OutlinedInput";
 import { useId } from "react";
 
+/**
+ * How wide a field is, from what it holds: a number, a short value (a code, a date), a medium one (a name, an email, a
+ * choice), a long one (a sentence, an address), or the whole width (a text). A field is never wider than its content
+ * needs, so forms read in one glance.
+ */
+export type FieldWidth = "number" | "short" | "medium" | "long" | "full";
+
+/** The largest inline size of each width. */
+export const FIELD_WIDTHS: Readonly<Record<FieldWidth, string>> = {
+  number: "11rem",
+  short: "15rem",
+  medium: "22rem",
+  long: "36rem",
+  full: "100%",
+};
+
 /** The props of `TextField`. */
 export interface TextFieldProps extends Omit<OutlinedInputProps, "error" | "label"> {
   /** The visible label; every field has one. */
@@ -54,15 +70,17 @@ export interface TextFieldProps extends Omit<OutlinedInputProps, "error" | "labe
   readonly hint?: string;
   /** An error to show, such as one the server returned. */
   readonly error?: string;
+  /** How wide it is, from what it holds; the whole width when not given. */
+  readonly width?: FieldWidth;
 }
 
 /** `<TextField label="Email" name="email" type="email" required />` */
-export function TextField({ label, hint, error, id, required, disabled, fullWidth = true, ...input }: TextFieldProps) {
+export function TextField({ label, hint, error, id, required, disabled, fullWidth = true, width = "full", ...input }: TextFieldProps) {
   const own = useId();
   const field = id ?? own;
   const described = [hint ? `${field}-hint` : "", error ? `${field}-error` : ""].filter(Boolean).join(" ") || undefined;
   return (
-    <FormControl fullWidth={fullWidth} required={required} disabled={disabled} error={Boolean(error)}>
+    <FormControl fullWidth={fullWidth} required={required} disabled={disabled} error={Boolean(error)} sx={{ maxInlineSize: FIELD_WIDTHS[width] }}>
       <FormLabel htmlFor={field}>{label}</FormLabel>
       <OutlinedInput
         id={field}

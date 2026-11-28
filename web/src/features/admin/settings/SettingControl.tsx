@@ -55,8 +55,9 @@ import { useI18n } from "../../../i18n/I18nProvider";
 import { optionName, settingName } from "../names";
 import { unitOf } from "./format";
 
-/** The most options shown side by side; more are a list. */
-const SIDE_BY_SIDE = 4;
+/** The most options shown side by side, and the longest name each may have; others are a list. */
+const SIDE_BY_SIDE = 3;
+const SHORT = 14;
 
 /** The props of `SettingControl`. */
 export interface SettingControlProps {
@@ -86,10 +87,12 @@ export function SettingControl({ setting, value, onChange, disabled, labelledBy,
     );
   }
   if (kind.type === "choice") {
-    if (kind.options.length > SIDE_BY_SIDE) {
+    if (kind.options.length > SIDE_BY_SIDE || kind.options.some((option) => optionName(t, setting.key, option).length > SHORT)) {
       return (
         <SelectField
           label={settingName(t, setting)}
+          width="medium"
+          labelHidden
           value={String(value ?? "")}
           disabled={disabled}
           onChange={onChange}
@@ -129,14 +132,13 @@ export function SettingControl({ setting, value, onChange, disabled, labelledBy,
         onChange={(event) => onChange(event.target.value === "" ? null : Number(event.target.value))}
         inputProps={{ min: kind.min, max: kind.max, step: 1, inputMode: "numeric", ...aria, "aria-invalid": invalid || undefined }}
         endAdornment={unit ? <InputAdornment position="end">{t(`admin.unit.${unit}.word`)}</InputAdornment> : undefined}
-        sx={{ inlineSize: 200 }}
+        sx={{ inlineSize: `calc(${String(kind.max).length + 2}ch + ${unit ? "5.5rem" : "1.5rem"})` }}
       />
     );
   }
   return (
     <OutlinedInput
       size="small"
-      fullWidth
       value={typeof value === "string" ? value : ""}
       disabled={disabled}
       error={invalid}
@@ -144,6 +146,7 @@ export function SettingControl({ setting, value, onChange, disabled, labelledBy,
       minRows={kind.type === "rich_text" ? 3 : undefined}
       onChange={(event) => onChange(event.target.value)}
       inputProps={{ maxLength: kind.max, ...aria, "aria-invalid": invalid || undefined }}
+      sx={{ inlineSize: kind.type === "rich_text" ? "100%" : kind.max <= 64 ? "min(100%, 18rem)" : "min(100%, 28rem)" }}
     />
   );
 }

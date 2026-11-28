@@ -339,3 +339,18 @@ test("the matrix of roles changes a value at once and the check explains why a p
   await page.getByRole("button", { name: t("admin.explain.check") }).click();
   await expect(page.getByRole("heading", { name: t("admin.explain.allowed") })).toBeVisible();
 });
+
+test("the accounts of the campus are found, chosen together and opened", async ({ page }) => {
+  await page.goto("/admin/people");
+  await expect(page.getByRole("heading", { level: 1, name: t("admin.page.people") })).toBeVisible();
+  await page.getByLabel(t("admin.people.search")).fill("admin");
+  const row = page.getByRole("row", { name: /admin/ }).first();
+  await expect(row).toBeVisible();
+  await row.getByRole("checkbox").check();
+  await expect(page.getByRole("toolbar", { name: t("admin.people.bulk") })).toBeVisible();
+  await page.getByRole("button", { name: t("admin.people.unchoose") }).click();
+  await row.getByRole("link").click();
+  await expect(page.getByRole("tab", { name: t("admin.people.tab.profile") })).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("tab", { name: t("admin.people.tab.roles") }).click();
+  await expect(page.getByRole("heading", { name: t("admin.people.roles.held") })).toBeVisible();
+});

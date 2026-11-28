@@ -118,6 +118,7 @@ export function Grants({ campus, roles, held }: GrantsProps) {
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-end" } }}>
             <SelectField
               label={t("admin.grants.role")}
+              width="medium"
               value={role}
               onChange={setRole}
               options={assignable.map((r) => ({ value: r.id, label: roleName(t, r) }))}

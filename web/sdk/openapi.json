@@ -2534,6 +2534,10 @@
             "format": "uuid",
             "type": "string"
           },
+          "scope_kind": {
+            "$ref": "#/components/schemas/ScopeKind",
+            "description": "The kind of that scope."
+          },
           "valid_from": {
             "description": "From when it counts.",
             "format": "date-time",
@@ -2552,6 +2556,7 @@
           "id",
           "role",
           "scope",
+          "scope_kind",
           "principal",
           "origin",
           "origin_module",
@@ -7390,6 +7395,58 @@
           }
         ],
         "summary": "Take a grant back",
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/access/principals/{principal}/grants": {
+      "get": {
+        "operationId": "get_access_principals_principal_grants",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "principal",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GrantView"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "The roles a principal holds in every scope, newest first",
         "tags": [
           "access"
         ]

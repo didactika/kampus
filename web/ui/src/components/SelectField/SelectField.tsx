@@ -50,6 +50,8 @@ import OutlinedInput from "@mui/material/OutlinedInput";
 import Select from "@mui/material/Select";
 import { useEffect, useId, useRef, useState } from "react";
 
+import { FIELD_WIDTHS, type FieldWidth } from "../TextField/TextField";
+
 import { Icon } from "../Icon/index";
 
 /** One option of a `SelectField`. */
@@ -67,6 +69,10 @@ export const SEARCH_FROM = 11;
 
 /** The props of `SelectField`. */
 export interface SelectFieldProps {
+  /** How wide it is, from what its options hold; the whole width when not given. */
+  readonly width?: FieldWidth;
+  /** Whether its name is already written beside it, so its label is only read, not shown. */
+  readonly labelHidden?: boolean;
   /** The visible label. */
   readonly label: string;
   /** The options. */
@@ -103,7 +109,7 @@ function Mark({ chosen }: { readonly chosen: boolean }) {
 
 /** `<SelectField label="Language" name="language" options={[…]} />` */
 export function SelectField(props: SelectFieldProps) {
-  const { label, options, name, hint, error, id, required, disabled, onChange, searchPlaceholder, noMatch } = props;
+  const { label, options, name, hint, error, id, required, disabled, onChange, searchPlaceholder, noMatch, width = "full", labelHidden = false } = props;
   const own = useId();
   const field = id ?? own;
   const initial = props.defaultValue ?? options[0]?.value ?? "";
@@ -126,8 +132,12 @@ export function SelectField(props: SelectFieldProps) {
   const searchable = options.length >= SEARCH_FROM;
 
   return (
-    <FormControl ref={root} fullWidth required={required} disabled={disabled} error={Boolean(error)}>
-      <FormLabel htmlFor={field} id={`${field}-label`}>
+    <FormControl ref={root} fullWidth required={required} disabled={disabled} error={Boolean(error)} sx={{ maxInlineSize: FIELD_WIDTHS[width] }}>
+      <FormLabel
+        htmlFor={field}
+        id={`${field}-label`}
+        sx={labelHidden ? { position: "absolute", inlineSize: 1, blockSize: 1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap" } : undefined}
+      >
         {label}
       </FormLabel>
       {searchable ? (

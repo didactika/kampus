@@ -139,7 +139,7 @@ export function PermissionMatrix({ roles: initial, permissions }: PermissionMatr
             <Icon name="search" size="small" />
           </InputAdornment>
         }
-        sx={{ maxInlineSize: 420 }}
+        width="medium"
       />
       <Box sx={{ overflow: "auto", maxBlockSize: "70vh", border: 1, borderColor: "divider", borderRadius: 3, bgcolor: "background.paper" }}>
         <Box component="table" sx={{ borderCollapse: "separate", borderSpacing: 0, minInlineSize: "100%", "& th, & td": { borderBottom: 1, borderColor: "divider" } }}>

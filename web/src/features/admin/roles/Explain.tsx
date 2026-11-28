@@ -102,6 +102,7 @@ export function Explain({ campus, roles, permissions }: ExplainProps) {
           <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "flex-end" } }}>
             <SelectField
               label={t("admin.explain.permission")}
+              width="medium"
               value={permission}
               searchPlaceholder={t("select.search")}
               noMatch={t("select.nomatch")}
