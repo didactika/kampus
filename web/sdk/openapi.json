@@ -3935,6 +3935,28 @@
           }
         ]
       },
+      "Outcome": {
+        "description": "What a change in bulk did to one account.",
+        "properties": {
+          "account": {
+            "description": "The account.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "problem": {
+            "description": "The code of the problem that stopped the change for it; absent when it was made.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "account",
+          "problem"
+        ],
+        "type": "object"
+      },
       "OverrideView": {
         "description": "The value a scope gives a permission for a role, in place of the value of the role.",
         "properties": {
@@ -4285,7 +4307,7 @@
           "items": {
             "description": "The items of the page.",
             "items": {
-              "$ref": "#/components/schemas/Conversation"
+              "$ref": "#/components/schemas/Account"
             },
             "type": "array"
           },
@@ -4304,6 +4326,30 @@
         "type": "object"
       },
       "Page2": {
+        "description": "One page of a list, with the cursor of the next page when there is one.",
+        "properties": {
+          "items": {
+            "description": "The items of the page.",
+            "items": {
+              "$ref": "#/components/schemas/Conversation"
+            },
+            "type": "array"
+          },
+          "next": {
+            "description": "The cursor of the next page, absent on the last page.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next"
+        ],
+        "type": "object"
+      },
+      "Page3": {
         "description": "One page of a list, with the cursor of the next page when there is one.",
         "properties": {
           "items": {
@@ -22382,6 +22428,53 @@
       }
     },
     "/identity/campuses/{campus}/accounts": {
+      "get": {
+        "operationId": "get_identity_campuses_campus_accounts",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campus",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "The accounts of a campus, newest first, a page at a time (query `q`, `status`, `kind`, `limit`, `after`)",
+        "tags": [
+          "identity"
+        ]
+      },
       "post": {
         "operationId": "post_identity_campuses_campus_accounts",
         "parameters": [
@@ -22526,6 +22619,101 @@
           }
         ],
         "summary": "The account a system knows by an identifier in a campus",
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/identity/campuses/{campus}/accounts/transitions": {
+      "post": {
+        "operationId": "post_identity_campuses_campus_accounts_transitions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "campus",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Any value; a request that changes something with a session cookie must carry it.",
+            "in": "header",
+            "name": "x-kampus",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "A change of status for several accounts of a campus.",
+                "properties": {
+                  "accounts": {
+                    "description": "The accounts, at most two hundred.",
+                    "items": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "reason": {
+                    "default": "",
+                    "description": "Why; kept with the change.",
+                    "type": "string"
+                  },
+                  "to": {
+                    "description": "`suspended`, `active`, `deletion_scheduled` or `deletion_cancelled`.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "accounts",
+                  "to"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Outcome"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "Suspend, reactivate or delete several accounts of a campus, each on its own",
         "tags": [
           "identity"
         ]
@@ -24187,7 +24375,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page"
+                  "$ref": "#/components/schemas/Page2"
                 }
               }
             },
@@ -24461,7 +24649,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Page2"
+                  "$ref": "#/components/schemas/Page3"
                 }
               }
             },
