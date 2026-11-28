@@ -132,7 +132,7 @@ Rules:
 
 ## Design system
 
-The look and behaviour of every screen, its principles (Didactika prevails, latest stable versions, scalable, dynamic, optimised, intuitive, accessible), its tokens, theme, components, patterns, icons and theming per scope are in the [Kampus design system](./design-system.md).
+The look and behaviour of every screen, its principles (Didactika prevails, latest stable versions, scalable, dynamic, optimised, intuitive, accessible), its tokens, theme, components, patterns, icons and theming per scope are in the [Kampus design system](./design-system.md). Where the administration is, how it is organised and the kinds of page it is built from are in [the administration](./administration.md).
 
 ## Data and state
 

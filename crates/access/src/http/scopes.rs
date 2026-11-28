@@ -72,6 +72,11 @@ pub(super) const OPERATIONS: &[Operation] = &[
     .body::<OverrideValue>()
     .no_content(),
     Operation::get(
+        "/scopes/{scope}/path",
+        "A scope and the scopes above it, nearest first, with their kinds, for whoever is signed in",
+    )
+    .returns::<Vec<crate::PathScope>>(),
+    Operation::get(
         "/scopes/{scope}/explain",
         "Why a principal may or may not use a permission in a scope (query `principal` and `permission`)",
     )
@@ -86,6 +91,7 @@ pub(super) fn routes() -> Router<Shared> {
         .route("/scopes/{scope}/overrides", get(overrides))
         .route("/scopes/{scope}/overrides/{role}/{permission}", put(set_override))
         .route("/scopes/{scope}/explain", get(explain))
+        .route("/scopes/{scope}/path", get(path))
 }
 
 /// A role to grant.
@@ -194,4 +200,16 @@ async fn explain(
         .explain(&acting, question.principal, &question.permission, id(&scope)?)
         .await?;
     Ok(Json(decision).into_response())
+}
+
+/// A scope and the scopes above it.
+async fn path(
+    State(shared): State<Shared>,
+    Extension(acting): Extension<Acting>,
+    Path(scope): Path<String>,
+) -> ApiResult<Response> {
+    if matches!(acting.actor, crate::Actor::Visitor(_)) {
+        return Err(kampus_common::Error::unauthenticated("access.sign_in_required").into());
+    }
+    Ok(Json(shared.access()?.path_of(id(&scope)?).await?).into_response())
 }

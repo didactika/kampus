@@ -1,3 +1,5 @@
 {
-  "progress.notify": "Avisar a las personas cuando completan un curso"
+  "progress.group.completion": "Finalización",
+  "progress.notify": "Avisar a las personas cuando completan un curso",
+  "progress.notify.hint": "Las personas reciben un aviso cuando completan un curso o un profesor decide su progreso."
 }

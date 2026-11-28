@@ -89,8 +89,7 @@ export function Explain({ campus, roles, permissions }: ExplainProps) {
 
   return (
     <Stack spacing={3}>
-      <Typography color="text.secondary">{t("admin.explain.lead")}</Typography>
-      <SectionCard title={t("admin.roles.tab.explain")} icon="help">
+      <SectionCard title={t("admin.page.check")} icon="help">
         <Stack spacing={2}>
           <AccountPicker
             campus={campus}

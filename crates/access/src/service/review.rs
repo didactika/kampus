@@ -205,6 +205,16 @@ impl Access {
         self.role_campus(&mut conn, role).await
     }
 
+    /// A scope and the scopes above it, nearest first.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown scope.
+    pub async fn path_of(&self, scope: ScopeId) -> Result<Vec<crate::PathScope>> {
+        let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
+        self.path(&mut conn, scope).await
+    }
+
     /// The scope where a grant is held.
     ///
     /// # Errors

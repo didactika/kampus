@@ -55,6 +55,8 @@ pub struct ScopeSetting {
     pub module: String,
     /// What it sets.
     pub summary: String,
+    /// The group it shows in among the settings of its module.
+    pub group: String,
     /// Its type and bounds, to build its field.
     pub kind: StoredKind,
     /// Its declared default.
@@ -124,10 +126,10 @@ impl Settings {
             .as_str()
             .to_owned();
         let rows = sqlx::query(sql(format!(
-            "select d.key, d.module, d.summary, d.kind, d.default_value, d.permission, d.restart_required,
+            "select d.key, d.module, d.summary, d.group_code, d.kind, d.default_value, d.permission, d.restart_required,
                     v.version, v.locked
              from {} d left join {} v on v.definition_key = d.key and v.scope_id = $1
-             where d.retired_at is null and d.levels ? $2 order by d.key",
+             where d.retired_at is null and d.levels ? $2 order by d.module, d.position, d.key",
             self.table("definition"),
             self.table("value")
         )))
@@ -169,6 +171,7 @@ impl Settings {
                 key: named.0,
                 module: named.1,
                 summary: named.2,
+                group: row.get("group_code"),
                 kind: stored,
                 default_value: row.get("default_value"),
                 value: found.value.clone(),

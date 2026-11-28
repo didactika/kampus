@@ -1,3 +1,5 @@
 {
-  "progress.notify": "Tell people when they complete a course"
+  "progress.group.completion": "Completion",
+  "progress.notify": "Tell people when they complete a course",
+  "progress.notify.hint": "People get a notification when they complete a course or a teacher decides their progress."
 }

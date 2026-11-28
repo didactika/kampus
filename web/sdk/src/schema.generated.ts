@@ -172,6 +172,23 @@ export type paths = {
         patch?: never;
         trace?: never;
     };
+    "/access/scopes/{scope}/path": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A scope and the scopes above it, nearest first, with their kinds, for whoever is signed in */
+        get: operations["get_access_scopes_scope_path"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/access/scopes/{scope}/permissions": {
         parameters: {
             query?: never;
@@ -5928,6 +5945,23 @@ export type components = {
              */
             row_pixels: number;
         };
+        /** @description One scope on the path from a scope up to the root. */
+        PathScope: {
+            /**
+             * Format: int32
+             * @description How many levels above the checked scope it is (0 for the scope itself).
+             */
+            depth: number;
+            /** @description Whether it is frozen. */
+            frozen: boolean;
+            /**
+             * Format: uuid
+             * @description The scope.
+             */
+            id: string;
+            /** @description Its kind. */
+            kind: components["schemas"]["ScopeKind"];
+        };
         /** @description A declared permission, as the matrix of roles lists it. */
         PermissionInfo: {
             /** @description The code, `<module>.<area>.<action>`. */
@@ -6546,6 +6580,8 @@ export type components = {
         ScopeSetting: {
             /** @description Its declared default. */
             default_value: unknown;
+            /** @description The group it shows in among the settings of its module. */
+            group: string;
             /** @description The key. */
             key: string;
             /** @description Its type and bounds, to build its field. */
@@ -7521,6 +7557,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_access_scopes_scope_path: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PathScope"][];
+                };
             };
             /** @description A problem (RFC 9457) */
             default: {

@@ -4402,6 +4402,36 @@
         ],
         "type": "object"
       },
+      "PathScope": {
+        "description": "One scope on the path from a scope up to the root.",
+        "properties": {
+          "depth": {
+            "description": "How many levels above the checked scope it is (0 for the scope itself).",
+            "format": "int32",
+            "type": "integer"
+          },
+          "frozen": {
+            "description": "Whether it is frozen.",
+            "type": "boolean"
+          },
+          "id": {
+            "description": "The scope.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ScopeKind",
+            "description": "Its kind."
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "frozen",
+          "depth"
+        ],
+        "type": "object"
+      },
       "PermissionInfo": {
         "description": "A declared permission, as the matrix of roles lists it.",
         "properties": {
@@ -5857,6 +5887,10 @@
           "default_value": {
             "description": "Its declared default."
           },
+          "group": {
+            "description": "The group it shows in among the settings of its module.",
+            "type": "string"
+          },
           "key": {
             "description": "The key.",
             "type": "string"
@@ -5906,6 +5940,7 @@
           "key",
           "module",
           "summary",
+          "group",
           "kind",
           "default_value",
           "value",
@@ -7944,6 +7979,58 @@
           }
         ],
         "summary": "Override the value of a permission for a role in a scope and below; null takes the override away",
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/access/scopes/{scope}/path": {
+      "get": {
+        "operationId": "get_access_scopes_scope_path",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PathScope"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "A scope and the scopes above it, nearest first, with their kinds, for whoever is signed in",
         "tags": [
           "access"
         ]

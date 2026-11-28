@@ -49,10 +49,16 @@ use crate::{CampusPolicy, Policies};
 const LEVELS: &[ScopeKind] = &[ScopeKind::Platform, ScopeKind::Campus];
 
 /// A setting of the policy.
-const fn setting(key: &'static str, summary: &'static str, kind: ValueKind) -> SettingDeclaration {
+const fn setting(
+    key: &'static str,
+    group: &'static str,
+    summary: &'static str,
+    kind: ValueKind,
+) -> SettingDeclaration {
     SettingDeclaration {
         key,
         summary,
+        group,
         kind,
         levels: LEVELS,
         permission: POLICY_MANAGE,
@@ -63,23 +69,26 @@ const fn setting(key: &'static str, summary: &'static str, kind: ValueKind) -> S
 /// A whole number of the policy.
 const fn number(
     key: &'static str,
+    group: &'static str,
     summary: &'static str,
     min: i64,
     max: i64,
     default: i64,
 ) -> SettingDeclaration {
-    setting(key, summary, ValueKind::Integer { min, max, default })
+    setting(key, group, summary, ValueKind::Integer { min, max, default })
 }
 
 /// The settings of this module.
 pub const SETTINGS: &[SettingDeclaration] = &[
     setting(
         "identity.self_sign_up",
+        "sign_up",
         "Whether visitors may sign up by themselves",
         ValueKind::Boolean { default: false },
     ),
     setting(
         "identity.allowed_domains",
+        "sign_up",
         "The email domains allowed to sign up, separated by commas; empty allows any",
         ValueKind::Text {
             max: 2000,
@@ -88,6 +97,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     number(
         "identity.password_min_length",
+        "passwords",
         "The shortest password",
         8,
         128,
@@ -95,11 +105,13 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     setting(
         "identity.second_factor_required",
+        "sign_in",
         "Whether every account needs a second factor",
         ValueKind::Boolean { default: false },
     ),
     number(
         "identity.confirmation_hours",
+        "sign_up",
         "How long a confirmation link lasts, in hours",
         1,
         168,
@@ -107,6 +119,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     number(
         "identity.invitation_days",
+        "sign_up",
         "How long an invitation link lasts, in days",
         1,
         90,
@@ -114,6 +127,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     number(
         "identity.recovery_minutes",
+        "passwords",
         "How long a recovery link lasts, in minutes",
         5,
         1440,
@@ -121,6 +135,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     number(
         "identity.session_idle_hours",
+        "sessions",
         "How long a session lasts without being used, in hours",
         1,
         720,
@@ -128,6 +143,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     number(
         "identity.session_lifetime_days",
+        "sessions",
         "How long a session lasts at most, in days",
         1,
         365,
@@ -135,6 +151,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     number(
         "identity.step_up_minutes",
+        "sign_in",
         "How old the last sign-in may be for a sensitive operation, in minutes",
         1,
         1440,
@@ -142,6 +159,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     number(
         "identity.token_default_days",
+        "tokens",
         "The lifetime of an API token when none is asked, in days",
         1,
         3650,
@@ -149,6 +167,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     number(
         "identity.token_max_days",
+        "tokens",
         "The longest lifetime of an API token, in days",
         1,
         3650,
@@ -156,6 +175,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     number(
         "identity.deletion_grace_days",
+        "accounts",
         "The grace period before a deletion runs, in days",
         0,
         365,
@@ -163,6 +183,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     number(
         "identity.attempt_retention_days",
+        "sign_in",
         "How long sign-in attempts are kept, in days",
         1,
         3650,
@@ -170,6 +191,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     number(
         "identity.throttle_slow_after",
+        "sign_in",
         "Failed sign-ins after which each new try waits longer",
         1,
         1000,
@@ -177,6 +199,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     number(
         "identity.throttle_lock_after",
+        "sign_in",
         "Failed sign-ins after which sign-in locks",
         1,
         1000,
@@ -184,6 +207,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     ),
     number(
         "identity.throttle_lock_minutes",
+        "sign_in",
         "How long a sign-in lock lasts, in minutes",
         1,
         1440,

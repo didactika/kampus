@@ -52,7 +52,7 @@ impl Settings {
         let mut tx = self.db.begin().await?;
         let mut keys = Vec::new();
         for module in modules {
-            for setting in module.settings {
+            for (position, setting) in (0_i32..).zip(module.settings) {
                 let default = setting.kind.default_value();
                 if setting.levels.is_empty() || !setting.kind.accepts(&default) {
                     return Err(Error::validation(
@@ -64,9 +64,10 @@ impl Settings {
                 keys.push(setting.key.to_owned());
                 let levels: Vec<&str> = setting.levels.iter().map(|l| l.as_str()).collect();
                 sqlx::query(sql(format!(
-                    "insert into {} (key, module, summary, kind, default_value, levels, permission, restart_required)
-                     values ($1, $2, $3, $4, $5, $6, $7, $8)
+                    "insert into {} (key, module, summary, group_code, position, kind, default_value, levels, permission, restart_required)
+                     values ($1, $2, $3, $9, $10, $4, $5, $6, $7, $8)
                      on conflict (key) do update set module = excluded.module, summary = excluded.summary,
+                     group_code = excluded.group_code, position = excluded.position,
                      kind = excluded.kind, default_value = excluded.default_value, levels = excluded.levels,
                      permission = excluded.permission, restart_required = excluded.restart_required, retired_at = null",
                     self.table("definition")
@@ -79,6 +80,8 @@ impl Settings {
                 .bind(json!(levels))
                 .bind(setting.permission)
                 .bind(setting.restart_required)
+                .bind(setting.group)
+                .bind(position)
                 .execute(&mut *tx)
                 .await
                 .map_err(kampus_db::classify)?;

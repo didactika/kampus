@@ -32,18 +32,70 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-/** The sections of the administration, in the order they are shown. */
+/**
+ * The map of the administration: its categories and the pages of each, in the order they are shown. The settings have
+ * one page per module that declares any, so a module or a plugin that adds settings adds its page.
+ */
 
-/** A section of the administration. */
-export interface AdminSection {
+/** A page of the administration. */
+export interface AdminPage {
   readonly href: string;
   /** The key of its name. */
   readonly label: string;
   readonly icon: string;
 }
 
-/** The sections. */
-export const ADMIN_SECTIONS: readonly AdminSection[] = [
-  { href: "/admin/settings", label: "admin.section.settings", icon: "tune" },
-  { href: "/admin/roles", label: "admin.section.roles", icon: "shield" },
-];
+/** A category of pages. */
+export interface AdminCategory {
+  readonly id: string;
+  /** The key of its name. */
+  readonly label: string;
+  readonly pages: readonly AdminPage[];
+}
+
+/** The icon of the settings of each module; others take the one of settings. */
+export const MODULE_ICONS: Readonly<Record<string, string>> = {
+  identity: "shield_person",
+  courses: "school",
+  notify: "notifications",
+  progress: "trending_up",
+  files: "attach_file",
+  privacy: "verified",
+};
+
+/** The page of the settings of a module. */
+export function settingsHref(module: string): string {
+  return `/admin/settings/${encodeURIComponent(module)}`;
+}
+
+/** `adminMap(["identity", "notify"])`: the categories, with a page of settings for each module given. */
+export function adminMap(modules: readonly string[]): readonly AdminCategory[] {
+  return [
+    {
+      id: "settings",
+      label: "admin.category.settings",
+      pages: modules.map((module) => ({ href: settingsHref(module), label: `admin.module.${module}`, icon: MODULE_ICONS[module] ?? "tune" })),
+    },
+    {
+      id: "access",
+      label: "admin.category.access",
+      pages: [
+        { href: "/admin/roles", label: "admin.page.roles", icon: "shield" },
+        { href: "/admin/roles/grants", label: "admin.page.grants", icon: "groups" },
+        { href: "/admin/roles/check", label: "admin.page.check", icon: "help" },
+      ],
+    },
+  ];
+}
+
+/** The page an address belongs to: the longest page address it starts with. */
+export function pageOf(map: readonly AdminCategory[], path: string): { readonly category: AdminCategory; readonly page: AdminPage } | null {
+  let best: { category: AdminCategory; page: AdminPage } | null = null;
+  for (const category of map) {
+    for (const page of category.pages) {
+      const within = path === page.href || path.startsWith(`${page.href}/`);
+      if (within && (!best || page.href.length > best.page.href.length)) best = { category, page };
+    }
+  }
+  return best;
+}

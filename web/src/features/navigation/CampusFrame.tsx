@@ -70,7 +70,7 @@ import type { Me, MenuItem as MenuEntry, Profile } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { SchemeMenu } from "../../theme/SchemeMenu";
 import { CampusFooter } from "./CampusFooter";
-import { LanguageSwitch } from "./LanguageSwitch";
+import { LanguageMenu } from "./LanguageMenu";
 import { labelOf } from "./label";
 import { EditModeProvider, EditModeSwitch } from "../shell/EditMode";
 import { helpAddress } from "./help";
@@ -133,6 +133,7 @@ export function CampusFrame({ account, profile, menu, footer = [], unread = 0, a
         { href: "/courses", label: t("nav.courses"), icon: "school", children: [] },
         { href: "/notifications", label: t("nav.notifications"), icon: "notifications", children: [] },
       ];
+  const shown: Place[] = administers ? [...places, { href: "/admin", label: t("nav.admin"), icon: "settings", children: [] }] : places;
   const [submenu, setSubmenu] = useState<{ anchor: HTMLElement; place: Place } | null>(null);
   const path = usePathname();
   const router = useRouter();
@@ -150,8 +151,8 @@ export function CampusFrame({ account, profile, menu, footer = [], unread = 0, a
     }
   }
 
-  /** The help, the language and the appearance: on the bar, or in the drawer where the bar has no room for them. */
-  const tools = (tone: "bar" | "surface") => (
+  /** The help and the appearance: on the bar, or in the drawer where the bar has no room for them. */
+  const tools = () => (
     <>
       {helpAddress(help, language, path) ? (
         <Tooltip title={t("nav.help")}>
@@ -160,7 +161,6 @@ export function CampusFrame({ account, profile, menu, footer = [], unread = 0, a
           </IconButton>
         </Tooltip>
       ) : null}
-      <LanguageSwitch profile={profile} tone={tone} />
       <SchemeMenu />
     </>
   );
@@ -204,7 +204,7 @@ export function CampusFrame({ account, profile, menu, footer = [], unread = 0, a
             </Typography>
           </Box>
           <Box component="nav" aria-label={t("nav.primary")} sx={{ display: { xs: "none", md: "flex" }, gap: 0.5 }}>
-            {places.map((place) => {
+            {shown.map((place) => {
               const here = holds(place.href, path) || place.children.some((c) => holds(c.href, path));
               const look = {
                 color: "inherit",
@@ -262,7 +262,7 @@ export function CampusFrame({ account, profile, menu, footer = [], unread = 0, a
             </IconButton>
           </Tooltip>
           <Box sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 1 }}>
-            {tools("bar")}
+            {tools()}
           </Box>
           <IconButton
             color="inherit"
@@ -305,14 +305,7 @@ export function CampusFrame({ account, profile, menu, footer = [], unread = 0, a
               </ListItemIcon>
               {t("account.title")}
             </MenuItem>
-            {administers ? (
-              <MenuItem component={Link} href="/admin" onClick={() => setAccountMenu(null)}>
-                <ListItemIcon>
-                  <Icon name="settings" size="small" />
-                </ListItemIcon>
-                {t("nav.admin")}
-              </MenuItem>
-            ) : null}
+            <LanguageMenu profile={profile} onDone={() => setAccountMenu(null)} />
             <MenuItem component={Link} href="/notifications/preferences" onClick={() => setAccountMenu(null)}>
               <ListItemIcon>
                 <Icon name="tune" size="small" />
@@ -332,7 +325,7 @@ export function CampusFrame({ account, profile, menu, footer = [], unread = 0, a
       <Drawer open={drawer} onClose={() => setDrawer(false)}>
         <Box component="nav" aria-label={t("nav.primary")} sx={{ inlineSize: 280, pt: 2 }}>
           <List>
-            {places.flatMap((place) => [place, ...place.children]).map((place) => (
+            {shown.flatMap((place) => [place, ...place.children]).map((place) => (
               <ListItemButton
                 key={place.href + place.label}
                 component={Link}
@@ -351,7 +344,7 @@ export function CampusFrame({ account, profile, menu, footer = [], unread = 0, a
           </List>
           <Divider sx={{ mx: 2, my: 1, display: { sm: "none" } }} />
           <Stack direction="row" spacing={1} sx={{ display: { xs: "flex", sm: "none" }, alignItems: "center", px: 2, py: 1 }}>
-            {tools("surface")}
+            {tools()}
           </Stack>
         </Box>
       </Drawer>
