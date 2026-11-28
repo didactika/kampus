@@ -354,3 +354,16 @@ test("the accounts of the campus are found, chosen together and opened", async (
   await page.getByRole("tab", { name: t("admin.people.tab.roles") }).click();
   await expect(page.getByRole("heading", { name: t("admin.people.roles.held") })).toBeVisible();
 });
+
+test("the courses of the campus are browsed by category and a course opens with its fields", async ({ page }) => {
+  await page.goto("/admin/courses");
+  await expect(page.getByRole("heading", { level: 1, name: t("admin.page.courses") })).toBeVisible();
+  const tree = page.getByRole("navigation", { name: t("admin.courses.tree") });
+  await tree.getByRole("link").first().click();
+  await expect(page).toHaveURL(/category=/);
+  const course = page.locator("tbody a").first();
+  const name = (await course.textContent())!.trim();
+  await course.click();
+  await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
+  await expect(page.getByLabel(t("admin.courses.field.full_name"))).toHaveValue(name);
+});
