@@ -49,6 +49,7 @@ import { STANDARD_GRID } from "../../../../features/dashboard/default-layout";
 import { ArrangedPage } from "../../../../features/layouts/ArrangedPage";
 import { currentAccount } from "../../../../features/session/current-account";
 import { requestI18n } from "../../../../i18n/server";
+import { OUTLINES } from "../../../../plugins/outlines.generated";
 import { WIDGETS } from "../../../../plugins/widgets.generated";
 
 /** The page kind of a course. */
@@ -81,7 +82,13 @@ export default async function CoursePage({ params }: CoursePageProps) {
   const [account, data, { language }] = [(await currentAccount())!, await courseData(id), await requestI18n()];
   const layout = await optional<Layout | null>(`/customise/scopes/${data.course.scope}/layouts/${COURSE_PAGE}`, null);
   const placements = layout?.placements.length ? layout.placements : DEFAULT_COURSE;
-  const context = { campus: account.campus, course: data };
+  // The content is presented by the outline the course chooses, or the standard one when it is not installed.
+  const outline = OUTLINES[data.course.outline] ?? OUTLINES["outline_sections"];
+  const context = {
+    campus: account.campus,
+    course: data,
+    outline: ({ collapsed }: { readonly collapsed: boolean }) => (outline ? outline.render({ course: data, collapsed, language }) : null),
+  };
   const widgets = await Promise.all(
     placements.map(async (placement) => {
       const plugin = WIDGETS[placement.widget];

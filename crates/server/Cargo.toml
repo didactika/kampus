@@ -63,6 +63,7 @@ kampus-progress = { path = "../progress" }
 kampus-notify = { path = "../notify" }
 kampus-calendar = { path = "../calendar" }
 kampus-privacy = { path = "../privacy" }
+kampus-outline-sections = { path = "../outline/plugins/sections" }
 kampus-widget-catalogue = { path = "../widget/plugins/catalogue" }
 kampus-widget-course-content = { path = "../widget/plugins/course_content" }
 kampus-widget-course-grades = { path = "../widget/plugins/course_grades" }
@@ -85,6 +86,7 @@ kampus-common.workspace = true
 kampus-db.workspace = true
 kampus-module.workspace = true
 kampus-widget.workspace = true
+kampus-outline.workspace = true
 kampus-cache.workspace = true
 kampus-storage.workspace = true
 kampus-mail.workspace = true

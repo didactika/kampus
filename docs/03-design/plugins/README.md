@@ -35,7 +35,7 @@ The folder `plugins/` has the same name in every type. Adapters of the ports are
 | Type | Crate | Extension point | Plugins in the repository | State |
 | --- | --- | --- | --- | --- |
 | [Widget](./widget.md) | `kampus-widget` | Pages arranged as grids: the home, the page of a course (DEC-090) | welcome, text, catalogue, notifications, course content, course summary, course progress, course grades, upcoming | built |
-| Outline | `kampus-outline` (to come) | How the content of a course presents its sections and activities; the content widget delegates to the outline the course chooses (DEC-092) | sections (standard) | designed |
+| [Outline](./outline.md) | `kampus-outline` | How the content of a course presents its sections and activities; the page of a course renders the outline the course chooses and gives it to the content widget (DEC-092) | sections (standard) | built |
 | Activity | `kampus-activity` (to come) | What a course holds: assignments, quizzes, pages, files… rendered inside the outline (RN-075, DEC-092) | — | designed; the contract lives in `activities` until its first plugin |
 | Enrolment method | `kampus-method` (to come) | Ways into a course (DEC-040) | — | contract in `enrol` |
 | Authentication | `kampus-auth` (to come) | Steps of the sign-in pipeline (DEC-030) | — | planned |

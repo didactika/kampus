@@ -2372,6 +2372,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "kampus-outline"
+version = "0.1.0"
+dependencies = [
+ "kampus-common",
+ "kampus-db",
+ "kampus-module",
+]
+
+[[package]]
+name = "kampus-outline-sections"
+version = "0.1.0"
+dependencies = [
+ "kampus-common",
+ "kampus-db",
+ "kampus-module",
+ "kampus-outline",
+]
+
+[[package]]
 name = "kampus-privacy"
 version = "0.1.0"
 dependencies = [
@@ -2542,6 +2561,8 @@ dependencies = [
  "kampus-mail-smtp",
  "kampus-module",
  "kampus-notify",
+ "kampus-outline",
+ "kampus-outline-sections",
  "kampus-privacy",
  "kampus-progress",
  "kampus-push",

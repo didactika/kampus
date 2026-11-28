@@ -44,8 +44,14 @@ import path from 'node:path';
 /** What the web part of a plugin may import: itself, React, the design system, the API types and the host API. */
 const ALLOWED = [/^\.\.?\//, /^react$/, /^react-dom$/, /^@mui\/material(\/|$)/, /^next\/link$/, /^next\/image$/, /^@kampus\/ui$/, /^@kampus\/sdk$/, /^@kampus\/web\/host(\/client)?$/];
 
-/** The files and folders the web part of a widget plugin must have. */
-const WIDGET_WEB = ['package.json', 'src/index.ts', 'strings/en.json'];
+/** The files the web part of a plugin must have. */
+const WEB = ['package.json', 'src/index.ts', 'strings/en.json'];
+
+/** The plugin types with a web part, and where each plugin declares what it offers. */
+const TYPES = {
+  widget: { file: 'src/settings/customise.rs', declares: /pub const WIDGETS: &\[WidgetDeclaration\]/, what: 'the widget in WIDGETS' },
+  outline: { file: 'src/settings/courses.rs', declares: /pub const OUTLINES: &\[OutlineDeclaration\]/, what: 'the outline in OUTLINES' },
+};
 
 /** Every file under a directory. */
 function walk(dir) {
@@ -64,22 +70,23 @@ export function checkPlugins(root) {
   const crates = path.join(root, 'crates');
   for (const type of fs.readdirSync(crates)) {
     const folder = path.join(crates, type, 'plugins');
-    if (type !== 'widget' || !fs.existsSync(folder)) continue;
+    const kind = TYPES[type];
+    if (!kind || !fs.existsSync(folder)) continue;
     for (const name of fs.readdirSync(folder)) {
       count += 1;
       const plugin = path.join(folder, name);
       const where = path.relative(root, plugin).split(path.sep).join('/');
-      for (const file of WIDGET_WEB) {
-        if (!fs.existsSync(path.join(plugin, 'web', file))) problems.push(`${where}/web/${file}: a widget plugin needs it`);
+      for (const file of WEB) {
+        if (!fs.existsSync(path.join(plugin, 'web', file))) problems.push(`${where}/web/${file}: a ${type} plugin needs it`);
       }
-      const expected = `@kampus/widget-${name.replace(/_/g, '-')}`;
+      const expected = `@kampus/${type}-${name.replace(/_/g, '-')}`;
       const manifest = path.join(plugin, 'web', 'package.json');
       if (fs.existsSync(manifest) && JSON.parse(fs.readFileSync(manifest, 'utf8')).name !== expected) {
         problems.push(`${where}/web/package.json: the package of this plugin is ${expected}`);
       }
-      const declaration = path.join(plugin, 'src', 'settings', 'customise.rs');
-      if (!fs.existsSync(declaration) || !/pub const WIDGETS: &\[WidgetDeclaration\]/.test(fs.readFileSync(declaration, 'utf8'))) {
-        problems.push(`${where}/src/settings/customise.rs: declares the widget in WIDGETS`);
+      const declaration = path.join(plugin, kind.file);
+      if (!fs.existsSync(declaration) || !kind.declares.test(fs.readFileSync(declaration, 'utf8'))) {
+        problems.push(`${where}/${kind.file}: declares ${kind.what}`);
       }
       const src = path.join(plugin, 'web', 'src');
       if (!fs.existsSync(src)) continue;
@@ -95,5 +102,5 @@ export function checkPlugins(root) {
       }
     }
   }
-  return { problems, summary: `${count} widget plugin(s) keep to their contract` };
+  return { problems, summary: `${count} plugin(s) with a web part keep to their contract` };
 }

@@ -265,6 +265,7 @@ pub(crate) const TESTING: Module = Module {
     field_kinds: KINDS,
     page_kinds: PAGES,
     widgets: WIDGETS,
+    outlines: &[],
     menu_kinds: MENUS,
     events: EVENTS,
     listeners: &[],
