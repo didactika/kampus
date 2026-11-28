@@ -77,6 +77,11 @@ export function adminMap(modules: readonly string[]): readonly AdminCategory[] {
       pages: [{ href: "/admin/people", label: "admin.page.people", icon: "groups" }],
     },
     {
+      id: "courses",
+      label: "admin.category.courses",
+      pages: [{ href: "/admin/courses", label: "admin.page.courses", icon: "school" }],
+    },
+    {
       id: "access",
       label: "admin.category.access",
       pages: [
