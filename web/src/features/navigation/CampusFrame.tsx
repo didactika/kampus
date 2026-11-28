@@ -351,7 +351,7 @@ export function CampusFrame({ account, profile, menu, footer = [], unread = 0, a
       <Container component="main" id="content" tabIndex={-1} maxWidth="lg" sx={{ py: { xs: 3, md: 5 }, outline: "none", flex: 1 }}>
         {children}
       </Container>
-      <CampusFooter items={footer} />
+      <CampusFooter items={footer} administers={administers} help={helpAddress(help, language, path)} />
       </Box>
     </EditModeProvider>
   );
