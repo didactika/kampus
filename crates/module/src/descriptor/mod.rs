@@ -57,8 +57,9 @@ pub use condition::{
     nothing_depends,
 };
 pub use customise::{
-    Band, Cells, FieldKindDeclaration, FlagDeclaration, Grid, MenuKindDeclaration, PageKindDeclaration,
-    Resize, RowHeight, TermDeclaration, TermForms, WidgetDeclaration, WidgetSetting, WidgetSize,
+    Band, Cells, FieldKindDeclaration, FlagDeclaration, Grid, MenuKindDeclaration, OutlineDeclaration,
+    PageKindDeclaration, Resize, RowHeight, TermDeclaration, TermForms, WidgetDeclaration, WidgetSetting,
+    WidgetSize,
 };
 pub use event::{Event, EventDeclaration, EventRun, ListenerDeclaration};
 pub use file::{FileAreaDeclaration, FileRead, ReadFuture};
@@ -112,6 +113,8 @@ pub struct Module {
     pub page_kinds: &'static [PageKindDeclaration],
     /// The widgets it offers for layouts, from `src/settings/customise.rs`.
     pub widgets: &'static [WidgetDeclaration],
+    /// The ways it offers of presenting the content of a course, from `src/settings/courses.rs`.
+    pub outlines: &'static [OutlineDeclaration],
     /// The kinds of navigation menu it shows, from `src/settings/customise.rs`.
     pub menu_kinds: &'static [MenuKindDeclaration],
     /// The actions it offers to rules, from `src/settings/customise.rs`.

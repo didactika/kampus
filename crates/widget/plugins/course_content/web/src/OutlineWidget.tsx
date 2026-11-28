@@ -35,11 +35,9 @@
 
 /** The sections and activities of the course of the page. */
 
-import { CourseOutline, type WidgetProps } from "@kampus/web/host";
+import type { WidgetProps } from "@kampus/web/host";
 
-/** The content of the course: its sections and activities as the reader sees them. */
+/** The content of the course, as the outline the course chooses presents it. */
 export function OutlineWidget({ settings, context }: WidgetProps) {
-  const course = context.course;
-  if (!course) return null;
-  return <CourseOutline sections={course.sections} modules={course.modules} progress={course.progress} collapsed={settings["collapsed"] === true} />;
+  return context.outline ? context.outline({ collapsed: settings["collapsed"] === true }) : null;
 }

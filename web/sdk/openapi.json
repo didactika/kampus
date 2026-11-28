@@ -6505,6 +6505,10 @@
             "description": "The layout plugin that presents it.",
             "type": "string"
           },
+          "outline": {
+            "description": "The outline it is presented with: the code of an outline plugin, as its settings resolve it.",
+            "type": "string"
+          },
           "owners": {
             "description": "Its owners.",
             "items": {
@@ -6573,7 +6577,8 @@
           "visibility",
           "sort_key",
           "version",
-          "owners"
+          "owners",
+          "outline"
         ],
         "type": "object"
       }

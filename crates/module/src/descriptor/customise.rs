@@ -348,6 +348,18 @@ pub struct WidgetDeclaration {
     pub settings: &'static [WidgetSetting],
 }
 
+/// How the content of a course presents its sections and activities, which a plugin of the outline type offers and a
+/// course chooses.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OutlineDeclaration {
+    /// The name of its plugin, `outline_<name>`, unique in the build.
+    pub code: &'static str,
+    /// How it presents the content, for the people who choose it.
+    pub summary: &'static str,
+    /// Its icon, by the name the design system gives it.
+    pub icon: &'static str,
+}
+
 /// A kind of navigation menu a module shows.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct MenuKindDeclaration {

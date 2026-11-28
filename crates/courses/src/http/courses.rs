@@ -95,6 +95,8 @@ struct WithOwners {
     course: Course,
     /// Its owners.
     owners: Vec<PrincipalId>,
+    /// The outline it is presented with: the code of an outline plugin, as its settings resolve it.
+    outline: String,
 }
 
 /// The routes.
@@ -173,8 +175,16 @@ async fn read(
         return Err(hidden("courses.course_not_found").into());
     }
     let owners = courses.owners(course.id).await?;
+    let outline = courses.outline(course.scope).await?;
     let version = course.version;
-    Ok(with_etag(Json(WithOwners { course, owners }), version))
+    Ok(with_etag(
+        Json(WithOwners {
+            course,
+            owners,
+            outline,
+        }),
+        version,
+    ))
 }
 
 /// Replaces the fields of a course.

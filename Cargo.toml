@@ -50,6 +50,7 @@ kampus-common = { path = "crates/common" }
 kampus-db = { path = "crates/db" }
 kampus-module = { path = "crates/module" }
 kampus-widget = { path = "crates/widget" }
+kampus-outline = { path = "crates/outline" }
 kampus-storage = { path = "crates/storage" }
 kampus-cache = { path = "crates/cache" }
 kampus-mail = { path = "crates/mail" }

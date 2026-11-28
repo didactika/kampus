@@ -71,7 +71,7 @@ impl BuildComponent {
 /// those modules define.
 #[must_use]
 pub fn plugin_types() -> Vec<&'static str> {
-    let mut types = vec!["cache", "storage", kampus_widget::TYPE];
+    let mut types = vec!["cache", "storage", kampus_widget::TYPE, kampus_outline::TYPE];
     types.extend(
         registry::MODULES
             .iter()

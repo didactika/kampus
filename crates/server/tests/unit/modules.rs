@@ -99,3 +99,25 @@ fn only_widget_plugins_declare_widgets_one_each_named_as_their_plugin() {
     }
     assert!(problems.is_empty(), "{}", problems.join("\n"));
 }
+
+#[test]
+fn only_outline_plugins_declare_outlines_one_each_named_as_their_plugin() {
+    use kampus_server::wiring::registry::MODULES;
+    let mut problems = Vec::new();
+    for module in MODULES {
+        let plugin = module.name.starts_with("outline_");
+        match (plugin, module.outlines) {
+            (false, []) => {}
+            (false, _) => problems.push(format!(
+                "{} declares outlines, but only outline plugins do",
+                module.name
+            )),
+            (true, _) => problems.extend(kampus_outline::conformance::problems(module)),
+        }
+    }
+    assert!(
+        MODULES.iter().any(|m| m.name == "outline_sections"),
+        "the standard outline is installed"
+    );
+    assert!(problems.is_empty(), "{}", problems.join("\n"));
+}

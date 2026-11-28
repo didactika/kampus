@@ -6625,6 +6625,8 @@ export type components = {
             language_code: string | null;
             /** @description The layout plugin that presents it. */
             layout: string;
+            /** @description The outline it is presented with: the code of an outline plugin, as its settings resolve it. */
+            outline: string;
             /** @description Its owners. */
             owners: string[];
             /**

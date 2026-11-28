@@ -7,5 +7,6 @@
   "@kampus/widget-notifications",
   "@kampus/widget-text",
   "@kampus/widget-upcoming",
-  "@kampus/widget-welcome"
+  "@kampus/widget-welcome",
+  "@kampus/outline-sections"
 ]

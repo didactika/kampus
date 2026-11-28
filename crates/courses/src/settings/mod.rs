@@ -42,26 +42,67 @@ use kampus_common::Result;
 use kampus_module::{ScopeKind, SettingDeclaration, ValueKind};
 use kampus_settings::Settings;
 
-use crate::permissions::GROUPS_MANAGE;
+use crate::permissions::{COURSE_UPDATE, GROUPS_MANAGE};
 use crate::{Courses, GroupMode};
 
 /// The key of the group mode.
 pub const GROUP_MODE: &str = "courses.group_mode";
 
+/// The key of the outline a course is presented with.
+pub const OUTLINE: &str = "courses.outline";
+
+/// The outline of a course when no scope chooses another, or the one chosen is no longer installed.
+pub const STANDARD_OUTLINE: &str = "outline_sections";
+
 /// The settings of this module.
-pub const SETTINGS: &[SettingDeclaration] = &[SettingDeclaration {
-    key: GROUP_MODE,
-    summary: "Whether people work in groups: none, separate (each group on its own) or visible",
-    kind: ValueKind::Choice {
-        options: &["none", "separate", "visible"],
-        default: "none",
+pub const SETTINGS: &[SettingDeclaration] = &[
+    SettingDeclaration {
+        key: GROUP_MODE,
+        summary: "Whether people work in groups: none, separate (each group on its own) or visible",
+        kind: ValueKind::Choice {
+            options: &["none", "separate", "visible"],
+            default: "none",
+        },
+        levels: &[ScopeKind::Course, ScopeKind::Section, ScopeKind::Activity],
+        permission: GROUPS_MANAGE,
+        restart_required: false,
     },
-    levels: &[ScopeKind::Course, ScopeKind::Section, ScopeKind::Activity],
-    permission: GROUPS_MANAGE,
-    restart_required: false,
-}];
+    SettingDeclaration {
+        key: OUTLINE,
+        summary: "How the content of a course presents its sections and activities: the code of an outline plugin",
+        kind: ValueKind::Text {
+            max: 64,
+            default: STANDARD_OUTLINE,
+        },
+        levels: &[
+            ScopeKind::Platform,
+            ScopeKind::Campus,
+            ScopeKind::Category,
+            ScopeKind::Course,
+        ],
+        permission: COURSE_UPDATE,
+        restart_required: false,
+    },
+];
 
 impl Courses {
+    /// The outline a course is presented with, as its settings resolve it: the code of an outline plugin.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown scope.
+    pub async fn outline(&self, scope: ScopeId) -> Result<String> {
+        let resolved = Settings::new(self.db.clone(), self.access.clone())
+            .resolve(OUTLINE, scope)
+            .await?;
+        Ok(resolved
+            .value
+            .as_str()
+            .filter(|code| !code.is_empty())
+            .unwrap_or(STANDARD_OUTLINE)
+            .to_owned())
+    }
+
     /// The group mode in a course, a section or an activity, as its settings resolve it.
     ///
     /// # Errors

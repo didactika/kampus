@@ -53,6 +53,7 @@ pub const MODULES: &[&kampus_module::Module] = &[
     &kampus_notify::MODULE,
     &kampus_calendar::MODULE,
     &kampus_privacy::MODULE,
+    &kampus_outline_sections::MODULE,
     &kampus_widget_catalogue::MODULE,
     &kampus_widget_course_content::MODULE,
     &kampus_widget_course_grades::MODULE,

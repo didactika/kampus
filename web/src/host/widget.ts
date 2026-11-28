@@ -43,6 +43,25 @@ import type { CourseData } from "../features/course/course-data";
 export interface PageContext {
   readonly campus: string;
   readonly course?: CourseData;
+  /**
+   * On the page of a course, its content as the outline the course chooses presents it; the content widget renders
+   * it, so no widget depends on an outline plugin.
+   */
+  readonly outline?: (options: { readonly collapsed: boolean }) => ReactNode | Promise<ReactNode>;
+}
+
+/** What an outline receives: the course as its page read it, whether its sections start folded, and the language. */
+export interface OutlineProps {
+  readonly course: CourseData;
+  readonly collapsed: boolean;
+  readonly language: string;
+}
+
+/** An outline as its plugin gives it to the web client: the code of its declaration and how it renders. */
+export interface OutlinePlugin {
+  /** The name of the plugin, `outline_<name>`. */
+  readonly code: string;
+  readonly render: (props: OutlineProps) => ReactNode | Promise<ReactNode>;
 }
 
 /** The size a widget has on the grid of its page, in cells: columns of twelve across the page, rows of their height. */

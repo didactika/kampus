@@ -78,6 +78,7 @@ fn plugin(name: &'static str, widgets: &'static [WidgetDeclaration]) -> Module {
         field_kinds: &[],
         page_kinds: &[],
         widgets,
+        outlines: &[],
         menu_kinds: &[],
         rule_actions: &[],
         file_areas: &[],

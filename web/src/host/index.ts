@@ -38,7 +38,7 @@
  * `@kampus/web/host/client`. Whatever is not exported here is the inside of the client and may change at any time.
  */
 
-export type { PageContext, Widget, WidgetPlugin, WidgetProps, WidgetSize } from "./widget";
+export type { OutlinePlugin, OutlineProps, PageContext, Widget, WidgetPlugin, WidgetProps, WidgetSize } from "./widget";
 export { fitting, heightOf, number, text } from "./widget";
 export { translated } from "../features/editor/translated";
 export { EditableRichText, EditableText } from "../features/editor/EditInPlace";
