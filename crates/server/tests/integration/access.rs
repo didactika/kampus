@@ -142,6 +142,7 @@ async fn the_roles_of_a_campus_are_read_created_and_changed_through_the_server()
 }
 
 #[tokio::test]
+#[allow(clippy::too_many_lines, reason = "one scenario told from start to end")]
 async fn a_scope_grants_overrides_and_explains_through_the_server() {
     let site = site().await;
     let admin = site.session("admin").await;
@@ -227,6 +228,25 @@ async fn a_scope_grants_overrides_and_explains_through_the_server() {
             .unwrap()
             .iter()
             .any(|g| g["role"] == manager.as_str() && g["value"] == "deny")
+    );
+
+    let held = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/access/principals/{principal}/grants"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    assert!(
+        held.body
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|g| g["id"] == grant.as_str() && g["scope_kind"] == "campus"),
+        "{}",
+        held.body
     );
 
     let revoked = site

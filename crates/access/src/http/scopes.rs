@@ -61,6 +61,11 @@ pub(super) const OPERATIONS: &[Operation] = &[
         .creates::<Identified<GrantId>>(),
     Operation::delete("/grants/{grant}", "Take a grant back").no_content(),
     Operation::get(
+        "/principals/{principal}/grants",
+        "The roles a principal holds in every scope, newest first",
+    )
+    .returns::<Vec<GrantView>>(),
+    Operation::get(
         "/scopes/{scope}/overrides",
         "The values a scope gives permissions for roles, in place of theirs",
     )
@@ -88,6 +93,7 @@ pub(super) fn routes() -> Router<Shared> {
     Router::new()
         .route("/scopes/{scope}/grants", get(grants).post(grant))
         .route("/grants/{grant}", delete(revoke))
+        .route("/principals/{principal}/grants", get(grants_of))
         .route("/scopes/{scope}/overrides", get(overrides))
         .route("/scopes/{scope}/overrides/{role}/{permission}", put(set_override))
         .route("/scopes/{scope}/explain", get(explain))
@@ -212,4 +218,13 @@ async fn path(
         return Err(kampus_common::Error::unauthenticated("access.sign_in_required").into());
     }
     Ok(Json(shared.access()?.path_of(id(&scope)?).await?).into_response())
+}
+
+/// The grants of a principal.
+async fn grants_of(
+    State(shared): State<Shared>,
+    Extension(acting): Extension<Acting>,
+    Path(principal): Path<String>,
+) -> ApiResult<Response> {
+    Ok(Json(shared.access()?.grants_of(&acting, id(&principal)?).await?).into_response())
 }

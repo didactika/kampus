@@ -103,7 +103,7 @@ export function AccountPicker({ campus, value, onChange }: AccountPickerProps) {
 
   if (value) {
     return (
-      <Stack direction="row" spacing={2} sx={{ alignItems: "center", p: 1.5, border: 1, borderColor: "divider", borderRadius: 2 }}>
+      <Stack direction="row" spacing={2} sx={{ alignItems: "center", p: 1.5, border: 1, borderColor: "divider", borderRadius: 2, maxInlineSize: "36rem" }}>
         <Stack sx={{ flex: 1, minInlineSize: 0 }}>
           <Person account={value} />
         </Stack>
@@ -117,6 +117,7 @@ export function AccountPicker({ campus, value, onChange }: AccountPickerProps) {
     <Stack spacing={1}>
       <TextField
         label={t("admin.account.search")}
+        width="long"
         type="search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
@@ -131,7 +132,7 @@ export function AccountPicker({ campus, value, onChange }: AccountPickerProps) {
           {t("admin.account.none")}
         </Typography>
       ) : (
-        <Stack component="ul" sx={{ listStyle: "none", m: 0, p: 0, border: 1, borderColor: "divider", borderRadius: 2, overflow: "hidden" }}>
+        <Stack component="ul" sx={{ listStyle: "none", m: 0, p: 0, maxInlineSize: "36rem", border: 1, borderColor: "divider", borderRadius: 2, overflow: "hidden" }}>
           {found.map((account) => (
             <li key={account.id}>
               <ButtonBase

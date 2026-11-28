@@ -52,6 +52,23 @@ export type paths = {
         patch?: never;
         trace?: never;
     };
+    "/access/principals/{principal}/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The roles a principal holds in every scope, newest first */
+        get: operations["get_access_principals_principal_grants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/access/roles/{role}": {
         parameters: {
             query?: never;
@@ -5153,6 +5170,8 @@ export type components = {
              * @description The scope where it is held, and so in every scope below.
              */
             scope: string;
+            /** @description The kind of that scope. */
+            scope_kind: components["schemas"]["ScopeKind"];
             /**
              * Format: date-time
              * @description From when it counts.
@@ -7248,6 +7267,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_access_principals_principal_grants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                principal: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GrantView"][];
+                };
             };
             /** @description A problem (RFC 9457) */
             default: {

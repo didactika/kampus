@@ -72,9 +72,9 @@ export function settingsHref(module: string): string {
 export function adminMap(modules: readonly string[]): readonly AdminCategory[] {
   return [
     {
-      id: "settings",
-      label: "admin.category.settings",
-      pages: modules.map((module) => ({ href: settingsHref(module), label: `admin.module.${module}`, icon: MODULE_ICONS[module] ?? "tune" })),
+      id: "people",
+      label: "admin.category.people",
+      pages: [{ href: "/admin/people", label: "admin.page.people", icon: "groups" }],
     },
     {
       id: "access",
@@ -84,6 +84,11 @@ export function adminMap(modules: readonly string[]): readonly AdminCategory[] {
         { href: "/admin/roles/grants", label: "admin.page.grants", icon: "groups" },
         { href: "/admin/roles/check", label: "admin.page.check", icon: "help" },
       ],
+    },
+    {
+      id: "settings",
+      label: "admin.category.settings",
+      pages: modules.map((module) => ({ href: settingsHref(module), label: `admin.module.${module}`, icon: MODULE_ICONS[module] ?? "tune" })),
     },
   ];
 }

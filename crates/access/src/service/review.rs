@@ -91,6 +91,8 @@ pub struct GrantView {
     pub role: RoleId,
     /// The scope where it is held, and so in every scope below.
     pub scope: ScopeId,
+    /// The kind of that scope.
+    pub scope_kind: ScopeKind,
     /// Who holds it.
     pub principal: PrincipalId,
     /// How it came: by hand, or by a module (an enrolment, a rule of a group).
@@ -295,30 +297,51 @@ impl Access {
     /// `permission_denied` without `access.review` in the scope.
     pub async fn grants_in(&self, acting: &Acting, scope: ScopeId) -> Result<Vec<GrantView>> {
         self.require_review(acting, scope).await?;
+        self.grants_where("g.scope_id = $1", scope.as_uuid()).await
+    }
+
+    /// The grants a principal holds, in every scope, newest first.
+    ///
+    /// # Errors
+    ///
+    /// `not_found` for an unknown principal, `permission_denied` without `access.review` in its campus.
+    pub async fn grants_of(&self, acting: &Acting, principal: PrincipalId) -> Result<Vec<GrantView>> {
+        self.require_review(acting, self.principal_campus(principal).await?)
+            .await?;
+        self.grants_where("g.principal_id = $1", principal.as_uuid())
+            .await
+    }
+
+    /// The grants a condition selects, with the kind of their scope.
+    async fn grants_where(&self, condition: &str, argument: uuid::Uuid) -> Result<Vec<GrantView>> {
         let rows = sqlx::query(sql(format!(
-            "select id, role_id, scope_id, principal_id, origin, origin_module, valid_from, valid_until
-             from {} where scope_id = $1 order by created_at desc, id desc",
-            self.table("grant")
+            "select g.id, g.role_id, g.scope_id, s.kind as scope_kind, g.principal_id, g.origin, g.origin_module,
+                    g.valid_from, g.valid_until
+             from {} g join {} s on s.id = g.scope_id where {condition} order by g.created_at desc, g.id desc",
+            self.table("grant"),
+            self.table("scope")
         )))
-        .bind(scope.as_uuid())
+        .bind(argument)
         .fetch_all(self.db.pool())
         .await
         .map_err(kampus_db::classify)?;
-        Ok(rows
-            .iter()
-            .map(|r| GrantView {
-                id: GrantId::from_uuid(r.get("id")),
-                role: RoleId::from_uuid(r.get("role_id")),
-                scope: ScopeId::from_uuid(r.get("scope_id")),
-                principal: PrincipalId::from_uuid(r.get("principal_id")),
-                origin: r.get("origin"),
-                origin_module: r.get("origin_module"),
-                valid_from: Timestamp::from_offset_date_time(r.get("valid_from")),
-                valid_until: r
-                    .get::<Option<time::OffsetDateTime>, _>("valid_until")
-                    .map(Timestamp::from_offset_date_time),
+        rows.iter()
+            .map(|r| {
+                Ok(GrantView {
+                    id: GrantId::from_uuid(r.get("id")),
+                    role: RoleId::from_uuid(r.get("role_id")),
+                    scope: ScopeId::from_uuid(r.get("scope_id")),
+                    scope_kind: word(r.get("scope_kind"))?,
+                    principal: PrincipalId::from_uuid(r.get("principal_id")),
+                    origin: r.get("origin"),
+                    origin_module: r.get("origin_module"),
+                    valid_from: Timestamp::from_offset_date_time(r.get("valid_from")),
+                    valid_until: r
+                        .get::<Option<time::OffsetDateTime>, _>("valid_until")
+                        .map(Timestamp::from_offset_date_time),
+                })
             })
-            .collect())
+            .collect()
     }
 
     /// The overrides set in a scope itself.

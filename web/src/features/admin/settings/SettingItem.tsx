@@ -100,6 +100,7 @@ export function SettingItem({ setting, scope, draft, failed, busy, onChange, onR
   const changed = !same(value, setting.default_value);
   const problem = draft ? problemOf(setting, value) : null;
   const name = settingName(t, setting);
+  const rich = setting.kind.type === "rich_text";
   const hint = settingHint(t, setting);
   const origin = setting.origin.from === "default" ? null : { inherited: setting.origin.scope !== scope };
   const ids = { name: `${own}-name`, help: `${own}-help` };
@@ -112,7 +113,7 @@ export function SettingItem({ setting, scope, draft, failed, busy, onChange, onR
       sx={{
         position: "relative",
         display: "grid",
-        gridTemplateColumns: { xs: "minmax(0, 1fr) auto", md: "minmax(0, 1fr) minmax(220px, 360px) auto" },
+        gridTemplateColumns: { xs: "minmax(0, 1fr) auto", md: rich ? "minmax(0, 1fr) auto" : "minmax(0, 1fr) auto auto" },
         columnGap: 3,
         rowGap: 1.5,
         alignItems: "start",
@@ -136,7 +137,7 @@ export function SettingItem({ setting, scope, draft, failed, busy, onChange, onR
         "& + &": { borderTop: 1, borderTopColor: "divider", borderRadius: 0 },
       }}
     >
-      <Box sx={{ minInlineSize: 0, gridColumn: { xs: "1 / 2", md: "auto" } }}>
+      <Box sx={{ minInlineSize: 0, gridColumn: "1 / 2", gridRow: 1 }}>
         <Typography id={ids.name} variant="subtitle1" component="h3" sx={{ fontWeight: 600, lineHeight: 1.35 }}>
           {name}
         </Typography>
@@ -157,7 +158,7 @@ export function SettingItem({ setting, scope, draft, failed, busy, onChange, onR
           </Stack>
         ) : null}
       </Box>
-      <Box sx={{ gridColumn: { xs: "1 / -1", md: "auto" }, gridRow: { xs: 2, md: "auto" }, minInlineSize: 0 }}>
+      <Box sx={{ gridColumn: { xs: "1 / -1", md: rich ? "1 / -1" : "2 / 3" }, gridRow: { xs: 2, md: rich ? 2 : 1 }, minInlineSize: 0, display: "flex", flexDirection: "column", alignItems: { md: "flex-end" } }}>
         <SettingControl
           setting={setting}
           value={value}
@@ -181,7 +182,7 @@ export function SettingItem({ setting, scope, draft, failed, busy, onChange, onR
           </Typography>
         ) : null}
       </Box>
-      <Box sx={{ gridColumn: { xs: "2 / 3", md: "auto" }, gridRow: { xs: 1, md: "auto" } }}>
+      <Box sx={{ gridColumn: { xs: "2 / 3", md: rich ? "2 / 3" : "3 / 4" }, gridRow: 1 }}>
         <Tooltip title={t("admin.actions")}>
           <IconButton aria-label={t("admin.actions.of", { name })} aria-haspopup="menu" onClick={(event) => setMenu(event.currentTarget)}>
             <Icon name="more_vert" size="small" />
