@@ -1,0 +1,20 @@
+{
+  "identity.allowed_domains": "Email domains allowed to sign up",
+  "identity.allowed_domains.hint": "Separated by commas; empty allows any domain.",
+  "identity.attempt_retention_days": "Days sign-in attempts are kept",
+  "identity.confirmation_hours": "Hours a confirmation link lasts",
+  "identity.deletion_grace_days": "Days before a deletion runs",
+  "identity.invitation_days": "Days an invitation link lasts",
+  "identity.password_min_length": "Shortest password",
+  "identity.recovery_minutes": "Minutes a recovery link lasts",
+  "identity.second_factor_required": "Every account needs a second factor",
+  "identity.self_sign_up": "Visitors may sign up by themselves",
+  "identity.session_idle_hours": "Hours a session lasts without use",
+  "identity.session_lifetime_days": "Days a session lasts at most",
+  "identity.step_up_minutes": "Minutes a sign-in counts for a sensitive operation",
+  "identity.throttle_lock_after": "Failed sign-ins before sign-in locks",
+  "identity.throttle_lock_minutes": "Minutes a sign-in lock lasts",
+  "identity.throttle_slow_after": "Failed sign-ins before each new try waits longer",
+  "identity.token_default_days": "Days an API token lasts when none is asked",
+  "identity.token_max_days": "Longest lifetime of an API token, in days"
+}

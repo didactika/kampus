@@ -115,6 +115,8 @@ export interface CampusFrameProps {
   readonly footer?: readonly MenuEntry[];
   /** How many notifications the person has not read. */
   readonly unread?: number;
+  /** Whether the person administers anything of the campus. */
+  readonly administers?: boolean;
   /** The address of the handbook, for the help of each screen; no help link without it. */
   readonly help?: string | null;
   /** The page. */
@@ -122,7 +124,7 @@ export interface CampusFrameProps {
 }
 
 /** The frame of the pages of a campus. */
-export function CampusFrame({ account, profile, menu, footer = [], unread = 0, help, children }: CampusFrameProps) {
+export function CampusFrame({ account, profile, menu, footer = [], unread = 0, administers = false, help, children }: CampusFrameProps) {
   const { t, language } = useI18n();
   const places: Place[] = menu.length
     ? placesOf(menu, language)
@@ -303,6 +305,14 @@ export function CampusFrame({ account, profile, menu, footer = [], unread = 0, h
               </ListItemIcon>
               {t("account.title")}
             </MenuItem>
+            {administers ? (
+              <MenuItem component={Link} href="/admin" onClick={() => setAccountMenu(null)}>
+                <ListItemIcon>
+                  <Icon name="settings" size="small" />
+                </ListItemIcon>
+                {t("nav.admin")}
+              </MenuItem>
+            ) : null}
             <MenuItem component={Link} href="/notifications/preferences" onClick={() => setAccountMenu(null)}>
               <ListItemIcon>
                 <Icon name="tune" size="small" />

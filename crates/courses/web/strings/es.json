@@ -1,0 +1,8 @@
+{
+  "courses.group_mode": "Modo de grupos",
+  "courses.group_mode.none": "Sin grupos",
+  "courses.group_mode.separate": "Grupos separados",
+  "courses.group_mode.visible": "Grupos visibles",
+  "courses.outline": "Presentación del contenido del curso",
+  "courses.outline.hint": "El código de un complemento de presentación instalado."
+}

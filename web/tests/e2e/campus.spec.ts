@@ -275,3 +275,32 @@ test("every page of the campus has its frame: the notifications, the language an
   await page.getByRole("banner").getByRole("link", { name: new RegExp(t("nav.notifications")) }).click();
   await expect(page.getByRole("heading", { level: 1, name: t("notifications.title") })).toBeVisible();
 });
+
+test("the administration finds a setting, saves it here and takes the inherited value again", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: t("nav.account") }).click();
+  await page.getByRole("menuitem", { name: t("nav.admin") }).click();
+  await expect(page).toHaveURL(/\/admin\/settings$/);
+  await page.getByLabel(t("admin.search")).fill("password");
+  const field = page.getByRole("spinbutton", { name: "Shortest password" });
+  await expect(field).toBeVisible();
+  const row = page.getByRole("group", { name: "Shortest password" });
+  // Only a setting that takes the default is changed, so taking the inherited value again leaves the campus as it was.
+  test.skip(!(await row.getByText(t("admin.origin.default")).isVisible()), "the campus sets this value itself");
+  const before = await field.inputValue();
+  try {
+    await field.fill(String(Number(before) + 1));
+    await page.getByRole("button", { name: t("admin.save") }).click();
+    await expect(page.getByText(t("admin.saved"))).toBeVisible();
+    await expect(row.getByText(t("admin.origin.here"))).toBeVisible();
+    await row.getByRole("button", { name: t("admin.reset") }).click();
+    await expect(row.getByText(t("admin.origin.default"))).toBeVisible();
+  } finally {
+    // Whatever failed, the campus takes the inherited value again.
+    await page.evaluate(async () => {
+      const me = (await (await fetch("/api/v1/identity/me")).json()) as { campus: string };
+      await fetch(`/api/v1/settings/scopes/${me.campus}/identity.password_min_length`, { method: "DELETE", headers: { "X-Kampus": "1" } });
+    });
+  }
+  await expect(field).toHaveValue(before);
+});
