@@ -103,6 +103,7 @@ const NAMES = [
   "light_mode",
   "link",
   "lock",
+  "lock_open",
   "logout",
   "mail",
   "mark_email_read",

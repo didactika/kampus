@@ -1,0 +1,8 @@
+{
+  "courses.group_mode": "Group mode",
+  "courses.group_mode.none": "No groups",
+  "courses.group_mode.separate": "Separate groups",
+  "courses.group_mode.visible": "Visible groups",
+  "courses.outline": "Presentation of the course content",
+  "courses.outline.hint": "The code of an installed outline plugin."
+}

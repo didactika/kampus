@@ -99,3 +99,9 @@ export interface DeclaredSetting {
   /** Whether a text takes one value per language. */
   readonly translatable?: boolean;
 }
+
+/** A setting of a scope, as its administration reads and changes it. */
+export type ScopeSetting = Schema<"ScopeSetting">;
+
+/** The type and bounds of a setting. */
+export type StoredKind = Schema<"StoredKind">;

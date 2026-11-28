@@ -46,14 +46,15 @@ import { currentAccount } from "../../features/session/current-account";
 export default async function CampusLayout({ children }: { readonly children: ReactNode }) {
   const account = await currentAccount();
   if (!account) redirect("/sign-in");
-  const [menu, footer, profile, inbox] = await Promise.all([
+  const [menu, footer, profile, inbox, settings] = await Promise.all([
     optional<Menu | null>(`/customise/scopes/${account.campus}/menus/customise.main`, null),
     optional<Menu | null>(`/customise/scopes/${account.campus}/menus/customise.footer`, null),
     optional<Profile | null>("/users/me/profile", null),
     optional<{ readonly unread: number } | null>("/notify/inbox?limit=1", null),
+    optional<readonly unknown[]>(`/settings/scopes/${account.campus}`, []),
   ]);
   return (
-    <CampusFrame account={account} profile={profile} menu={menu?.items ?? []} footer={footer?.items ?? []} unread={inbox?.unread ?? 0} help={process.env["KAMPUS_HELP_URL"] ?? null}>
+    <CampusFrame account={account} profile={profile} menu={menu?.items ?? []} footer={footer?.items ?? []} unread={inbox?.unread ?? 0} administers={settings.length > 0} help={process.env["KAMPUS_HELP_URL"] ?? null}>
       {children}
     </CampusFrame>
   );

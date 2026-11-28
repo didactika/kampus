@@ -1,0 +1,20 @@
+{
+  "identity.allowed_domains": "Dominios de correo admitidos en el registro",
+  "identity.allowed_domains.hint": "Separados por comas; si se deja vacío, se admite cualquier dominio.",
+  "identity.attempt_retention_days": "Días que se conservan los intentos de acceso",
+  "identity.confirmation_hours": "Horas de validez de un enlace de confirmación",
+  "identity.deletion_grace_days": "Días antes de ejecutar una eliminación",
+  "identity.invitation_days": "Días de validez de una invitación",
+  "identity.password_min_length": "Longitud mínima de la contraseña",
+  "identity.recovery_minutes": "Minutos de validez de un enlace de recuperación",
+  "identity.second_factor_required": "Todas las cuentas requieren un segundo factor",
+  "identity.self_sign_up": "Los visitantes pueden registrarse por sí mismos",
+  "identity.session_idle_hours": "Horas que dura una sesión sin actividad",
+  "identity.session_lifetime_days": "Días que dura una sesión como máximo",
+  "identity.step_up_minutes": "Minutos que vale un acceso para una operación sensible",
+  "identity.throttle_lock_after": "Intentos fallidos antes de bloquear el acceso",
+  "identity.throttle_lock_minutes": "Minutos que dura un bloqueo de acceso",
+  "identity.throttle_slow_after": "Intentos fallidos antes de espaciar los siguientes",
+  "identity.token_default_days": "Días de validez de un token de API cuando no se indica",
+  "identity.token_max_days": "Días de validez máxima de un token de API"
+}
