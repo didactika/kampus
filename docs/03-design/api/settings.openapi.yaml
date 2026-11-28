@@ -9,11 +9,11 @@ paths:
   /api/v1/settings/scopes/{scope}:
     get: { summary: 'The settings a scope may set and the caller may change, with their type, value, origin, version and locks; query q finds words in the key, module or summary', responses: { '200': { description: The settings } } }
   /api/v1/settings/scopes/{scope}/{key}:
-    get: { summary: A setting of a scope, responses: { '200': { description: The setting with its version as ETag }, '404': { description: Unknown, not settable in the scope, or not the caller's to change } } }
+    get: { summary: A setting of a scope, responses: { '200': { description: The setting with its version as ETag }, '404': { description: "Unknown, not settable in the scope, or not the caller's to change" } } }
     put: { summary: 'Set a value, validated against its kind (RN-163), and lock it for the levels below; If-Match carries the version, 0 when the scope sets none', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Set }, '409': { description: Locked above }, '412': { description: Changed meanwhile }, '422': { description: Invalid } } }
     delete: { summary: Remove the value; the level above applies again, responses: { '200': { description: The setting as it reads now } } }
   /api/v1/settings/scopes/{scope}/{key}/history:
-    get: { summary: The changes of a setting in a scope with actor and values, newest first, responses: { '200': { description: The changes } } }
+    get: { summary: "The changes of a setting in a scope with actor and values, newest first", responses: { '200': { description: The changes } } }
 components:
   parameters:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }

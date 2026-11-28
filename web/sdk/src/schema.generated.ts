@@ -3536,6 +3536,23 @@ export type paths = {
         patch?: never;
         trace?: never;
     };
+    "/settings/scopes/{scope}/{key}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The changes of a setting in a scope, newest first */
+        get: operations["get_settings_scopes_scope_key_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/accounts/{id}/picture": {
         parameters: {
             query?: never;
@@ -6318,6 +6335,32 @@ export type components = {
              * @description When it was last used.
              */
             last_seen_at: string;
+        };
+        /** @description A change of a setting in a scope. */
+        SettingChange: {
+            /**
+             * Format: uuid
+             * @description Who changed it; the operator when absent.
+             */
+            actor: string | null;
+            /** @description The value after; unset when absent. */
+            after: unknown;
+            /**
+             * Format: date-time
+             * @description When.
+             */
+            at: string;
+            /** @description The value before; unset when absent. */
+            before: unknown;
+            /** @description The key. */
+            key: string;
+            /** @description Whether it was locked after the change. */
+            locked: boolean;
+            /**
+             * Format: uuid
+             * @description The scope.
+             */
+            scope: string;
         };
         /** @description A link that reads one file for a few minutes, without signing in. */
         SignedUrl: {
@@ -18905,6 +18948,38 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ScopeSetting"];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_settings_scopes_scope_key_history: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingChange"][];
                 };
             };
             /** @description A problem (RFC 9457) */

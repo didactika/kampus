@@ -5697,6 +5697,53 @@
         ],
         "type": "object"
       },
+      "SettingChange": {
+        "description": "A change of a setting in a scope.",
+        "properties": {
+          "actor": {
+            "description": "Who changed it; the operator when absent.",
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "after": {
+            "description": "The value after; unset when absent."
+          },
+          "at": {
+            "description": "When.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "before": {
+            "description": "The value before; unset when absent."
+          },
+          "key": {
+            "description": "The key.",
+            "type": "string"
+          },
+          "locked": {
+            "description": "Whether it was locked after the change.",
+            "type": "boolean"
+          },
+          "scope": {
+            "description": "The scope.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "scope",
+          "actor",
+          "before",
+          "after",
+          "locked",
+          "at"
+        ],
+        "type": "object"
+      },
       "SignInAnswer": {
         "description": "What a sign-in answers, by its `status`.",
         "oneOf": [
@@ -29287,6 +29334,66 @@
           }
         ],
         "summary": "Set a setting in a scope, and lock it for the scopes below; `If-Match` carries its version, 0 when the scope sets none",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/settings/scopes/{scope}/{key}/history": {
+      "get": {
+        "operationId": "get_settings_scopes_scope_key_history",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SettingChange"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "The changes of a setting in a scope, newest first",
         "tags": [
           "settings"
         ]
