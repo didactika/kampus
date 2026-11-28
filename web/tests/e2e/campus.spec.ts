@@ -82,7 +82,7 @@ test("the notifications switch between all and unread, and lead to their prefere
   await expect(page.getByRole("heading", { level: 1, name: t("notifications.title") })).toBeVisible();
   await page.getByRole("tab", { name: new RegExp(t("notifications.tab.unread")) }).click();
   await expect(page).toHaveURL(/unread=1/);
-  await page.getByRole("link", { name: t("notifications.preferences") }).click();
+  await page.getByRole("main").getByRole("link", { name: t("notifications.preferences") }).click();
   await expect(page.getByRole("heading", { level: 1, name: t("prefs.title") })).toBeVisible();
 });
 
