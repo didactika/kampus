@@ -56,6 +56,7 @@ import { Button, Icon, TextField } from "@kampus/ui";
 import { browserApi } from "../../api/browser";
 import { ApiError } from "../../api/problem";
 import { useI18n } from "../../i18n/I18nProvider";
+import { AuthHeading } from "./AuthHeading";
 import { PasswordField } from "./PasswordField";
 
 /** What a sign-in answers. */
@@ -123,12 +124,7 @@ export function SignInForm({ notice }: { readonly notice?: string }) {
 
   return (
     <>
-      <Typography variant="h1" sx={{ fontSize: { xs: "1.75rem", md: "2rem" } }}>
-        {t("signin.welcome")}
-      </Typography>
-      <Typography color="text.secondary" sx={{ mt: 1, mb: 4 }}>
-        {t("signin.lead")}
-      </Typography>
+      <AuthHeading title={t("signin.welcome")} lead={t("signin.lead")} />
       <Stack spacing={2.5} component="form" onSubmit={(event) => void submit(event)} aria-label={t("signin.title")}>
         {notice ? (
           <Alert severity="success" role="status">
@@ -207,12 +203,7 @@ function SecondFactor({ pending, onSignedIn, onBack }: { readonly pending: Pendi
 
   return (
     <>
-      <Typography variant="h1" sx={{ fontSize: { xs: "1.75rem", md: "2rem" } }}>
-        {t("factor.title")}
-      </Typography>
-      <Typography color="text.secondary" sx={{ mt: 1, mb: 4 }}>
-        {method ? t("factor.lead") : t("factor.none")}
-      </Typography>
+      <AuthHeading title={t("factor.title")} lead={method ? t("factor.lead") : t("factor.none")} />
       {method ? (
         <Stack spacing={2.5} component="form" onSubmit={(event) => void verify(event)} aria-label={t("factor.title")}>
           {pending.methods.length > 1 ? (

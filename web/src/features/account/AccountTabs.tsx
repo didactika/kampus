@@ -32,23 +32,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-
 "use client";
 
 /** The head of the account and its tabs, kept in the address so each one can be linked. */
 
 import Avatar from "@mui/material/Avatar";
-import Stack from "@mui/material/Stack";
 import Tab from "@mui/material/Tab";
 import Tabs from "@mui/material/Tabs";
-import Typography from "@mui/material/Typography";
+
+import { Icon } from "@kampus/ui";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { Icon } from "@kampus/ui";
-
 import type { Me, Profile } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
+import { PageHeader } from "../shell/PageHeader";
 import { initialsOf, nameOf } from "./names";
 import type { AccountTab } from "./tabs";
 
@@ -65,15 +63,15 @@ export function AccountTabs({ account, profile, tab, children }: AccountTabsProp
   const { t } = useI18n();
   return (
     <>
-      <Stack direction="row" spacing={2.5} sx={{ alignItems: "center", mb: 3 }}>
-        <Avatar sx={{ inlineSize: 72, blockSize: 72, fontSize: "1.5rem", fontWeight: 700, backgroundImage: "var(--k-palette-gradient-primary)", color: "primary.contrastText" }}>
-          {initialsOf(profile, account)}
-        </Avatar>
-        <div>
-          <Typography variant="h1">{nameOf(profile, account)}</Typography>
-          <Typography color="text.secondary">{t("account.lead")}</Typography>
-        </div>
-      </Stack>
+      <PageHeader
+        title={nameOf(profile, account)}
+        lead={t("account.lead")}
+        leading={
+          <Avatar sx={{ inlineSize: 72, blockSize: 72, fontSize: "1.5rem", fontWeight: 700, backgroundImage: "var(--k-palette-gradient-primary)", color: "primary.contrastText" }}>
+            {initialsOf(profile, account)}
+          </Avatar>
+        }
+      />
       <Tabs value={tab} sx={{ mb: 3 }} aria-label={t("account.title")}>
         <Tab value="profile" component={Link} href="/account" icon={<Icon name="person" size="small" />} iconPosition="start" label={t("account.tab.profile")} />
         <Tab value="security" component={Link} href="/account?tab=security" icon={<Icon name="lock" size="small" />} iconPosition="start" label={t("account.tab.security")} />

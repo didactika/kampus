@@ -32,7 +32,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-
 "use client";
 
 /**
@@ -52,8 +51,7 @@ import ListItemText from "@mui/material/ListItemText";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
-import { Icon, StatusBadge } from "@kampus/ui";
-
+import { Icon, IconTile, StatusBadge } from "@kampus/ui";
 import type { ActivityState, CourseModule, Section } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
 import { STATE_TONES, TYPE_ICONS, isDone } from "./activity-look";
@@ -80,9 +78,7 @@ export function CourseOutline({ sections, modules, progress, collapsed = false }
           <Accordion key={section.id} defaultExpanded={!collapsed && at < 2} disableGutters elevation={0}>
             <AccordionSummary expandIcon={<Icon name="keyboard_arrow_down" />} sx={{ px: 2.5, py: 0.5 }}>
               <Stack direction="row" spacing={2} sx={{ alignItems: "center", flex: 1, mr: 2 }}>
-                <Box sx={{ display: "grid", placeItems: "center", inlineSize: 40, blockSize: 40, borderRadius: 2.5, flex: "none", backgroundImage: "var(--k-palette-gradient-soft)", color: "primary.main", typography: "subtitle1" }}>
-                  {at + 1}
-                </Box>
+                <IconTile text={String(at + 1)} />
                 <Box sx={{ flex: 1, minInlineSize: 0 }}>
                   <Typography variant="h4" component="h3">
                     {section.title ?? t("course.untitled", { n: at + 1 })}

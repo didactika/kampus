@@ -51,9 +51,9 @@ import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import Switch from "@mui/material/Switch";
 import Typography from "@mui/material/Typography";
-import { useId, useState } from "react";
 
-import { Button, Icon, SelectField, TextField } from "@kampus/ui";
+import { Button, Icon, IconTile, SelectField, TextField } from "@kampus/ui";
+import { useId, useState } from "react";
 
 import type { DeclaredSetting } from "../../api/types";
 import { LanguagePicker, filledIn } from "../editor/LanguagePicker";
@@ -152,9 +152,7 @@ export function WidgetSettings({ title, icon = "tune", declared, values, applyLa
   return (
     <Dialog open onClose={onClose} maxWidth="sm" fullWidth aria-labelledby={heading}>
       <DialogTitle component="div" sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-        <Box sx={{ display: "grid", placeItems: "center", inlineSize: 40, blockSize: 40, flex: "none", borderRadius: 2.5, backgroundImage: "var(--k-palette-gradient-soft)", color: "primary.main" }}>
-          <Icon name={icon} />
-        </Box>
+        <IconTile name={icon} />
         <Typography id={heading} variant="h4" component="h2" sx={{ flex: 1 }}>
           {title}
         </Typography>

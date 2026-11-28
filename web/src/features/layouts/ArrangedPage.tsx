@@ -32,7 +32,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-
 "use client";
 
 /**
@@ -55,10 +54,10 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
+
+import { Button, ConfirmDialog, IconTile, useToast } from "@kampus/ui";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
-
-import { Button, ConfirmDialog, Icon, useToast } from "@kampus/ui";
 
 import { browserApi } from "../../api/browser";
 import type { AvailableWidget, DeclaredSetting, Placement } from "../../api/types";
@@ -326,9 +325,7 @@ export function ArrangedPage({ scope, pageKind, grid, widgets, editable, lockabl
                       else insert(widget, {});
                     }}
                   >
-                    <Box sx={{ display: "grid", placeItems: "center", inlineSize: 40, blockSize: 40, flex: "none", borderRadius: 2.5, backgroundImage: "var(--k-palette-gradient-soft)", color: "primary.main" }}>
-                      <Icon name={iconOf(widget.code)} />
-                    </Box>
+                    <IconTile name={iconOf(widget.code)} />
                     <Box>
                       <Typography variant="subtitle2">{name(widget.code)}</Typography>
                       <Typography variant="caption" color="text.secondary">

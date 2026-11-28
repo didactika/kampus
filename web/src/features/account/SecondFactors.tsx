@@ -32,7 +32,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-
 "use client";
 
 /**
@@ -41,18 +40,15 @@
  * sign-in is old, and the recovery codes of a first factor are shown once.
  */
 
-import Box from "@mui/material/Box";
-import Card from "@mui/material/Card";
-import CardContent from "@mui/material/CardContent";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useState, type FormEvent } from "react";
 
-import { Button, ConfirmDialog, Icon, TextField, useToast } from "@kampus/ui";
+import { Button, ConfirmDialog, Row, RowList, SectionCard, TextField, useToast } from "@kampus/ui";
+import { useState, type FormEvent } from "react";
 
 import { browserApi } from "../../api/browser";
 import type { SecondFactor } from "../../api/types";
@@ -131,37 +127,25 @@ export function SecondFactors({ factors }: { readonly factors: readonly SecondFa
   }
 
   return (
-    <Card component="section" aria-labelledby="factors-title">
-      <CardContent sx={{ p: { xs: 2.5, md: 4 } }}>
-        <Typography id="factors-title" variant="h3" component="h2">
-          {t("factors.title")}
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
-          {t("factors.lead")}
-        </Typography>
+    <SectionCard icon="shield" title={t("factors.title")} lead={t("factors.lead")}>
         {items.length === 0 ? (
           <EmptyState compact icon="shield" message={t("factors.empty")} />
         ) : (
-          <Stack spacing={1} component="ul" sx={{ m: 0, p: 0, listStyle: "none" }}>
+          <RowList label={t("factors.title")}>
             {items.map((factor) => (
-              <Stack component="li" key={factor.id} direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ alignItems: { sm: "center" }, p: 1.5, borderRadius: 3, border: 1, borderColor: "divider" }}>
-                <Box sx={{ display: "grid", placeItems: "center", inlineSize: 40, blockSize: 40, flex: "none", borderRadius: 2.5, backgroundImage: "var(--k-palette-gradient-soft)", color: "primary.main" }}>
-                  <Icon name={ICONS[factor.kind] ?? "shield"} size="small" />
-                </Box>
-                <Box sx={{ flex: 1, minInlineSize: 0 }}>
-                  <Typography variant="subtitle2" noWrap>
-                    {factor.label}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {[t(`factor.method.${factor.kind}`), t("factors.since", { date: date(factor.created_at) }), factor.last_used_at ? t("factors.used", { date: relative(factor.last_used_at) }) : t("factors.unused")].join(" · ")}
-                  </Typography>
-                </Box>
-                <Button variant="outlined" tone="danger" icon="delete" size="small" onClick={() => setRemoving(factor)}>
-                  {t("factors.remove")}
-                </Button>
-              </Stack>
+              <Row
+                key={factor.id}
+                icon={ICONS[factor.kind] ?? "shield"}
+                title={factor.label}
+                meta={[t(`factor.method.${factor.kind}`), t("factors.since", { date: date(factor.created_at) }), factor.last_used_at ? t("factors.used", { date: relative(factor.last_used_at) }) : t("factors.unused")].join(" · ")}
+                actions={
+                  <Button variant="text" tone="danger" icon="delete" size="small" onClick={() => setRemoving(factor)}>
+                    {t("factors.remove")}
+                  </Button>
+                }
+              />
             ))}
-          </Stack>
+          </RowList>
         )}
         <Stack direction="row" sx={{ mt: 2.5, flexWrap: "wrap", gap: 1 }}>
           <Button variant="tonal" icon="mobile_lock_portrait" onClick={() => setAdding("totp")}>
@@ -176,7 +160,6 @@ export function SecondFactors({ factors }: { readonly factors: readonly SecondFa
             </Button>
           ) : null}
         </Stack>
-      </CardContent>
 
       <TotpDialog
         open={adding === "totp"}
@@ -231,6 +214,6 @@ export function SecondFactors({ factors }: { readonly factors: readonly SecondFa
       </ConfirmDialog>
 
       <RecoveryCodesDialog codes={codes} onClose={() => setCodes(null)} />
-    </Card>
+    </SectionCard>
   );
 }

@@ -39,13 +39,13 @@
 
 import Alert from "@mui/material/Alert";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { Button } from "@kampus/ui";
 
 import { useI18n } from "../../i18n/I18nProvider";
+import { AuthHeading } from "../session/AuthHeading";
 
 /** The props of `Outcome` and `StepHeading`. */
 interface StepProps {
@@ -55,20 +55,7 @@ interface StepProps {
 
 /** The heading of a step: its title and what it is for. */
 export function StepHeading({ title, lead }: StepProps) {
-  return (
-    <>
-      <Typography variant="h1" sx={{ fontSize: { xs: "1.75rem", md: "2rem" } }}>
-        {title}
-      </Typography>
-      {lead ? (
-        <Typography color="text.secondary" sx={{ mt: 1, mb: 4 }}>
-          {lead}
-        </Typography>
-      ) : (
-        <Stack sx={{ mb: 4 }} />
-      )}
-    </>
-  );
+  return <AuthHeading title={title} lead={lead} />;
 }
 
 /** `<Outcome title="Account active" severity="success">You can now sign in.</Outcome>` */
