@@ -53,7 +53,7 @@ use crate::service::scope::PathScope;
 use crate::{Access, Actor, GrantId, RoleId, ScopeId, ScopeKind, Value, sql};
 
 /// How one granted role was evaluated.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct GrantEvaluation {
     /// The grant, absent for the implicit roles of visitors and "view as".
     pub grant: Option<GrantId>,
@@ -68,7 +68,7 @@ pub struct GrantEvaluation {
 }
 
 /// The result of a check, with its explanation.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 pub struct Decision {
     /// Whether the actor may.
     pub allowed: bool,

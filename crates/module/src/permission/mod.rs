@@ -39,10 +39,10 @@ use std::fmt;
 use std::str::FromStr;
 
 use kampus_common::{Error, FieldError};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 /// The kinds of scope, in the order of the tree.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum ScopeKind {
     /// The whole installation.
@@ -149,7 +149,7 @@ impl fmt::Display for ScopeKind {
 }
 
 /// The value a role gives a permission.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Value {
     /// The role allows it.
@@ -189,7 +189,7 @@ impl FromStr for Value {
 }
 
 /// Whether a permission only reads or also changes something.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum PermissionKind {
     /// Reads.
@@ -199,7 +199,7 @@ pub enum PermissionKind {
 }
 
 /// What a permission can expose.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Risk {
     /// Personal data of other people.

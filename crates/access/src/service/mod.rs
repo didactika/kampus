@@ -39,6 +39,7 @@ pub mod check;
 pub mod grant;
 pub(crate) mod history;
 pub mod overrides;
+pub mod review;
 pub mod role;
 pub mod scope;
 pub mod sync;

@@ -16,15 +16,15 @@ paths:
   /api/v1/access/scopes/{scope_id}/freeze:
     put: { summary: Freeze the scope (read-only for everyone), parameters: [{ $ref: '#/components/parameters/ScopeId' }], responses: { '204': { description: Frozen } } }
     delete: { summary: Unfreeze the scope, parameters: [{ $ref: '#/components/parameters/ScopeId' }], responses: { '204': { description: Unfrozen } } }
-  /api/v1/access/permissions:
+  /api/v1/access/scopes/{scope_id}/permissions:
     get:
-      summary: Declared permissions, with kind, risks, lowest scope kind and module
-      parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }]
-      responses: { '200': { description: A page of permissions } }
+      summary: 'Declared permissions, with kind, risks, lowest scope kind and module; needs access.review in the scope'
+      parameters: [{ $ref: '#/components/parameters/ScopeId' }]
+      responses: { '200': { description: The permissions } }
   /api/v1/access/role-templates:
     get: { summary: Role templates and their versions, responses: { '200': { description: A page of templates } } }
-  /api/v1/access/campuses/{campus_id}/roles:
-    get: { summary: Roles of a campus, responses: { '200': { description: A page of roles } } }
+  /api/v1/access/scopes/{scope_id}/roles:
+    get: { summary: 'Roles of the campus of a scope, with their values', parameters: [{ $ref: '#/components/parameters/ScopeId' }], responses: { '200': { description: The roles } } }
     post:
       summary: Create a role from a template version
       parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
@@ -37,6 +37,10 @@ paths:
       parameters: [{ $ref: '#/components/parameters/IfMatch' }]
       responses: { '200': { description: Updated }, '412': { description: Stale version } }
     delete: { summary: Delete a role without grants, responses: { '204': { description: Deleted }, '409': { description: The role still has grants } } }
+  /api/v1/access/roles/{role_id}/permissions/{permission}:
+    put: { summary: 'Set the value a role gives a permission; null takes it away', responses: { '200': { description: The role } } }
+  /api/v1/access/roles/{role_id}/second-factor:
+    put: { summary: Whether whoever holds the role signs in with a second factor, responses: { '200': { description: The role } } }
   /api/v1/access/roles/{role_id}/reset-preview:
     post: { summary: Differences between the role and a template version (RN-017), responses: { '200': { description: The differences } } }
   /api/v1/access/roles/{role_id}/reset:
@@ -55,16 +59,16 @@ paths:
     delete: { summary: Remove a manual grant (RN-016), responses: { '204': { description: Removed }, '409': { description: Owned by a module } } }
   /api/v1/access/scopes/{scope_id}/overrides:
     get: { summary: Overrides set in a scope, parameters: [{ $ref: '#/components/parameters/ScopeId' }], responses: { '200': { description: A page of overrides } } }
+  /api/v1/access/scopes/{scope_id}/overrides/{role_id}/{permission}:
     put:
-      summary: Set or clear (inherit) override values for a role in the scope (RN-014, RN-015)
-      parameters: [{ $ref: '#/components/parameters/ScopeId' }, { $ref: '#/components/parameters/IfMatch' }]
-      responses: { '200': { description: Updated } }
-  /api/v1/access/scopes/{scope_id}/checks:
-    post:
-      summary: Check permissions for a user in the scope, with explanations (RN-019)
+      summary: 'Set or clear (inherit, with null) the override of a permission for a role in the scope (RN-014, RN-015)'
       parameters: [{ $ref: '#/components/parameters/ScopeId' }]
-      requestBody: { content: { application/json: { schema: { $ref: '#/components/schemas/CheckInput' } } } }
-      responses: { '200': { description: Decisions, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Decision' } } } } } }
+      responses: { '204': { description: Updated } }
+  /api/v1/access/scopes/{scope_id}/explain:
+    get:
+      summary: 'Why a principal may or may not use a permission in the scope, with every role considered (RN-019)'
+      parameters: [{ $ref: '#/components/parameters/ScopeId' }, { name: principal, in: query, required: true, schema: { type: string } }, { name: permission, in: query, required: true, schema: { type: string } }]
+      responses: { '200': { description: The decision, content: { application/json: { schema: { $ref: '#/components/schemas/Decision' } } } } }
   /api/v1/access/scopes/{scope_id}/view-as:
     post: { summary: 'Start viewing the scope as a role, read-only (RN-018)', parameters: [{ $ref: '#/components/parameters/ScopeId' }], responses: { '201': { description: Started } } }
     delete: { summary: Stop viewing as, parameters: [{ $ref: '#/components/parameters/ScopeId' }], responses: { '204': { description: Ended } } }
