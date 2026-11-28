@@ -379,7 +379,7 @@ async fn an_api_token_acts_only_within_what_it_carries() {
         )
         .await;
     assert_eq!(invite.status, StatusCode::FORBIDDEN);
-    assert_eq!(invite.code(), "identity.api_token_scope");
+    assert_eq!(invite.code(), "access.token_scope");
     let credentials = site
         .call(
             Method::GET,

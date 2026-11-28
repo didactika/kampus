@@ -35,6 +35,9 @@
 //! The concepts of access control: identifiers, scope kinds, permission values, risks, declarations and
 //! the actor of a check.
 
+mod acting;
+
+pub use acting::{Acting, Carried};
 pub use kampus_module::{
     PermissionDeclaration, PermissionKind, Risk, RoleTemplateDeclaration, ScopeKind, Value,
 };

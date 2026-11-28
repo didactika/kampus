@@ -51,7 +51,7 @@ pub use descriptor::{
 pub use descriptor::{
     Argument, Command, CommandContext, CommandFuture, Event, EventDeclaration, EventRun, JobDeclaration,
     JobFuture, JobRun, ListenerDeclaration, Module, PreferenceDeclaration, ProgressRuleDeclaration,
-    ScheduleDeclaration, SettingDeclaration, ValueKind,
+    ScheduleDeclaration, SettingDeclaration, StoredKind, ValueKind,
 };
 pub use descriptor::{
     Band, Cells, FieldKindDeclaration, FlagDeclaration, Grid, MenuKindDeclaration, OutlineDeclaration,

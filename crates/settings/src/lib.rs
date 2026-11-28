@@ -39,6 +39,7 @@
 pub mod commands;
 pub mod db;
 pub mod events;
+pub mod http;
 pub mod model;
 pub mod module;
 pub mod permissions;
@@ -49,6 +50,7 @@ use kampus_db::Database;
 
 pub use model::{Definition, Origin, Resolved, SettingChange};
 pub use module::MODULE;
+pub use service::scope::ScopeSetting;
 
 /// The settings of an installation.
 #[derive(Debug, Clone)]

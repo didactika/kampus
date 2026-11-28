@@ -37,3 +37,4 @@
 pub mod change;
 pub mod declarations;
 pub mod resolve;
+pub mod scope;

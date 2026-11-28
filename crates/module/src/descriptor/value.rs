@@ -35,7 +35,53 @@
 //! The kinds of value a module declares for its preferences and settings: each one with its default,
 //! and what it accepts.
 
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
+
+/// A kind of value as it is stored and as a client reads it to build a field: its type and bounds, without
+/// its default.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, schemars::JsonSchema)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum StoredKind {
+    /// On or off.
+    Boolean {},
+    /// One of a list of options.
+    Choice {
+        /// The options.
+        options: Vec<String>,
+    },
+    /// A whole number in a range.
+    Integer {
+        /// The smallest value.
+        min: i64,
+        /// The largest value.
+        max: i64,
+    },
+    /// Text of at most some characters.
+    Text {
+        /// The longest text.
+        max: usize,
+    },
+    /// Rich text in the one format of user content: at most some characters of HTML.
+    RichText {
+        /// The longest HTML.
+        max: usize,
+    },
+}
+
+impl From<ValueKind> for StoredKind {
+    fn from(kind: ValueKind) -> Self {
+        match kind {
+            ValueKind::Boolean { .. } => Self::Boolean {},
+            ValueKind::Choice { options, .. } => Self::Choice {
+                options: options.iter().map(|&o| o.to_owned()).collect(),
+            },
+            ValueKind::Integer { min, max, .. } => Self::Integer { min, max },
+            ValueKind::Text { max, .. } => Self::Text { max },
+            ValueKind::RichText { max } => Self::RichText { max },
+        }
+    }
+}
 
 /// The type of a declared value, with its default.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -107,15 +153,7 @@ impl ValueKind {
     /// The kind as stored, so a value is checked against it without the declaration in hand.
     #[must_use]
     pub fn stored(self) -> Value {
-        match self {
-            Self::Boolean { .. } => serde_json::json!({ "type": "boolean" }),
-            Self::Choice { options, .. } => serde_json::json!({ "type": "choice", "options": options }),
-            Self::Integer { min, max, .. } => {
-                serde_json::json!({ "type": "integer", "min": min, "max": max })
-            }
-            Self::Text { max, .. } => serde_json::json!({ "type": "text", "max": max }),
-            Self::RichText { max } => serde_json::json!({ "type": "rich_text", "max": max }),
-        }
+        serde_json::to_value(StoredKind::from(self)).unwrap_or(Value::Null)
     }
 
     /// Whether a value is of a kind as [`ValueKind::stored`] wrote it, and within its bounds.

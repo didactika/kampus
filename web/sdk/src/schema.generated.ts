@@ -3500,6 +3500,59 @@ export type paths = {
         patch?: never;
         trace?: never;
     };
+    "/settings/scopes/{scope}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The settings a scope may set and the caller may change, with their values, origins and locks (query `q`) */
+        get: operations["get_settings_scopes_scope"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/settings/scopes/{scope}/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A setting of a scope */
+        get: operations["get_settings_scopes_scope_key"];
+        /** Set a setting in a scope, and lock it for the scopes below; `If-Match` carries its version, 0 when the scope sets none */
+        put: operations["put_settings_scopes_scope_key"];
+        post?: never;
+        /** Remove the value a scope sets, so it comes from above again */
+        delete: operations["delete_settings_scopes_scope_key"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/settings/scopes/{scope}/{key}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The changes of a setting in a scope, newest first */
+        get: operations["get_settings_scopes_scope_key_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/users/accounts/{id}/picture": {
         parameters: {
             query?: never;
@@ -5173,7 +5226,7 @@ export type components = {
              */
             account: string;
             /** @description Where the membership comes from. */
-            origin: components["schemas"]["Origin2"];
+            origin: components["schemas"]["Origin3"];
         };
         /** @description Where a group membership comes from; a module removes only what it added. */
         MemberOrigin: {
@@ -5380,8 +5433,23 @@ export type components = {
              */
             scope: string;
         };
+        /** @description Where a resolved value came from. */
+        Origin2: {
+            /** @constant */
+            from: "default";
+        } | {
+            /** @constant */
+            from: "scope";
+            /** @description Whether that scope locks it, so no scope below may change it. */
+            locked: boolean;
+            /**
+             * Format: uuid
+             * @description The scope.
+             */
+            scope: string;
+        };
         /** @description Where a membership comes from; a rule or a sync removes only the memberships it made. */
-        Origin2: "manual" | "rule" | "sync";
+        Origin3: "manual" | "rule" | "sync";
         /** @description A package of customisations. */
         Package: {
             /**
@@ -6122,6 +6190,37 @@ export type components = {
         Scheme: {
             [key: string]: string;
         };
+        /** @description A setting in a scope, as the administration of the scope shows and changes it. */
+        ScopeSetting: {
+            /** @description Its declared default. */
+            default_value: unknown;
+            /** @description The key. */
+            key: string;
+            /** @description Its type and bounds, to build its field. */
+            kind: components["schemas"]["StoredKind"];
+            /** @description Whether the scope locks it for the scopes below. */
+            locked: boolean;
+            /** @description Whether a scope above locks it, so it cannot change here. */
+            locked_above: boolean;
+            /** @description The module that declares it. */
+            module: string;
+            /** @description Where the value comes from. */
+            origin: components["schemas"]["Origin2"];
+            /** @description The permission that sets it. */
+            permission: string;
+            /** @description Whether a change applies only when the processes that read it start again. */
+            restart_required: boolean;
+            /** @description What it sets. */
+            summary: string;
+            /** @description Its value in the scope. */
+            value: unknown;
+            /**
+             * Format: int32
+             * @description The version of the value the scope itself sets, `0` when it sets none, so it takes the one from above:
+             *     what `If-Match` carries to change it.
+             */
+            version: number;
+        };
         /** @description A second factor as listed to its owner; its secret never leaves identity. */
         SecondFactor: {
             /**
@@ -6237,6 +6336,32 @@ export type components = {
              */
             last_seen_at: string;
         };
+        /** @description A change of a setting in a scope. */
+        SettingChange: {
+            /**
+             * Format: uuid
+             * @description Who changed it; the operator when absent.
+             */
+            actor: string | null;
+            /** @description The value after; unset when absent. */
+            after: unknown;
+            /**
+             * Format: date-time
+             * @description When.
+             */
+            at: string;
+            /** @description The value before; unset when absent. */
+            before: unknown;
+            /** @description The key. */
+            key: string;
+            /** @description Whether it was locked after the change. */
+            locked: boolean;
+            /**
+             * Format: uuid
+             * @description The scope.
+             */
+            scope: string;
+        };
         /** @description A link that reads one file for a few minutes, without signing in. */
         SignedUrl: {
             /**
@@ -6300,6 +6425,48 @@ export type components = {
         SteppedUp: {
             /** @description The session. */
             session: components["schemas"]["Session"];
+        };
+        /**
+         * @description A kind of value as it is stored and as a client reads it to build a field: its type and bounds, without
+         *     its default.
+         */
+        StoredKind: {
+            /** @constant */
+            type: "boolean";
+        } | {
+            /** @description The options. */
+            options: string[];
+            /** @constant */
+            type: "choice";
+        } | {
+            /**
+             * Format: int64
+             * @description The largest value.
+             */
+            max: number;
+            /**
+             * Format: int64
+             * @description The smallest value.
+             */
+            min: number;
+            /** @constant */
+            type: "integer";
+        } | {
+            /**
+             * Format: uint
+             * @description The longest text.
+             */
+            max: number;
+            /** @constant */
+            type: "text";
+        } | {
+            /**
+             * Format: uint
+             * @description The longest HTML.
+             */
+            max: number;
+            /** @constant */
+            type: "rich_text";
         };
         /** @description A calendar of another system shown in a scope, read again every so often. */
         Subscription: {
@@ -18636,6 +18803,183 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Scale"];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_settings_scopes_scope: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScopeSetting"][];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_settings_scopes_scope_key: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScopeSetting"];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    put_settings_scopes_scope_key: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Any value; a request that changes something with a session cookie must carry it. */
+                "x-kampus": string;
+            };
+            path: {
+                key: string;
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description Whether the scopes below keep it.
+                     * @default false
+                     */
+                    locked?: boolean;
+                    /** @description The value, of the kind of the setting and within its bounds. */
+                    value: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScopeSetting"];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_settings_scopes_scope_key: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Any value; a request that changes something with a session cookie must carry it. */
+                "x-kampus": string;
+            };
+            path: {
+                key: string;
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScopeSetting"];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_settings_scopes_scope_key_history: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingChange"][];
                 };
             };
             /** @description A problem (RFC 9457) */

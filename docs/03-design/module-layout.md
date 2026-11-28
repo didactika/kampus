@@ -112,8 +112,9 @@ Before any handler the server runs two layers:
 | --- | --- | --- |
 | Campus | `kampus-server` (`http/campus.rs`) | `CurrentCampus`: the campus of the installation, or of the request's domain with a campus per domain |
 | Authentication | `kampus-identity` (`http/mod.rs`) | `Caller`: the actor, the session or API token, the campus and where the request comes from |
+| Authentication | `kampus-identity` (`http/mod.rs`) | `Acting` (of `kampus-access`): the actor and the permissions its API token carries, for the modules below identity, which cannot see a `Caller` |
 
-`Caller` gives what each kind of route needs: `session()` for routes that manage credentials, which API tokens never do; `account()` for the person signed in; and `acting(identity, permission, scope)` for an operation that needs a permission, which also limits an API token to the permissions it carries. The service still checks the permission itself.
+`Caller` gives what each kind of route needs: `session()` for routes that manage credentials, which API tokens never do; `account()` for the person signed in; and `acting(identity, permission, scope)` for an operation that needs a permission, which also limits an API token to the permissions it carries. The service still checks the permission itself. A module below identity (settings, access) reads `Acting` instead and calls `Access::acting` or `Access::carries`, the same limit `Caller::acting` applies, so an API token is limited alike wherever a route lives.
 
 A browser authenticates with the `kampus_session` cookie (HttpOnly, SameSite=Lax, Secure over HTTPS), and every request that changes something with it carries the `X-Kampus` header, which other sites cannot send. An integration sends an API token as `Authorization: Bearer kmp_...`.
 

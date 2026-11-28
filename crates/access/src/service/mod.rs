@@ -34,6 +34,7 @@
 
 //! The service API of access, one file per area.
 
+pub mod acting;
 pub mod check;
 pub mod grant;
 pub(crate) mod history;

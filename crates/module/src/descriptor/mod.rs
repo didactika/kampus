@@ -71,7 +71,7 @@ pub use privacy::{PrivacyFuture, PrivacyHandlerDeclaration, PrivacyRun};
 pub use progress::ProgressRuleDeclaration;
 pub use rule::{RuleActionDeclaration, RuleActionRun, RuleParameter};
 pub use setting::SettingDeclaration;
-pub use value::ValueKind;
+pub use value::{StoredKind, ValueKind};
 
 use kampus_db::{ModuleSteps, Step};
 

@@ -98,3 +98,204 @@ async fn the_policy_of_a_campus_follows_its_settings() {
     );
     site.drop().await;
 }
+
+#[tokio::test]
+async fn the_settings_of_a_scope_are_read_set_and_taken_back_through_the_server() {
+    let site = site().await;
+    let admin = site.session("admin").await;
+    let campus = site.campus.to_string();
+    let path = format!("/api/v1/settings/scopes/{campus}/identity.self_sign_up");
+
+    let all = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/settings/scopes/{campus}?q=sign%20up"),
+            Some(&admin),
+            &[],
+            None,
+        )
+        .await;
+    assert_eq!(all.status, StatusCode::OK, "{}", all.body);
+    let found = all.body.as_array().unwrap();
+    assert!(
+        found
+            .iter()
+            .all(|s| s["summary"].as_str().unwrap().to_lowercase().contains("sign up"))
+    );
+    let sign_up = found
+        .iter()
+        .find(|s| s["key"] == "identity.self_sign_up")
+        .unwrap();
+    assert_eq!(sign_up["kind"], json!({ "type": "boolean" }));
+    assert_eq!(
+        (sign_up["version"].as_i64(), sign_up["origin"]["from"].as_str()),
+        (Some(0), Some("default"))
+    );
+
+    let without = site
+        .call(
+            Method::PUT,
+            &path,
+            Some(&admin),
+            &[],
+            Some(json!({ "value": true })),
+        )
+        .await;
+    assert_eq!(
+        without.status,
+        StatusCode::PRECONDITION_FAILED,
+        "a change says the version it read"
+    );
+    let set = site
+        .call(
+            Method::PUT,
+            &path,
+            Some(&admin),
+            &[("if-match", "\"0\"")],
+            Some(json!({ "value": true })),
+        )
+        .await;
+    assert_eq!(set.status, StatusCode::OK, "{}", set.body);
+    assert_eq!(
+        (set.body["value"].as_bool(), set.body["version"].as_i64()),
+        (Some(true), Some(1))
+    );
+    assert_eq!(set.headers["etag"], "\"1\"");
+    let stale = site
+        .call(
+            Method::PUT,
+            &path,
+            Some(&admin),
+            &[("if-match", "\"0\"")],
+            Some(json!({ "value": false })),
+        )
+        .await;
+    assert_eq!(stale.status, StatusCode::PRECONDITION_FAILED);
+    let wrong = site
+        .call(
+            Method::PUT,
+            &path,
+            Some(&admin),
+            &[("if-match", "\"1\"")],
+            Some(json!({ "value": "yes" })),
+        )
+        .await;
+    assert_eq!(wrong.code(), "settings.value_invalid");
+    let changes = site
+        .call(Method::GET, &format!("{path}/history"), Some(&admin), &[], None)
+        .await;
+    assert_eq!(changes.body.as_array().map(Vec::len), Some(1), "{}", changes.body);
+    assert_eq!(changes.body[0]["after"], json!(true));
+
+    let back = site.call(Method::DELETE, &path, Some(&admin), &[], None).await;
+    assert_eq!(back.status, StatusCode::OK, "{}", back.body);
+    assert_eq!(
+        (
+            back.body["version"].as_i64(),
+            back.body["origin"]["from"].as_str()
+        ),
+        (Some(0), Some("default"))
+    );
+    site.drop().await;
+}
+
+#[tokio::test]
+async fn a_setting_locked_above_reads_as_held_and_refuses_a_change_below() {
+    let site = site().await;
+    let admin = site.session("admin").await;
+    let path = format!("/api/v1/settings/scopes/{}/identity.self_sign_up", site.campus);
+    let platform = site
+        .context
+        .service::<kampus_access::Access>()
+        .unwrap()
+        .platform()
+        .await
+        .unwrap()
+        .unwrap();
+    site.context
+        .service::<Settings>()
+        .unwrap()
+        .set_as_operator("identity.self_sign_up", platform, Some(json!(false)), true)
+        .await
+        .unwrap();
+    let held = site.call(Method::GET, &path, Some(&admin), &[], None).await;
+    assert_eq!(
+        (held.body["locked_above"].as_bool(), held.body["value"].as_bool()),
+        (Some(true), Some(false))
+    );
+    let refused = site
+        .call(
+            Method::PUT,
+            &path,
+            Some(&admin),
+            &[("if-match", "\"0\"")],
+            Some(json!({ "value": true })),
+        )
+        .await;
+    assert_eq!(refused.code(), "settings.locked_above");
+    site.context
+        .service::<Settings>()
+        .unwrap()
+        .set_as_operator("identity.self_sign_up", platform, None, false)
+        .await
+        .unwrap();
+
+    site.drop().await;
+}
+
+#[tokio::test]
+async fn an_api_token_sees_only_the_settings_whose_permission_it_carries() {
+    let site = site().await;
+    let admin = site.session("admin").await;
+    let created = site
+        .call(
+            Method::POST,
+            "/api/v1/identity/me/tokens",
+            Some(&admin),
+            &[],
+            Some(json!({
+                "name": "reports",
+                "scopes": [{ "permission": "identity.account.read", "scope": site.campus.to_string() }],
+            })),
+        )
+        .await;
+    assert_eq!(created.status, StatusCode::CREATED, "{}", created.body);
+    let bearer = format!("Bearer {}", created.body["token"].as_str().unwrap());
+    let campus = site.campus.to_string();
+    let seen = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/settings/scopes/{campus}"),
+            None,
+            &[("authorization", &bearer)],
+            None,
+        )
+        .await;
+    assert_eq!(seen.status, StatusCode::OK, "{}", seen.body);
+    assert_eq!(
+        seen.body,
+        json!([]),
+        "the token carries no permission of a setting"
+    );
+    let one = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/settings/scopes/{campus}/identity.self_sign_up"),
+            None,
+            &[("authorization", &bearer)],
+            None,
+        )
+        .await;
+    assert_eq!(one.status, StatusCode::NOT_FOUND);
+    let visitor = site
+        .call(
+            Method::GET,
+            &format!("/api/v1/settings/scopes/{campus}"),
+            None,
+            &[],
+            None,
+        )
+        .await;
+    assert_eq!(visitor.body, json!([]));
+    site.drop().await;
+}

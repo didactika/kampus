@@ -36,7 +36,7 @@
 //! token is `kmp_<prefix>_<secret>`; its prefix names it in lists and logs. A request with a token may do
 //! only what both the token's scopes and the account's roles allow.
 
-use kampus_access::{Actor, ScopeId};
+use kampus_access::{Acting, Actor, Carried, ScopeId};
 use kampus_common::{Error, FieldError, Result, Timestamp};
 use serde::Serialize;
 use sqlx::{PgConnection, Row};
@@ -92,6 +92,20 @@ pub struct TokenAuth {
     pub campus: ScopeId,
     /// What it may do.
     pub scopes: Vec<TokenScope>,
+}
+
+impl TokenAuth {
+    /// What it carries, as access reads the limit of a request.
+    #[must_use]
+    pub fn carried(&self) -> Vec<Carried> {
+        self.scopes
+            .iter()
+            .map(|s| Carried {
+                permission: s.permission.clone(),
+                scope: s.scope,
+            })
+            .collect()
+    }
 }
 
 /// A token as listed.
@@ -308,20 +322,15 @@ impl Identity {
     ///
     /// `not_found` for an unknown scope.
     pub async fn token_may(&self, auth: &TokenAuth, permission: &str, scope: ScopeId) -> Result<bool> {
-        let mut conn = self.db.pool().acquire().await.map_err(kampus_db::classify)?;
-        let path = self.access.path(&mut conn, scope).await?;
-        let carried = auth
-            .scopes
-            .iter()
-            .any(|s| s.permission == permission && path.iter().any(|p| p.id == s.scope));
-        if !carried {
+        let actor = Actor::Principal(auth.account);
+        let acting = Acting {
+            actor,
+            carried: Some(auth.carried()),
+        };
+        if !self.access.carries(&acting, permission, scope).await? {
             return Ok(false);
         }
-        Ok(self
-            .access
-            .check_in(&mut conn, &Actor::Principal(auth.account), permission, scope)
-            .await?
-            .allowed)
+        Ok(self.access.check(&actor, permission, scope).await?.allowed)
     }
 
     /// The scopes of a token.

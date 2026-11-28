@@ -48,7 +48,7 @@ use axum::extract::{ConnectInfo, Request, State};
 use axum::http::{HeaderMap, HeaderValue, Method, header};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
-use kampus_access::{Actor, ScopeId};
+use kampus_access::{Acting, Actor, ScopeId};
 use kampus_common::{Error, Result, Timestamp};
 use kampus_module::ServiceContext;
 use kampus_module::http::ApiError;
@@ -149,18 +149,28 @@ impl Caller {
         }
     }
 
+    /// What the request acts with, as the modules that cannot see a caller read it: the actor and what its
+    /// API token carries.
+    #[must_use]
+    pub fn as_acting(&self) -> Acting {
+        Acting {
+            actor: self.actor,
+            carried: self.token.as_ref().map(TokenAuth::carried),
+        }
+    }
+
     /// The actor for an operation that needs a permission in a scope: an API token acts only within what
     /// it carries, while a session acts as its account and the service checks the permission.
     ///
     /// # Errors
     ///
-    /// `permission_denied` (`identity.api_token_scope`) when the token does not carry the permission there.
+    /// `permission_denied` (`access.token_scope`) when the token does not carry the permission there.
     pub async fn acting(&self, identity: &Identity, permission: &str, scope: ScopeId) -> Result<&Actor> {
-        if let Some(token) = &self.token
-            && !identity.token_may(token, permission, scope).await?
-        {
-            return Err(Error::permission_denied("identity.api_token_scope")
-                .with_param("permission", permission.to_owned()));
+        if self.token.is_some() {
+            identity
+                .access
+                .acting(&self.as_acting(), permission, scope)
+                .await?;
         }
         Ok(&self.actor)
     }
@@ -197,6 +207,7 @@ pub async fn authenticate(State(identity): State<Identity>, mut request: Request
     let changes = !matches!(*request.method(), Method::GET | Method::HEAD | Method::OPTIONS);
     match caller(&identity, campus, client, request.headers().clone(), changes).await {
         Ok(caller) => {
+            request.extensions_mut().insert(caller.as_acting());
             request.extensions_mut().insert(caller);
             next.run(request).await
         }
