@@ -2608,11 +2608,13 @@ dependencies = [
 name = "kampus-settings"
 version = "0.1.0"
 dependencies = [
+ "axum",
  "kampus-access",
  "kampus-common",
  "kampus-db",
  "kampus-events",
  "kampus-module",
+ "schemars 1.2.3",
  "serde",
  "serde_json",
  "sqlx",

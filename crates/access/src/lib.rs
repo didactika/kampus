@@ -49,8 +49,8 @@ use kampus_common::{Clock, Timestamp};
 use kampus_db::Database;
 
 pub use model::{
-    Actor, AllowanceKind, GrantId, PermissionDeclaration, PermissionKind, PrincipalId, Risk, RoleId,
-    RoleTemplateDeclaration, ScopeId, ScopeKind, Value, ViewAsId,
+    Acting, Actor, AllowanceKind, Carried, GrantId, PermissionDeclaration, PermissionKind, PrincipalId, Risk,
+    RoleId, RoleTemplateDeclaration, ScopeId, ScopeKind, Value, ViewAsId,
 };
 pub use module::MODULE;
 pub use service::check::{Decision, GrantEvaluation};

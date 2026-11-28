@@ -40,7 +40,7 @@ use serde::Serialize;
 use serde_json::Value;
 
 /// Where a resolved value came from.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, schemars::JsonSchema)]
 #[serde(tag = "from", rename_all = "snake_case")]
 pub enum Origin {
     /// No scope sets it: the declared default.
@@ -66,7 +66,7 @@ pub struct Resolved {
 }
 
 /// A change of a setting in a scope.
-#[derive(Debug, Clone, PartialEq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, schemars::JsonSchema)]
 pub struct SettingChange {
     /// The key.
     pub key: String,

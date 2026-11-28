@@ -6,18 +6,14 @@ info:
     Declared settings, values per scope resolved with their origin (RN-164), locks (RN-165), fixed values
     (RN-166) and history (RN-168). Sensitive values are never returned (RN-167). Conventions of DEC-025 and DEC-026.
 paths:
-  /api/v1/settings/setting-definitions:
-    get: { summary: 'Declared settings with schema, default and levels', parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
-  /api/v1/settings/scopes/{scope_id}/settings:
-    get: { summary: Resolved values in a scope with the origin of each, responses: { '200': { description: Values } } }
-  /api/v1/settings/scopes/{scope_id}/settings/{key}:
-    put: { summary: 'Set a value, validated against its schema (RN-163)', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Set }, '409': { description: Locked above or fixed by the deployment }, '422': { description: Invalid } } }
-    delete: { summary: Remove the value; the level above applies again, responses: { '204': { description: Removed } } }
-  /api/v1/settings/scopes/{scope_id}/settings/{key}/lock:
-    put: { summary: Lock the value for the levels below, responses: { '204': { description: Locked } } }
-    delete: { summary: Unlock, responses: { '204': { description: Unlocked } } }
-  /api/v1/settings/settings/{key}/history:
-    get: { summary: Changes of a setting with actor and values (masked when sensitive), parameters: [{ $ref: '#/components/parameters/Limit' }, { $ref: '#/components/parameters/After' }], responses: { '200': { description: A page } } }
+  /api/v1/settings/scopes/{scope}:
+    get: { summary: 'The settings a scope may set and the caller may change, with their type, value, origin, version and locks; query q finds words in the key, module or summary', responses: { '200': { description: The settings } } }
+  /api/v1/settings/scopes/{scope}/{key}:
+    get: { summary: A setting of a scope, responses: { '200': { description: The setting with its version as ETag }, '404': { description: Unknown, not settable in the scope, or not the caller's to change } } }
+    put: { summary: 'Set a value, validated against its kind (RN-163), and lock it for the levels below; If-Match carries the version, 0 when the scope sets none', parameters: [{ $ref: '#/components/parameters/IfMatch' }], responses: { '200': { description: Set }, '409': { description: Locked above }, '412': { description: Changed meanwhile }, '422': { description: Invalid } } }
+    delete: { summary: Remove the value; the level above applies again, responses: { '200': { description: The setting as it reads now } } }
+  /api/v1/settings/scopes/{scope}/{key}/history:
+    get: { summary: The changes of a setting in a scope with actor and values, newest first, responses: { '200': { description: The changes } } }
 components:
   parameters:
     Limit: { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }

@@ -3176,7 +3176,7 @@
             "type": "string"
           },
           "origin": {
-            "$ref": "#/components/schemas/Origin2",
+            "$ref": "#/components/schemas/Origin3",
             "description": "Where the membership comes from."
           }
         },
@@ -3719,6 +3719,48 @@
         ]
       },
       "Origin2": {
+        "description": "Where a resolved value came from.",
+        "oneOf": [
+          {
+            "description": "No scope sets it: the declared default.",
+            "properties": {
+              "from": {
+                "const": "default",
+                "type": "string"
+              }
+            },
+            "required": [
+              "from"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Set in this scope, the nearest one or one that locks it.",
+            "properties": {
+              "from": {
+                "const": "scope",
+                "type": "string"
+              },
+              "locked": {
+                "description": "Whether that scope locks it, so no scope below may change it.",
+                "type": "boolean"
+              },
+              "scope": {
+                "description": "The scope.",
+                "format": "uuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "scope",
+              "locked"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "Origin3": {
         "description": "Where a membership comes from; a rule or a sync removes only the memberships it made.",
         "oneOf": [
           {
@@ -5391,6 +5433,73 @@
         "description": "The colour roles of one scheme, light or dark, by name (`primary`, `on-primary-container`…).",
         "type": "object"
       },
+      "ScopeSetting": {
+        "description": "A setting in a scope, as the administration of the scope shows and changes it.",
+        "properties": {
+          "default_value": {
+            "description": "Its declared default."
+          },
+          "key": {
+            "description": "The key.",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/StoredKind",
+            "description": "Its type and bounds, to build its field."
+          },
+          "locked": {
+            "description": "Whether the scope locks it for the scopes below.",
+            "type": "boolean"
+          },
+          "locked_above": {
+            "description": "Whether a scope above locks it, so it cannot change here.",
+            "type": "boolean"
+          },
+          "module": {
+            "description": "The module that declares it.",
+            "type": "string"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin2",
+            "description": "Where the value comes from."
+          },
+          "permission": {
+            "description": "The permission that sets it.",
+            "type": "string"
+          },
+          "restart_required": {
+            "description": "Whether a change applies only when the processes that read it start again.",
+            "type": "boolean"
+          },
+          "summary": {
+            "description": "What it sets.",
+            "type": "string"
+          },
+          "value": {
+            "description": "Its value in the scope."
+          },
+          "version": {
+            "description": "The version of the value the scope itself sets, `0` when it sets none, so it takes the one from above:\nwhat `If-Match` carries to change it.",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "module",
+          "summary",
+          "kind",
+          "default_value",
+          "value",
+          "origin",
+          "version",
+          "locked",
+          "locked_above",
+          "permission",
+          "restart_required"
+        ],
+        "type": "object"
+      },
       "SecondFactor": {
         "description": "A second factor as listed to its owner; its secret never leaves identity.",
         "properties": {
@@ -5840,6 +5949,110 @@
           "session"
         ],
         "type": "object"
+      },
+      "StoredKind": {
+        "description": "A kind of value as it is stored and as a client reads it to build a field: its type and bounds, without\nits default.",
+        "oneOf": [
+          {
+            "description": "On or off.",
+            "properties": {
+              "type": {
+                "const": "boolean",
+                "type": "string"
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "One of a list of options.",
+            "properties": {
+              "options": {
+                "description": "The options.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "type": {
+                "const": "choice",
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "options"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "A whole number in a range.",
+            "properties": {
+              "max": {
+                "description": "The largest value.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "min": {
+                "description": "The smallest value.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "type": {
+                "const": "integer",
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "min",
+              "max"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Text of at most some characters.",
+            "properties": {
+              "max": {
+                "description": "The longest text.",
+                "format": "uint",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "type": {
+                "const": "text",
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "max"
+            ],
+            "type": "object"
+          },
+          {
+            "description": "Rich text in the one format of user content: at most some characters of HTML.",
+            "properties": {
+              "max": {
+                "description": "The longest HTML.",
+                "format": "uint",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "type": {
+                "const": "rich_text",
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "max"
+            ],
+            "type": "object"
+          }
+        ]
       },
       "Subscription": {
         "description": "A calendar of another system shown in a scope, read again every so often.",
@@ -28818,6 +29031,267 @@
         ]
       }
     },
+    "/settings/scopes/{scope}": {
+      "get": {
+        "operationId": "get_settings_scopes_scope",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScopeSetting"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "The settings a scope may set and the caller may change, with their values, origins and locks (query `q`)",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/settings/scopes/{scope}/{key}": {
+      "delete": {
+        "operationId": "delete_settings_scopes_scope_key",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Any value; a request that changes something with a session cookie must carry it.",
+            "in": "header",
+            "name": "x-kampus",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeSetting"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "Remove the value a scope sets, so it comes from above again",
+        "tags": [
+          "settings"
+        ]
+      },
+      "get": {
+        "operationId": "get_settings_scopes_scope_key",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeSetting"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "A setting of a scope",
+        "tags": [
+          "settings"
+        ]
+      },
+      "put": {
+        "operationId": "put_settings_scopes_scope_key",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Any value; a request that changes something with a session cookie must carry it.",
+            "in": "header",
+            "name": "x-kampus",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "The value a scope gives a setting.",
+                "properties": {
+                  "locked": {
+                    "default": false,
+                    "description": "Whether the scopes below keep it.",
+                    "type": "boolean"
+                  },
+                  "value": {
+                    "description": "The value, of the kind of the setting and within its bounds."
+                  }
+                },
+                "required": [
+                  "value"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeSetting"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "Set a setting in a scope, and lock it for the scopes below; `If-Match` carries its version, 0 when the scope sets none",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
     "/users/accounts/{id}/picture": {
       "get": {
         "operationId": "get_users_accounts_id_picture",
@@ -30165,6 +30639,10 @@
     }
   ],
   "tags": [
+    {
+      "description": "Typed settings resolved through the scope tree",
+      "name": "settings"
+    },
     {
       "description": "Accounts, credentials, sign-in, second factors, sessions and API tokens",
       "name": "identity"
