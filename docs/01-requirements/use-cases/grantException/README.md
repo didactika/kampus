@@ -56,6 +56,8 @@ Every activity with dates, attempts, time limits or submissions accepts exceptio
 | --- | --- | --- | --- | --- |
 | A1 | 2 | An exception already exists for that person or group | Offers to edit it (RN-085) | Success |
 | A2 | — | The group is deleted | Its exceptions go with it, with an event (RN-087) | Success |
+| A3 | 1 | The course module sets no date, time limit or attempts | Exceptions are not offered; a request is refused (`activities.exceptions_not_needed`, RN-084) | Failure |
+| A4 | 3 | The exception changes a date or a limit the course module does not set | Refuses that value (`not_on_module`, RN-084) | Failure |
 
 ## Business rules
 

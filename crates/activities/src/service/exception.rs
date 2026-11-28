@@ -207,21 +207,80 @@ fn setting_number(module: &Module, key: &str) -> Option<i32> {
         .and_then(|n| i32::try_from(n).ok())
 }
 
+/// The dates, time limit and attempts a course module sets of its own.
+fn own_values(module: &Module) -> Values {
+    Values {
+        opens_at: setting_time(module, "opens_at"),
+        closes_at: setting_time(module, "closes_at"),
+        due_at: setting_time(module, "due_at"),
+        cutoff_at: setting_time(module, "cutoff_at"),
+        time_limit_seconds: setting_number(module, "time_limit_seconds"),
+        attempts: setting_number(module, "attempts"),
+    }
+}
+
+/// What a course module limits: its dates, and its time limit and attempts when they are not zero, which
+/// means without a limit.
+fn limits(module: &Module) -> Values {
+    let own = own_values(module);
+    Values {
+        time_limit_seconds: own.time_limit_seconds.filter(|&t| t > 0),
+        attempts: own.attempts.filter(|&a| a > 0),
+        ..own
+    }
+}
+
+/// The settings an exception changes that the course module does not limit: an exception moves what a
+/// course module limits for someone, and never adds a date, a limit or a count the others do not have.
+fn not_on_module(values: &Values, own: &Values) -> Vec<FieldError> {
+    [
+        ("opens_at", values.opens_at.is_some(), own.opens_at.is_some()),
+        ("closes_at", values.closes_at.is_some(), own.closes_at.is_some()),
+        ("due_at", values.due_at.is_some(), own.due_at.is_some()),
+        ("cutoff_at", values.cutoff_at.is_some(), own.cutoff_at.is_some()),
+        (
+            "time_limit_seconds",
+            values.time_limit_seconds.is_some(),
+            own.time_limit_seconds.is_some(),
+        ),
+        ("attempts", values.attempts.is_some(), own.attempts.is_some()),
+    ]
+    .into_iter()
+    .filter(|&(_, wanted, set)| wanted && !set)
+    .map(|(name, _, _)| FieldError::new(name, "not_on_module"))
+    .collect()
+}
+
 impl Activities {
-    /// Fails unless the type of a course module supports exceptions.
+    /// Whether a course module takes exceptions: its type supports them and it sets a date, a time limit
+    /// or a number of attempts for them to change. A course module without any, such as one that is not
+    /// graded and has no dates, needs none.
+    #[must_use]
+    pub fn takes_exceptions(&self, module: &Module) -> bool {
+        self.type_declaration(&module.type_code)
+            .is_some_and(|t| t.features.contains(&"exceptions"))
+            && !limits(module).is_empty()
+    }
+
+    /// Fails unless a course module takes exceptions.
     fn require_exceptions(&self, module: &Module) -> Result<()> {
         let supports = self
             .type_declaration(&module.type_code)
             .is_some_and(|t| t.features.contains(&"exceptions"));
-        if supports {
-            Ok(())
-        } else {
-            Err(Error::validation(
+        if !supports {
+            return Err(Error::validation(
                 "activities.exceptions_unsupported",
                 vec![FieldError::new("type", "feature")],
             )
-            .with_param("type", module.type_code.clone()))
+            .with_param("type", module.type_code.clone()));
         }
+        if limits(module).is_empty() {
+            return Err(Error::validation(
+                "activities.exceptions_not_needed",
+                vec![FieldError::new("module", "nothing_to_change")],
+            ));
+        }
+        Ok(())
     }
 
     /// Grants an exception to a person or a group on a course module, replacing the one they had; needs
@@ -230,8 +289,9 @@ impl Activities {
     /// # Errors
     ///
     /// `not_found`, `permission_denied`, `validation` (`activities.exceptions_unsupported`) for a type
-    /// without them, (`activities.exception_invalid`) for one that changes nothing or whose dates are out of
-    /// order or numbers not positive, and for a group of another course.
+    /// without them, (`activities.exceptions_not_needed`) for a course module that sets no date, time limit
+    /// or attempts, (`activities.exception_invalid`) for one that changes nothing, changes what the course
+    /// module does not set, has dates out of order or numbers not positive, and for a group of another course.
     pub async fn set_exception(
         &self,
         actor: &Actor,
@@ -243,7 +303,7 @@ impl Activities {
         let stored = self.stored(module).await?;
         self.access.require(actor, EXCEPTION_MANAGE, stored.scope).await?;
         self.require_exceptions(&stored)?;
-        let mut problems = Vec::new();
+        let mut problems = not_on_module(&values, &limits(&stored));
         if values.is_empty() {
             problems.push(FieldError::new("values", "required"));
         }
@@ -415,14 +475,7 @@ impl Activities {
             .filter(|r| r.get::<Option<uuid::Uuid>, _>("group_id").is_some())
             .map(values_of)
             .collect();
-        let base = Values {
-            opens_at: setting_time(&stored, "opens_at"),
-            closes_at: setting_time(&stored, "closes_at"),
-            due_at: setting_time(&stored, "due_at"),
-            cutoff_at: setting_time(&stored, "cutoff_at"),
-            time_limit_seconds: setting_number(&stored, "time_limit_seconds"),
-            attempts: setting_number(&stored, "attempts"),
-        };
+        let base = own_values(&stored);
         Ok(own.or(generous(&of_groups)).or(base))
     }
 }
@@ -476,13 +529,6 @@ impl Activities {
     /// `not_found` for an unknown course module.
     pub async fn module_values(&self, module: ModuleId) -> Result<Values> {
         let stored = self.stored(module).await?;
-        Ok(Values {
-            opens_at: setting_time(&stored, "opens_at"),
-            closes_at: setting_time(&stored, "closes_at"),
-            due_at: setting_time(&stored, "due_at"),
-            cutoff_at: setting_time(&stored, "cutoff_at"),
-            time_limit_seconds: setting_number(&stored, "time_limit_seconds"),
-            attempts: setting_number(&stored, "attempts"),
-        })
+        Ok(own_values(&stored))
     }
 }
