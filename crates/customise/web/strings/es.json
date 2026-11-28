@@ -1,0 +1,13 @@
+{
+  "customise.field.edit.permission": "Rellenar campos personalizados",
+  "customise.field.manage.permission": "Definir campos personalizados",
+  "customise.field.view.permission": "Ver campos personalizados",
+  "customise.flag.manage.permission": "Activar o desactivar funcionalidades",
+  "customise.layout.manage.permission": "Organizar las páginas de los demás",
+  "customise.layout.own.permission": "Organizar su propia página de inicio",
+  "customise.menu.manage.permission": "Editar menús",
+  "customise.package.manage.permission": "Exportar e importar la personalización",
+  "customise.rule.manage.permission": "Gestionar reglas automáticas",
+  "customise.term.manage.permission": "Renombrar términos",
+  "customise.theme.manage.permission": "Cambiar el tema"
+}

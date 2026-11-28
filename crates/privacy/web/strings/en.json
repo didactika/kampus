@@ -1,0 +1,7 @@
+{
+  "privacy.hold.manage.permission": "Manage legal holds",
+  "privacy.policy.manage.permission": "Publish policies",
+  "privacy.request.approve.permission": "Approve deletion requests",
+  "privacy.request.manage.permission": "Handle privacy requests",
+  "privacy.retention.manage.permission": "Set how long data is kept"
+}

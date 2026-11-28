@@ -32,15 +32,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-/** The matrix of the values each role of the campus gives every permission. */
+/** The roles of the campus, read on the server. */
 
 import type { Metadata } from "next";
 
 import { optional } from "../../../../api/server";
-import type { PermissionInfo, RoleView } from "../../../../api/types";
-import { PermissionMatrix } from "../../../../features/admin/roles/PermissionMatrix";
+import type { RoleView } from "../../../../api/types";
+import { RoleList } from "../../../../features/admin/roles/RoleList";
 import { EmptyState } from "../../../../features/shell/EmptyState";
-import { PageHeader } from "../../../../features/shell/PageHeader";
 import { currentAccount } from "../../../../features/session/current-account";
 import { requestI18n } from "../../../../i18n/server";
 
@@ -50,27 +49,11 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${t("admin.page.roles")} · ${t("admin.title")}` };
 }
 
-/** The page, read on the server. */
-export default async function Page() {
+/** The roles of the campus of the person. */
+export default async function RolesPage() {
   const campus = (await currentAccount())!.campus;
   const { t } = await requestI18n();
-  const [roles, permissions] = await Promise.all([
-    optional<RoleView[] | null>(`/access/scopes/${campus}/roles`, null),
-    optional<PermissionInfo[]>(`/access/scopes/${campus}/permissions`, []),
-  ]);
-  const header = <PageHeader title={t("admin.page.roles")} lead={t("admin.page.roles.lead")} />;
-  if (!roles) {
-    return (
-      <>
-        {header}
-        <EmptyState icon="shield" message={t("admin.roles.empty")} />
-      </>
-    );
-  }
-  return (
-    <>
-      {header}
-      <PermissionMatrix roles={roles} permissions={permissions} />
-    </>
-  );
+  const roles = await optional<RoleView[] | null>(`/access/scopes/${campus}/roles`, null);
+  if (!roles) return <EmptyState icon="shield" message={t("admin.roles.empty")} />;
+  return <RoleList roles={roles} />;
 }

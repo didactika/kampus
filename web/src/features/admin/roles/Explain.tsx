@@ -49,7 +49,7 @@ import { browserApi } from "../../../api/browser";
 import type { Decision, Me, PermissionInfo, RoleView } from "../../../api/types";
 import { useI18n } from "../../../i18n/I18nProvider";
 import { AccountPicker } from "./AccountPicker";
-import { type Choice, LOOK, roleName, ruleText, valueName } from "./words";
+import { type Choice, LOOK, roleName, ruleText, valueName, permissionName } from "./words";
 
 /** The props of `Explain`. */
 export interface ExplainProps {
@@ -110,7 +110,7 @@ export function Explain({ campus, roles, permissions }: ExplainProps) {
                 setPermission(code);
                 setDecision(null);
               }}
-              options={permissions.map((p) => ({ value: p.code, label: p.code }))}
+              options={permissions.map((p) => ({ value: p.code, label: permissionName(t, p.code) }))}
             />
             <Button variant="filled" icon="search" busy={busy} disabled={!person} onClick={() => void check()} sx={{ flex: "none" }}>
               {t("admin.explain.check")}

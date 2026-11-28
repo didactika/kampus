@@ -1,10 +1,14 @@
 {
+  "notify.defaults.manage.permission": "Fijar los valores de notificaciones y mensajería",
   "notify.group.messaging": "Mensajería",
+  "notify.message.anyone.permission": "Escribir a cualquier persona",
+  "notify.message.attach.permission": "Adjuntar archivos a los mensajes",
   "notify.message_retention_days": "Días que se conservan los mensajes",
   "notify.message_retention_days.hint": "Con 0 se conservan hasta que todos los participantes los eliminan.",
   "notify.messaging": "Quién puede escribir a quién",
   "notify.messaging.campus": "Cualquier persona del campus",
   "notify.messaging.course": "Personas que comparten un curso",
   "notify.messaging.hint": "Limita quién puede iniciar una conversación con quién.",
-  "notify.messaging.nobody": "Nadie"
+  "notify.messaging.nobody": "Nadie",
+  "notify.template.manage.permission": "Redactar plantillas de notificación"
 }

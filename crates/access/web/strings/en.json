@@ -1,4 +1,9 @@
 {
+  "access.grant.create.permission": "Assign roles",
+  "access.grant.delete.permission": "Take roles back",
+  "access.override.risky.permission": "Override risky permissions",
+  "access.override.update.permission": "Override permissions in a place",
+  "access.review.permission": "Review who may do what",
   "access.risk.configuration": "the configuration",
   "access.risk.data_loss": "loss of data",
   "access.risk.personal_data": "personal data",
@@ -10,6 +15,7 @@
   "access.role.course_creator": "Course creator",
   "access.role.guest": "Guest",
   "access.role.learner": "Learner",
+  "access.role.manage.permission": "Manage roles",
   "access.role.manager": "Manager",
   "access.role.mentor": "Mentor",
   "access.role.non_editing_teacher": "Non-editing teacher",
@@ -24,8 +30,10 @@
   "access.rule.no_allow": "No role allows it here.",
   "access.rule.unknown_permission": "No module declares this permission.",
   "access.rule.view_as_limit": "Viewing as another role only reads.",
+  "access.scope.freeze.permission": "Freeze a place",
   "access.value.allow": "Allow",
   "access.value.deny": "Deny",
   "access.value.forbid": "Forbid",
-  "access.value.none": "Not set"
+  "access.value.none": "Not set",
+  "access.view_as.permission": "View as another role"
 }

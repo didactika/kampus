@@ -48,7 +48,7 @@ export const LOOK: Readonly<Record<Choice, { readonly icon: string; readonly col
   allow: { icon: "check", color: "success.main", bg: "color-mix(in srgb, var(--k-palette-success-main) 14%, transparent)" },
   deny: { icon: "close", color: "text.secondary", bg: "action.hover" },
   forbid: { icon: "block", color: "error.main", bg: "color-mix(in srgb, var(--k-palette-error-main) 12%, transparent)" },
-  none: { icon: "remove", color: "text.disabled", bg: "transparent" },
+  none: { icon: "remove", color: "text.primary", bg: "action.selected" },
 };
 
 /** `roleName(t, role)`: the name of a role of the campus in the language of the reader, or its short name. */
@@ -68,4 +68,11 @@ export function ruleText(t: Translate, rule: string): string {
   const key = `access.rule.${rule}`;
   const text = t(key);
   return text === key ? rule : text;
+}
+
+/** `permissionName(t, "access.review")`: the name of a permission in the language of the reader, or its code. */
+export function permissionName(t: Translate, code: string): string {
+  const key = `${code}.permission`;
+  const text = t(key);
+  return text === key ? code : text;
 }

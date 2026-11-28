@@ -1,0 +1,7 @@
+{
+  "enrol.enrolment.manage.permission": "Matricular y dar de baja",
+  "enrol.enrolment.read.permission": "Ver matrículas",
+  "enrol.instance.manage.permission": "Gestionar métodos de matriculación",
+  "enrol.request.decide.permission": "Resolver solicitudes de matrícula",
+  "enrol.self.permission": "Matricularse uno mismo"
+}

@@ -88,6 +88,7 @@ export function adminMap(modules: readonly string[]): readonly AdminCategory[] {
         { href: "/admin/roles", label: "admin.page.roles", icon: "shield" },
         { href: "/admin/roles/grants", label: "admin.page.grants", icon: "groups" },
         { href: "/admin/roles/check", label: "admin.page.check", icon: "help" },
+        { href: "/admin/roles/compare", label: "admin.page.compare", icon: "grid_view" },
       ],
     },
     {

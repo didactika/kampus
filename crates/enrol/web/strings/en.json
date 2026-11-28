@@ -1,0 +1,7 @@
+{
+  "enrol.enrolment.manage.permission": "Enrol and unenrol people",
+  "enrol.enrolment.read.permission": "See enrolments",
+  "enrol.instance.manage.permission": "Manage enrolment methods",
+  "enrol.request.decide.permission": "Decide on enrolment requests",
+  "enrol.self.permission": "Enrol oneself"
+}

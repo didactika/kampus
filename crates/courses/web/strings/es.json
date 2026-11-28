@@ -1,10 +1,19 @@
 {
+  "courses.category.manage.permission": "Gestionar categorías",
+  "courses.course.archive.permission": "Archivar cursos",
+  "courses.course.create.permission": "Crear cursos",
+  "courses.course.delete.permission": "Eliminar cursos",
+  "courses.course.update.permission": "Modificar cursos",
   "courses.group.courses": "Cursos",
   "courses.group_mode": "Modo de grupos",
   "courses.group_mode.hint": "Con grupos separados cada grupo solo ve su trabajo; con grupos visibles también ve el de los demás.",
   "courses.group_mode.none": "Sin grupos",
   "courses.group_mode.separate": "Grupos separados",
   "courses.group_mode.visible": "Grupos visibles",
+  "courses.groups.access_all.permission": "Ver todos los grupos de un curso",
+  "courses.groups.manage.permission": "Gestionar grupos",
+  "courses.hidden.view.permission": "Ver cursos y secciones ocultos",
   "courses.outline": "Presentación del contenido del curso",
-  "courses.outline.hint": "El código de un complemento de presentación instalado."
+  "courses.outline.hint": "El código de un complemento de presentación instalado.",
+  "courses.section.manage.permission": "Gestionar secciones"
 }

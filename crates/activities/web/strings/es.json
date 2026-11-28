@@ -1,0 +1,6 @@
+{
+  "activities.conditions.ignore.permission": "Abrir actividades sin cumplir sus condiciones",
+  "activities.conditions.manage.permission": "Definir las condiciones de las actividades",
+  "activities.exception.manage.permission": "Conceder excepciones en actividades",
+  "activities.module.manage.permission": "Añadir y modificar actividades"
+}

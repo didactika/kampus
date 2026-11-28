@@ -1,10 +1,19 @@
 {
+  "courses.category.manage.permission": "Manage categories",
+  "courses.course.archive.permission": "Archive courses",
+  "courses.course.create.permission": "Create courses",
+  "courses.course.delete.permission": "Delete courses",
+  "courses.course.update.permission": "Change courses",
   "courses.group.courses": "Courses",
   "courses.group_mode": "Group mode",
   "courses.group_mode.hint": "Separate groups see only their own work; visible groups also see the work of the others.",
   "courses.group_mode.none": "No groups",
   "courses.group_mode.separate": "Separate groups",
   "courses.group_mode.visible": "Visible groups",
+  "courses.groups.access_all.permission": "See every group of a course",
+  "courses.groups.manage.permission": "Manage groups",
+  "courses.hidden.view.permission": "See hidden courses and sections",
   "courses.outline": "Presentation of the course content",
-  "courses.outline.hint": "The code of an installed outline plugin."
+  "courses.outline.hint": "The code of an installed outline plugin.",
+  "courses.section.manage.permission": "Manage sections"
 }
