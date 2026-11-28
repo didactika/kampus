@@ -1998,6 +1998,7 @@ dependencies = [
 name = "kampus-access"
 version = "0.1.0"
 dependencies = [
+ "axum",
  "kampus-common",
  "kampus-db",
  "kampus-module",

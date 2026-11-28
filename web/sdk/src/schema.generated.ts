@@ -35,6 +35,178 @@
 /** The routes and schemas of the API. Written by `scripts/generate.ts` from `openapi.json`; do not edit. */
 
 export type paths = {
+    "/access/grants/{grant}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Take a grant back */
+        delete: operations["delete_access_grants_grant"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access/roles/{role}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** A role with its values */
+        get: operations["get_access_roles_role"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access/roles/{role}/permissions/{permission}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set the value a role gives a permission; null takes it away */
+        put: operations["put_access_roles_role_permissions_permission"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access/roles/{role}/second-factor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Whether whoever holds a role must sign in with a second factor */
+        put: operations["put_access_roles_role_second_factor"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access/scopes/{scope}/explain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Why a principal may or may not use a permission in a scope (query `principal` and `permission`) */
+        get: operations["get_access_scopes_scope_explain"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access/scopes/{scope}/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The roles granted in a scope itself, newest first */
+        get: operations["get_access_scopes_scope_grants"];
+        put?: never;
+        /** Grant a role to a principal in a scope */
+        post: operations["post_access_scopes_scope_grants"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access/scopes/{scope}/overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The values a scope gives permissions for roles, in place of theirs */
+        get: operations["get_access_scopes_scope_overrides"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access/scopes/{scope}/overrides/{role}/{permission}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Override the value of a permission for a role in a scope and below; null takes the override away */
+        put: operations["put_access_scopes_scope_overrides_role_permission"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access/scopes/{scope}/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every declared permission, with what it can expose and the lowest scope where it means something */
+        get: operations["get_access_scopes_scope_permissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/access/scopes/{scope}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The roles of the campus of a scope, with their values */
+        get: operations["get_access_scopes_scope_roles"];
+        put?: never;
+        /** Create a role in a campus from a template */
+        post: operations["post_access_scopes_scope_roles"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/activities/campuses/{campus}/course-modules/by-reference/{system}/{external_id}": {
         parameters: {
             query?: never;
@@ -4373,6 +4545,20 @@ export type components = {
             /** @constant */
             kind: "course";
         });
+        /** @description The result of a check, with its explanation. */
+        Decision: {
+            /** @description Whether the actor may. */
+            allowed: boolean;
+            /** @description The roles considered and their values. */
+            grants: components["schemas"]["GrantEvaluation"][];
+            /** @description The permission checked. */
+            permission: string;
+            /**
+             * @description Why: `allowed`, `no_allow`, `forbidden`, `guest_limit`, `frozen_scope`, `inactive_account`,
+             *     `view_as_limit` or `unknown_permission`.
+             */
+            rule: string;
+        };
         /** @description A grade with the entries that made it. */
         Detail: {
             /** @description Its history, oldest first. */
@@ -4881,6 +5067,68 @@ export type components = {
         };
         /** @description What a grade is made of. */
         GradeType: "value" | "scale" | "text";
+        /** @description How one granted role was evaluated. */
+        GrantEvaluation: {
+            /**
+             * Format: uuid
+             * @description The grant, absent for the implicit roles of visitors and "view as".
+             */
+            grant: string | null;
+            /**
+             * Format: uuid
+             * @description The role.
+             */
+            role: string;
+            /**
+             * Format: uuid
+             * @description Where the role is held.
+             */
+            scope: string;
+            /**
+             * Format: uuid
+             * @description The scope of the override that gave the value; absent when it is the role's own value.
+             */
+            set_at: string | null;
+            /** @description The value found, if any. */
+            value: components["schemas"]["Value"] | null;
+        };
+        /** @description A role granted to a principal in a scope. */
+        GrantView: {
+            /**
+             * Format: uuid
+             * @description The grant.
+             */
+            id: string;
+            /** @description How it came: by hand, or by a module (an enrolment, a rule of a group). */
+            origin: string;
+            /** @description The module that gave it, when one did. */
+            origin_module: string | null;
+            /**
+             * Format: uuid
+             * @description Who holds it.
+             */
+            principal: string;
+            /**
+             * Format: uuid
+             * @description The role.
+             */
+            role: string;
+            /**
+             * Format: uuid
+             * @description The scope where it is held, and so in every scope below.
+             */
+            scope: string;
+            /**
+             * Format: date-time
+             * @description From when it counts.
+             */
+            valid_from: string;
+            /**
+             * Format: date-time
+             * @description Until when it counts, when it ends.
+             */
+            valid_until: string | null;
+        };
         /** @description A group of a course. */
         Group: {
             /** @description Its code, unique in the course when set. */
@@ -4992,6 +5240,14 @@ export type components = {
         };
         /** @description The answer that names what an operation created or found by its identifier: `{ "id": ... }`. */
         Identified3: {
+            /**
+             * Format: uuid
+             * @description The identifier.
+             */
+            id: string;
+        };
+        /** @description The answer that names what an operation created or found by its identifier: `{ "id": ... }`. */
+        Identified4: {
             /**
              * Format: uuid
              * @description The identifier.
@@ -5450,6 +5706,23 @@ export type components = {
         };
         /** @description Where a membership comes from; a rule or a sync removes only the memberships it made. */
         Origin3: "manual" | "rule" | "sync";
+        /** @description The value a scope gives a permission for a role, in place of the value of the role. */
+        OverrideView: {
+            /** @description The permission. */
+            permission: string;
+            /**
+             * Format: uuid
+             * @description The role.
+             */
+            role: string;
+            /** @description The value in the scope and below. */
+            value: components["schemas"]["Value"];
+            /**
+             * Format: int32
+             * @description Its version.
+             */
+            version: number;
+        };
         /** @description A package of customisations. */
         Package: {
             /**
@@ -5620,6 +5893,21 @@ export type components = {
              */
             row_pixels: number;
         };
+        /** @description A declared permission, as the matrix of roles lists it. */
+        PermissionInfo: {
+            /** @description The code, `<module>.<area>.<action>`. */
+            code: string;
+            /** @description Whether it reads or changes something. */
+            kind: components["schemas"]["PermissionKind"];
+            /** @description The lowest kind of scope where it means something, and so where it may be overridden. */
+            lowest_kind: components["schemas"]["ScopeKind"];
+            /** @description The module that declares it. */
+            module: string;
+            /** @description What it can expose. */
+            risks: components["schemas"]["Risk"][];
+        };
+        /** @description Whether a permission only reads or also changes something. */
+        PermissionKind: "read" | "write";
         /** @description The picture of an account. */
         PictureFile: {
             /**
@@ -6069,6 +6357,33 @@ export type components = {
             /** @description Why the data is kept. */
             purpose: string;
         };
+        /** @description What a permission can expose. */
+        Risk: "personal_data" | "configuration" | "script_injection" | "data_loss" | "trust_escalation" | "spam";
+        /** @description A role of a campus with the value it gives each permission. */
+        RoleView: {
+            /**
+             * Format: uuid
+             * @description The role.
+             */
+            id: string;
+            /** @description The kinds of scope where it may be granted. */
+            kinds: components["schemas"]["ScopeKind"][];
+            /** @description Whether whoever holds it must sign in with a second factor. */
+            second_factor_required: boolean;
+            /** @description Its short name, unique in its campus. */
+            short_name: string;
+            /** @description The template it was made from. */
+            template: string;
+            /** @description The value it gives each permission it names; a permission it does not name is not allowed. */
+            values: {
+                [key: string]: components["schemas"]["Value"];
+            };
+            /**
+             * Format: int32
+             * @description Its version.
+             */
+            version: number;
+        };
         /** @description The height of a row of a grid, by name. */
         RowHeight: "compact" | "regular" | "tall";
         /** @description A rule of a scope; it reacts to the events of its scope and of the scopes below. */
@@ -6190,6 +6505,8 @@ export type components = {
         Scheme: {
             [key: string]: string;
         };
+        /** @description The kinds of scope, in the order of the tree. */
+        ScopeKind: "platform" | "tenant" | "campus" | "category" | "course" | "section" | "activity" | "widget" | "user";
         /** @description A setting in a scope, as the administration of the scope shows and changes it. */
         ScopeSetting: {
             /** @description Its declared default. */
@@ -6680,6 +6997,8 @@ export type components = {
              */
             scope: string;
         };
+        /** @description The value a role gives a permission. */
+        Value: "allow" | "deny" | "forbid";
         /** @description The settings an exception may change; each left out keeps the value below it. */
         Values: {
             /**
@@ -6838,6 +7157,454 @@ export type components = {
 };
 export type $defs = Record<string, never>;
 export interface operations {
+    delete_access_grants_grant: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Any value; a request that changes something with a session cookie must carry it. */
+                "x-kampus": string;
+            };
+            path: {
+                grant: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Done, with nothing to answer */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_access_roles_role: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                role: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleView"];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    put_access_roles_role_permissions_permission: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Any value; a request that changes something with a session cookie must carry it. */
+                "x-kampus": string;
+            };
+            path: {
+                permission: string;
+                role: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description The value; absent or null takes it away, so the role does not allow it.
+                     * @default null
+                     */
+                    value?: ("allow" | "deny" | "forbid") | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleView"];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    put_access_roles_role_second_factor: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Any value; a request that changes something with a session cookie must carry it. */
+                "x-kampus": string;
+            };
+            path: {
+                role: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Whether it does. */
+                    required: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleView"];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_access_scopes_scope_explain: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Decision"];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_access_scopes_scope_grants: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GrantView"][];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    post_access_scopes_scope_grants: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Any value; a request that changes something with a session cookie must carry it. */
+                "x-kampus": string;
+            };
+            path: {
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * Format: uuid
+                     * @description Who receives it.
+                     */
+                    principal: string;
+                    /**
+                     * Format: uuid
+                     * @description The role.
+                     */
+                    role: string;
+                    /**
+                     * Format: date-time
+                     * @description Until when it counts; for good when absent.
+                     * @default null
+                     */
+                    until?: string | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Identified"];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_access_scopes_scope_overrides: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverrideView"][];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    put_access_scopes_scope_overrides_role_permission: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Any value; a request that changes something with a session cookie must carry it. */
+                "x-kampus": string;
+            };
+            path: {
+                permission: string;
+                role: string;
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /**
+                     * @description The value; absent or null takes the override away.
+                     * @default null
+                     */
+                    value?: ("allow" | "deny" | "forbid") | null;
+                };
+            };
+        };
+        responses: {
+            /** @description Done, with nothing to answer */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_access_scopes_scope_permissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PermissionInfo"][];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_access_scopes_scope_roles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleView"][];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    post_access_scopes_scope_roles: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Any value; a request that changes something with a session cookie must carry it. */
+                "x-kampus": string;
+            };
+            path: {
+                scope: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description The kinds of scope where it may be granted. */
+                    kinds: ("platform" | "tenant" | "campus" | "category" | "course" | "section" | "activity" | "widget" | "user")[];
+                    /** @description Its short name, unique in its campus. */
+                    short_name: string;
+                    /** @description The code of the template it starts from. */
+                    template: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoleView"];
+                };
+            };
+            /** @description A problem (RFC 9457) */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     get_activities_campuses_campus_course_modules_by_reference_system_external_id: {
         parameters: {
             query?: never;
@@ -14385,7 +15152,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Identified"];
+                    "application/json": components["schemas"]["Identified2"];
                 };
             };
             /** @description A problem (RFC 9457) */
@@ -14496,7 +15263,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Identified2"];
+                    "application/json": components["schemas"]["Identified3"];
                 };
             };
             /** @description A problem (RFC 9457) */
@@ -14537,7 +15304,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Identified"];
+                    "application/json": components["schemas"]["Identified2"];
                 };
             };
             /** @description A problem (RFC 9457) */
@@ -19386,7 +20153,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Identified3"];
+                    "application/json": components["schemas"]["Identified4"];
                 };
             };
             /** @description A problem (RFC 9457) */
@@ -19438,7 +20205,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Identified3"];
+                    "application/json": components["schemas"]["Identified4"];
                 };
             };
             /** @description A problem (RFC 9457) */

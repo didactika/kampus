@@ -40,6 +40,7 @@
     reason = "a failing test stops on the first error"
 )]
 
+mod access;
 mod activities;
 mod api;
 mod calendar;

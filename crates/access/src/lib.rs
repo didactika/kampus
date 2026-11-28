@@ -38,6 +38,7 @@
 //! There is no bypass: administrators are principals with roles, checked like everyone else.
 
 pub mod db;
+pub mod http;
 pub mod model;
 pub mod module;
 pub mod permissions;
@@ -54,6 +55,7 @@ pub use model::{
 };
 pub use module::MODULE;
 pub use service::check::{Decision, GrantEvaluation};
+pub use service::review::{GrantView, OverrideView, PermissionInfo, RoleView};
 pub use service::scope::PathScope;
 
 /// The access service.

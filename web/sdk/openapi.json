@@ -1311,6 +1311,37 @@
         ],
         "type": "object"
       },
+      "Decision": {
+        "description": "The result of a check, with its explanation.",
+        "properties": {
+          "allowed": {
+            "description": "Whether the actor may.",
+            "type": "boolean"
+          },
+          "grants": {
+            "description": "The roles considered and their values.",
+            "items": {
+              "$ref": "#/components/schemas/GrantEvaluation"
+            },
+            "type": "array"
+          },
+          "permission": {
+            "description": "The permission checked.",
+            "type": "string"
+          },
+          "rule": {
+            "description": "Why: `allowed`, `no_allow`, `forbidden`, `guest_limit`, `frozen_scope`, `inactive_account`,\n`view_as_limit` or `unknown_permission`.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "allowed",
+          "rule",
+          "permission",
+          "grants"
+        ],
+        "type": "object"
+      },
       "Detail": {
         "description": "A grade with the entries that made it.",
         "properties": {
@@ -2419,6 +2450,116 @@
           }
         ]
       },
+      "GrantEvaluation": {
+        "description": "How one granted role was evaluated.",
+        "properties": {
+          "grant": {
+            "description": "The grant, absent for the implicit roles of visitors and \"view as\".",
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "role": {
+            "description": "The role.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "scope": {
+            "description": "Where the role is held.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "set_at": {
+            "description": "The scope of the override that gave the value; absent when it is the role's own value.",
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "value": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Value"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The value found, if any."
+          }
+        },
+        "required": [
+          "grant",
+          "role",
+          "scope",
+          "value",
+          "set_at"
+        ],
+        "type": "object"
+      },
+      "GrantView": {
+        "description": "A role granted to a principal in a scope.",
+        "properties": {
+          "id": {
+            "description": "The grant.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "origin": {
+            "description": "How it came: by hand, or by a module (an enrolment, a rule of a group).",
+            "type": "string"
+          },
+          "origin_module": {
+            "description": "The module that gave it, when one did.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "principal": {
+            "description": "Who holds it.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "role": {
+            "description": "The role.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "scope": {
+            "description": "The scope where it is held, and so in every scope below.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "valid_from": {
+            "description": "From when it counts.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "valid_until": {
+            "description": "Until when it counts, when it ends.",
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "scope",
+          "principal",
+          "origin",
+          "origin_module",
+          "valid_from",
+          "valid_until"
+        ],
+        "type": "object"
+      },
       "Group": {
         "description": "A group of a course.",
         "properties": {
@@ -2669,6 +2810,20 @@
         "type": "object"
       },
       "Identified3": {
+        "description": "The answer that names what an operation created or found by its identifier: `{ \"id\": ... }`.",
+        "properties": {
+          "id": {
+            "description": "The identifier.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "Identified4": {
         "description": "The answer that names what an operation created or found by its identifier: `{ \"id\": ... }`.",
         "properties": {
           "id": {
@@ -3780,6 +3935,36 @@
           }
         ]
       },
+      "OverrideView": {
+        "description": "The value a scope gives a permission for a role, in place of the value of the role.",
+        "properties": {
+          "permission": {
+            "description": "The permission.",
+            "type": "string"
+          },
+          "role": {
+            "description": "The role.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "value": {
+            "$ref": "#/components/schemas/Value",
+            "description": "The value in the scope and below."
+          },
+          "version": {
+            "description": "Its version.",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "role",
+          "permission",
+          "value",
+          "version"
+        ],
+        "type": "object"
+      },
       "Package": {
         "description": "A package of customisations.",
         "properties": {
@@ -4170,6 +4355,57 @@
           "row_pixels"
         ],
         "type": "object"
+      },
+      "PermissionInfo": {
+        "description": "A declared permission, as the matrix of roles lists it.",
+        "properties": {
+          "code": {
+            "description": "The code, `<module>.<area>.<action>`.",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PermissionKind",
+            "description": "Whether it reads or changes something."
+          },
+          "lowest_kind": {
+            "$ref": "#/components/schemas/ScopeKind",
+            "description": "The lowest kind of scope where it means something, and so where it may be overridden."
+          },
+          "module": {
+            "description": "The module that declares it.",
+            "type": "string"
+          },
+          "risks": {
+            "description": "What it can expose.",
+            "items": {
+              "$ref": "#/components/schemas/Risk"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "code",
+          "module",
+          "kind",
+          "risks",
+          "lowest_kind"
+        ],
+        "type": "object"
+      },
+      "PermissionKind": {
+        "description": "Whether a permission only reads or also changes something.",
+        "oneOf": [
+          {
+            "const": "read",
+            "description": "Reads.",
+            "type": "string"
+          },
+          {
+            "const": "write",
+            "description": "Changes something.",
+            "type": "string"
+          }
+        ]
       },
       "PictureFile": {
         "description": "The picture of an account.",
@@ -5141,6 +5377,92 @@
         ],
         "type": "object"
       },
+      "Risk": {
+        "description": "What a permission can expose.",
+        "oneOf": [
+          {
+            "const": "personal_data",
+            "description": "Personal data of other people.",
+            "type": "string"
+          },
+          {
+            "const": "configuration",
+            "description": "The configuration of the campus.",
+            "type": "string"
+          },
+          {
+            "const": "script_injection",
+            "description": "Content that runs in other people's browsers.",
+            "type": "string"
+          },
+          {
+            "const": "data_loss",
+            "description": "Losing data.",
+            "type": "string"
+          },
+          {
+            "const": "trust_escalation",
+            "description": "Giving oneself or others more rights.",
+            "type": "string"
+          },
+          {
+            "const": "spam",
+            "description": "Messages to many people.",
+            "type": "string"
+          }
+        ]
+      },
+      "RoleView": {
+        "description": "A role of a campus with the value it gives each permission.",
+        "properties": {
+          "id": {
+            "description": "The role.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "kinds": {
+            "description": "The kinds of scope where it may be granted.",
+            "items": {
+              "$ref": "#/components/schemas/ScopeKind"
+            },
+            "type": "array"
+          },
+          "second_factor_required": {
+            "description": "Whether whoever holds it must sign in with a second factor.",
+            "type": "boolean"
+          },
+          "short_name": {
+            "description": "Its short name, unique in its campus.",
+            "type": "string"
+          },
+          "template": {
+            "description": "The template it was made from.",
+            "type": "string"
+          },
+          "values": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Value"
+            },
+            "description": "The value it gives each permission it names; a permission it does not name is not allowed.",
+            "type": "object"
+          },
+          "version": {
+            "description": "Its version.",
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "short_name",
+          "template",
+          "kinds",
+          "second_factor_required",
+          "version",
+          "values"
+        ],
+        "type": "object"
+      },
       "RowHeight": {
         "description": "The height of a row of a grid, by name.",
         "oneOf": [
@@ -5432,6 +5754,56 @@
         },
         "description": "The colour roles of one scheme, light or dark, by name (`primary`, `on-primary-container`…).",
         "type": "object"
+      },
+      "ScopeKind": {
+        "description": "The kinds of scope, in the order of the tree.",
+        "oneOf": [
+          {
+            "const": "platform",
+            "description": "The whole installation.",
+            "type": "string"
+          },
+          {
+            "const": "tenant",
+            "description": "One tenant of a multi-tenant installation.",
+            "type": "string"
+          },
+          {
+            "const": "campus",
+            "description": "One campus.",
+            "type": "string"
+          },
+          {
+            "const": "category",
+            "description": "A category of courses, possibly nested.",
+            "type": "string"
+          },
+          {
+            "const": "course",
+            "description": "A course.",
+            "type": "string"
+          },
+          {
+            "const": "section",
+            "description": "A section of a course, possibly nested.",
+            "type": "string"
+          },
+          {
+            "const": "activity",
+            "description": "An activity or material.",
+            "type": "string"
+          },
+          {
+            "const": "widget",
+            "description": "A widget shown in some scope.",
+            "type": "string"
+          },
+          {
+            "const": "user",
+            "description": "A person, hanging from their campus.",
+            "type": "string"
+          }
+        ]
       },
       "ScopeSetting": {
         "description": "A setting in a scope, as the administration of the scope shows and changes it.",
@@ -6545,6 +6917,26 @@
         ],
         "type": "object"
       },
+      "Value": {
+        "description": "The value a role gives a permission.",
+        "oneOf": [
+          {
+            "const": "allow",
+            "description": "The role allows it.",
+            "type": "string"
+          },
+          {
+            "const": "deny",
+            "description": "The role does not allow it here; a lower scope may allow it again.",
+            "type": "string"
+          },
+          {
+            "const": "forbid",
+            "description": "No role and no lower scope may allow it.",
+            "type": "string"
+          }
+        ]
+      },
       "Values": {
         "description": "The settings an exception may change; each left out keeps the value below it.",
         "properties": {
@@ -6871,6 +7263,886 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/access/grants/{grant}": {
+      "delete": {
+        "operationId": "delete_access_grants_grant",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "grant",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Any value; a request that changes something with a session cookie must carry it.",
+            "in": "header",
+            "name": "x-kampus",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Done, with nothing to answer"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "Take a grant back",
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/access/roles/{role}": {
+      "get": {
+        "operationId": "get_access_roles_role",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "role",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "A role with its values",
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/access/roles/{role}/permissions/{permission}": {
+      "put": {
+        "operationId": "put_access_roles_role_permissions_permission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "role",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "permission",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Any value; a request that changes something with a session cookie must carry it.",
+            "in": "header",
+            "name": "x-kampus",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "The value a role gives a permission.",
+                "properties": {
+                  "value": {
+                    "anyOf": [
+                      {
+                        "description": "The value a role gives a permission.",
+                        "oneOf": [
+                          {
+                            "const": "allow",
+                            "description": "The role allows it.",
+                            "type": "string"
+                          },
+                          {
+                            "const": "deny",
+                            "description": "The role does not allow it here; a lower scope may allow it again.",
+                            "type": "string"
+                          },
+                          {
+                            "const": "forbid",
+                            "description": "No role and no lower scope may allow it.",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "description": "The value; absent or null takes it away, so the role does not allow it."
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "Set the value a role gives a permission; null takes it away",
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/access/roles/{role}/second-factor": {
+      "put": {
+        "operationId": "put_access_roles_role_second_factor",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "role",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Any value; a request that changes something with a session cookie must carry it.",
+            "in": "header",
+            "name": "x-kampus",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "Whether a role asks for a second factor.",
+                "properties": {
+                  "required": {
+                    "description": "Whether it does.",
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "required"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleView"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "Whether whoever holds a role must sign in with a second factor",
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/access/scopes/{scope}/explain": {
+      "get": {
+        "operationId": "get_access_scopes_scope_explain",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Decision"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "Why a principal may or may not use a permission in a scope (query `principal` and `permission`)",
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/access/scopes/{scope}/grants": {
+      "get": {
+        "operationId": "get_access_scopes_scope_grants",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GrantView"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "The roles granted in a scope itself, newest first",
+        "tags": [
+          "access"
+        ]
+      },
+      "post": {
+        "operationId": "post_access_scopes_scope_grants",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Any value; a request that changes something with a session cookie must carry it.",
+            "in": "header",
+            "name": "x-kampus",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "A role to grant.",
+                "properties": {
+                  "principal": {
+                    "description": "Who receives it.",
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "role": {
+                    "description": "The role.",
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "until": {
+                    "default": null,
+                    "description": "Until when it counts; for good when absent.",
+                    "format": "date-time",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "role",
+                  "principal"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Identified"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "Grant a role to a principal in a scope",
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/access/scopes/{scope}/overrides": {
+      "get": {
+        "operationId": "get_access_scopes_scope_overrides",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OverrideView"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "The values a scope gives permissions for roles, in place of theirs",
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/access/scopes/{scope}/overrides/{role}/{permission}": {
+      "put": {
+        "operationId": "put_access_scopes_scope_overrides_role_permission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "role",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "permission",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Any value; a request that changes something with a session cookie must carry it.",
+            "in": "header",
+            "name": "x-kampus",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "The value a scope gives a permission for a role.",
+                "properties": {
+                  "value": {
+                    "anyOf": [
+                      {
+                        "description": "The value a role gives a permission.",
+                        "oneOf": [
+                          {
+                            "const": "allow",
+                            "description": "The role allows it.",
+                            "type": "string"
+                          },
+                          {
+                            "const": "deny",
+                            "description": "The role does not allow it here; a lower scope may allow it again.",
+                            "type": "string"
+                          },
+                          {
+                            "const": "forbid",
+                            "description": "No role and no lower scope may allow it.",
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "default": null,
+                    "description": "The value; absent or null takes the override away."
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Done, with nothing to answer"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "Override the value of a permission for a role in a scope and below; null takes the override away",
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/access/scopes/{scope}/permissions": {
+      "get": {
+        "operationId": "get_access_scopes_scope_permissions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PermissionInfo"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "Every declared permission, with what it can expose and the lowest scope where it means something",
+        "tags": [
+          "access"
+        ]
+      }
+    },
+    "/access/scopes/{scope}/roles": {
+      "get": {
+        "operationId": "get_access_scopes_scope_roles",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RoleView"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Success"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "The roles of the campus of a scope, with their values",
+        "tags": [
+          "access"
+        ]
+      },
+      "post": {
+        "operationId": "post_access_scopes_scope_roles",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Any value; a request that changes something with a session cookie must carry it.",
+            "in": "header",
+            "name": "x-kampus",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "A role to create.",
+                "properties": {
+                  "kinds": {
+                    "description": "The kinds of scope where it may be granted.",
+                    "items": {
+                      "description": "The kinds of scope, in the order of the tree.",
+                      "oneOf": [
+                        {
+                          "const": "platform",
+                          "description": "The whole installation.",
+                          "type": "string"
+                        },
+                        {
+                          "const": "tenant",
+                          "description": "One tenant of a multi-tenant installation.",
+                          "type": "string"
+                        },
+                        {
+                          "const": "campus",
+                          "description": "One campus.",
+                          "type": "string"
+                        },
+                        {
+                          "const": "category",
+                          "description": "A category of courses, possibly nested.",
+                          "type": "string"
+                        },
+                        {
+                          "const": "course",
+                          "description": "A course.",
+                          "type": "string"
+                        },
+                        {
+                          "const": "section",
+                          "description": "A section of a course, possibly nested.",
+                          "type": "string"
+                        },
+                        {
+                          "const": "activity",
+                          "description": "An activity or material.",
+                          "type": "string"
+                        },
+                        {
+                          "const": "widget",
+                          "description": "A widget shown in some scope.",
+                          "type": "string"
+                        },
+                        {
+                          "const": "user",
+                          "description": "A person, hanging from their campus.",
+                          "type": "string"
+                        }
+                      ]
+                    },
+                    "type": "array"
+                  },
+                  "short_name": {
+                    "description": "Its short name, unique in its campus.",
+                    "type": "string"
+                  },
+                  "template": {
+                    "description": "The code of the template it starts from.",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "short_name",
+                  "template",
+                  "kinds"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleView"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "A problem (RFC 9457)"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ],
+        "summary": "Create a role in a campus from a template",
+        "tags": [
+          "access"
+        ]
+      }
+    },
     "/activities/campuses/{campus}/course-modules/by-reference/{system}/{external_id}": {
       "get": {
         "operationId": "get_activities_campuses_campus_course_modules_by_reference_system_external_id",
@@ -21163,7 +22435,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Identified"
+                  "$ref": "#/components/schemas/Identified2"
                 }
               }
             },
@@ -21371,7 +22643,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Identified2"
+                  "$ref": "#/components/schemas/Identified3"
                 }
               }
             },
@@ -21449,7 +22721,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Identified"
+                  "$ref": "#/components/schemas/Identified2"
                 }
               }
             },
@@ -30094,7 +31366,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Identified3"
+                  "$ref": "#/components/schemas/Identified4"
                 }
               }
             },
@@ -30235,7 +31507,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Identified3"
+                  "$ref": "#/components/schemas/Identified4"
                 }
               }
             },
@@ -30746,6 +32018,10 @@
     }
   ],
   "tags": [
+    {
+      "description": "Scopes, principals, roles, grants, overrides and permission checks",
+      "name": "access"
+    },
     {
       "description": "Typed settings resolved through the scope tree",
       "name": "settings"
