@@ -49,6 +49,7 @@ pub const NOTIFY: &str = "progress.notify";
 pub const SETTINGS: &[SettingDeclaration] = &[SettingDeclaration {
     key: NOTIFY,
     summary: "Whether the people of a course are told when they complete it or a teacher decides their progress",
+    group: "completion",
     kind: ValueKind::Boolean { default: true },
     levels: &[ScopeKind::Campus, ScopeKind::Category, ScopeKind::Course],
     permission: MANAGE,

@@ -59,6 +59,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     SettingDeclaration {
         key: GROUP_MODE,
         summary: "Whether people work in groups: none, separate (each group on its own) or visible",
+        group: "courses",
         kind: ValueKind::Choice {
             options: &["none", "separate", "visible"],
             default: "none",
@@ -70,6 +71,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     SettingDeclaration {
         key: OUTLINE,
         summary: "How the content of a course presents its sections and activities: the code of an outline plugin",
+        group: "courses",
         kind: ValueKind::Text {
             max: 64,
             default: STANDARD_OUTLINE,

@@ -32,38 +32,45 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-"use client";
+/** Why a person may or may not use a permission in the campus. */
 
-/** The tabs of roles and permissions: the matrix, the assignments of the campus and the explanation of a check. */
+import type { Metadata } from "next";
 
-import Tab from "@mui/material/Tab";
-import Tabs from "@mui/material/Tabs";
-import Link from "next/link";
+import { optional } from "../../../../../api/server";
+import type { PermissionInfo, RoleView } from "../../../../../api/types";
+import { Explain } from "../../../../../features/admin/roles/Explain";
+import { EmptyState } from "../../../../../features/shell/EmptyState";
+import { PageHeader } from "../../../../../features/shell/PageHeader";
+import { currentAccount } from "../../../../../features/session/current-account";
+import { requestI18n } from "../../../../../i18n/server";
 
-import { Icon } from "@kampus/ui";
+/** The title of the page, in the language of the request. */
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await requestI18n();
+  return { title: `${t("admin.page.check")} · ${t("admin.title")}` };
+}
 
-import { useI18n } from "../../../i18n/I18nProvider";
-import { ROLE_TABS, type RoleTab } from "./words";
-
-/** The icon of each tab. */
-const ICONS: Readonly<Record<RoleTab, string>> = { matrix: "grid_view", grants: "groups", explain: "help" };
-
-/** `<RoleTabs tab="matrix" />` */
-export function RoleTabs({ tab }: { readonly tab: RoleTab }) {
-  const { t } = useI18n();
+/** The page, read on the server. */
+export default async function Page() {
+  const campus = (await currentAccount())!.campus;
+  const { t } = await requestI18n();
+  const [roles, permissions] = await Promise.all([
+    optional<RoleView[] | null>(`/access/scopes/${campus}/roles`, null),
+    optional<PermissionInfo[]>(`/access/scopes/${campus}/permissions`, []),
+  ]);
+  const header = <PageHeader title={t("admin.page.check")} lead={t("admin.page.check.lead")} />;
+  if (!roles) {
+    return (
+      <>
+        {header}
+        <EmptyState icon="shield" message={t("admin.roles.empty")} />
+      </>
+    );
+  }
   return (
-    <Tabs value={tab} sx={{ mb: 3 }} variant="scrollable" allowScrollButtonsMobile aria-label={t("admin.section.roles")}>
-      {ROLE_TABS.map((name) => (
-        <Tab
-          key={name}
-          value={name}
-          component={Link}
-          href={name === "matrix" ? "/admin/roles" : `/admin/roles?tab=${name}`}
-          icon={<Icon name={ICONS[name]} size="small" />}
-          iconPosition="start"
-          label={t(`admin.roles.tab.${name}`)}
-        />
-      ))}
-    </Tabs>
+    <>
+      {header}
+      <Explain campus={campus} roles={roles} permissions={permissions} />
+    </>
   );
 }

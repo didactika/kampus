@@ -1,5 +1,7 @@
 {
+  "courses.group.courses": "Courses",
   "courses.group_mode": "Group mode",
+  "courses.group_mode.hint": "Separate groups see only their own work; visible groups also see the work of the others.",
   "courses.group_mode.none": "No groups",
   "courses.group_mode.separate": "Separate groups",
   "courses.group_mode.visible": "Visible groups",

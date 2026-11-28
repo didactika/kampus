@@ -69,9 +69,3 @@ export function ruleText(t: Translate, rule: string): string {
   const text = t(key);
   return text === key ? rule : text;
 }
-
-/** The tabs, by the value of `?tab=`. */
-export const ROLE_TABS = ["matrix", "grants", "explain"] as const;
-
-/** A tab. */
-export type RoleTab = (typeof ROLE_TABS)[number];

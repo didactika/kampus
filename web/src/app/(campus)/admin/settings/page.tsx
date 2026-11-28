@@ -32,25 +32,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-/** The settings of the campus the person may change, read on the server. */
+/** The settings open on the page of their first module. */
 
-import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-import { serverApi } from "../../../../api/server";
+import { optional } from "../../../../api/server";
 import type { ScopeSetting } from "../../../../api/types";
-import { SettingsForm } from "../../../../features/admin/settings/SettingsForm";
+import { settingsHref } from "../../../../features/admin/sections";
 import { currentAccount } from "../../../../features/session/current-account";
-import { requestI18n } from "../../../../i18n/server";
 
-/** The title of the page, in the language of the request. */
-export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await requestI18n();
-  return { title: `${t("admin.section.settings")} · ${t("admin.title")}` };
-}
-
-/** The settings of the campus of the person. */
+/** Goes to the settings of the first module, or to the administration without any. */
 export default async function SettingsPage() {
-  const account = (await currentAccount())!;
-  const settings = await serverApi<ScopeSetting[]>(`/settings/scopes/${account.campus}`);
-  return <SettingsForm scope={account.campus} settings={settings} />;
+  const campus = (await currentAccount())!.campus;
+  const first = (await optional<ScopeSetting[]>(`/settings/scopes/${campus}`, [])).map((s) => s.module).sort()[0];
+  redirect(first ? settingsHref(first) : "/admin");
 }

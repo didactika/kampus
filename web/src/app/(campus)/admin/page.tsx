@@ -32,13 +32,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-/** The administration opens on its first section. */
+/** The first page of the administration. */
 
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
 
-import { ADMIN_SECTIONS } from "../../../features/admin/sections";
+import { optional } from "../../../api/server";
+import type { ScopeSetting } from "../../../api/types";
+import { AdminOverview } from "../../../features/admin/AdminOverview";
+import { currentAccount } from "../../../features/session/current-account";
+import { requestI18n } from "../../../i18n/server";
 
-/** Goes to the first section. */
-export default function AdminPage() {
-  redirect(ADMIN_SECTIONS[0]!.href);
+/** The title of the page, in the language of the request. */
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await requestI18n();
+  return { title: t("admin.title") };
+}
+
+/** The categories of the administration and their pages. */
+export default async function AdminPage() {
+  const campus = (await currentAccount())!.campus;
+  return <AdminOverview settings={await optional<ScopeSetting[]>(`/settings/scopes/${campus}`, [])} />;
 }

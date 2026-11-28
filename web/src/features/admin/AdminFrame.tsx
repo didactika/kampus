@@ -35,59 +35,190 @@
 "use client";
 
 /**
- * The frame of the administration: its head and its sections, beside the section open. On a narrow screen the sections
- * become a row of tabs above it.
+ * The frame of the administration: a side panel with a search over every page and setting and the map of its
+ * categories, and the page open beside it under its trail. On a narrow screen the panel opens from a button above the
+ * page.
  */
 
 import Box from "@mui/material/Box";
+import Breadcrumbs from "@mui/material/Breadcrumbs";
+import Drawer from "@mui/material/Drawer";
+import InputAdornment from "@mui/material/InputAdornment";
+import InputBase from "@mui/material/InputBase";
+import MuiLink from "@mui/material/Link";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
-import { Icon } from "@kampus/ui";
+import { Button, Icon } from "@kampus/ui";
 
+import type { ScopeSetting } from "../../api/types";
 import { useI18n } from "../../i18n/I18nProvider";
-import { PageHeader } from "../shell/PageHeader";
-import { ADMIN_SECTIONS } from "./sections";
+import { settingHint, settingName } from "./names";
+import { adminMap, pageOf, settingsHref, type AdminCategory } from "./sections";
 
-/** `<AdminFrame>{section}</AdminFrame>` */
-export function AdminFrame({ children }: { readonly children: ReactNode }) {
+/** How many settings a search lists. */
+const SHOWN = 12;
+
+/** The props of `AdminFrame`. */
+export interface AdminFrameProps {
+  /** The settings of the campus the person may change, for the map and the search. */
+  readonly settings: readonly ScopeSetting[];
+  readonly children: ReactNode;
+}
+
+/** The map of categories and pages. */
+function MapList({ map, path, onGo }: { readonly map: readonly AdminCategory[]; readonly path: string; readonly onGo: () => void }) {
   const { t } = useI18n();
-  const path = usePathname();
+  const current = pageOf(map, path)?.page.href;
+  const item = (href: string, label: string, icon: string) => (
+    <ListItem key={href} disablePadding>
+      <ListItemButton
+        component={Link}
+        href={href}
+        selected={href === current || (href === "/admin" && path === "/admin")}
+        aria-current={href === current ? "page" : undefined}
+        onClick={onGo}
+        sx={{ borderRadius: 2, py: 0.75 }}
+      >
+        <ListItemIcon sx={{ minInlineSize: 34 }}>
+          <Icon name={icon} size="small" />
+        </ListItemIcon>
+        <ListItemText primary={label} slotProps={{ primary: { variant: "body2", sx: { fontWeight: 500 } } }} />
+      </ListItemButton>
+    </ListItem>
+  );
   return (
     <>
-      <PageHeader title={t("admin.title")} lead={t("admin.lead")} />
-      <Box sx={{ display: "grid", gap: 3, gridTemplateColumns: { xs: "1fr", md: "220px minmax(0, 1fr)" }, alignItems: "start" }}>
-        <Box component="nav" aria-label={t("admin.sections")} sx={{ position: { md: "sticky" }, top: { md: 88 } }}>
-          <List disablePadding sx={{ display: { xs: "flex", md: "block" }, gap: 0.5, overflowX: "auto" }}>
-            {ADMIN_SECTIONS.map((section) => {
-              const current = path.startsWith(section.href);
-              return (
-                <ListItem key={section.href} disablePadding sx={{ inlineSize: { xs: "auto", md: "100%" } }}>
-                <ListItemButton
-                  component={Link}
-                  href={section.href}
-                  selected={current}
-                  aria-current={current ? "page" : undefined}
-                  sx={{ borderRadius: 999, flex: { xs: "none", md: "initial" } }}
-                >
-                  <ListItemIcon sx={{ minInlineSize: 36 }}>
-                    <Icon name={section.icon} size="small" />
-                  </ListItemIcon>
-                  <ListItemText primary={t(section.label)} />
-                </ListItemButton>
-                </ListItem>
-              );
-            })}
-          </List>
-        </Box>
-        <Box sx={{ minInlineSize: 0 }}>{children}</Box>
-      </Box>
+      <List disablePadding>{item("/admin", t("admin.page.overview"), "dashboard")}</List>
+      {map.map((category) =>
+        category.pages.length ? (
+          <Box key={category.id} sx={{ mt: 2 }}>
+            <Typography variant="overline" color="text.secondary" sx={{ px: 1.5, display: "block", lineHeight: 2 }} id={`admin-${category.id}`}>
+              {t(category.label)}
+            </Typography>
+            <List disablePadding aria-labelledby={`admin-${category.id}`}>
+              {category.pages.map((page) => item(page.href, t(page.label), page.icon))}
+            </List>
+          </Box>
+        ) : null,
+      )}
     </>
+  );
+}
+
+/** What a search finds: the pages whose name and the settings whose name, help or key hold its words. */
+function Results({ map, settings, query, onGo }: { readonly map: readonly AdminCategory[]; readonly settings: readonly ScopeSetting[]; readonly query: string; readonly onGo: () => void }) {
+  const { t } = useI18n();
+  const words = query.trim().toLowerCase();
+  const pages = map.flatMap((c) => c.pages).filter((p) => t(p.label).toLowerCase().includes(words));
+  const found = settings
+    .filter((s) => [settingName(t, s), settingHint(t, s) ?? "", s.key].some((text) => text.toLowerCase().includes(words)))
+    .slice(0, SHOWN);
+  if (!pages.length && !found.length) {
+    return (
+      <Typography variant="body2" color="text.secondary" sx={{ px: 1.5, py: 2 }} role="status">
+        {t("admin.search.none", { q: query.trim() })}
+      </Typography>
+    );
+  }
+  return (
+    <List disablePadding aria-label={t("admin.search.results")}>
+      {pages.map((page) => (
+        <ListItem key={page.href} disablePadding>
+          <ListItemButton component={Link} href={page.href} onClick={onGo} sx={{ borderRadius: 2 }}>
+            <ListItemIcon sx={{ minInlineSize: 34 }}>
+              <Icon name={page.icon} size="small" />
+            </ListItemIcon>
+            <ListItemText primary={t(page.label)} secondary={t("admin.search.page")} slotProps={{ primary: { variant: "body2", sx: { fontWeight: 600 } } }} />
+          </ListItemButton>
+        </ListItem>
+      ))}
+      {found.map((setting) => (
+        <ListItem key={setting.key} disablePadding>
+          <ListItemButton component={Link} href={`${settingsHref(setting.module)}#${setting.key}`} onClick={onGo} sx={{ borderRadius: 2 }}>
+            <ListItemIcon sx={{ minInlineSize: 34 }}>
+              <Icon name="tune" size="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary={settingName(t, setting)}
+              secondary={t(`admin.module.${setting.module}`)}
+              slotProps={{ primary: { variant: "body2", sx: { fontWeight: 600 } } }}
+            />
+          </ListItemButton>
+        </ListItem>
+      ))}
+    </List>
+  );
+}
+
+/** `<AdminFrame settings={settings}>{page}</AdminFrame>` */
+export function AdminFrame({ settings, children }: AdminFrameProps) {
+  const { t } = useI18n();
+  const path = usePathname();
+  const [query, setQuery] = useState("");
+  const [drawer, setDrawer] = useState(false);
+  const map = useMemo(() => adminMap([...new Set(settings.map((s) => s.module))].sort((a, b) => t(`admin.module.${a}`).localeCompare(t(`admin.module.${b}`)))), [settings, t]);
+  const here = pageOf(map, path);
+  const go = () => {
+    setDrawer(false);
+    setQuery("");
+  };
+  const panel = (
+    <Box component="nav" aria-label={t("admin.sections")} sx={{ p: 1.5 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, px: 1.5, py: 1, mb: 1.5, border: 1, borderColor: "divider", borderRadius: 999, bgcolor: "background.paper", "&:focus-within": { borderColor: "primary.main", boxShadow: "0 0 0 3px color-mix(in srgb, var(--k-palette-primary-main) 20%, transparent)" } }}>
+        <InputBase
+          fullWidth
+          type="search"
+          placeholder={t("admin.search.all")}
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          inputProps={{ "aria-label": t("admin.search.all") }}
+          startAdornment={
+            <InputAdornment position="start">
+              <Icon name="search" size="small" />
+            </InputAdornment>
+          }
+          sx={{ typography: "body2" }}
+        />
+      </Box>
+      {query.trim() ? <Results map={map} settings={settings} query={query} onGo={go} /> : <MapList map={map} path={path} onGo={go} />}
+    </Box>
+  );
+  return (
+    <Box sx={{ display: "grid", gap: { xs: 2, md: 4 }, gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "264px minmax(0, 1fr)" }, alignItems: "start" }}>
+      <Box sx={{ display: { xs: "none", md: "block" }, position: "sticky", top: 88, maxBlockSize: "calc(100dvh - 104px)", overflowY: "auto", border: 1, borderColor: "divider", borderRadius: 4, bgcolor: "background.paper" }}>
+        {panel}
+      </Box>
+      <Box sx={{ minInlineSize: 0 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+          <Box sx={{ display: { md: "none" } }}>
+            <Button variant="outlined" icon="menu" onClick={() => setDrawer(true)}>
+              {t("admin.sections")}
+            </Button>
+          </Box>
+          <Breadcrumbs aria-label={t("admin.trail")} sx={{ typography: "body2" }}>
+            <MuiLink component={Link} href="/admin" variant="body2" color="text.secondary" underline="hover">
+              {t("admin.title")}
+            </MuiLink>
+            {here ? (
+              <Typography variant="body2" color="text.secondary">
+                {t(here.category.label)}
+              </Typography>
+            ) : null}
+          </Breadcrumbs>
+        </Box>
+        {children}
+      </Box>
+      <Drawer open={drawer} onClose={() => setDrawer(false)} slotProps={{ paper: { sx: { inlineSize: 300 } } }}>
+        {panel}
+      </Drawer>
+    </Box>
   );
 }

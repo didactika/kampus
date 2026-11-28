@@ -1,8 +1,10 @@
 {
+  "notify.group.messaging": "Messaging",
   "notify.message_retention_days": "Days messages are kept",
   "notify.message_retention_days.hint": "With 0 they are kept until every member deletes them.",
   "notify.messaging": "Who may write to whom",
   "notify.messaging.campus": "Anyone of the campus",
   "notify.messaging.course": "People who share a course",
+  "notify.messaging.hint": "Limits who may start a conversation with whom.",
   "notify.messaging.nobody": "Nobody"
 }

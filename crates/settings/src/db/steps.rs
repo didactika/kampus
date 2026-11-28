@@ -57,69 +57,91 @@ const SCOPE: ForeignKey = ForeignKey {
 };
 
 /// The upgrade steps of this module.
-pub const STEPS: &[Step] = &[Step {
-    sequence: 1,
-    name: "definitions, values and changes",
-    revert: &[],
-    action: None,
-    changes: &[
-        Change::CreateTable(Table {
-            name: "definition",
-            columns: &[
-                Column::new("key", Type::Text),
-                Column::new("module", Type::Text),
-                Column::new("summary", Type::Text),
-                Column::new("kind", Type::Json("settings.kind")),
-                Column::new("default_value", Type::Json("settings.value")),
-                Column::new("levels", Type::Json("settings.levels")),
-                Column::new("permission", Type::Text),
-                Column::new("restart_required", Type::Boolean),
-                Column::new("retired_at", Type::Timestamptz).nullable(),
-            ],
-            primary_key: &["key"],
-            without_natural_key: Some("keyed by the key its module declares"),
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "value",
-            columns: &[
-                Column::new("id", Type::Uuid),
-                Column::new("definition_key", Type::Text),
-                Column::new("scope_id", Type::Uuid),
-                Column::new("value", Type::Json("settings.value")),
-                Column::new("locked", Type::Boolean).default(ColumnDefault::Bool(false)),
-                Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
-                Column::new("updated_at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["id"],
-            unique: &[&["definition_key", "scope_id"]],
-            foreign_keys: &[DEFINITION, SCOPE],
-            indexes: &[Index {
-                columns: &["scope_id"],
-                unique: false,
-            }],
-            ..Table::EMPTY
-        }),
-        Change::CreateTable(Table {
-            name: "change",
-            columns: &[
-                Column::new("id", Type::Uuid),
-                Column::new("definition_key", Type::Text),
-                Column::new("scope_id", Type::Uuid),
-                Column::new("actor", Type::Uuid).nullable(),
-                Column::new("before", Type::Json("settings.value")).nullable(),
-                Column::new("after", Type::Json("settings.value")).nullable(),
-                Column::new("locked", Type::Boolean),
-                Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
-            ],
-            primary_key: &["id"],
-            foreign_keys: &[DEFINITION, SCOPE],
-            indexes: &[Index {
-                columns: &["definition_key", "at"],
-                unique: false,
-            }],
-            without_natural_key: Some("an append-only record of changes; its actor outlives the account"),
-            ..Table::EMPTY
-        }),
-    ],
-}];
+pub const STEPS: &[Step] = &[
+    Step {
+        sequence: 1,
+        name: "definitions, values and changes",
+        revert: &[],
+        action: None,
+        changes: &[
+            Change::CreateTable(Table {
+                name: "definition",
+                columns: &[
+                    Column::new("key", Type::Text),
+                    Column::new("module", Type::Text),
+                    Column::new("summary", Type::Text),
+                    Column::new("kind", Type::Json("settings.kind")),
+                    Column::new("default_value", Type::Json("settings.value")),
+                    Column::new("levels", Type::Json("settings.levels")),
+                    Column::new("permission", Type::Text),
+                    Column::new("restart_required", Type::Boolean),
+                    Column::new("retired_at", Type::Timestamptz).nullable(),
+                ],
+                primary_key: &["key"],
+                without_natural_key: Some("keyed by the key its module declares"),
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "value",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("definition_key", Type::Text),
+                    Column::new("scope_id", Type::Uuid),
+                    Column::new("value", Type::Json("settings.value")),
+                    Column::new("locked", Type::Boolean).default(ColumnDefault::Bool(false)),
+                    Column::new("version", Type::Integer).default(ColumnDefault::Int(1)),
+                    Column::new("updated_at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                unique: &[&["definition_key", "scope_id"]],
+                foreign_keys: &[DEFINITION, SCOPE],
+                indexes: &[Index {
+                    columns: &["scope_id"],
+                    unique: false,
+                }],
+                ..Table::EMPTY
+            }),
+            Change::CreateTable(Table {
+                name: "change",
+                columns: &[
+                    Column::new("id", Type::Uuid),
+                    Column::new("definition_key", Type::Text),
+                    Column::new("scope_id", Type::Uuid),
+                    Column::new("actor", Type::Uuid).nullable(),
+                    Column::new("before", Type::Json("settings.value")).nullable(),
+                    Column::new("after", Type::Json("settings.value")).nullable(),
+                    Column::new("locked", Type::Boolean),
+                    Column::new("at", Type::Timestamptz).default(ColumnDefault::Now),
+                ],
+                primary_key: &["id"],
+                foreign_keys: &[DEFINITION, SCOPE],
+                indexes: &[Index {
+                    columns: &["definition_key", "at"],
+                    unique: false,
+                }],
+                without_natural_key: Some("an append-only record of changes; its actor outlives the account"),
+                ..Table::EMPTY
+            }),
+        ],
+    },
+    Step {
+        sequence: 2,
+        name: "the group of each definition",
+        revert: &[],
+        action: None,
+        changes: &[Change::AddColumn {
+            table: "definition",
+            column: Column::new("group_code", Type::Text).default(ColumnDefault::Text("general")),
+        }],
+    },
+    Step {
+        sequence: 3,
+        name: "the place of each definition among those of its module",
+        revert: &[],
+        action: None,
+        changes: &[Change::AddColumn {
+            table: "definition",
+            column: Column::new("position", Type::Integer).default(ColumnDefault::Int(0)),
+        }],
+    },
+];

@@ -129,7 +129,6 @@ export function PermissionMatrix({ roles: initial, permissions }: PermissionMatr
   const current: Choice = open ? ((open.role.values[open.permission] as Choice | undefined) ?? "none") : "none";
   return (
     <Stack spacing={2.5}>
-      <Typography color="text.secondary">{t("admin.roles.matrix.lead")}</Typography>
       <TextField
         label={t("admin.roles.search")}
         type="search"

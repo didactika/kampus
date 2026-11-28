@@ -43,7 +43,7 @@ use crate::permissions::SCOPE_FREEZE;
 use crate::{Access, Actor, PrincipalId, ScopeId, ScopeKind, sql};
 
 /// One scope on the path from a scope up to the root.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, schemars::JsonSchema)]
 pub struct PathScope {
     /// The scope.
     pub id: ScopeId,

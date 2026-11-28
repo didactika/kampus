@@ -112,7 +112,6 @@ export function Grants({ campus, roles, held }: GrantsProps) {
 
   return (
     <Stack spacing={3}>
-      <Typography color="text.secondary">{t("admin.grants.lead")}</Typography>
       <SectionCard title={t("admin.grants.add")} icon="person">
         <Stack spacing={2}>
           <AccountPicker campus={campus} value={person} onChange={setPerson} />
@@ -132,7 +131,7 @@ export function Grants({ campus, roles, held }: GrantsProps) {
       {held.length === 0 ? (
         <Typography color="text.secondary">{t("admin.grants.none")}</Typography>
       ) : (
-        <RowList label={t("admin.roles.tab.grants")}>
+        <RowList label={t("admin.page.grants")}>
           {held.map(({ grant, account }) => (
             <Row
               key={grant.id}

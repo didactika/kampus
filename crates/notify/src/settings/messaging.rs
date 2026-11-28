@@ -57,6 +57,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     SettingDeclaration {
         key: MESSAGING,
         summary: "Who may write to whom: people who take part in a course together, anyone of the campus, or nobody",
+        group: "messaging",
         kind: ValueKind::Choice {
             options: MESSAGING_OPTIONS,
             default: "course",
@@ -68,6 +69,7 @@ pub const SETTINGS: &[SettingDeclaration] = &[
     SettingDeclaration {
         key: RETENTION,
         summary: "How many days messages are kept before they are removed; 0 keeps them until every member deletes them",
+        group: "messaging",
         kind: ValueKind::Integer {
             min: 0,
             max: 3650,

@@ -60,6 +60,7 @@ const SETTINGS: &[SettingDeclaration] = &[
     SettingDeclaration {
         key: "testing.limit",
         summary: "A limit",
+        group: "testing",
         kind: ValueKind::Integer {
             min: 1,
             max: 100,
@@ -77,6 +78,7 @@ const SETTINGS: &[SettingDeclaration] = &[
     SettingDeclaration {
         key: "testing.platform_only",
         summary: "Only for the platform",
+        group: "testing",
         kind: ValueKind::Boolean { default: false },
         levels: &[ScopeKind::Platform],
         permission: MANAGE,

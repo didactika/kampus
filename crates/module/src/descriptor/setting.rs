@@ -44,6 +44,9 @@ pub struct SettingDeclaration {
     pub key: &'static str,
     /// What it sets.
     pub summary: &'static str,
+    /// The group it shows in, among the settings of its module (`sign_up`, `sessions`): the administration
+    /// gives each group of a module its own section, so a module with many settings keeps them apart.
+    pub group: &'static str,
     /// Its type and default.
     pub kind: ValueKind,
     /// The kinds of scope where it may be set, such as the platform and the campus.

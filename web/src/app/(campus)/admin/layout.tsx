@@ -32,13 +32,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // ------------------------------------------------------------------------------
 
-/** The administration: its frame around the section open. */
+/** The administration: the map of its pages beside the page open, with the settings of the campus for its search. */
 
 import type { ReactNode } from "react";
 
+import { optional } from "../../../api/server";
+import type { ScopeSetting } from "../../../api/types";
 import { AdminFrame } from "../../../features/admin/AdminFrame";
+import { currentAccount } from "../../../features/session/current-account";
 
 /** The frame of every page of the administration. */
-export default function AdminLayout({ children }: { readonly children: ReactNode }) {
-  return <AdminFrame>{children}</AdminFrame>;
+export default async function AdminLayout({ children }: { readonly children: ReactNode }) {
+  const campus = (await currentAccount())!.campus;
+  const settings = await optional<ScopeSetting[]>(`/settings/scopes/${campus}`, []);
+  return <AdminFrame settings={settings}>{children}</AdminFrame>;
 }
