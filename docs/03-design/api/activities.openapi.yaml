@@ -45,7 +45,7 @@ paths:
   /api/v1/activities/course-modules/{course_module_id}/exceptions:
     get: { summary: Exceptions of a course module, responses: { '200': { description: Exceptions }, '403': { description: Without activities.exception.manage } } }
   /api/v1/activities/course-modules/{course_module_id}/exceptions/accounts/{account_id}:
-    put: { summary: 'Grant an exception to a person, replacing theirs (RN-084, RN-085)', responses: { '200': { description: Granted }, '422': { description: 'The type has no exceptions, nothing changes, dates out of order or numbers out of range' } } }
+    put: { summary: 'Grant an exception to a person, replacing theirs (RN-084, RN-085)', responses: { '200': { description: Granted }, '422': { description: 'The type has no exceptions, the course module limits nothing an exception changes, the exception changes what the course module does not set or nothing, dates out of order or numbers out of range' } } }
   /api/v1/activities/course-modules/{course_module_id}/exceptions/groups/{group_id}:
     put: { summary: 'Grant an exception to a group of the course, replacing its own (RN-084, RN-085)', responses: { '200': { description: Granted }, '422': { description: 'As for a person, or a group of another course' } } }
   /api/v1/activities/exceptions/{exception_id}:

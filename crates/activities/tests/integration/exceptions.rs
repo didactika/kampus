@@ -356,3 +356,66 @@ async fn exceptions_are_replaced_validated_and_limited_to_types_that_support_the
     );
     w.drop().await;
 }
+
+#[tokio::test]
+async fn a_course_module_without_dates_or_limits_takes_no_exceptions_and_one_never_adds_a_limit() {
+    let w = world().await;
+    let learner = person(&w.learner);
+    let open = ModuleFields {
+        settings: BTreeMap::new(),
+        ..quiz("", 0, 0)
+    };
+    let module = w
+        .activities
+        .create_module(&w.admin, w.first.id, QUIZ, open, Place::Last)
+        .await
+        .unwrap();
+    assert!(
+        !w.activities.takes_exceptions(&module),
+        "no date, no time limit and unlimited attempts"
+    );
+    let more = Values {
+        attempts: Some(3),
+        ..Values::default()
+    };
+    let refused = w
+        .activities
+        .set_exception(&w.admin, module.id, Target::Person(learner), more, None)
+        .await
+        .unwrap_err();
+    assert_eq!(refused.code(), "activities.exceptions_not_needed");
+
+    let closing = w
+        .activities
+        .create_module(
+            &w.admin,
+            w.first.id,
+            QUIZ,
+            quiz("2030-01-10T10:00:00Z", 0, 0),
+            Place::Last,
+        )
+        .await
+        .unwrap();
+    assert!(w.activities.takes_exceptions(&closing));
+    let added = w
+        .activities
+        .set_exception(&w.admin, closing.id, Target::Person(learner), more, None)
+        .await
+        .unwrap_err();
+    assert_eq!(added.code(), "activities.exception_invalid");
+    assert!(
+        added
+            .fields()
+            .iter()
+            .any(|f| f.field == "attempts" && f.rule == "not_on_module")
+    );
+    let later = Values {
+        closes_at: Some(at("2030-01-17T10:00:00Z")),
+        ..Values::default()
+    };
+    w.activities
+        .set_exception(&w.admin, closing.id, Target::Person(learner), later, None)
+        .await
+        .unwrap();
+    w.drop().await;
+}
