@@ -304,3 +304,30 @@ test("the administration finds a setting, saves it here and takes the inherited 
   }
   await expect(field).toHaveValue(before);
 });
+
+test("the matrix of roles changes a value at once and the check explains why a person may", async ({ page }) => {
+  await page.goto("/admin/roles");
+  await page.getByLabel(t("admin.roles.search")).fill("access.view_as");
+  const cell = page.getByRole("button", { name: /^Mentor, access\.view_as: / });
+  const before = (await cell.getAttribute("aria-label"))!.split(": ").pop()!;
+  const choices = ["allow", "deny", "forbid", "none"] as const;
+  const original = choices.find((c) => t(`access.value.${c}`) === before)!;
+  const other = original === "deny" ? "allow" : "deny";
+  try {
+    await cell.click();
+    await page.getByRole("menuitem", { name: t(`access.value.${other}`) }).click();
+    await expect(page.getByText(t("admin.roles.saved"))).toBeVisible();
+    await expect(cell).toHaveAccessibleName(`Mentor, access.view_as: ${t(`access.value.${other}`)}`);
+  } finally {
+    // Whatever failed, the role gives the permission what it gave before.
+    await cell.click();
+    await page.getByRole("menuitem", { name: t(`access.value.${original}`) }).click();
+    await expect(cell).toHaveAccessibleName(`Mentor, access.view_as: ${before}`);
+  }
+
+  await page.getByRole("tab", { name: t("admin.roles.tab.explain") }).click();
+  await page.getByLabel(t("admin.account.search")).fill("admin");
+  await page.getByRole("listitem").getByRole("button").first().click();
+  await page.getByRole("button", { name: t("admin.explain.check") }).click();
+  await expect(page.getByRole("heading", { name: t("admin.explain.allowed") })).toBeVisible();
+});
